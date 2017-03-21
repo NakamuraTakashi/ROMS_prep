@@ -1,0 +1,49 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Output Files
+output/*
+!.gitkeep
+
+# Data Files
+Data/*
+roms_cdl/*
+CDL/*
+ROMS_grid_Yaeyama/*
+
+# Backup Files
+backup/*
+
+# MATLAB temp. files
+*.asv
+
+# Fortran temp. output files
+fort.*
+
