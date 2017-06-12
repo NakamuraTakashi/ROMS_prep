@@ -1,5 +1,5 @@
 
-!!!=== ver 2015/02/28   Copyright (c) 2014-2015 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2017 Takashi NAKAMURA  =====
 
 !!!**** Interpolation MODULE ************************************
 
@@ -52,11 +52,13 @@
       real(8) :: Vnew(Nx,Ny)
       real(8) :: mask(Nx,Ny)
       real(8) :: masksum
-      integer :: i,j,k
+      integer :: i,j,k,loop
       integer :: loopflag
       
       Vnew(:,:)=V(:,:)
       
+!$omp parallel
+!$omp do private(i,j)
       do i=1,Nx
         do j=1,Ny
           if( (vmin > Vnew(i,j)) .or. (Vnew(i,j) > vmax) ) then
@@ -66,8 +68,9 @@
           endif
         enddo
       enddo
-      
-      
+!$omp end do
+!$omp end parallel
+
       do
         loopflag = 0
 
@@ -75,7 +78,7 @@
           do j=2,Ny-1
             if( mask(i,j)==0.0d0 ) then
               masksum = mask(i-1,j)+mask(i+1,j)+mask(i,j-1)+mask(i,j+1)
-              if(masksum <= 1.0d0) then
+              if(masksum == 0.0d0) then
                 loopflag = 1
               else
                 Vnew(i,j) =( mask(i-1,j)*Vnew(i-1,j)                   &
@@ -90,33 +93,44 @@
         enddo
         if(loopflag == 0) exit
       enddo
-      
+
+!$omp parallel
+!$omp do private(i)
       do i=1,Nx
         if( mask(i,1)==0.0d0 ) then
           Vnew(i,1) = Vnew(i,2)
         endif
       enddo
+!$omp end do
+!$omp do private(i)
       do i=1,Nx
         if( mask(i,Ny)==0.0d0 ) then
           Vnew(i,Ny) = Vnew(i,Ny-1)
         endif
       enddo
+!$omp end do
+!$omp do private(j)
       do j=1,Ny
         if( mask(1,j)==0.0d0 ) then
           Vnew(1,j) = Vnew(2,j)
         endif
       enddo
+!$omp end do
+!$omp do private(j)
       do j=1,Ny
         if( mask(Nx,j)==0.0d0 ) then
           Vnew(Nx,j) = Vnew(Nx-1,j)
         endif
       enddo
-      
+!$omp end do
+!$omp do private(i,j)
       do i=1,Im
         do j=1,Jm
           call LinearInterpolation2D_point(Nx, Ny, X, Y, Vnew, Xgrd(i,j), Ygrd(i,j), Vgrd(i,j))
         enddo
       enddo
+!$omp end do
+!$omp end parallel
       
       RETURN
     END SUBROUTINE LinearInterpolation2D_grid2
@@ -139,6 +153,8 @@
      
       integer :: i,j,k
       
+!$omp parallel
+!$omp do private(i,j,k)
       do i=1,Im
         do j=1,Jm
           do k=1,Km
@@ -147,6 +163,8 @@
           enddo
         enddo
       enddo
+!$omp end do
+!$omp end parallel
       
       RETURN
     END SUBROUTINE LinearInterpolation3D_grid
@@ -297,6 +315,9 @@
       integer :: loopflag
       
       Vnew(:,:,:)=V(:,:,:)
+
+!$omp parallel
+!$omp do private(i,j,k)
       
       do i=1,Nx
         do j=1,Ny
@@ -309,9 +330,11 @@
           enddo
         enddo
       enddo
-      
+!$omp end do
+!$omp do private(i,j,k,loopflag,masksum)
       do k=1,Nz
-        do loop=1,500
+!        do loop=1,500
+        do
           loopflag = 0
           do i=2,Nx-1
             do j=2,Ny-1
@@ -320,7 +343,7 @@
      &                   +mask(i,j-1,k)+mask(i,j+1,k)  !&
 !     &                   +mask(i,j,k-1)+mask(i,j,k+1)
      
-                if(masksum <= 1.0d0) then
+                if(masksum == 0.0d0) then
                   loopflag = 1
                 else
                   Vnew(i,j,k) =( mask(i-1,j,k)*Vnew(i-1,j,k)       &
@@ -348,26 +371,8 @@
           enddo
         endif
       enddo
-
-!      if(loopflag == 1) then
-!      endif
-
-
-      
-!      do i=1,Nx
-!        do j=1,Ny
-!          if( mask(i,j,1)==0.0d0 ) then
-!            Vnew(i,j,1) = Vnew(i,j,2)
-!          endif
-!        enddo
-!      enddo
-!      do i=1,Nx
-!        do j=1,Ny
-!          if( mask(i,j,Nz)==0.0d0 ) then
-!            Vnew(i,j,Nz) = Vnew(i,j,Nz-1)
-!          endif
-!        enddo
-!      enddo
+!$omp end do
+!$omp do private(i,k)
       do i=1,Nx
         do k=1,Nz
           if( mask(i,1,k)==0.0d0 ) then
@@ -375,6 +380,8 @@
           endif
         enddo
       enddo
+!$omp end do
+!$omp do private(i,k)
       do i=1,Nx
         do k=1,Nz
           if( mask(i,Ny,k)==0.0d0 ) then
@@ -382,6 +389,8 @@
           endif
         enddo
       enddo
+!$omp end do
+!$omp do private(j,k)
       do j=1,Ny
         do k=1,Nz
           if( mask(1,j,k)==0.0d0 ) then
@@ -389,6 +398,8 @@
           endif
         enddo
       enddo
+!$omp end do
+!$omp do private(j,k)
       do j=1,Ny
         do k=1,Nz
           if( mask(Nx,j,k)==0.0d0 ) then
@@ -396,7 +407,8 @@
           endif
         enddo
       enddo
-
+!$omp end do
+!$omp do private(i,j,k)
       do i=1,Im
         do j=1,Jm
           do k=1,Km
@@ -405,6 +417,8 @@
           enddo
         enddo
       enddo
+!$omp end do
+!$omp end parallel
       
       RETURN
     END SUBROUTINE LinearInterpolation3D_grid3
@@ -450,7 +464,6 @@
           exit
         end if
       enddo
-      
       do j=2,Ny
         if( (Y(j-1)-yi)*(Y(j)-yi) <= 0.0d0) then
           jB = j-1
@@ -460,7 +473,6 @@
           exit
         end if
       enddo
-      
       f = abs(xi-xL)/abs(xR-xL)
       g = abs(yi-yB)/abs(yT-yB)
       
@@ -468,7 +480,6 @@
      &    +V(iR,jB)* f *(1.0d0-g)                               &
      &    +V(iL,jT)*(1.0d0-f)* g                                &
      &    +V(iR,jT)* f * g
-
       RETURN
     END SUBROUTINE LinearInterpolation2D_point
     

@@ -82,7 +82,7 @@ c
 c
 c ***** Directory conf. *****
 c
-      data omapdir /'./omap'/
+      data omapdir /'./omapj'/
 c
 c ***************************
 c     
