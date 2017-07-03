@@ -38,16 +38,16 @@
       
      ! NetCDF file     
 !      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama1_grd_v10.nc"
-!      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.04_grd_v1.nc"
-      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.08_grd_v3.nc"
+      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.04_grd_v1.nc"
+!      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.08_grd_v3.nc"
       character(len=*), parameter :: OCEAN_FILE  =                      &
 !     &     "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama1_HYCOM_extracted_1509.nc"
      &  "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted_1604.nc"
       character(len=*), parameter :: BRY_FILE  =                        &
 !     &     "./output/Yaeyama1_bry_Nz30_HYCOM_0709.nc"
 !     &     "./output/Yaeyama1_bry_Nz15_HYCOM_1509.nc"
-!     &     "./output/CT_0.04_bry_Nz30_HYCOM_1604v1.nc"
-     &     "./output/CT_0.08_bry_Nz30_HYCOM_1604v3.nc"
+     &     "./output/CT_0.04_bry_Nz30_HYCOM_1604v1.nc"
+!     &     "./output/CT_0.08_bry_Nz30_HYCOM_1604v3.nc"
       
 ! -------------------------------------------------------------------------
 
