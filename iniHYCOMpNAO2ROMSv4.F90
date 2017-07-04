@@ -1,8 +1,8 @@
 
 !!!=== Copyright (c) 2014-2017 Takashi NAKAMURA  =====
 
-#define NAOTIDE
-/*#define NAOTIDEJ*/
+/*#define NAOTIDE*/
+#define NAOTIDEJ
 
     PROGRAM iniHYCOMpNAO2ROMS
       use netcdf
@@ -13,8 +13,8 @@
       implicit none
       
 ! -------------------------------------------------------------------------
-!      integer, parameter :: N_s_rho = 15
-      integer, parameter :: N_s_rho = 30
+      integer, parameter :: N_s_rho = 15
+!      integer, parameter :: N_s_rho = 30
       
 !      integer, parameter :: spherical  = 0   
       integer, parameter :: spherical  = 1   
@@ -42,16 +42,16 @@
       integer, parameter :: mode = 1        ! mode=1, linear intrtporation
       
      ! NetCDF file     
-!      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Yaeyama/Data/Yaeyama1_grd_v10.nc"
-      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.04_grd_v1.nc"
+      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama1_grd_v10.nc"
+!      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.04_grd_v1.nc"
 !      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.08_grd_v3.nc"
       character(len=*), parameter :: OCEAN_FILE  =                      &
-!     &     "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama1_HYCOM_extracted_1509.nc"
-     &  "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted_1604.nc"
+     &     "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama1_HYCOM_extracted_1604.nc"
+!     &  "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted_1604.nc"
       character(len=*), parameter :: INI_FILE  =                        &
-!     &     "./output/Yaeyama1_ini_Nz30_HYCOMpNAO_070410.nc"
-!     &     "./output/Yaeyama1_ini_Nz15_HYCOMpNAO_150410.nc"
-     &     "./output/CT_0.04_ini_Nz30_HYCOMpNAO_160401v1.nc"
+!     &     "./output/Yaeyama1_ini_Nz30_HYCOMpNAO_160401.nc"
+     &     "./output/Yaeyama1_ini_Nz15_HYCOMpNAO_160401.nc"
+!     &     "./output/CT_0.04_ini_Nz30_HYCOMpNAO_160401v1.nc"
 !     &     "./output/CT_0.08_ini_Nz30_HYCOMpNAO_160401v3.nc"
 !     &     "./output/CT_0.04_ini_Nz30_HYCOM_160401v1.nc"
 !     &     "./output/CT_0.08_ini_Nz30_HYCOM_160401v1.nc"

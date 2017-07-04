@@ -28,14 +28,14 @@
 !
 ! Geographical and Grid parameters --------
 
-!      real(8), parameter :: Tlat = 28.0d0     ! Latitude  (degrees) of the top-right corner of the grid.
-!      real(8), parameter :: Blat = 22.0d0     ! Latitude  (degrees) of the bottom-left corner of the grid.
-!      real(8), parameter :: Llon = 120.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-!      real(8), parameter :: Rlon = 128.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
-      real(8), parameter :: Tlat =  31.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
-      real(8), parameter :: Blat = -18.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
-      real(8), parameter :: Llon =  98.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-      real(8), parameter :: Rlon = 140.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+      real(8), parameter :: Tlat = 28.0d0     ! Latitude  (degrees) of the top-right corner of the grid.
+      real(8), parameter :: Blat = 22.0d0     ! Latitude  (degrees) of the bottom-left corner of the grid.
+      real(8), parameter :: Llon = 120.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+      real(8), parameter :: Rlon = 128.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+!      real(8), parameter :: Tlat =  31.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+!      real(8), parameter :: Blat = -18.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+!      real(8), parameter :: Llon =  98.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+!      real(8), parameter :: Rlon = 140.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
 
       integer, parameter :: Syear  = 2016   ! Starting year
       integer, parameter :: Smonth = 4      ! Starting month
@@ -50,10 +50,10 @@
       integer, parameter :: Rday   = 1      ! Reference day
       
      ! NetCDF file     
-!      character(len=*), parameter :: OCEAN_FILE  = &
-!     &  "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama1_HYCOM_extracted_1609.nc"
       character(len=*), parameter :: OCEAN_FILE  = &
-     &  "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted_1604.nc"
+     &  "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama1_HYCOM_extracted_1604.nc"
+!      character(len=*), parameter :: OCEAN_FILE  = &
+!     &  "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted_1604.nc"
 
 #ifdef EXPT_9X
 ! ----- HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to present) -----
