@@ -414,7 +414,7 @@
       
 ! --- Write NetCDF file ------------------------
       
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
+      write(*,*) "WRITE ", NCNAME," to ", trim( OUT_FILE )
       call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
       call check( nf90_inq_varid(ncid, NCNAME, var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start1D, count = count1D) )
@@ -445,7 +445,7 @@
       
 ! --- Write NetCDF file ------------------------
       
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
+      write(*,*) "WRITE ", NCNAME," to ", trim( OUT_FILE )
       call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
       call check( nf90_inq_varid(ncid, NCNAME, var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start2D, count = count2D) )
@@ -476,7 +476,7 @@
       
 ! --- Write NetCDF file ------------------------
       
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
+      write(*,*) "WRITE ", NCNAME," to ", trim( OUT_FILE )
       call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
       call check( nf90_inq_varid(ncid, NCNAME, var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -507,7 +507,7 @@
       
 ! --- Write NetCDF file ------------------------
       
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
+      write(*,*) "WRITE ", NCNAME," to ", trim( OUT_FILE )
       call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
       call check( nf90_inq_varid(ncid, NCNAME, var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start4D, count = count4D) )
