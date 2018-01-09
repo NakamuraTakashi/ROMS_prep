@@ -19,11 +19,12 @@
       character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama1_grd_v10.nc"
 
       integer, parameter :: N_Param = 7
-      character(256) :: GRIB_prefix(2)  =  (/                  &
-     &   "D:/DSJRA-55/Hist/Daily/fcst_surf/199609/fcst_surf  " &
-     &  ,"D:/DSJRA-55/Hist/Daily/fcst_phy2m/199609/fcst_phy2m" &
-     &  /)
-!      character(len=*), parameter :: GRIB_LL = "D:/DSJRA-55/Lambert5km_latlon.dat"
+      character(len=*), parameter :: GRIB_FCST_SURF_prefix  =  &
+     &   "D:/DSJRA-55/Hist/Daily/fcst_surf/199609/fcst_surf"
+      character(len=*), parameter :: GRIB_FCST_PHY2M_prefix =  &
+     &   "D:/DSJRA-55/Hist/Daily/fcst_phy2m/199609/fcst_phy2m"
+     
+      character(len=*), parameter :: GRIB_LL = "D:/DSJRA-55/Consts/Lambert5km_latlon.dat"
       
       character(len=*), parameter :: OUT_prefix  = "output/Yaeyama1_frc_DSJRA55_"
       
@@ -41,37 +42,48 @@
       character(256) :: GRIB_FILE
       character(256) :: OUT_FILE(N_Param)
       
-      character(256) :: GRIB_NAME(N_Param) = (/   &
-     &   "t   "                                   &
-     &  ,"10u "                                   &
-     &  ,"10v "                                   &
-     &  ,"t   "                                   & !!!!!!!!!!!!!!!!湿度要検討shortName がunknown
-     &  ,"msl "                                   &
-     &  ,"tcc "                                   &
-     &  ,"mtpf"                                   &
-     &  /)
+!      character(256) :: GRIB_NAME(N_Param) = (/   &
+!     &   "10u "                                   &
+!     &  ,"10v "                                   &
+!     &  ,"t   "                                   &
+!     &  ,"t   "                                   & !!!!!!!!!!!!!!!!湿度要検討shortName がunknown
+!     &  ,"msl "                                   &
+!     &  ,"tcc "                                   &
+!     &  ,"mtpf"                                   &
+!     &  /)
+      integer, parameter :: GRIB_NAME(3,N_Param) = reshape ((/   &
+!     productDefinitionTemplateNumber, parameterCategory, parameterNumber
+     &    0, 2, 2          &  ! 10 metre U wind component
+     &  , 0, 2, 3          &  ! 10 metre V wind component
+     &  , 0, 0, 0          &  ! air_temperature
+     &  , 0, 0, 7          &  ! 露点差/deficit (K)
+     &  , 0, 3, 0          &  ! Surface pressure
+     &  , 0, 6, 1          &  ! Total Cloud Cover
+     &  , 0, 1, 52         &  ! Total precipitation rate  (kg m-2 s-1)
+     &  /), (/3, N_Param/))
+     
       character(256) :: NC_NAME(N_Param) = (/     &
-     &   "Tair "                                  &
-     &  ,"Uwind"                                  &
+     &   "Uwind"                                  &
      &  ,"Vwind"                                  &
+     &  ,"Tair "                                  &
      &  ,"Qair "                                  &
      &  ,"Pair "                                  &
      &  ,"cloud"                                  &
      &  ,"rain "                                  &
      &  /)
       character(256) :: NC_LNAME(N_Param) = (/    &
-     &   "surface air temperature      "          &
-     &  ,"surface u-wind component     "          &
+     &   "surface u-wind component     "          &
      &  ,"surface v-wind component     "          &
+     &  ,"surface air temperature      "          &
      &  ,"surface air relative humidity"          &
      &  ,"surface air pressure         "          &
      &  ,"cloud fraction               "          &
      &  ,"rain fall rate               "          &
      &  /)
       character(256) :: NC_UNIT(N_Param) = (/     &
-     &   "Celsius                  "              &
+     &   "meter second-1           "              &
      &  ,"meter second-1           "              &
-     &  ,"meter second-1           "              &
+     &  ,"Celsius                  "              &
      &  ,"percentage               "              &
      &  ,"millibar                 "              &
      &  ,"0 to 1                   "              &
@@ -86,8 +98,12 @@
       
       real(8), allocatable :: out_data(:,:) ! output forcing data
            
-      real(8), allocatable :: lat(:), lon(:)
+      integer :: Im, Jm
+!      integer, parameter :: Im = 721
+!      integer, parameter :: Jm = 577
+      real(8), allocatable :: lat(:, :), lon(:, :)
       real(8), allocatable :: grib_data(:, :)
+!      real(8) :: grib_data(Im,Jm)
       real(8) :: time(1)
       integer :: start1D(1), count1D(1)
       integer :: start3D(3), count3D(3)
@@ -104,16 +120,21 @@
       
       integer :: ncid,var_id
       integer :: N_xi_rho, N_eta_rho
-      integer :: Im, Jm
+!      integer :: Im, Jm
       
       integer :: dimids(3)
       integer :: xi_rho_dimid, eta_rho_dimid, time_dimid
       
       integer :: iparam
       integer :: ifile,idx,iret,igrib
+      integer :: stat
       integer :: istart, iend
       integer :: YYYYMMDD, hhmm
       real(8), allocatable :: values(:)
+      real :: bd
+      
+      integer, allocatable :: tmp(:)
+      integer :: itmp
 
 !---- Modify time-unit description ---------------------------------
       
@@ -147,37 +168,89 @@
       ! Close NetCDF file
       call check( nf90_close(ncid) )
       
-!---- Read JRA-55 GRIB1 file --------------------------------
+!---- Read DSJRA-55 GRIB2 file --------------------------------
 
       write (YYYY, "(I4.4)") Syear
       write (MM, "(I2.2)") Smonth
       GRIB_suffix(2:5)=YYYY
       GRIB_suffix(6:7)=MM
 
-      GRIB_FILE = trim(GRIB_prefix(1))//GRIB_suffix
+      GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
       !Open GRIB file
       write(*,*) "OPEN: ", trim( GRIB_FILE )
-      call codes_open_file(ifile, GRIB_FILE,'r')
+      call codes_open_file(ifile, GRIB_FILE,'r', stat)
+      write(*,*) "DEBUG1", ifile, stat
       call codes_new_from_file(ifile,igrib, iret)
-
-      ! Get dimension data
+      write(*,*) "DEBUG2", ifile, igrib, iret
+!
+!      ! Get dimension data
       call codes_get(igrib,'Ny', Jm)
       call codes_get(igrib,'Nx', Im)
-          
-      write(*,*) Im, Jm
+      write(*,*) Im,Jm
+!          
+      ! Allocate variable
+      allocate(values(Im*Jm))
+      allocate(lat(Im,Jm))
+      allocate(lon(Im,Jm))
+      allocate(grib_data(Im, Jm))
       
-!      ! Allocate variable
-!      allocate(lat(Jm))
-!      allocate(lon(Im))
+!      open(unit=21, file='lat.txt')
+!      open(unit=22, file='lon.txt')
       
-      call codes_get(igrib,'latitudeOfFirstGridPoint',lat)
-      call codes_get(igrib,'longitudeOfFirstGridPoint',lon)
-      write(50,*) lat
-      write(51,*) lon
+!      call codes_get(igrib,'latitudes', values)
+!      write(*,*) values(1)
+!      do i=1, Jm
+!        istart = 1 + Im*(i-1)
+!        iend   = Im*i
+!        lat(:,i) = values(istart:iend)
+!!        write(21,*) lat(:,i)
+!      end do
+!      call codes_get(igrib,'longitudes', values)
+!      write(*,*) values(1)
+!      do i=1, Jm
+!        istart = 1 + Im*(i-1)
+!        iend   = Im*i
+!        lon(:,i) = values(istart:iend)
+!!        write(22,*) lon(:,i)
+!      end do
+!
+!      write(*,*) lat(1,1), lon(1,1)
+!      write(*,*) lat(1,Jm), lon(1,Jm)
+!      write(*,*) lat(Im,1), lon(Im,1)
+!      write(*,*) lat(Im,Jm), lon(Im,Jm)
+      
+!      call codes_release(igrib)
       call codes_close_file(ifile)
       
-      allocate(values(Im*Jm))
-      allocate(grib_data(Im, Jm))
+
+       open(unit=20, file=GRIB_LL, action='read',                 &
+            & form='unformatted', access='direct', recl=4,        &
+            & CONVERT='BIG_ENDIAN', status='old')
+       do j=1, Jm
+         do i=1,Im
+           read(20, rec=i+Im*(j-1)) bd
+           lat(i,j) =dble(bd)
+!           write(*,*) i+Im*(j-1), lat(i,j)
+!            write(*,*) lat(i,j)
+         end do
+!         write(21,*) lat(:,j)
+       end do
+       do j=1, Jm
+         do i=1,Im
+           read(20, rec=Im*Jm+i+Im*(j-1)) bd
+           lon(i,j) = dble(bd)
+!           write(*,*) i+Im*(j-1), lat(i,j)
+         end do
+!         write(22,*) lon(:,j)
+       end do
+       close(20)
+!       close(21)
+!       close(22)
+      write(*,*) lat(1,1), lon(1,1)
+      write(*,*) lat(1,Jm), lon(1,Jm)
+      write(*,*) lat(Im,1), lon(Im,1)
+      write(*,*) lat(Im,Jm), lon(Im,Jm)
+      
       
 !---- Create the forcing netCDF file --------------------------------
 
@@ -225,17 +298,23 @@
         GRIB_suffix(8:9)=DD
         GRIB_suffix(10:11)=hh
       
-        GRIB_FILE = trim(GRIB_prefix(1))//GRIB_suffix
+        GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
         
         !Open GRIB file
         write(*,*) "OPEN: ", trim( GRIB_FILE )
-        call codes_open_file(ifile, GRIB_FILE,'r')
+        call codes_open_file(ifile, GRIB_FILE,'r', stat)
+        if (stat /= CODES_SUCCESS) then
+          write(*,*) "CANNOT OPEN: ", trim( GRIB_FILE )
+          exit
+        end if
         call codes_new_from_file(ifile,igrib, iret)
+        write(*,*) "DEBUG1", ifile,igrib, iret
         write(*,*) "READ: ", trim( GRIB_FILE )
         call codes_get(igrib,'validityDate',YYYYMMDD)
         write(*,*) 'validityDate=', YYYYMMDD
         call codes_get(igrib,'validityTime',hhmm)
         write(*,*) 'validityTime=', hhmm
+!        call codes_release(igrib)
         call codes_close_file(ifile) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         
         iyear  = YYYYMMDD/10000
@@ -253,24 +332,38 @@
         DO iparam=1,N_Param
         
           if(iparam==7) then !!! for rain (rain fall rate)
-            GRIB_FILE = trim(GRIB_prefix(2))//GRIB_suffix
+            GRIB_FILE = trim(GRIB_FCST_PHY2M_prefix)//GRIB_suffix
           else
-            GRIB_FILE = trim(GRIB_prefix(1))//GRIB_suffix
+            GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
           end if
           
           write(*,*) "READ: ", trim( GRIB_FILE )
-          call codes_index_create(idx,GRIB_FILE,'shortName')
+          call codes_index_create(idx,GRIB_FILE,'productDefinitionTemplateNumber,parameterCategory,parameterNumber')
+!          call codes_index_create(idx,GRIB_FILE,'parameterNumber')
       
-          call codes_index_select(idx,'shortName',GRIB_NAME(iparam))
+          call codes_index_get_size(idx,'parameterNumber',itmp)
+          allocate(tmp(itmp))
+          
+          call codes_index_get(idx,'parameterNumber',tmp)
+          write(*,*) 'parameterNumber',tmp, itmp
+          
+          call codes_index_select(idx,'productDefinitionTemplateNumber',GRIB_NAME(1,iparam),stat)
+          write(*,*) "DEBUG2.0", idx,stat, iparam, GRIB_NAME(:,iparam)
+          call codes_index_select(idx,'parameterCategory',GRIB_NAME(2,iparam),stat)
+          write(*,*) "DEBUG2.1", idx,stat, iparam, GRIB_NAME(:,iparam)
+          call codes_index_select(idx,'parameterNumber',GRIB_NAME(3,iparam),stat)
+          write(*,*) "DEBUG2.2", idx,stat, iparam, GRIB_NAME(:,iparam)
           call codes_new_from_index(idx,igrib, iret)
+          write(*,*) "DEBUG3", idx,igrib, iret
           call codes_get(igrib,'values', values)
+          write(*,*) "DEBUG4", idx,igrib, iret
           do i=1, Jm
             istart = 1 + Im*(i-1)
             iend   = Im*i
             grib_data(:,i) = values(istart:iend)
           end do
           
-          if(iparam==1) then  !!! for Tair
+          if(iparam==3) then  !!! for Tair
             grib_data = grib_data - 273.15d0  ! K -> degC
           end if
           if(iparam==5) then !!! for Pair (Pressure)
@@ -281,15 +374,15 @@
           end if
           if(iparam==7) then !!! for rain (rain fall rate)
             grib_data = grib_data   ! kg m-2 s-1
-            time(1) = time(1)+0.5d0/24.0d0  !!! minus 0.5 hours
+            time(1) = time(1)+0.5d0/24.0d0  !!! + 0.5 hours
           end if
           
           write(*,*) time(1),TIME_ATT
           
           write(*,*) 'Linear Interporation: ',trim( NC_NAME(iparam) )
-          call LinearInterpolation2D_grid2(Im, Jm, lon, lat               &
-     &                    , grib_data, -9999.0d0, 9999.0d0                &
-     &                    , N_xi_rho, N_eta_rho, lon_rho, lat_rho, out_data )
+!          call LinearInterpolation2D_grid2(Im, Jm, lon, lat               &
+!     &                    , grib_data, -9999.0d0, 9999.0d0                &
+!     &                    , N_xi_rho, N_eta_rho, lon_rho, lat_rho, out_data )
           
           start1D = (/ itime /)
           count1D = (/ 1 /)
@@ -327,9 +420,9 @@
 !---- LOOP1 END --------------------------------
 
       deallocate(values)
-      deallocate(lat)
-      deallocate(lon)
-      deallocate(grib_data)
+!      deallocate(lat)
+!      deallocate(lon)
+!      deallocate(grib_data)
       
       write(*,*) 'FINISH!!'
 

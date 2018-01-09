@@ -19,10 +19,10 @@
       character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.04_grd_v1.nc"
 
       integer, parameter :: N_Param = 7
-      character(256) :: GRIB_prefix(2)  =  (/                       &
-     &   "D:/JRA-55/Hist/Daily/fcst_surf125/201707/fcst_surf125  " &
-     &  ,"D:/JRA-55/Hist/Daily/fcst_phy2m125/201707/fcst_phy2m125" &
-     &  /)
+      character(len=*), parameter :: GRIB_FCST_SURF_prefix  =  &
+     &   "D:/JRA-55/Hist/Daily/fcst_surf125/201707/fcst_surf125"
+      character(len=*), parameter :: GRIB_FCST_PHY2M_prefix =  &
+     &   "D:/JRA-55/Hist/Daily/fcst_phy2m125/201707/fcst_phy2m125"
       
       character(len=*), parameter :: OUT_prefix  = "output/CT_0.04_frc_JRA55_"
       
@@ -41,36 +41,36 @@
       character(256) :: OUT_FILE(N_Param)
       
       character(256) :: GRIB_NAME(N_Param) = (/   &
-     &   "2t      "                               &
-     &  ,"10u     "                               &
+     &   "10u     "                               &
      &  ,"10v     "                               &
+     &  ,"2t      "                               &
      &  ,"2r      "                               &
      &  ,"msl     "                               &
      &  ,"tcc     "                               &
      &  ,"tpratsfc"                               &
      &  /)
       character(256) :: NC_NAME(N_Param) = (/     &
-     &   "Tair "                                  &
-     &  ,"Uwind"                                  &
+     &   "Uwind"                                  &
      &  ,"Vwind"                                  &
+     &  ,"Tair "                                  &
      &  ,"Qair "                                  &
      &  ,"Pair "                                  &
      &  ,"cloud"                                  &
      &  ,"rain "                                  &
      &  /)
       character(256) :: NC_LNAME(N_Param) = (/    &
-     &   "surface air temperature      "          &
-     &  ,"surface u-wind component     "          &
+     &   "surface u-wind component     "          &
      &  ,"surface v-wind component     "          &
+     &  ,"surface air temperature      "          &
      &  ,"surface air relative humidity"          &
      &  ,"surface air pressure         "          &
      &  ,"cloud fraction               "          &
      &  ,"rain fall rate               "          &
      &  /)
       character(256) :: NC_UNIT(N_Param) = (/     &
-     &   "Celsius                  "              &
+     &   "meter second-1           "              &
      &  ,"meter second-1           "              &
-     &  ,"meter second-1           "              &
+     &  ,"Celsius                  "              &
      &  ,"percentage               "              &
      &  ,"millibar                 "              &
      &  ,"0 to 1                   "              &
@@ -110,6 +110,7 @@
       
       integer :: iparam
       integer :: ifile,idx,iret,igrib
+      integer :: stat
       integer :: istart, iend
       integer :: YYYYMMDD, hhmm
       real(8), allocatable :: values(:)
@@ -153,7 +154,7 @@
       GRIB_suffix(2:5)=YYYY
       GRIB_suffix(6:7)=MM
 
-      GRIB_FILE = trim(GRIB_prefix(1))//GRIB_suffix
+      GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
       !Open GRIB file
       write(*,*) "OPEN: ", trim( GRIB_FILE )
       call codes_open_file(ifile, GRIB_FILE,'r')
@@ -223,11 +224,15 @@
         GRIB_suffix(8:9)=DD
         GRIB_suffix(10:11)=hh
       
-        GRIB_FILE = trim(GRIB_prefix(1))//GRIB_suffix
+        GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
         
         !Open GRIB file
         write(*,*) "OPEN: ", trim( GRIB_FILE )
-        call codes_open_file(ifile, GRIB_FILE,'r')
+        call codes_open_file(ifile, GRIB_FILE,'r', stat)
+        if (stat /= CODES_SUCCESS) then
+          write(*,*) "CANNOT OPEN: ", trim( GRIB_FILE )
+          exit
+        end if
         call codes_new_from_file(ifile,igrib, iret)
         write(*,*) "READ: ", trim( GRIB_FILE )
         call codes_get(igrib,'validityDate',YYYYMMDD)
@@ -251,9 +256,9 @@
         DO iparam=1,N_Param
         
           if(iparam==7) then !!! for rain (rain fall rate)
-            GRIB_FILE = trim(GRIB_prefix(2))//GRIB_suffix
+            GRIB_FILE = trim(GRIB_FCST_PHY2M_prefix)//GRIB_suffix
           else
-            GRIB_FILE = trim(GRIB_prefix(1))//GRIB_suffix
+            GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
           end if
           
           write(*,*) "READ: ", trim( GRIB_FILE )
@@ -268,7 +273,7 @@
             grib_data(:,i) = values(istart:iend)
           end do
           
-          if(iparam==1) then  !!! for Tair
+          if(iparam==3) then  !!! for Tair
             grib_data = grib_data - 273.15d0  ! K -> degC
           end if
           if(iparam==5) then !!! for Pair (Pressure)
@@ -280,7 +285,7 @@
           if(iparam==7) then !!! for rain (rain fall rate)
             grib_data = grib_data*1.0d0/86400.0d0  ! mm day-1 -> kg m-2 s-1
                                  !!! 1mm x 1m x 1m = 0.1x100x100 cm3 = 1000 cm3 = 1L = 1kg
-            time(1) = time(1)+1.5d0/24.0d0  !!! minus 1.5 hours
+            time(1) = time(1)+1.5d0/24.0d0  !!! + 1.5 hours
           end if
           
           write(*,*) time(1),TIME_ATT
