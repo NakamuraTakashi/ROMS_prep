@@ -180,7 +180,7 @@
       write(*,*) "OPEN: ", trim( GRIB_FILE )
       call codes_open_file(ifile, GRIB_FILE,'r', stat)
       write(*,*) "DEBUG1", ifile, stat
-      call codes_new_from_file(ifile,igrib, iret)
+      call codes_grib_new_from_file(ifile,igrib, iret)
       write(*,*) "DEBUG2", ifile, igrib, iret
 !
 !      ! Get dimension data
@@ -219,7 +219,7 @@
 !      write(*,*) lat(Im,1), lon(Im,1)
 !      write(*,*) lat(Im,Jm), lon(Im,Jm)
       
-!      call codes_release(igrib)
+      call codes_release(igrib)
       call codes_close_file(ifile)
       
 
@@ -307,14 +307,14 @@
           write(*,*) "CANNOT OPEN: ", trim( GRIB_FILE )
           exit
         end if
-        call codes_new_from_file(ifile,igrib, iret)
+        call codes_grib_new_from_file(ifile,igrib, iret)
         write(*,*) "DEBUG1", ifile,igrib, iret
         write(*,*) "READ: ", trim( GRIB_FILE )
         call codes_get(igrib,'validityDate',YYYYMMDD)
         write(*,*) 'validityDate=', YYYYMMDD
         call codes_get(igrib,'validityTime',hhmm)
         write(*,*) 'validityTime=', hhmm
-!        call codes_release(igrib)
+        call codes_release(igrib)
         call codes_close_file(ifile) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         
         iyear  = YYYYMMDD/10000

@@ -158,7 +158,7 @@
       !Open GRIB file
       write(*,*) "OPEN: ", trim( GRIB_FILE )
       call codes_open_file(ifile, GRIB_FILE,'r')
-      call codes_new_from_file(ifile,igrib, iret)
+      call codes_grib_new_from_file(ifile,igrib, iret)
 
       ! Get dimension data
       call codes_get(igrib,'Nj', Jm)
@@ -173,6 +173,7 @@
       call codes_get(igrib,'distinctLatitudes',lat)
       call codes_get(igrib,'distinctLongitudes',lon)
       
+      call codes_release(igrib)
       call codes_close_file(ifile)
       
       allocate(values(Im*Jm))
@@ -233,12 +234,13 @@
           write(*,*) "CANNOT OPEN: ", trim( GRIB_FILE )
           exit
         end if
-        call codes_new_from_file(ifile,igrib, iret)
+        call codes_grib_new_from_file(ifile,igrib, iret)
         write(*,*) "READ: ", trim( GRIB_FILE )
         call codes_get(igrib,'validityDate',YYYYMMDD)
         write(*,*) 'validityDate=', YYYYMMDD
         call codes_get(igrib,'validityTime',hhmm)
         write(*,*) 'validityTime=', hhmm
+        call codes_release(igrib)
         call codes_close_file(ifile) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         
         iyear  = YYYYMMDD/10000
