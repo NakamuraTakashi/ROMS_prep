@@ -48,8 +48,8 @@
 !     productDefinitionTemplateNumber, parameterCategory, parameterNumber
      &    0, 2, 2          &  ! 10 metre U wind component
      &  , 0, 2, 3          &  ! 10 metre V wind component
-     &  , 0, 0, 0          &  ! air_temperature
-     &  , 0, 0, 7          &  ! dew-point deficit (K)
+     &  , 0, 0, 0          &  ! Air temperature
+     &  , 0, 0, 7          &  ! Dewpoint depression (or deficit) (K)
      &  , 0, 3, 0          &  ! Surface pressure
      &  , 0, 6, 1          &  ! Total Cloud Cover
      &  , 8, 1, 52         &  ! Total precipitation rate  (kg m-2 s-1)
@@ -98,6 +98,7 @@
 !      real(8), allocatable :: grib_data(:, :)
       real(8), allocatable :: grib_data(:,:, :)
 !      real(8) :: grib_data(Im,Jm)
+      real(8) :: t
       real(8) :: time(1)
       integer :: start1D(1), count1D(1)
       integer :: start3D(3), count3D(3)
@@ -184,7 +185,7 @@
       allocate(values(Im*Jm))
       allocate(lat(Im,Jm))
       allocate(lon(Im,Jm))
-      allocate(grib_data(N_Param,Im, Jm))
+      allocate(grib_data(N_Param, Im, Jm))
       
 !      open(unit=21, file='lat.txt')
 !      open(unit=22, file='lon.txt')
@@ -318,10 +319,10 @@
         imin   = hhmm-100*ihour
         call ndays(imonth, iday, iyear, Rmonth, Rday, Ryear, idays)
         
-        time(1) = dble(idays)+dble(ihour)/24.0d0+dble(imin)/1440.0d0
+        t = dble(idays)+dble(ihour)/24.0d0+dble(imin)/1440.0d0
         
 
-!  ----   LOOP2 START --------------------------------
+!  ----   LOOP2.1 START --------------------------------
         DO iparam=1,N_Param
         
           if(iparam==7) then !!! for rain (rain fall rate)
@@ -341,29 +342,36 @@
           do i=1, Jm
             istart = 1 + Im*(i-1)
             iend   = Im*i
-            grib_data(:,i) = values(istart:iend)
+            grib_data(iparam,:,i) = values(istart:iend)
           end do
+        END DO
+!  ---- LOOP2.1 END --------------------------------
+      !!! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors 
           
-          if(iparam==3) then  !!! for Tair
-            grib_data = grib_data - 273.15d0  ! K -> degC
-          end if
-          if(iparam==5) then !!! for Pair (Pressure)
-            grib_data = grib_data*0.01  ! Pa -> millibar (= hPa)
-          end if
-          if(iparam==6) then !!! for cloud (cloud fraction)
-            grib_data = grib_data*0.01  ! percent -> ratio(0 to 1)
-          end if
-          if(iparam==7) then !!! for rain (rain fall rate)
-            grib_data = grib_data   ! kg m-2 s-1
-            time(1) = time(1)+0.5d0/24.0d0  !!! + 0.5 hours
-          end if
+      !!! for Tair
+        grib_data(3,:,:) = grib_data(3,:,:) - 273.15d0  ! K -> degC
+      !!! for Qair: convert Dewpoint depression (K) to Relative humidity (%)
+        grib_data(3,:,:) = grib_data(3,:,:) - 273.15d0  ! K -> degC
+      !!! for Pair (Pressure)
+        grib_data(5,:,:) = grib_data(5,:,:)*0.01  ! Pa -> millibar (= hPa)
+      !!! for cloud (cloud fraction)
+        grib_data(6,:,:) = grib_data(6,:,:)*0.01  ! percent -> ratio(0 to 1)
+     
           
-          write(*,*) time(1),TIME_ATT
-          
+!  ----   LOOP2.2 START --------------------------------
+        DO iparam=1,N_Param
+        
           write(*,*) 'Linear Interporation: ',trim( NC_NAME(iparam) )
 !          call LinearInterpolation2D_grid2(Im, Jm, lon, lat               &
-!     &                    , grib_data, -9999.0d0, 9999.0d0                &
+!     &                    , grib_data(iparam,:,:), -9999.0d0, 9999.0d0    &
 !     &                    , N_xi_rho, N_eta_rho, lon_rho, lat_rho, out_data )
+
+          if(iparam==7) then !!! for rain (rain fall rate)
+            time(1) = t+0.5d0/24.0d0  !!! + 0.5 hours
+          else
+            time(1) = t
+          end if
+          write(*,*) time(1),TIME_ATT
           
           start1D = (/ itime /)
           count1D = (/ 1 /)
@@ -392,7 +400,7 @@
           call codes_index_release(idx)
           
         END DO
-!  ---- LOOP2 END --------------------------------
+!  ---- LOOP2.2 END --------------------------------
         call codes_release(igrib)
 
         itime = itime + 1
