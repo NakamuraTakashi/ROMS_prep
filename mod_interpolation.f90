@@ -135,6 +135,107 @@
       RETURN
     END SUBROUTINE LinearInterpolation2D_grid2
     
+! **********************************************************************
+
+    SUBROUTINE LinearInterpolation2D_grid3(Nx, Ny, X, Y, V, vmin, vmax, Im, Jm, Xgrd, Ygrd, Vgrd)
+
+      implicit none
+! input parameters
+      integer, intent( in) :: Nx, Ny
+      real(8), intent( in) :: X(Nx,Ny), Y(Nx,Ny)
+      real(8), intent( in) :: V(Nx,Ny)
+      real(8), intent( in) :: vmin, vmax
+      integer, intent( in) :: Im, Jm
+      real(8), intent( in) :: Xgrd(Im,Jm), Ygrd(Im,Jm)
+! output parameters
+      real(8), intent(out) :: Vgrd(Im,Jm)
+      
+      real(8) :: Vnew(Nx,Ny)
+      real(8) :: mask(Nx,Ny)
+      real(8) :: masksum
+      integer :: i,j,k,loop
+      integer :: loopflag
+      
+      Vnew(:,:)=V(:,:)
+      
+!$omp parallel
+!$omp do private(i,j)
+      do i=1,Nx
+        do j=1,Ny
+          if( (vmin > Vnew(i,j)) .or. (Vnew(i,j) > vmax) ) then
+            mask(i,j)=0.0d0
+          else
+            mask(i,j)=1.0d0
+          endif
+        enddo
+      enddo
+!$omp end do
+!$omp end parallel
+
+      do
+        loopflag = 0
+
+        do i=2,Nx-1
+          do j=2,Ny-1
+            if( mask(i,j)==0.0d0 ) then
+              masksum = mask(i-1,j)+mask(i+1,j)+mask(i,j-1)+mask(i,j+1)
+              if(masksum == 0.0d0) then
+                loopflag = 1
+              else
+                Vnew(i,j) =( mask(i-1,j)*Vnew(i-1,j)                   &
+     &                      +mask(i+1,j)*Vnew(i+1,j)                   &
+     &                      +mask(i,j-1)*Vnew(i,j-1)                   &
+     &                      +mask(i,j+1)*Vnew(i,j+1) )                 &
+     &                     /masksum
+                mask(i,j) = 1.0d0
+              endif
+            endif
+          enddo
+        enddo
+        if(loopflag == 0) exit
+      enddo
+
+!$omp parallel
+!$omp do private(i)
+      do i=1,Nx
+        if( mask(i,1)==0.0d0 ) then
+          Vnew(i,1) = Vnew(i,2)
+        endif
+      enddo
+!$omp end do
+!$omp do private(i)
+      do i=1,Nx
+        if( mask(i,Ny)==0.0d0 ) then
+          Vnew(i,Ny) = Vnew(i,Ny-1)
+        endif
+      enddo
+!$omp end do
+!$omp do private(j)
+      do j=1,Ny
+        if( mask(1,j)==0.0d0 ) then
+          Vnew(1,j) = Vnew(2,j)
+        endif
+      enddo
+!$omp end do
+!$omp do private(j)
+      do j=1,Ny
+        if( mask(Nx,j)==0.0d0 ) then
+          Vnew(Nx,j) = Vnew(Nx-1,j)
+        endif
+      enddo
+!$omp end do
+!$omp do private(i,j)
+      do i=1,Im
+        do j=1,Jm
+          call LinearInterpolation2D_point4(Nx, Ny, X, Y, Vnew, Xgrd(i,j), Ygrd(i,j), Vgrd(i,j))
+        enddo
+      enddo
+!$omp end do
+!$omp end parallel
+      
+      RETURN
+    END SUBROUTINE LinearInterpolation2D_grid3
+
 !!! **********************************************************************
 !!!  Linear interpolation on the 3D grid
 !!! **********************************************************************
@@ -482,6 +583,351 @@
      &    +V(iR,jT)* f * g
       RETURN
     END SUBROUTINE LinearInterpolation2D_point
+    
+! **********************************************************************
+
+    SUBROUTINE LinearInterpolation2D_point2(Nx, Ny, X, Y, V, xi, yi, vi)
+
+      implicit none
+! input parameters
+      integer, intent( in) :: Nx, Ny
+      real(8), intent( in) :: X(Nx,Ny), Y(Nx,Ny)
+      real(8), intent( in) :: V(Nx,Ny)
+      real(8), intent( in) :: xi, yi
+! output parameters
+      real(8), intent(out) :: vi
+     
+      integer :: i,j,k
+      integer :: iL, iR, jB, jT
+      real(8) :: xL, xR, yB, yT
+      real(8) :: f,g
+      integer :: in(3), jn(3)
+      real(8) :: d(3)
+      real(8) :: dtmp
+      real(8) :: sum_w
+      
+!       vLT              vRT
+!      YT |-------------|
+!         |             |
+!         |             |
+!         | f           |
+!         |---* (xi,yi) |
+!         |   |g        |
+!         |   |         |
+!      YB |-------------|
+!     vLB XL           XR vRB
+      
+      d = sqrt( (X(1,1)-X(Nx,Ny))**2.0d0+(Y(1,1)-Y(Nx,Ny))**2.0d0 )
+! Check the cornar points.
+      do j=1,Ny
+        do i=1,Nx
+          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
+          if( dtmp < 1.0d-4) then
+            vi = V(i,j)
+            RETURN
+          else if( dtmp < d(1)) then
+            d(3) = d(2)
+            d(2) = d(1)
+            d(1) = dtmp
+            in(3) = in(2)
+            in(2) = in(1)
+            in(1) = i
+            jn(3) = jn(2)
+            jn(2) = jn(1)
+            jn(1) = j
+          else if( dtmp < d(2)) then
+            d(3) = d(2)
+            d(2) = dtmp
+            in(3) = in(2)
+            in(2) = i
+            jn(3) = jn(2)
+            jn(2) = j
+          else if( dtmp < d(3)) then
+            d(3) = dtmp
+            in(3) = i
+            jn(3) = j
+          end if
+        enddo
+      enddo
+      
+      sum_w = 1.0d0/d(1)+1.0d0/d(2)+1.0d0/d(3)
+      
+      vi =( V(in(1),jn(1))*1.0d0/d(1)    &
+     &     +V(in(2),jn(2))*1.0d0/d(2)    &
+     &     +V(in(3),jn(3))*1.0d0/d(3) )/sum_w
+
+!      vi = V(in(1),jn(1))
+      
+    END SUBROUTINE LinearInterpolation2D_point2
+    
+! **********************************************************************
+
+    SUBROUTINE LinearInterpolation2D_point3(Nx, Ny, X, Y, V, xi, yi, vi)
+
+      implicit none
+! input parameters
+      integer, intent( in) :: Nx, Ny
+      real(8), intent( in) :: X(Nx,Ny), Y(Nx,Ny)
+      real(8), intent( in) :: V(Nx,Ny)
+      real(8), intent( in) :: xi, yi
+! output parameters
+      real(8), intent(out) :: vi
+     
+      real(8), parameter :: dmin  = 1.0d-4
+      integer :: istep1
+      integer :: istep2
+      integer :: i,j
+      integer :: is, ie, js, je
+
+      integer :: in(3), jn(3)
+      integer :: ic, jc
+      real(8) :: d(3)
+      real(8) :: dtmp
+      real(8) :: sum_w
+      
+!       vLT              vRT
+!      YT |-------------|
+!         |             |
+!         |             |
+!         | f           |
+!         |---* (xi,yi) |
+!         |   |g        |
+!         |   |         |
+!      YB |-------------|
+!     vLB XL           XR vRB
+      
+      d = sqrt( (X(1,1)-X(Nx,Ny))**2.0d0+(Y(1,1)-Y(Nx,Ny))**2.0d0 )
+      istep1 = max(Nx,Ny)/20
+      istep2 = max(10,istep1/10)
+
+      js = max(1,istep1/2)
+      is = max(1,istep1/2)
+      do j=js, Ny, istep1
+        do i=is, Nx, istep1
+          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
+          if( dtmp < dmin ) then
+            vi = V(i,j)
+            RETURN
+          else if( dtmp < d(1)) then
+            d(1) = dtmp
+            ic = i
+            jc = j
+          end if
+        enddo
+      enddo
+      
+      js = max(1,jc-istep1/2)
+      is = max(1,ic-istep1/2)
+      je = min(Ny,jc+istep1/2)
+      ie = min(Nx,ic+istep1/2)
+      
+      do j=js, je, istep2
+        do i=is, ie, istep2
+          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
+          if( dtmp < dmin ) then
+            vi = V(i,j)
+            RETURN
+          else if( dtmp < d(1)) then
+            d(1) = dtmp
+            ic = i
+            jc = j
+          end if
+        enddo
+      enddo
+      
+      js = max(1,jc-istep1/2)
+      is = max(1,ic-istep1/2)
+      je = min(Ny,jc+istep1/2)
+      ie = min(Nx,ic+istep1/2)
+      
+      do j=js, je
+        do i=is, ie
+          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
+          if( dtmp < 1.0d-4) then
+            vi = V(i,j)
+            RETURN
+          else if( dtmp < d(1)) then
+            d(3) = d(2)
+            d(2) = d(1)
+            d(1) = dtmp
+            in(3) = in(2)
+            in(2) = in(1)
+            in(1) = i
+            jn(3) = jn(2)
+            jn(2) = jn(1)
+            jn(1) = j
+          else if( dtmp < d(2)) then
+            d(3) = d(2)
+            d(2) = dtmp
+            in(3) = in(2)
+            in(2) = i
+            jn(3) = jn(2)
+            jn(2) = j
+          else if( dtmp < d(3)) then
+            d(3) = dtmp
+            in(3) = i
+            jn(3) = j
+          end if
+        enddo
+      enddo
+      
+      sum_w = 1.0d0/d(1)+1.0d0/d(2)+1.0d0/d(3)
+      
+      vi =( V(in(1),jn(1))*1.0d0/d(1)    &
+     &     +V(in(2),jn(2))*1.0d0/d(2)    &
+     &     +V(in(3),jn(3))*1.0d0/d(3) )/sum_w
+
+!      vi = V(in(1),jn(1))
+      
+    END SUBROUTINE LinearInterpolation2D_point3
+! **********************************************************************
+
+    SUBROUTINE LinearInterpolation2D_point4(Nx, Ny, X, Y, V, xi, yi, vi)
+
+      implicit none
+! input parameters
+      integer, intent( in) :: Nx, Ny
+      real(8), intent( in) :: X(Nx,Ny), Y(Nx,Ny)
+      real(8), intent( in) :: V(Nx,Ny)
+      real(8), intent( in) :: xi, yi
+! output parameters
+      real(8), intent(out) :: vi
+     
+      real(8), parameter :: dmin  = 1.0d-4
+      integer :: istep1
+      integer :: istep2
+      integer :: i,j
+      integer :: is, ie, js, je
+
+      integer :: in(4), jn(4)
+      integer :: ic, jc
+      real(8) :: d(4)
+      real(8) :: dtmp
+      real(8) :: sum_w
+      
+!       vLT              vRT
+!      YT |-------------|
+!         |             |
+!         |             |
+!         | f           |
+!         |---* (xi,yi) |
+!         |   |g        |
+!         |   |         |
+!      YB |-------------|
+!     vLB XL           XR vRB
+      
+      d = sqrt( (X(1,1)-X(Nx,Ny))**2.0d0+(Y(1,1)-Y(Nx,Ny))**2.0d0 )
+      istep1 = max(Nx,Ny)/20
+      istep2 = max(15,istep1/10)
+
+      js = max(1,istep1/2)
+      is = max(1,istep1/2)
+      do j=js, Ny, istep1
+        do i=is, Nx, istep1
+          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
+          if( dtmp < dmin ) then
+            vi = V(i,j)
+            RETURN
+          else if( dtmp < d(1)) then
+            d(1) = dtmp
+            ic = i
+            jc = j
+          end if
+        enddo
+      enddo
+      
+      js = max(1,jc-istep1/2)
+      is = max(1,ic-istep1/2)
+      je = min(Ny,jc+istep1/2)
+      ie = min(Nx,ic+istep1/2)
+      
+      do j=js, je, istep2
+        do i=is, ie, istep2
+          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
+          if( dtmp < dmin ) then
+            vi = V(i,j)
+            RETURN
+          else if( dtmp < d(1)) then
+            d(1) = dtmp
+            ic = i
+            jc = j
+          end if
+        enddo
+      enddo
+      
+      js = max(1,jc-istep1/2)
+      is = max(1,ic-istep1/2)
+      je = min(Ny,jc+istep1/2)
+      ie = min(Nx,ic+istep1/2)
+      
+      do j=js, je
+        do i=is, ie
+          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
+          if( dtmp < 1.0d-4) then
+            vi = V(i,j)
+            RETURN
+          else if( dtmp < d(1)) then
+            d(4) = d(3)
+            d(3) = d(2)
+            d(2) = d(1)
+            d(1) = dtmp
+            in(4) = in(3)
+            in(3) = in(2)
+            in(2) = in(1)
+            in(1) = i
+            jn(4) = jn(3)
+            jn(3) = jn(2)
+            jn(2) = jn(1)
+            jn(1) = j
+          else if( dtmp < d(2)) then
+            d(4) = d(3)
+            d(3) = d(2)
+            d(2) = dtmp
+            in(4) = in(3)
+            in(3) = in(2)
+            in(2) = i
+            jn(4) = jn(3)
+            jn(3) = jn(2)
+            jn(2) = j
+          else if( dtmp < d(3)) then
+            d(4) = d(3)
+            d(3) = dtmp
+            in(4) = in(3)
+            in(3) = i
+            jn(4) = jn(3)
+            jn(3) = j
+          else if( dtmp < d(4)) then
+            d(4) = dtmp
+            in(4) = i
+            jn(4) = j
+          end if
+        enddo
+      enddo
+      
+!      sum_w = 1.0d0/d(1)+1.0d0/d(2)+1.0d0/d(3)+1.0d0/d(4)
+!      
+!      vi =( V(in(1),jn(1))*1.0d0/d(1)    &
+!     &     +V(in(2),jn(2))*1.0d0/d(2)    &
+!     &     +V(in(3),jn(3))*1.0d0/d(3)    &
+!     &     +V(in(4),jn(4))*1.0d0/d(4) )/sum_w
+
+      sum_w = 1.0d0/d(1)/d(1)+1.0d0/d(2)/d(2)+1.0d0/d(3)/d(3)+1.0d0/d(4)/d(4)
+      
+      vi =( V(in(1),jn(1))*1.0d0/d(1)/d(1)    &
+     &     +V(in(2),jn(2))*1.0d0/d(2)/d(2)    &
+     &     +V(in(3),jn(3))*1.0d0/d(3)/d(3)    &
+     &     +V(in(4),jn(4))*1.0d0/d(4)/d(4) )/sum_w
+     
+!      sum_w = d(1)*d(1)+d(2)*d(2)+d(3)*d(3)+d(4)*d(4)
+!      
+!      vi =( V(in(1),jn(1))*(sum_w-d(1)*d(1))    &
+!     &     +V(in(2),jn(2))*(sum_w-d(2)*d(2))    &
+!     &     +V(in(3),jn(3))*(sum_w-d(3)*d(3))    &
+!     &     +V(in(4),jn(4))*(sum_w-d(4)*d(4)))/sum_w
+
+!      vi = V(in(1),jn(1))
+      
+    END SUBROUTINE LinearInterpolation2D_point4
     
 ! **********************************************************************
 

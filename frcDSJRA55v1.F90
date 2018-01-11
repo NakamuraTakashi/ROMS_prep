@@ -17,6 +17,8 @@
 
      ! NetCDF file     
       character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama1_grd_v10.nc"
+!      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama2_grd_v9.3.nc"
+!      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama3_grd_v9.nc"
 
       integer, parameter :: N_Param = 7
       character(len=*), parameter :: GRIB_FCST_SURF_dir  =  &
@@ -27,6 +29,8 @@
       character(len=*), parameter :: GRIB_LL = "D:/DSJRA-55/Consts/Lambert5km_latlon.dat"
       
       character(len=*), parameter :: OUT_prefix  = "output/Yaeyama1_frc_DSJRA55_"
+!      character(len=*), parameter :: OUT_prefix  = "output/Yaeyama2_frc_DSJRA55_"
+!      character(len=*), parameter :: OUT_prefix  = "output/Yaeyama3_frc_DSJRA55_"
       
       integer, parameter :: Ryear  = 2000   ! Reference year for NetCDF
       integer, parameter :: Rmonth = 1      ! Reference month for NetCDF
@@ -44,16 +48,26 @@
       character(256) :: GRIB_FILE
       character(256) :: OUT_FILE(N_Param)
       
-      integer, parameter :: GRIB_NAME(3,N_Param) = reshape ((/   &
-!     productDefinitionTemplateNumber, parameterCategory, parameterNumber
-     &    0, 2, 2          &  ! 10 metre U wind component
-     &  , 0, 2, 3          &  ! 10 metre V wind component
-     &  , 0, 0, 0          &  ! Air temperature
-     &  , 0, 0, 7          &  ! Dewpoint depression (or deficit) (K)
-     &  , 0, 3, 0          &  ! Surface pressure
-     &  , 0, 6, 1          &  ! Total Cloud Cover
-     &  , 8, 1, 52         &  ! Total precipitation rate  (kg m-2 s-1)
-     &  /), (/3, N_Param/))
+      integer, parameter :: GRIB_NUM(2,N_Param) = reshape ((/   &
+!     parameter  parameter
+!     Category  ,Number
+     &   2      ,2        &  ! 10 metre U wind component
+     &  ,2      ,3        &  ! 10 metre V wind component
+     &  ,0      ,0        &  ! Air temperature
+     &  ,0      ,7        &  ! Dewpoint depression (or deficit) (K)
+     &  ,3      ,0        &  ! Surface pressure
+     &  ,6      ,1        &  ! Total Cloud Cover
+     &  ,1      ,52       &  ! Total precipitation rate  (kg m-2 s-1)
+     &  /), (/2, N_Param/))
+      character(256) :: GRIB_NAME(N_Param) = (/   &
+     &   "10u    "                                &
+     &  ,"10v    "                                &
+     &  ,"t      "                                &
+     &  ,"unknown"                                &
+     &  ,"msl    "                                &
+     &  ,"tcc    "                                &
+     &  ,"mtpf   "                                &
+     &  /)
      
       character(256) :: NC_NAME(N_Param) = (/     &
      &   "Uwind"                                  &
@@ -86,18 +100,22 @@
      
       integer, parameter :: mode = 1           ! mode=1, linear intrtporation
 
+      real(8), parameter :: pi = 3.141592653589793d0
+
       real(8), allocatable :: lat_rho(:, :)
       real(8), allocatable :: lon_rho(:, :)
+      real(8), allocatable :: cosAu(:, :)
+      real(8), allocatable :: sinAu(:, :)
+      real(8), allocatable :: cosAv(:, :)
+      real(8), allocatable :: sinAv(:, :)
       
-      real(8), allocatable :: out_data(:,:) ! output forcing data
+      real(8), allocatable :: out_data(:,:,:) ! output forcing data
            
       integer :: Im, Jm
-!      integer, parameter :: Im = 721
-!      integer, parameter :: Jm = 577
       real(8), allocatable :: lat(:, :), lon(:, :)
-!      real(8), allocatable :: grib_data(:, :)
+      real(8), allocatable :: cosAx(:, :), sinAx(:, :)
+      real(8), allocatable :: cosAy(:, :), sinAy(:, :)
       real(8), allocatable :: grib_data(:,:, :)
-!      real(8) :: grib_data(Im,Jm)
       real(8) :: t
       real(8) :: time(1)
       integer :: start1D(1), count1D(1)
@@ -115,7 +133,8 @@
       
       integer :: ncid,var_id
       integer :: N_xi_rho, N_eta_rho
-!      integer :: Im, Jm
+      integer :: N_xi_u, N_eta_u
+      integer :: N_xi_v, N_eta_v
       
       integer :: dimids(3)
       integer :: xi_rho_dimid, eta_rho_dimid, time_dimid
@@ -124,11 +143,14 @@
       integer :: ifile,idx,iret,igrib
       integer :: istart, iend
       integer :: YYYYMMDD, hhmm
-      real(8), allocatable :: values(:)
       real :: bd
-      
-      integer, allocatable :: tmp(:)
-      integer :: itmp
+      real(8), allocatable :: values(:)
+      integer :: p1,p2
+      character(10) :: p3
+
+      real(8) :: d_lat, d_lon
+      real(8) :: u, v
+      real(8) :: dpT, sat_VP, VP
 
 !---- Modify time-unit description ---------------------------------
       
@@ -148,10 +170,18 @@
       ! Get dimension data
       call get_dimension(ncid, 'xi_rho',  N_xi_rho)
       call get_dimension(ncid, 'eta_rho', N_eta_rho)
+      call get_dimension(ncid, 'xi_u',    N_xi_u)
+      call get_dimension(ncid, 'eta_u',   N_eta_u)
+      call get_dimension(ncid, 'xi_v',    N_xi_v)
+      call get_dimension(ncid, 'eta_v',   N_eta_v)
       
       allocate(lat_rho(N_xi_rho, N_eta_rho))
       allocate(lon_rho(N_xi_rho, N_eta_rho))
-      allocate(out_data(N_xi_rho, N_eta_rho))
+      allocate(cosAu(N_xi_u, N_eta_u))
+      allocate(sinAu(N_xi_u, N_eta_u))
+      allocate(cosAv(N_xi_v, N_eta_v))
+      allocate(sinAv(N_xi_v, N_eta_v))
+      allocate(out_data(N_Param, N_xi_rho, N_eta_rho))
       
       ! Get variable id
       call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
@@ -161,6 +191,25 @@
       
       ! Close NetCDF file
       call check( nf90_close(ncid) )
+      
+      do i=1,N_xi_u
+        do j=1,N_eta_u
+          d_lat=lat_rho(i+1,j)-lat_rho(i,j)
+          d_lon=lon_rho(i+1,j)-lon_rho(i,j)
+          d_lon=d_lon*cos(lat_rho(i,j)/180.0d0*PI)
+          cosAu(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+          sinAu(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+        enddo
+      enddo
+      do i=1,N_xi_v
+        do j=1,N_eta_v
+          d_lat=lat_rho(i,j+1)-lat_rho(i,j)
+          d_lon=lon_rho(i,j)-lon_rho(i,j+1)
+          d_lon=d_lon*cos(lat_rho(i,j)/180.0d0*PI)
+          cosAv(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+          sinAv(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+        enddo         
+      enddo
       
 !---- Read DSJRA-55 GRIB2 file --------------------------------
 
@@ -185,6 +234,10 @@
       allocate(values(Im*Jm))
       allocate(lat(Im,Jm))
       allocate(lon(Im,Jm))
+      allocate(cosAx(Im,Jm))
+      allocate(sinAx(Im,Jm))
+      allocate(cosAy(Im,Jm))
+      allocate(sinAy(Im,Jm))
       allocate(grib_data(N_Param, Im, Jm))
       
 !      open(unit=21, file='lat.txt')
@@ -247,6 +300,30 @@
       write(*,*) 'SE corner:', lat(Im,1), lon(Im,1)
       write(*,*) 'NE corner:', lat(Im,Jm),lon(Im,Jm)
       
+!  ---- Calc. rotation angle --------------
+      do j=1, Jm
+        do i=1,Im-1
+          d_lat=lat(i+1,j)-lat(i,j)
+          d_lon=lon(i+1,j)-lon(i,j)
+          d_lon=d_lon*cos(lat(i,j)/180.0d0*PI)
+          cosAx(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+          sinAx(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+        end do
+      end do
+      cosAx(Im,:) = cosAx(Im-1,:)
+      sinAx(Im,:) = sinAx(Im-1,:)
+      
+      do j=1, Jm-1
+        do i=1,Im
+          d_lat=lat(i,j)-lat(i,j+1)
+          d_lon=lon(i,j+1)-lon(i,j)
+          d_lon=d_lon*cos(lat(i,j)/180.0d0*PI)
+          cosAy(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+          sinAy(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+        end do
+      end do
+      cosAy(:,Jm) = cosAy(:,Jm-1)
+      sinAy(:,Jm) = sinAy(:,Jm-1)
       
 !---- Create the forcing netCDF file --------------------------------
 
@@ -322,7 +399,7 @@
         t = dble(idays)+dble(ihour)/24.0d0+dble(imin)/1440.0d0
         
 
-!  ----   LOOP2.1 START --------------------------------
+!  ---- LOOP2.1 START --------------------------------
         DO iparam=1,N_Param
         
           if(iparam==7) then !!! for rain (rain fall rate)
@@ -331,40 +408,93 @@
             GRIB_FILE = trim(GRIB_FCST_SURF_dir)//GRIB_FCST_SURF_prefix//GRIB_suffix
           end if
           
-          write(*,*) "READ: ", trim( GRIB_FILE )
-          call codes_index_create(idx,GRIB_FILE,'productDefinitionTemplateNumber:i,parameterCategory:i,parameterNumber:i')
-      
-          call codes_index_select(idx,'productDefinitionTemplateNumber',GRIB_NAME(1,iparam),iret)
-          call codes_index_select(idx,'parameterCategory',GRIB_NAME(2,iparam),iret)
-          call codes_index_select(idx,'parameterNumber',GRIB_NAME(3,iparam),iret)
-          call codes_new_from_index(idx,igrib, iret)
+          call codes_open_file(ifile, GRIB_FILE,'r', iret)
+          call codes_grib_new_from_file(ifile,igrib, iret)
+          
+!    ---- Seek message --------------------------------
+          DO WHILE (iret /= GRIB_END_OF_FILE)
+            call codes_get(igrib,'parameterCategory',p1)
+            call codes_get(igrib,'parameterNumber',  p2)
+            call codes_get(igrib,'shortName',        p3)
+            if (p1==GRIB_NUM(1,iparam) .and.             &
+    &           p2==GRIB_NUM(2,iparam) .and.             &
+    &           p3==GRIB_NAME(iparam)        ) exit
+            call codes_grib_new_from_file(ifile,igrib, iret)
+          END DO
+
+!    ---- Get GRIB data --------------------------------
           call codes_get(igrib,'values', values)
+          
+          call codes_release(igrib)
+          call codes_close_file(ifile)
+          
           do i=1, Jm
             istart = 1 + Im*(i-1)
             iend   = Im*i
             grib_data(iparam,:,i) = values(istart:iend)
           end do
         END DO
+        
+
 !  ---- LOOP2.1 END --------------------------------
+
       !!! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors 
+        do j=1, Jm
+          do i=1,Im
+            u = grib_data(1,i,j)*cosAx(i,j)-grib_data(2,i,j)*sinAy(i,j)
+            v = grib_data(1,i,j)*sinAx(i,j)+grib_data(2,i,j)*cosAy(i,j)
+            grib_data(1,i,j) = u
+            grib_data(2,i,j) = v
+          end do
+        end do
           
       !!! for Tair
         grib_data(3,:,:) = grib_data(3,:,:) - 273.15d0  ! K -> degC
+        
       !!! for Qair: convert Dewpoint depression (K) to Relative humidity (%)
-        grib_data(3,:,:) = grib_data(3,:,:) - 273.15d0  ! K -> degC
+        do j=1, Jm
+          do i=1,Im
+            ! Dewpoint (oC)
+            dpT = grib_data(3,i,j)-grib_data(4,i,j) ! (oC)
+            ! Saturation vapor pressure (hPa)
+            sat_VP=6.1078d0*10.0d0**(7.5d0*grib_data(3,i,j)/(237.3d0+grib_data(3,i,j)))
+            ! Vapor pressure (hPa)
+            VP    =6.1078d0*10.0d0**(7.5d0*dpT/(237.3d0+dpT))
+            ! Relative humidity (%)
+            grib_data(4,i,j) = VP/sat_VP*100.0d0 ! (%)
+          end do
+        end do
       !!! for Pair (Pressure)
         grib_data(5,:,:) = grib_data(5,:,:)*0.01  ! Pa -> millibar (= hPa)
+        
       !!! for cloud (cloud fraction)
         grib_data(6,:,:) = grib_data(6,:,:)*0.01  ! percent -> ratio(0 to 1)
      
           
-!  ----   LOOP2.2 START --------------------------------
+!  ---- LOOP2.2 START --------------------------------
         DO iparam=1,N_Param
         
           write(*,*) 'Linear Interporation: ',trim( NC_NAME(iparam) )
-!          call LinearInterpolation2D_grid2(Im, Jm, lon, lat               &
-!     &                    , grib_data(iparam,:,:), -9999.0d0, 9999.0d0    &
-!     &                    , N_xi_rho, N_eta_rho, lon_rho, lat_rho, out_data )
+          call LinearInterpolation2D_grid3(Im, Jm, lon, lat               &
+     &          , grib_data(iparam,:,:), -9999.0d0, 9999.0d0              &
+     &          , N_xi_rho, N_eta_rho, lon_rho, lat_rho, out_data(iparam,:,:) )
+
+        END DO
+!  ---- LOOP2.2 END --------------------------------
+
+      !!! for U V: change regular Lat Lon to ROMS grid coordinat vectors 
+
+          do i=1,N_xi_rho
+            do j=1,N_eta_rho
+              u = out_data(1,i,j)*cosAu(i,j)+out_data(2,i,j)*sinAu(i,j)
+              v =-out_data(1,i,j)*sinAv(i,j)+out_data(2,i,j)*cosAv(i,j)
+              out_data(1,i,j) = u
+              out_data(2,i,j) = v
+            enddo
+          enddo
+
+!  ---- LOOP2.3 START --------------------------------
+        DO iparam=1,N_Param
 
           if(iparam==7) then !!! for rain (rain fall rate)
             time(1) = t+0.5d0/24.0d0  !!! + 0.5 hours
@@ -392,17 +522,13 @@
      &          trim( NC_NAME(iparam) )           &
      &        , OUT_FILE(iparam)                  &
      &        , N_xi_rho, N_eta_rho, 1            &
-     &        , out_data                          &
+     &        , out_data(iparam,:,:)              &
      &        , start3D, count3D                  &
      &        )
           
-          
-          call codes_index_release(idx)
-          
         END DO
-!  ---- LOOP2.2 END --------------------------------
-        call codes_release(igrib)
-
+!  ---- LOOP2.3 END --------------------------------
+        
         itime = itime + 1
 
       END DO
