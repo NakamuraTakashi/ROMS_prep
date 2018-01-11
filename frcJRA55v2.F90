@@ -19,10 +19,10 @@
       character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.04_grd_v1.nc"
 
       integer, parameter :: N_Param = 7
-      character(len=*), parameter :: GRIB_FCST_SURF_prefix  =  &
-     &   "D:/JRA-55/Hist/Daily/fcst_surf125/201707/fcst_surf125"
-      character(len=*), parameter :: GRIB_FCST_PHY2M_prefix =  &
-     &   "D:/JRA-55/Hist/Daily/fcst_phy2m125/201707/fcst_phy2m125"
+      character(len=*), parameter :: GRIB_FCST_SURF_dir  =  &
+     &   "D:/JRA-55/Hist/Daily/fcst_surf125/201707/"
+      character(len=*), parameter :: GRIB_FCST_PHY2M_dir =  &
+     &   "D:/JRA-55/Hist/Daily/fcst_phy2m125/201707/"
       
       character(len=*), parameter :: OUT_prefix  = "output/CT_0.04_frc_JRA55_"
       
@@ -32,6 +32,8 @@
       
 !----------------------------------------------------------------------
 
+      character(len=*), parameter :: GRIB_FCST_SURF_prefix  = "fcst_surf125"
+      character(len=*), parameter :: GRIB_FCST_PHY2M_prefix = "fcst_phy2m125"
       character(11) :: GRIB_suffix  = ".1958010100"
       character(10) :: OUT_suffix   = "_195801.nc"
       
@@ -110,7 +112,6 @@
       
       integer :: iparam
       integer :: ifile,idx,iret,igrib
-      integer :: stat
       integer :: istart, iend
       integer :: YYYYMMDD, hhmm
       real(8), allocatable :: values(:)
@@ -154,7 +155,7 @@
       GRIB_suffix(2:5)=YYYY
       GRIB_suffix(6:7)=MM
 
-      GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
+      GRIB_FILE = trim(GRIB_FCST_SURF_dir)//GRIB_FCST_SURF_prefix//GRIB_suffix
       !Open GRIB file
       write(*,*) "OPEN: ", trim( GRIB_FILE )
       call codes_open_file(ifile, GRIB_FILE,'r')
@@ -225,12 +226,12 @@
         GRIB_suffix(8:9)=DD
         GRIB_suffix(10:11)=hh
       
-        GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
+        GRIB_FILE = trim(GRIB_FCST_SURF_dir)//GRIB_FCST_SURF_prefix//GRIB_suffix
         
         !Open GRIB file
         write(*,*) "OPEN: ", trim( GRIB_FILE )
-        call codes_open_file(ifile, GRIB_FILE,'r', stat)
-        if (stat /= CODES_SUCCESS) then
+        call codes_open_file(ifile, GRIB_FILE,'r', iret)
+        if (iret /= CODES_SUCCESS) then
           write(*,*) "CANNOT OPEN: ", trim( GRIB_FILE )
           exit
         end if
@@ -258,9 +259,9 @@
         DO iparam=1,N_Param
         
           if(iparam==7) then !!! for rain (rain fall rate)
-            GRIB_FILE = trim(GRIB_FCST_PHY2M_prefix)//GRIB_suffix
+            GRIB_FILE = trim(GRIB_FCST_PHY2M_dir)//GRIB_FCST_PHY2M_prefix//GRIB_suffix
           else
-            GRIB_FILE = trim(GRIB_FCST_SURF_prefix)//GRIB_suffix
+            GRIB_FILE = trim(GRIB_FCST_SURF_dir)//GRIB_FCST_SURF_prefix//GRIB_suffix
           end if
           
           write(*,*) "READ: ", trim( GRIB_FILE )
