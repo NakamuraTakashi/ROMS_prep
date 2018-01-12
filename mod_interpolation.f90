@@ -227,7 +227,7 @@
 !$omp do private(i,j)
       do i=1,Im
         do j=1,Jm
-          call LinearInterpolation2D_point4(Nx, Ny, X, Y, Vnew, Xgrd(i,j), Ygrd(i,j), Vgrd(i,j))
+          call LinearInterpolation2D_point2(Nx, Ny, X, Y, Vnew, Xgrd(i,j), Ygrd(i,j), Vgrd(i,j))
         enddo
       enddo
 !$omp end do
@@ -597,205 +597,10 @@
 ! output parameters
       real(8), intent(out) :: vi
      
-      integer :: i,j,k
-      integer :: iL, iR, jB, jT
-      real(8) :: xL, xR, yB, yT
-      real(8) :: f,g
-      integer :: in(3), jn(3)
-      real(8) :: d(3)
-      real(8) :: dtmp
-      real(8) :: sum_w
-      
-!       vLT              vRT
-!      YT |-------------|
-!         |             |
-!         |             |
-!         | f           |
-!         |---* (xi,yi) |
-!         |   |g        |
-!         |   |         |
-!      YB |-------------|
-!     vLB XL           XR vRB
-      
-      d = sqrt( (X(1,1)-X(Nx,Ny))**2.0d0+(Y(1,1)-Y(Nx,Ny))**2.0d0 )
-! Check the cornar points.
-      do j=1,Ny
-        do i=1,Nx
-          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
-          if( dtmp < 1.0d-4) then
-            vi = V(i,j)
-            RETURN
-          else if( dtmp < d(1)) then
-            d(3) = d(2)
-            d(2) = d(1)
-            d(1) = dtmp
-            in(3) = in(2)
-            in(2) = in(1)
-            in(1) = i
-            jn(3) = jn(2)
-            jn(2) = jn(1)
-            jn(1) = j
-          else if( dtmp < d(2)) then
-            d(3) = d(2)
-            d(2) = dtmp
-            in(3) = in(2)
-            in(2) = i
-            jn(3) = jn(2)
-            jn(2) = j
-          else if( dtmp < d(3)) then
-            d(3) = dtmp
-            in(3) = i
-            jn(3) = j
-          end if
-        enddo
-      enddo
-      
-      sum_w = 1.0d0/d(1)+1.0d0/d(2)+1.0d0/d(3)
-      
-      vi =( V(in(1),jn(1))*1.0d0/d(1)    &
-     &     +V(in(2),jn(2))*1.0d0/d(2)    &
-     &     +V(in(3),jn(3))*1.0d0/d(3) )/sum_w
-
-!      vi = V(in(1),jn(1))
-      
-    END SUBROUTINE LinearInterpolation2D_point2
-    
-! **********************************************************************
-
-    SUBROUTINE LinearInterpolation2D_point3(Nx, Ny, X, Y, V, xi, yi, vi)
-
-      implicit none
-! input parameters
-      integer, intent( in) :: Nx, Ny
-      real(8), intent( in) :: X(Nx,Ny), Y(Nx,Ny)
-      real(8), intent( in) :: V(Nx,Ny)
-      real(8), intent( in) :: xi, yi
-! output parameters
-      real(8), intent(out) :: vi
-     
-      real(8), parameter :: dmin  = 1.0d-4
+      real(8), parameter :: dmin  = 1.0d-6
       integer :: istep1
       integer :: istep2
-      integer :: i,j
-      integer :: is, ie, js, je
-
-      integer :: in(3), jn(3)
-      integer :: ic, jc
-      real(8) :: d(3)
-      real(8) :: dtmp
-      real(8) :: sum_w
-      
-!       vLT              vRT
-!      YT |-------------|
-!         |             |
-!         |             |
-!         | f           |
-!         |---* (xi,yi) |
-!         |   |g        |
-!         |   |         |
-!      YB |-------------|
-!     vLB XL           XR vRB
-      
-      d = sqrt( (X(1,1)-X(Nx,Ny))**2.0d0+(Y(1,1)-Y(Nx,Ny))**2.0d0 )
-      istep1 = max(Nx,Ny)/20
-      istep2 = max(10,istep1/10)
-
-      js = max(1,istep1/2)
-      is = max(1,istep1/2)
-      do j=js, Ny, istep1
-        do i=is, Nx, istep1
-          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
-          if( dtmp < dmin ) then
-            vi = V(i,j)
-            RETURN
-          else if( dtmp < d(1)) then
-            d(1) = dtmp
-            ic = i
-            jc = j
-          end if
-        enddo
-      enddo
-      
-      js = max(1,jc-istep1/2)
-      is = max(1,ic-istep1/2)
-      je = min(Ny,jc+istep1/2)
-      ie = min(Nx,ic+istep1/2)
-      
-      do j=js, je, istep2
-        do i=is, ie, istep2
-          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
-          if( dtmp < dmin ) then
-            vi = V(i,j)
-            RETURN
-          else if( dtmp < d(1)) then
-            d(1) = dtmp
-            ic = i
-            jc = j
-          end if
-        enddo
-      enddo
-      
-      js = max(1,jc-istep1/2)
-      is = max(1,ic-istep1/2)
-      je = min(Ny,jc+istep1/2)
-      ie = min(Nx,ic+istep1/2)
-      
-      do j=js, je
-        do i=is, ie
-          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
-          if( dtmp < 1.0d-4) then
-            vi = V(i,j)
-            RETURN
-          else if( dtmp < d(1)) then
-            d(3) = d(2)
-            d(2) = d(1)
-            d(1) = dtmp
-            in(3) = in(2)
-            in(2) = in(1)
-            in(1) = i
-            jn(3) = jn(2)
-            jn(2) = jn(1)
-            jn(1) = j
-          else if( dtmp < d(2)) then
-            d(3) = d(2)
-            d(2) = dtmp
-            in(3) = in(2)
-            in(2) = i
-            jn(3) = jn(2)
-            jn(2) = j
-          else if( dtmp < d(3)) then
-            d(3) = dtmp
-            in(3) = i
-            jn(3) = j
-          end if
-        enddo
-      enddo
-      
-      sum_w = 1.0d0/d(1)+1.0d0/d(2)+1.0d0/d(3)
-      
-      vi =( V(in(1),jn(1))*1.0d0/d(1)    &
-     &     +V(in(2),jn(2))*1.0d0/d(2)    &
-     &     +V(in(3),jn(3))*1.0d0/d(3) )/sum_w
-
-!      vi = V(in(1),jn(1))
-      
-    END SUBROUTINE LinearInterpolation2D_point3
-! **********************************************************************
-
-    SUBROUTINE LinearInterpolation2D_point4(Nx, Ny, X, Y, V, xi, yi, vi)
-
-      implicit none
-! input parameters
-      integer, intent( in) :: Nx, Ny
-      real(8), intent( in) :: X(Nx,Ny), Y(Nx,Ny)
-      real(8), intent( in) :: V(Nx,Ny)
-      real(8), intent( in) :: xi, yi
-! output parameters
-      real(8), intent(out) :: vi
-     
-      real(8), parameter :: dmin  = 1.0d-4
-      integer :: istep1
-      integer :: istep2
+      integer :: istep
       integer :: i,j
       integer :: is, ie, js, je
 
@@ -805,103 +610,76 @@
       real(8) :: dtmp
       real(8) :: sum_w
       
-!       vLT              vRT
-!      YT |-------------|
-!         |             |
-!         |             |
-!         | f           |
-!         |---* (xi,yi) |
-!         |   |g        |
-!         |   |         |
-!      YB |-------------|
-!     vLB XL           XR vRB
       
       d = sqrt( (X(1,1)-X(Nx,Ny))**2.0d0+(Y(1,1)-Y(Nx,Ny))**2.0d0 )
-      istep1 = max(Nx,Ny)/20
-      istep2 = max(15,istep1/10)
+      js = 1
+      is = 1
+      je = Ny
+      ie = Nx
+      istep = max(Nx/2,Ny/2)
+      do
+        do j=js, je, istep
+          do i=is, ie, istep
+            dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
+            if( dtmp < 1.0d-4) then
+              vi = V(i,j)
+              RETURN
+            else if( dtmp < d(1)) then
+              d(4) = d(3)
+              d(3) = d(2)
+              d(2) = d(1)
+              d(1) = dtmp
+              in(4) = in(3)
+              in(3) = in(2)
+              in(2) = in(1)
+              in(1) = i
+              jn(4) = jn(3)
+              jn(3) = jn(2)
+              jn(2) = jn(1)
+              jn(1) = j
+            else if( dtmp < d(2)) then
+              d(4) = d(3)
+              d(3) = d(2)
+              d(2) = dtmp
+              in(4) = in(3)
+              in(3) = in(2)
+              in(2) = i
+              jn(4) = jn(3)
+              jn(3) = jn(2)
+              jn(2) = j
+            else if( dtmp < d(3)) then
+              d(4) = d(3)
+              d(3) = dtmp
+              in(4) = in(3)
+              in(3) = i
+              jn(4) = jn(3)
+              jn(3) = j
+            else if( dtmp < d(4)) then
+              d(4) = dtmp
+              in(4) = i
+              jn(4) = j
+            end if
+          enddo
+          
+        enddo
+        
+        if(istep == 1) then
+          exit 
+        else if (istep < 5 ) then
+          istep = 1
+          js = max(1,jn(1)-3)
+          is = max(1,in(1)-3)
+          je = min(Ny,jn(1)+3)
+          ie = min(Nx,in(1)+3)
+        else
+          istep = istep/2
+          js = max(1,jn(1)-istep-2)
+          is = max(1,in(1)-istep-2)
+          je = min(Ny,jn(1)+istep+2)
+          ie = min(Nx,in(1)+istep+2)
+        end if
+        
 
-      js = max(1,istep1/2)
-      is = max(1,istep1/2)
-      do j=js, Ny, istep1
-        do i=is, Nx, istep1
-          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
-          if( dtmp < dmin ) then
-            vi = V(i,j)
-            RETURN
-          else if( dtmp < d(1)) then
-            d(1) = dtmp
-            ic = i
-            jc = j
-          end if
-        enddo
-      enddo
-      
-      js = max(1,jc-istep1/2)
-      is = max(1,ic-istep1/2)
-      je = min(Ny,jc+istep1/2)
-      ie = min(Nx,ic+istep1/2)
-      
-      do j=js, je, istep2
-        do i=is, ie, istep2
-          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
-          if( dtmp < dmin ) then
-            vi = V(i,j)
-            RETURN
-          else if( dtmp < d(1)) then
-            d(1) = dtmp
-            ic = i
-            jc = j
-          end if
-        enddo
-      enddo
-      
-      js = max(1,jc-istep1/2)
-      is = max(1,ic-istep1/2)
-      je = min(Ny,jc+istep1/2)
-      ie = min(Nx,ic+istep1/2)
-      
-      do j=js, je
-        do i=is, ie
-          dtmp = sqrt( (X(i,j)-xi)**2.0d0+(Y(i,j)-yi)**2.0d0 )
-          if( dtmp < 1.0d-4) then
-            vi = V(i,j)
-            RETURN
-          else if( dtmp < d(1)) then
-            d(4) = d(3)
-            d(3) = d(2)
-            d(2) = d(1)
-            d(1) = dtmp
-            in(4) = in(3)
-            in(3) = in(2)
-            in(2) = in(1)
-            in(1) = i
-            jn(4) = jn(3)
-            jn(3) = jn(2)
-            jn(2) = jn(1)
-            jn(1) = j
-          else if( dtmp < d(2)) then
-            d(4) = d(3)
-            d(3) = d(2)
-            d(2) = dtmp
-            in(4) = in(3)
-            in(3) = in(2)
-            in(2) = i
-            jn(4) = jn(3)
-            jn(3) = jn(2)
-            jn(2) = j
-          else if( dtmp < d(3)) then
-            d(4) = d(3)
-            d(3) = dtmp
-            in(4) = in(3)
-            in(3) = i
-            jn(4) = jn(3)
-            jn(3) = j
-          else if( dtmp < d(4)) then
-            d(4) = dtmp
-            in(4) = i
-            jn(4) = j
-          end if
-        enddo
       enddo
       
 !      sum_w = 1.0d0/d(1)+1.0d0/d(2)+1.0d0/d(3)+1.0d0/d(4)
@@ -927,10 +705,10 @@
 
 !      vi = V(in(1),jn(1))
       
-    END SUBROUTINE LinearInterpolation2D_point4
+    END SUBROUTINE LinearInterpolation2D_point2
     
 ! **********************************************************************
-
+! **********************************************************************
 
     SUBROUTINE LinearInterpolation3D_point(Nx, Ny, Nz, X, Y, Z, V, xi, yi, zi, vi)
 

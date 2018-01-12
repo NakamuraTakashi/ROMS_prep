@@ -20,7 +20,6 @@
 !      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama2_grd_v9.3.nc"
 !      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama3_grd_v9.nc"
 
-      integer, parameter :: N_Param = 7
       character(len=*), parameter :: GRIB_FCST_SURF_dir  =  &
      &   "D:/DSJRA-55/Hist/Daily/fcst_surf/199609/"
       character(len=*), parameter :: GRIB_FCST_PHY2M_dir =  &
@@ -38,6 +37,8 @@
       
 !----------------------------------------------------------------------
 
+      integer, parameter :: N_Param = 7
+      
       character(len=*), parameter :: GRIB_FCST_SURF_prefix  = "fcst_surf"
       character(len=*), parameter :: GRIB_FCST_PHY2M_prefix = "fcst_phy2m"
       character(11) :: GRIB_suffix  = ".1958010100"
@@ -408,6 +409,8 @@
             GRIB_FILE = trim(GRIB_FCST_SURF_dir)//GRIB_FCST_SURF_prefix//GRIB_suffix
           end if
           
+          !Open GRIB file
+          write(*,*) "OPEN: ", trim( GRIB_FILE )
           call codes_open_file(ifile, GRIB_FILE,'r', iret)
           call codes_grib_new_from_file(ifile,igrib, iret)
           
@@ -423,6 +426,7 @@
           END DO
 
 !    ---- Get GRIB data --------------------------------
+          write(*,*) "READ GRIB DATA: ", trim( GRIB_NAME(iparam) )
           call codes_get(igrib,'values', values)
           
           call codes_release(igrib)
