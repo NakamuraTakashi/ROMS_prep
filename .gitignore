@@ -28,6 +28,7 @@
 *.out
 *.app
 *.exe.stackdump
+*.dump
 
 # Output Files
 output/*
@@ -47,4 +48,3 @@ backup/*
 
 # Fortran temp. output files
 fort.*
-
