@@ -1,5 +1,5 @@
 
-!!!=== ver 2015/12/08   Copyright (c) 2014-2015 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2018 Takashi NAKAMURA  =====
 
     PROGRAM getJMAMSM
       use netcdf
@@ -12,7 +12,7 @@
 ! -------------------------------------------------------------------------
 ! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
 !
-!  　　　　　　　 ______ (Rlon,Tlat)
+!                 ______ (Rlon,Tlat)
 !                |      |
 !                |      |
 !                |______|

@@ -1,10 +1,16 @@
 
-!!!=== Copyright (c) 2014-2017 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2018 Takashi NAKAMURA  =====
 
-#define EXPT_9X
+#define GOFS_31
+/*#define GOFS_30_3H*/
+/*#define GOFS_30*/
+
+#define ANALYSIS
+/*#define REANALYSIS*/
 
     PROGRAM getHYCOM
       use netcdf
+      use mod_roms_netcdf
       use mod_calendar
      
       implicit none
@@ -13,7 +19,7 @@
 ! -------------------------------------------------------------------------
 ! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
 !
-!  Å@Å@Å@Å@Å@Å@Å@ ______ (Rlon,Tlat)
+!                 ______ (Rlon,Tlat)
 !                |      |
 !                |      |
 !                |______|
@@ -32,31 +38,63 @@
       real(8), parameter :: Blat = 22.0d0     ! Latitude  (degrees) of the bottom-left corner of the grid.
       real(8), parameter :: Llon = 120.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
       real(8), parameter :: Rlon = 128.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
-!      real(8), parameter :: Tlat =  31.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
-!      real(8), parameter :: Blat = -18.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
-!      real(8), parameter :: Llon =  98.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-!      real(8), parameter :: Rlon = 140.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+!      real(8), parameter :: Tlat =  32.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+!      real(8), parameter :: Blat = -16.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+!      real(8), parameter :: Llon =  89.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+!      real(8), parameter :: Rlon = 158.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
 
-      integer, parameter :: Syear  = 2016   ! Starting year
-      integer, parameter :: Smonth = 4      ! Starting month
+      integer, parameter :: Syear  = 2017   ! Starting year
+      integer, parameter :: Smonth = 11     ! Starting month
       integer, parameter :: Sday   = 1      ! Starting day
       
-      integer, parameter :: Eyear  = 2016   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-      integer, parameter :: Emonth = 5      ! Ending month
-      integer, parameter :: Eday   = 1      ! Ending day
+      integer, parameter :: Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+      integer, parameter :: Emonth = 11     ! Ending month
+      integer, parameter :: Eday   = 3      ! Ending day
       
       integer, parameter :: Ryear  = 2000   ! Reference year
       integer, parameter :: Rmonth = 1      ! Reference month
       integer, parameter :: Rday   = 1      ! Reference day
       
      ! NetCDF file     
-      character(len=*), parameter :: OCEAN_FILE  = &
-     &  "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama1_HYCOM_extracted_1604.nc"
-!      character(len=*), parameter :: OCEAN_FILE  = &
+      character(len=*), parameter :: OUT_prefix  = &
+     &  "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama1_HYCOM_extracted"
+!      character(len=*), parameter :: OUT_prefix  = &
 !     &  "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted_1604.nc"
 
-#ifdef EXPT_9X
-! ----- HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to present) -----
+#if defined GOFS_31
+# if defined ANALYSIS
+! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-July to present) -----
+      integer, parameter :: NCnum   = 5
+      character(53) :: NC_FILE(NCnum) = (/                          &
+     &     "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_56.3"  &
+     &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_57.2"  &
+     &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_92.8"  &
+     &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_57.7"  &
+     &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_92.9"  &
+     &  /)
+# elif defined REANALYSIS
+! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (coming soon) -----
+      integer, parameter :: NCnum   = 0
+      character(53) :: NC_FILE(NCnum) = (/                          &
+     &  /)
+# endif
+#elif defined GOFS_30_3H
+# if defined ANALYSIS
+! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to present) -----
+      integer, parameter :: NCnum   = 0
+      character(53) :: NC_FILE(NCnum) = (/                          &
+     &  /)
+# elif defined REANALYSIS
+! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Reanalysis (since 1992-10-02 to 2012-12-31) -----
+      integer, parameter :: NCnum   = 2
+      character(59) :: NC_FILE(NCnum) = (/                          &  !!! ReanalysisÔøΩ∆ÇÔøΩLonÔøΩÃîzÔøΩuÔøΩÔøΩÔøΩ·Ç§ÔøΩÊÇ§ÔøΩÔøΩÔøΩB
+     &     "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.0/3hrly"  &  !!! ÔøΩvÔøΩÔøΩÔøΩÔøΩ
+     &    ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.1/3hrly"  &
+     &  /)
+# endif
+#elif defined GOFS_30
+# if defined ANALYSIS
+! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to present) -----
       integer, parameter :: NCnum   = 4
       character(53) :: NC_FILE(NCnum) = (/                          &
      &     "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_90.9"  &
@@ -64,17 +102,20 @@
      &    ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1"  &
      &    ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.2"  &
      &  /)
-#else
-! ----- HYCOM + NCODA Global 1/12 deg Reanalysis (since 1992-10-02 to 2012-12-31) -----
+# elif defined REANALYSIS
+! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Reanalysis (since 1992-10-02 to 2012-12-31) -----
       integer, parameter :: NCnum   = 2
-      character(53) :: NC_FILE(NCnum) = (/                          &  !!! ReanalysisÇ∆ÇÕLonÇÃîzíuÇ™à·Ç§ÇÊÇ§ÇæÅB
-     &     "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.0"  &  !!! óvåüì¢
+      character(53) :: NC_FILE(NCnum) = (/                          &  !!! ReanalysisÔøΩ∆ÇÔøΩLonÔøΩÃîzÔøΩuÔøΩÔøΩÔøΩ·Ç§ÔøΩÊÇ§ÔøΩÔøΩÔøΩB
+     &     "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.0"  &  !!! ÔøΩvÔøΩÔøΩÔøΩÔøΩ
      &    ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.1"  &
      &  /)
+# endif
 #endif
 ! -------------------------------------------------------------------------
 
-      character(30) :: TIME_ATT  = "days since 1992-01-01 00:00:00"
+      character(30) :: TIME_ATT  = "days since 2000-01-01 00:00:00"
+      character(10) :: OUT_suffix    = "_200001.nc"
+      character(256) :: OUT_FILE
      
       integer, parameter :: mode = 1           ! mode=1, linear intrtporation
       
@@ -102,11 +143,11 @@
       integer :: iyear, imonth, iday
       integer :: i,j,k
       integer :: idays
-      integer :: jdate
+!      integer :: jdate
       character(4) :: YYYY
       character(2) :: MM
       character(2) :: DD
-      
+      real(8) :: d_jdate_20000101, d_jdate     
       integer :: ncid,var_id
       integer :: ncid2,var_id2
       integer :: N_xi_rho, N_eta_rho
@@ -123,8 +164,9 @@
       
       
       call jd(2000, 1, 1, jdate_20000101)
-
-      write(*,*) jdate_20000101
+      d_jdate_20000101 = dble(jdate_20000101)
+      
+      write(*,*) d_jdate_20000101
 
       call ndays(Emonth, Eday, Eyear, Smonth, Sday, Syear, N_days)
       call jd(Syear, Smonth, Sday, jdate_Start)
@@ -145,6 +187,15 @@
       TIME_ATT(17:18)=MM
       TIME_ATT(20:21)=DD
       
+!---- Create the Output file --------------------------------
+
+      write (YYYY, "(I4.4)") Syear
+      write (MM, "(I2.2)") Smonth
+
+      OUT_suffix(2:5)=YYYY
+      OUT_suffix(6:7)=MM
+      OUT_FILE = OUT_prefix//OUT_suffix
+
 !---- Allocate lat, lon dimension data ---------------------------------
       
       write(*,*) "OPEN: ", NC_FILE(NCnum)
@@ -215,7 +266,7 @@
       
       call createNetCDF(         &
 !      input parameters
-     &    OCEAN_FILE             &
+     &    trim( OUT_FILE )       &
      &  , TIME_ATT               &  
      &  , Im, Jm, Nz, N_days+1   &   
      &  )
@@ -224,7 +275,7 @@
       call writeNetCDF_1d(       &
 !      input parameters
      &    'lon'                  &
-     &  , OCEAN_FILE             &
+     &  , trim( OUT_FILE )       &
      &  , Im                     &
      &  , lon                    &
      &  , start1D, count1D       &
@@ -234,7 +285,7 @@
       call writeNetCDF_1d(       &
 !      input parameters
      &    'lat'                  &
-     &  , OCEAN_FILE             &
+     &  , trim( OUT_FILE )       &
      &  , Jm                     &
      &  , lat                    &
      &  , start1D, count1D       &
@@ -245,7 +296,7 @@
       call writeNetCDF_1d(       &
 !      input parameters
      &    'depth'                &
-     &  , OCEAN_FILE             &
+     &  , trim( OUT_FILE )       &
      &  , Nz                     &
      &  , depth                  &
      &  , start1D, count1D       &
@@ -288,27 +339,27 @@
       
       do iNC=NCnum,1,-1
         do i=NC(iNC)%Nt-1,1,-1
-          jdate=jdate_20000101+nint(NC(iNC)%time_all(i))/24
-          if(jdate < jdate_End) then
+          d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24
+          if(d_jdate < dble(jdate_End)) then
             write(*,*) '*** FOUND: Ending point @ NC_FILE',iNC
             NC(iNC)%ItE=i+1
             exit
           endif
         end do
       end do
+      write(*,*) NC(:)%ItE 
       
       do iNC=1,NCnum
-        do i=2,NC(iNC)%ItE
-          jdate=jdate_20000101+nint(NC(iNC)%time_all(i))/24
-          if(jdate>jdate_Start) then
+        do i=1,NC(iNC)%ItE
+          d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24
+          if(d_jdate>dble(jdate_Start)) then
             write(*,*) '*** FOUND: Starting point @ NC_FILE',iNC
             NC(iNC)%ItS=i-1
             exit
           endif
         end do
       end do
-      
-      write(*,*) NC(:)%ItS, NC(:)%ItE 
+      write(*,*) NC(:)%ItS 
         
 !==== LOOP start!! =====================================================
 
@@ -387,7 +438,7 @@
           call writeNetCDF_1d(       &
 !          input parameters
      &        'time'                 &
-     &      , OCEAN_FILE             &
+     &      , trim( OUT_FILE )       &
      &      , 1                      &
      &      , time(1)                &
      &      , start1D, count1D       &
@@ -398,7 +449,7 @@
           call writeNetCDF_3d(       &
 !          input parameters
      &        'surf_el'              &
-     &      , OCEAN_FILE             &
+     &      , trim( OUT_FILE )       &
      &      , Im, Jm, 1              &
      &      , surf_el                &
      &      , start3D, count3D       &
@@ -409,7 +460,7 @@
           call writeNetCDF_4d(       &
 !          input parameters
      &        'water_temp'           &
-     &      , OCEAN_FILE             &
+     &      , trim( OUT_FILE )       &
      &      , Im, Jm, Nz, 1          &
      &      , water_temp             &
      &      , start4D, count4D       &
@@ -417,7 +468,7 @@
           call writeNetCDF_4d(       &
 !          input parameters
      &        'salinity'             &
-     &      , OCEAN_FILE             &
+     &      , trim( OUT_FILE )       &
      &      , Im, Jm, Nz, 1          &
      &      , salinity               &
      &      , start4D, count4D       &
@@ -425,7 +476,7 @@
           call writeNetCDF_4d(       &
 !          input parameters
      &        'water_u'              &
-     &      , OCEAN_FILE             &
+     &      , trim( OUT_FILE )       &
      &      , Im, Jm, Nz, 1          &
      &      , water_u                &
      &      , start4D, count4D       &
@@ -434,8 +485,8 @@
           call writeNetCDF_4d(       &
 !          input parameters
      &        'water_v'              &
-     &      , OCEAN_FILE             &
-     &      , Im, Jm, Nz, 1         &
+     &      , trim( OUT_FILE )       &
+     &      , Im, Jm, Nz, 1          &
      &      , water_v                &
      &      , start4D, count4D       &
      &      )
@@ -456,7 +507,7 @@
         
     CONTAINS
     
-!**** createNetCDF **********************************************
+!**** create HYCOM NetCDF **********************************************
 
       SUBROUTINE createNetCDF(   &
 !        input parameters
@@ -476,9 +527,9 @@
       
 !---- Create the extracted HYCOM netCDF file --------------------------------
 
-      write(*,*) "CREATE: ", OUT_FILE
+      write(*,*) "CREATE: ", trim( OUT_FILE )
 
-      call check( nf90_create(OUT_FILE, nf90_clobber, ncid2) )
+      call check( nf90_create(trim( OUT_FILE ), nf90_clobber, ncid2) )
 
       call check( nf90_def_dim(ncid2, 'lat', Jm, lat_dimid) )
       call check( nf90_def_dim(ncid2, 'lon', Im, lon_dimid) )
@@ -536,291 +587,6 @@
       write(*,*) '*** SUCCESS'
 
       END SUBROUTINE createNetCDF
-      
-!**** writeNetCDF_1d **********************************************
-      
-      SUBROUTINE writeNetCDF_1d(   &
-!        input parameters
-     &      NCNAME                 &
-     &    , OUT_FILE               &
-     &    , Im                     &
-     &    , data                   &
-     &    , start1D, count1D       &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NCNAME
-      character(len=*), intent( in) :: OUT_FILE
-      integer, intent( in) :: Im 
-      real(8), intent( in) :: data(Im )
-      integer, intent( in) :: start1D(1), count1D(1)
-      
-      integer :: ncid,var_id
-      
-! --- Write NetCDF file ------------------------
-      
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
-      call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
-      call check( nf90_inq_varid(ncid, NCNAME, var_id) )
-      call check( nf90_put_var(ncid, var_id, data, start = start1D, count = count1D) )
-      call check( nf90_close(ncid) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE writeNetCDF_1d
-      
-!**** writeNetCDF_3d **********************************************
-      
-      SUBROUTINE writeNetCDF_3d(   &
-!        input parameters
-     &      NCNAME                 &
-     &    , OUT_FILE               &
-     &    , Im, Jm, Nt             &
-     &    , data                   &
-     &    , start3D, count3D       &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NCNAME
-      character(len=*), intent( in) :: OUT_FILE
-      integer, intent( in) :: Im, Jm, Nt 
-      real(8), intent( in) :: data(Im, Jm, Nt )
-      integer, intent( in) :: start3D(3), count3D(3)
-      
-      integer :: ncid,var_id
-      
-! --- Write NetCDF file ------------------------
-      
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
-      call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
-      call check( nf90_inq_varid(ncid, NCNAME, var_id) )
-      call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
-      call check( nf90_close(ncid) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE writeNetCDF_3d
-      
-!**** writeNetCDF_4d **********************************************
-      
-      SUBROUTINE writeNetCDF_4d(   &
-!        input parameters
-     &      NCNAME                 &
-     &    , OUT_FILE               &
-     &    , Im, Jm, Nz, Nt         &
-     &    , data                   &
-     &    , start4D, count4D       &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NCNAME
-      character(len=*), intent( in) :: OUT_FILE
-      integer, intent( in) :: Im, Jm, Nz, Nt
-      real(8), intent( in) :: data(Im, Jm, Nz, Nt)
-      integer, intent( in) :: start4D(4), count4D(4)
-      
-      integer :: ncid,var_id
-      
-! --- Write NetCDF file ------------------------
-      
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
-      call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
-      call check( nf90_inq_varid(ncid, NCNAME, var_id) )
-      call check( nf90_put_var(ncid, var_id, data, start = start4D, count = count4D) )
-      call check( nf90_close(ncid) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE writeNetCDF_4d
-      
-!**** readNetCDF_3d **********************************************
-      
-      SUBROUTINE readNetCDF_3d(    &
-!        input parameters
-     &      NC_FILE                &
-     &    , NCNAME                 &
-     &    , Im, Jm, Nt             &
-     &    , start3D, count3D       &
-!        output parameters
-     &    , data                   &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NC_FILE
-      character(len=*), intent( in) :: NCNAME
-      integer, intent( in) :: Im, Jm, Nt
-      integer, intent( in) :: start3D(3), count3D(3)
-      real(8), intent(out) :: data(Im, Jm, Nt)
-      
-      integer :: ncid,var_id
-      integer :: err_flag
-      
-! --- Read NetCDF file ------------------------
-      
-      do
-        write(*,*) "OPEN: ", NC_FILE
-        call check( nf90_open(NC_FILE, nf90_nowrite, ncid) )
-      
-        write(*,*) 'DOWNLOAD ', NCNAME
-        
-!       Get variable id
-        call check2( nf90_inq_varid(ncid, NCNAME, var_id), err_flag ) ! Water Temperature (degC)
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 1: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_var(ncid, var_id, data, start=start3D, count=count3D), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** DOWNLOAD FAILED: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_att(ncid, var_id, 'scale_factor', sf), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 2: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_att(ncid, var_id, 'add_offset', off), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 3: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check( nf90_close(ncid) )
-        write(*,*) "CLOSE: ", NC_FILE
-        exit
-      end do
-
-      data(:,:,:)=data(:,:,:)*sf+off
-      write(*,*) '*** SUCCESS'
-
-
-      END SUBROUTINE readNetCDF_3d
-      
-!**** readNetCDF_4d **********************************************
-      
-      SUBROUTINE readNetCDF_4d(    &
-!        input parameters
-     &      NC_FILE                &
-     &    , NCNAME                 &
-     &    , Im, Jm, Nz, Nt         &
-     &    , start4D, count4D       &
-!        output parameters
-     &    , data                   &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NC_FILE
-      character(len=*), intent( in) :: NCNAME
-      integer, intent( in) :: Im, Jm, Nz, Nt
-      integer, intent( in) :: start4D(4), count4D(4)
-      real(8), intent(out) :: data(Im, Jm, Nz, Nt)
-      
-      integer :: ncid,var_id
-      integer :: err_flag
-      
-! --- Read NetCDF file ------------------------
-      
-      do
-        write(*,*) "OPEN: ", NC_FILE
-        call check( nf90_open(NC_FILE, nf90_nowrite, ncid) )
-      
-        write(*,*) 'DOWNLOAD ', NCNAME
-        
-!       Get variable id
-        call check2( nf90_inq_varid(ncid, NCNAME, var_id), err_flag ) ! Water Temperature (degC)
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 1: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_var(ncid, var_id, data, start=start4D, count=count4D), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** DOWNLOAD FAILED: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_att(ncid, var_id, 'scale_factor', sf), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 2: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_att(ncid, var_id, 'add_offset', off), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 3: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check( nf90_close(ncid) )
-        write(*,*) "CLOSE: ", NC_FILE
-        exit
-      end do
-      
-      data(:,:,:,:)=data(:,:,:,:)*sf+off
-      write(*,*) '*** SUCCESS'
-
-
-      END SUBROUTINE readNetCDF_4d
-      
-!**** NetCDF utility **********************************************
-      
-      SUBROUTINE get_dimension(ncid, name, dim)
-      
-      integer,           intent( in) :: ncid
-      character(len=*),  intent( in) :: name
-      integer,           intent(out) :: dim
-
-      integer :: dimid
-      call check( nf90_inq_dimid(ncid, name, dimid) )
-      call check( nf90_inquire_dimension(ncid, dimid, len=dim) )
-      
-      END SUBROUTINE get_dimension
-
-! -------------------------------------------------------------------------
-
-      SUBROUTINE check(status)
-      
-      integer, intent(in) :: status
-
-      if (status /= nf90_noerr) then 
-          print *, trim(nf90_strerror(status))
-          stop "Stopped"
-      end if
-      
-      END SUBROUTINE check
-      
-! -------------------------------------------------------------------------
-      
-      SUBROUTINE check2(status, err_flag)
-      
-      integer, intent( in) :: status
-      integer, intent(out) :: err_flag
-      
-      err_flag = 0
-
-      if (status /= nf90_noerr) then 
-          print *, trim(nf90_strerror(status))
-          err_flag = 1
-!          stop "Stopped"
-      end if
-      
-      END SUBROUTINE check2
       
 ! -------------------------------------------------------------------------
       
