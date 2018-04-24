@@ -1,23 +1,26 @@
 
 !!!=== Copyright (c) 2018 Takashi NAKAMURA  =====
 
+#define LOCAL_TIME 9  /* set UTC+9 (JST) */
+
     PROGRAM getJMACWM
       use netcdf
       use eccodes
+      use mod_calendar
      
       implicit none
       
 ! SETTINGS of input and output files  -----------------------------------
 
-      integer, parameter :: Syear  = 2017   ! Sampling year
-      integer, parameter :: Smonth = 2      ! Sampling month
+      integer, parameter :: Syear  = 2010   ! Sampling year
+      integer, parameter :: Smonth = 9      ! Sampling month
       
       real(8), parameter :: Slat = 24.4d0   ! Sampling Latitude
       real(8), parameter :: Slon = 124.3d0  ! Sampling Longitude
 
       integer, parameter :: N_Param = 3
       character(len=*), parameter :: GRIB_dir  =  &
-     &   "D:/CWM/"
+     &   "K:/Data/CWM/2010/"
       
       character(len=*), parameter :: OUT_prefix  = "output/wave_CWM"
       
