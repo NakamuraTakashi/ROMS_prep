@@ -43,13 +43,13 @@
 !      real(8), parameter :: Llon =  89.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
 !      real(8), parameter :: Rlon = 158.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
 
-      integer, parameter :: Syear  = 2017   ! Starting year
-      integer, parameter :: Smonth = 11     ! Starting month
+      integer, parameter :: Syear  = 2018   ! Starting year
+      integer, parameter :: Smonth = 4      ! Starting month
       integer, parameter :: Sday   = 1      ! Starting day
       
-      integer, parameter :: Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-      integer, parameter :: Emonth = 11     ! Ending month
-      integer, parameter :: Eday   = 3      ! Ending day
+      integer, parameter :: Eyear  = 2018   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+      integer, parameter :: Emonth = 5      ! Ending month
+      integer, parameter :: Eday   = 1      ! Ending day
       
       integer, parameter :: Ryear  = 2000   ! Reference year
       integer, parameter :: Rmonth = 1      ! Reference month
@@ -64,13 +64,14 @@
 #if defined GOFS_31
 # if defined ANALYSIS
 ! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-July to present) -----
-      integer, parameter :: NCnum   = 5
+      integer, parameter :: NCnum   = 6
       character(53) :: NC_FILE(NCnum) = (/                          &
      &     "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_56.3"  &
      &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_57.2"  &
      &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_92.8"  &
      &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_57.7"  &
      &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_92.9"  &
+     &    ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_93.0"  &
      &  /)
 # elif defined REANALYSIS
 ! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (coming soon) -----

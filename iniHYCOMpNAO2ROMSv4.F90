@@ -279,7 +279,7 @@
       do i=1,N_xi_rho
         do j=1,N_eta_rho
           do k=1,N_s_rho
-            z_r(i,j,k)= -h(i,j)*Cs_r(k)
+            z_r(i,j,k)= -h(i,j)*Cs_r(k)    !!!!!!!!!!!!!!!!Check!!!!!!!!!!!!!!!!!!!!!!
           enddo
         enddo
       enddo

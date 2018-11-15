@@ -80,5 +80,5 @@
 
 
 
-      END MODULE mod_swphys
+    END MODULE mod_sw_phys
 

@@ -16,15 +16,15 @@
       integer, parameter :: Smonth = 7      ! Sampling month
 
      ! NetCDF file     
-      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.04_grd_v1.nc"
+      character(len=*), parameter :: GRID_FILE = "D:/ROMS/Data/Coral_Triangle/CT_0.08_grd_v4.nc"
 
       integer, parameter :: N_Param = 7
       character(len=*), parameter :: GRIB_FCST_SURF_dir  =  &
-     &   "D:/JRA-55/Hist/Daily/fcst_surf125/201707/"
+     &   "K:/Data/JRA-55/Hist/Daily/fcst_surf125/201707/"
       character(len=*), parameter :: GRIB_FCST_PHY2M_dir =  &
-     &   "D:/JRA-55/Hist/Daily/fcst_phy2m125/201707/"
+     &   "K:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201707/"
       
-      character(len=*), parameter :: OUT_prefix  = "output/CT_0.04_frc_JRA55_"
+      character(len=*), parameter :: OUT_prefix  = "output/CT_0.08_frc_JRA55_"
       
       integer, parameter :: Ryear  = 2000   ! Reference year for NetCDF
       integer, parameter :: Rmonth = 1      ! Reference month for NetCDF

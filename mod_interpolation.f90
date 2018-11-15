@@ -56,7 +56,6 @@
       integer :: loopflag
       
       Vnew(:,:)=V(:,:)
-      
 !$omp parallel
 !$omp do private(i,j)
       do i=1,Nx
@@ -70,7 +69,7 @@
       enddo
 !$omp end do
 !$omp end parallel
-
+!
       do
         loopflag = 0
 
@@ -556,6 +555,7 @@
 !     vLB XL           XR vRB
 
 ! Check the cornar points.
+
       do i=2,Nx
         if( (X(i-1)-xi)*(X(i)-xi) <= 0.0d0) then
           iL = i-1
