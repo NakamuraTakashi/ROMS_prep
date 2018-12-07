@@ -1,0 +1,117 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama1_grd_v10.nc"
+/
+
+&range
+! -------------------------------------------------------------------------
+! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
+!
+!                 ______ (Rlon,Tlat)
+!                |      |
+!                |      |
+!                |______|
+!     (Llon,Blat)                     
+!
+! On Input:
+!
+!    Llon         Box left-edge   longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Rlon         Box right-edge  longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Blat         Box bottom-edge latitude  (degress, -80 to 80 )
+!    Tlat         Box top-edge    latitude  (degress, -80 to 80 )
+!
+! Geographical and Grid parameters --------
+!
+  Llon = 120.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+  Rlon = 128.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+  Blat =  22.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+  Tlat =  28.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+/
+
+&sdate
+
+  Syear  = 2017   ! Starting year
+  Smonth = 4      ! Starting month
+  Sday   = 1      ! Starting day
+/
+
+&edate
+
+  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 5      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&refdate
+
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&intpmode
+
+  mode = 1        ! mode=1, linear interpolation
+/
+
+&hycom      
+! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
+  HYCOM_prefix  = "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama_HYCOM_extracted"
+/
+
+&bry
+  BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
+/
+
+&ini
+  INI_prefix  = "Yaeyama1_ini_HYCOM_Nz15"
+  itime = 9       ! Frame number of HYCOME file
+/
+
+&hcoord
+
+  spherical  = 1   
+/
+
+&zcoord
+
+  N_s_rho = 15
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see below for details), [1:Ngrids].
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see below for details), [1:Ngrids].
+
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+
+/
+
+&frc_jra55
+  GRIB_FCST_SURF_dir  =  "N:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
+  GRIB_FCST_PHY2M_dir =  "N:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
+  
+  FRC_prefix  = "Yaeyama1_frc_JRA55"
+/
+
+&frc_dsjra55
+  GRIB_FCST_SURF_dir  =  "N:/Data/dsjra55/Hist/Daily/fcst_surf/199304/"
+  GRIB_FCST_PHY2M_dir =  "N:/Data/dsjra55/Hist/Daily/fcst_phy2m/199304/"
+  GRIB_LL = "N:/Data/dsjra55/Consts/Lambert5km_latlon.dat"
+  
+  FRC_prefix  = "Yaeyama1_frc_DSJRA55"
+/
+
+&frc_jmamsm
+!  MSM_SURF_dir  =  "http://opendap.rish.kyoto-u.ac.jp/opendap/hyrax/jmadata/gpv/netcdf/MSM-S/"
+!  MSM_R1H_dir =  "http://opendap.rish.kyoto-u.ac.jp/opendap/hyrax/jmadata/gpv/netcdf/MSM-S/r1h/"
+  MSM_SURF_dir  =  "N:/Data/JMA-MSM/MSM-S/"
+  MSM_R1H_dir =  "N:/Data/JMA-MSM/MSM-S/r1h/"
+  
+  FRC_prefix  = "Yaeyama1_frc_JMAMSM"
+/

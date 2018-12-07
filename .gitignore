@@ -31,17 +31,22 @@
 *.dump
 
 # Output Files
-output/*
-!.gitkeep
+*.nc
 
 # Data Files
 Data/*
 roms_cdl/*
 CDL/*
 ROMS_grid_Yaeyama/*
-
+OTPS/DATA/*
+!OTPS/DATA/get_tpxo9_atlas30.sh
 # Backup Files
 backup/*
+OTPS/OTPS_back/*
+OTPS/OTPS2/*
+OTPS/OTPS2_back/*
+OTPS/OTPSnc/*
+Projects/test/*
 
 # MATLAB temp. files
 *.asv
