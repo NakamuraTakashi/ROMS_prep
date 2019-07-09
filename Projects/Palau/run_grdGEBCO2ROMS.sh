@@ -1,5 +1,5 @@
 #!/bin/bash
-#export MY_CPP_FLAGS="-DGRID_REFINEMENT"
+export MY_CPP_FLAGS="-DGRID_REFINEMENT"
 
 SRC_DIR=../../src
 #FCFLAGS="-Wall -pedantic -std=f95 -fbounds-check -O -Wuninitialized -ffpe-trap=invalid,zero,overflow -fbacktrace"
@@ -10,4 +10,6 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./grdGEBCO2ROMS.exe < CT_0.08.in
+#./grdGEBCO2ROMS.exe < Palau1.in
+#./grdGEBCO2ROMS.exe < Palau2.in
+./grdGEBCO2ROMS.exe < Palau3.in

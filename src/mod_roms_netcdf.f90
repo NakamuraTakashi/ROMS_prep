@@ -108,6 +108,15 @@
       call check( nf90_put_att(ncid, var_id, 'long_name', 'mask on RHO-points') )
       call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
 
+      call check( nf90_def_var(ncid, 'hraw', NF90_DOUBLE, dim2Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'Raw bathymetric data at RHO-points') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
+
+#if defined GRID_REFINEMENT
+      call check( nf90_def_var(ncid, 'mask_rho_coarse', NF90_DOUBLE, dim2Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'mask on RHO-points of coarse grid') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
+#endif
 
       dim2Dids = (/ xi_psi_dimid, eta_psi_dimid /)
       

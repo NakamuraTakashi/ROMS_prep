@@ -22,7 +22,7 @@
       character(len=*), parameter :: GRIB_dir  =  &
      &   "K:/Data/CWM/2010/"
       
-      character(len=*), parameter :: OUT_prefix  = "output/wave_CWM"
+      character(len=*), parameter :: OUT_prefix  = "wave_CWM"
       
       integer, parameter :: Ryear  = 2000   ! Reference year for NetCDF
       integer, parameter :: Rmonth = 1      ! Reference month for NetCDF

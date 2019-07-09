@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2019 Takashi NAKAMURA  =====
 
 !!!**** UTILITY MODULE ****************
 
@@ -120,10 +120,7 @@
       real(8), intent(in ) :: h(N_xi_rho,N_eta_rho) ! depth (m)
       real(8), intent(in ) :: hmin                  ! minimum depth (m)
       real(8), intent(out) :: mask_rho(N_xi_rho,N_eta_rho) ! Land/Sea mask on RHO-points.
-      integer :: i,j,k
-      integer :: ip,im,jp,jm
-      integer :: count
-      real(8) :: rmsk(N_xi_rho,N_eta_rho)
+      integer :: i,j
       
       mask_rho(:,:) = 1.0d0
       do i=1, N_xi_rho
@@ -133,9 +130,39 @@
           endif
         enddo
       enddo
+      
+      END SUBROUTINE land_masking
+
+! --- Fill isolated water and one grid bay ---------------------
+ 
+      SUBROUTINE isolated_water_masking(N_xi_rho, N_eta_rho, mask_rho)
+      integer, intent(in ) :: N_xi_rho
+      integer, intent(in ) :: N_eta_rho
+      real(8), intent(inout) :: mask_rho(N_xi_rho,N_eta_rho) ! Land/Sea mask on RHO-points.
+      integer :: i,j,k
+      integer :: ip,im,jp,jm
+      integer :: is,js
+      integer :: count
+      real(8) :: rmsk(N_xi_rho,N_eta_rho)
+      real(8) :: xrmsk
+      
       ! Remove isolated water area
       rmsk(:,:) = 0.0d0
-      rmsk(1:2,1:2) = 1.0d0  !!! seed
+      ! Generate seed of water area
+      do
+        is = int(rand(0)*(N_xi_rho-10))
+        js = int(rand(0)*(N_eta_rho-10))
+        xrmsk=1.0d0
+        do i=0,9
+          do j=0,9
+            xrmsk = xrmsk*mask_rho(is+i,js+j)
+          enddo
+        enddo
+        if(xrmsk == 1.0d0 ) exit
+      enddo
+  
+      rmsk(is:is+9,js:js+9) = 1.0d0  !!! seed
+      ! Expand water area
       do k=1,1000
         count = 0
         do i=1, N_xi_rho
@@ -185,9 +212,9 @@
       enddo
       
       mask_rho(:,:) = rmsk(:,:)
-
-      END SUBROUTINE land_masking
-
+  
+      END SUBROUTINE isolated_water_masking
+  
 ! --- Compute mask_u, mask_v, mask_psi ---------------------
  
       SUBROUTINE uvp_masks(N_xi_rho, N_eta_rho, mask_rho, mask_u, mask_v, mask_psi)
@@ -213,7 +240,7 @@
       enddo
       
       do i=1, N_xi_rho-1
-        do j=1, N_eta_rho
+        do j=1, N_eta_rho-1
           tm = (mask_rho(i+1,j+1)+mask_rho(i,j))   &
      &        *(mask_rho(i+1,j)+mask_rho(i,j+1))
           if(tm>1.5d0) then

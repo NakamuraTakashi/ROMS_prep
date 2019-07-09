@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2018 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2019 Takashi NAKAMURA  =====
 
     PROGRAM iniHYCOMpNAO2ROMS
       use netcdf
@@ -178,10 +178,10 @@
       TIME_ATT(23:24)=DD
       
 !---- Read ROMS grid netCDF file --------------------------------
-      write(*,*) "OPEN: ", GRID_FILE
+      write(*,*) "OPEN: ", trim( GRID_FILE )
       
       ! Open NetCDF grid file
-      call check( nf90_open(GRID_FILE, nf90_nowrite, ncid) )
+      call check( nf90_open(trim( GRID_FILE ), nf90_nowrite, ncid) )
       ! Get dimension data
       call get_dimension(ncid, 'xi_rho',  N_xi_rho)
       call get_dimension(ncid, 'eta_rho', N_eta_rho)
@@ -249,7 +249,7 @@
       ! Close NetCDF file
       call check( nf90_close(ncid) )
       
-      write(*,*) "CLOSE: ", GRID_FILE
+      write(*,*) "CLOSE: ", trim( GRID_FILE )
       
       
       
