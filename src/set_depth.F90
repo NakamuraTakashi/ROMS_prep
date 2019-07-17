@@ -2,9 +2,9 @@
       SUBROUTINE set_depth (        &
      &              Im, Jm, N       &
      &            , h               &
-# ifdef ICESHELF
-     &            , zice            &
-# endif
+!# ifdef ICESHELF
+!     &            , zice            &
+!# endif
      &            , Vtransform      &
      &            , hc              &
      &            , sc_w, sc_r      &
@@ -18,9 +18,9 @@
 !    input parameters
       integer, intent( in) :: Im,Jm,N
       real(8), intent( in) :: h(Im,Jm)
-#  ifdef ICESHELF
-      real(8), intent( in) :: zice(Im,Jm)
-#  endif
+!#  ifdef ICESHELF
+!      real(8), intent( in) :: zice(Im,Jm)
+!#  endif
       integer, intent( in) :: Vtransform 
       real(8), intent( in) :: hc       
       real(8), intent( in) :: sc_w(0:N)       
@@ -65,18 +65,18 @@
             cff1_w=Cs_w(k)
             DO i=1,Im
               hwater=h(i,j)
-# ifdef ICESHELF
-              hwater=hwater-ABS(zice(i,j))
-# endif
+!# ifdef ICESHELF
+!              hwater=hwater-ABS(zice(i,j))
+!# endif
               hinv=1.0d0/hwater
               z_w0=cff_w+cff1_w*hwater
               z_w(i,j,k)=z_w0+zeta0*(1.0d0+z_w0*hinv)
               z_r0=cff_r+cff1_r*hwater
               z_r(i,j,k)=z_r0+zeta0*(1.0d0+z_r0*hinv)
-# ifdef ICESHELF
-              z_w(i,j,k)=z_w(i,j,k)-ABS(zice(i,j))
-              z_r(i,j,k)=z_r(i,j,k)-ABS(zice(i,j))
-# endif
+!# ifdef ICESHELF
+!              z_w(i,j,k)=z_w(i,j,k)-ABS(zice(i,j))
+!              z_r(i,j,k)=z_r(i,j,k)-ABS(zice(i,j))
+!# endif
             END DO
           END DO
         END DO
@@ -106,19 +106,19 @@
             cff1_w=Cs_w(k)
             DO i=1,Im
               hwater=h(i,j)
-# ifdef ICESHELF
-              hwater=hwater-ABS(zice(i,j))
-# endif
+!# ifdef ICESHELF
+!              hwater=hwater-ABS(zice(i,j))
+!# endif
               hinv=1.0d0/(hc+hwater)
               cff2_r=(cff_r+cff1_r*hwater)*hinv
               cff2_w=(cff_w+cff1_w*hwater)*hinv
 
               z_w(i,j,k)=zeta0+(zeta0+hwater)*cff2_w
               z_r(i,j,k)=zeta0+(zeta0+hwater)*cff2_r
-# ifdef ICESHELF
-              z_w(i,j,k)=z_w(i,j,k)-ABS(zice(i,j))
-              z_r(i,j,k)=z_r(i,j,k)-ABS(zice(i,j))
-# endif
+!# ifdef ICESHELF
+!              z_w(i,j,k)=z_w(i,j,k)-ABS(zice(i,j))
+!              z_r(i,j,k)=z_r(i,j,k)-ABS(zice(i,j))
+!# endif
             END DO
           END DO
         END DO

@@ -361,7 +361,36 @@
       write(*,*) '*** SUCCESS'
 
       END SUBROUTINE createNetCDFini
+!
+!**** Copy and Add a variables to NetCDF file **********************************************
+
+      SUBROUTINE addNetCDFvar(   &
+!        input parameters
+     &      IN_FILE             &
+     &    , OUT_FILE             &
+     &    , var_name             &  
+     &    , Im, Jm, Nz, Nt       &   
+     &)
+!    input parameters
+      character(len=*),  intent( in) :: IN_FILE
+      character(len=*),  intent( in) :: OUT_FILE
+      character(len=*),  intent( in) :: var_name
+      integer, intent( in) :: Im, Jm, Nz, Nt
       
+      integer :: ncid,var_id
+!      integer :: lat_dimid, lon_dimid, depth_dimid, time_dimid
+      integer :: xi_rho_dimid, eta_rho_dimid
+      integer :: xi_u_dimid, eta_u_dimid
+      integer :: xi_v_dimid, eta_v_dimid
+      integer :: s_rho_dimid, s_w_dimid
+      integer :: ocean_time_dimid
+      integer :: dim3Dids(3), dim4Dids(4)
+
+
+
+      
+      END SUBROUTINE addNetCDFvar
+             
 !**** create boundary conditions NetCDF file **********************************************
 
       SUBROUTINE createNetCDFbry(   &

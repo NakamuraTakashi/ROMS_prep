@@ -88,14 +88,17 @@
   HYCOM_prefix  = "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted"
 /
 
+&roms2roms      
+! ROMS coraes NetCDF histry file name
+  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+/
 &bry
-  BRY_prefix  = "CT_0.08_bry_HYCOM_Nz30"
+  BRY_prefix  = "Busuanga1_bry_Nz30"
 /
 
 &ini
-  INI_prefix  = "CT_0.08_ini_HYCOMwNAO_Nz30"
-!  INI_prefix  = "CT_0.08_ini_HYCOM_Nz30"
-  itime = 9       ! Frame number of HYCOME file
+  INI_prefix  = "Busuanga1_ini_Nz30"
+  itime = 73       ! Frame number of HYCOME/ROMS file
 /
 
 &hcoord
@@ -123,16 +126,16 @@
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "N:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "N:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
+  GRIB_FCST_SURF_dir  =  "O:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
+  GRIB_FCST_PHY2M_dir =  "O:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
   
-  FRC_prefix  = "CT_0.08_frc_JRA55"
+  FRC_prefix  = "Busuanga1_frc_JRA55"
 /
 
 &frc_dsjra55
-  GRIB_FCST_SURF_dir  =  "N:/Data/DSJRA-55/Hist/Daily/fcst_surf/199609/"
-  GRIB_FCST_PHY2M_dir =  "N:/Data/DSJRA-55/Hist/Daily/fcst_phy2m/199609/"
-  GRIB_LL = "N:/Data/DSJRA-55/Consts/Lambert5km_latlon.dat"
+  GRIB_FCST_SURF_dir  =  "O:/Data/DSJRA-55/Hist/Daily/fcst_surf/199609/"
+  GRIB_FCST_PHY2M_dir =  "O:/Data/DSJRA-55/Hist/Daily/fcst_phy2m/199609/"
+  GRIB_LL = "O:/Data/DSJRA-55/Consts/Lambert5km_latlon.dat"
   
-  FRC_prefix  = "CT_0.08_frc_DSJRA55"
+  FRC_prefix  = "Busuanga1_frc_DSJRA55"
 /

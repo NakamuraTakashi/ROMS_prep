@@ -140,24 +140,26 @@ END SUBROUTINE nmonths
 
 !**************************************************************
 
-!converts julian date number to calendar date
-SUBROUTINE cdate2(days, Ryear, Rmonth, Rday, YYYYMMDDpHH)
- real(8), intent(IN)   :: days
- integer, intent(OUT)  :: Ryear
- integer, intent(OUT)  :: Rmonth
- integer, intent(OUT)  :: Rday
- character(len=*), intent(OUT)  :: YYYYMMDDpHH
- integer :: yyyy, mm, dd, hh
- integer :: rjd, out_jd
- 
- CALL jd(Ryear, Rmonth, Rday, rjd)
- out_jd = int(days)+rjd
- CALL cdate(out_jd, yyyy, mm, dd)
- hh = int(days*24.0d0) - int(days)*24
- 
- write (YYYYMMDDpHH, "(I4.4, I2.2, I2.2, '.', I2.2)") yyyy, mm, dd, hh
+!converts ROMS ocean_time (sec) since (Ryear, Rmonth, Rday) to calendar date
+SUBROUTINE oceantime2cdate(ocean_time, Ryear, Rmonth, Rday, YYYYMMDDpHH)
+  real(8), intent(IN)  :: ocean_time  ! sec
+  integer, intent(IN)  :: Ryear
+  integer, intent(IN)  :: Rmonth
+  integer, intent(IN)  :: Rday
+  character(len=*), intent(OUT)  :: YYYYMMDDpHH
+  integer :: yyyy, mm, dd, hh
+  integer :: rjd, out_jd
+  real(8) :: ocean_date
 
-END SUBROUTINE cdate2
-
+  ocean_date = ocean_time/24.0d0/60.0d0/60.0d0
+  CALL jd(Ryear, Rmonth, Rday, rjd)
+  out_jd = int(ocean_date)+rjd
+  CALL cdate(out_jd, yyyy, mm, dd)
+  hh = int( ( ocean_date - dble( int(ocean_date) ) )*24.0d0 )
+  
+  write (YYYYMMDDpHH, "(I4.4, I2.2, I2.2, '.', I2.2)") yyyy, mm, dd, hh
+ 
+ END SUBROUTINE oceantime2cdate
+ 
 END MODULE mod_calendar
 

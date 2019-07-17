@@ -145,13 +145,16 @@
       integer :: count
       real(8) :: rmsk(N_xi_rho,N_eta_rho)
       real(8) :: xrmsk
+      real(8) :: rnd
       
       ! Remove isolated water area
       rmsk(:,:) = 0.0d0
       ! Generate seed of water area
       do
-        is = int(rand(0)*(N_xi_rho-10))
-        js = int(rand(0)*(N_eta_rho-10))
+        call random_number(rnd)
+        is = int(rnd*(N_xi_rho-10))
+        call random_number(rnd)
+        js = int(rnd*(N_eta_rho-10))
         xrmsk=1.0d0
         do i=0,9
           do j=0,9

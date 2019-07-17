@@ -1,1423 +1,704 @@
 
-!!!=== ver 2015/12/21   Copyright (c) 2014-2015 Takashi NAKAMURA  ===== (under developing)
+!!!=== Copyright (c) 2014-2019 Takashi NAKAMURA  ===== 
 
-/*#define ADD_TIDES*/
-/*#define RAMP_TIDES*/
+PROGRAM iniROMS2ROMS
+  use netcdf
+  use mod_utility
+  use mod_roms_netcdf
+  use mod_calendar
+  use mod_interpolation
+ 
+  implicit none
+      
+! ---------------------------------------------------------------------
+  integer :: Syear, Smonth, Sday
+  integer :: Ryear, Rmonth, Rday
+  integer :: itime
+  integer :: mode
+  character(256) :: GRID_FILE
+  character(256) :: parent_grid
+  integer :: parent_Imin, parent_Imax
+  integer :: parent_Jmin, parent_Jmax
+  integer :: refine_factor
+  character(256) :: HYCOM_prefix
+  character(256) :: INI_prefix
+  integer :: N_s_rho
+  integer :: Nzr
+  integer :: spherical
+  integer :: Vtransform, Vstretching
+  real(8) :: THETA_S , THETA_B, TCLINE, DCRIT
+  integer :: Nzr_dg
+  integer :: Vtransform_dg, Vstretching_dg
+ 
+  integer, parameter :: N_Param = 2
+  character(256), parameter :: NC_NAME(N_Param) = (/ &
+     "temp"              &
+    ,"salt"              &
+    /)
 
-    PROGRAM iniROMS2ROMS
-      use netcdf
-      use mod_calendar
-      use mod_interpolation
-     
-      implicit none
-      
-! -------------------------------------------------------------------------
-      integer, parameter :: N_s_rho = 15  !!!!!!!!!!!!!!!!!!
-      
-      integer, parameter :: spherical  = 0   
-      
-! Set vertical, terrain-following coordinates transformation equation and
-! stretching function (see below for details), [1:Ngrids].
+  character(33) :: TIME_ATT  = "seconds since 2000-01-01 00:00:00"
 
-      integer, parameter :: Vtransform  = 2   !!! transformation equation
-      integer, parameter :: Vstretching = 4   !!! stretching function
+  character(256) :: ROMS_HISFILE
+  character(15) :: INI_suffix   = "_20000101.00.nc"
+  character(256) :: INI_FILE
+  
+  real(8), allocatable :: time_all(:), lat_all(:), lon_all(:)
+  integer :: start1D(1), count1D(1)
+  integer :: start2D(2), count2D(2)
+  integer :: start3D(3), count3D(3)
+  integer :: start4D(4), count4D(4)
+  
+  real(8), allocatable :: h(:,:)        ! depth (meter)
+  real(8), allocatable :: rmask(:,:)    ! land mask
+  real(8), allocatable :: umask(:,:)    ! land mask
+  real(8), allocatable :: vmask(:,:)    ! land mask
+  real(8), allocatable :: latr(:, :)
+  real(8), allocatable :: lonr(:, :)
+  real(8), allocatable :: latu(:, :)
+  real(8), allocatable :: lonu(:, :)
+  real(8), allocatable :: latv(:, :)
+  real(8), allocatable :: lonv(:, :)
+  real(8) :: hc       
+  real(8), allocatable :: sc_w(:)       
+  real(8), allocatable :: sc_r(:)  
+  real(8), allocatable :: Cs_w(:)       
+  real(8), allocatable :: Cs_r(:)  
+  real(8), allocatable :: z_r(:,:,:)
+  real(8), allocatable :: z_w(:,:,:)
+  real(8), allocatable :: z_u(:,:,:)
+  real(8), allocatable :: z_v(:,:,:)
+  
+  real(8), allocatable :: zeta(:,:,:)   ! free-surface (meter)
+  real(8), allocatable :: ubar(:,:,:)   ! vertically integrated u-momentum component (meter second-1)
+  real(8), allocatable :: vbar(:,:,:)   ! vertically integrated v-momentum component (milibar=hPa)
+  real(8), allocatable :: u(:,:,:,:)    ! u-momentum component (meter second-1)
+  real(8), allocatable :: v(:,:,:,:)    ! v-momentum component (meter second-1)
+  real(8), allocatable :: t(:,:,:,:)    ! tracer 
 
-! Vertical S-coordinates parameters (see below for details), [1:Ngrids].
+  real(8), allocatable :: h_dg(:,:)      ! depth (meter) of donor grid
+  real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: umask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: vmask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: latr_dg(:,:)
+  real(8), allocatable :: lonr_dg(:,:)
+  real(8), allocatable :: latu_dg(:,:)
+  real(8), allocatable :: lonu_dg(:,:)
+  real(8), allocatable :: latv_dg(:,:)
+  real(8), allocatable :: lonv_dg(:,:)
+  real(8) :: hc_dg       
+  real(8), allocatable :: sc_w_dg(:)       
+  real(8), allocatable :: sc_r_dg(:)  
+  real(8), allocatable :: Cs_w_dg(:)       
+  real(8), allocatable :: Cs_r_dg(:)  
+  real(8), allocatable :: z_r_dg(:,:,:)
+  real(8), allocatable :: z_w_dg(:,:,:)
+  real(8), allocatable :: z_u_dg(:,:,:)
+  real(8), allocatable :: z_v_dg(:,:,:)
 
-      real(8), parameter :: THETA_S = 7.0d0   !!! 1.0d0                      ! surface stretching parameter
-      real(8), parameter :: THETA_B = 0.1d0   !!! 1.0d0                      ! bottom  stretching parameter
-      real(8), parameter :: TCLINE  = 200.0d0  !!! 0.0d0                     ! critical depth (m)
-      real(8), parameter :: DCRIT   = 0.10d0  !!! 0.0d0                      ! critical depth (m)
-! -------------------------------------------------------------------------
-      
-      integer, parameter :: Ryear  = 2000   ! Reference year
-      integer, parameter :: Rmonth = 1      ! Reference month
-      integer, parameter :: Rday   = 1      ! Reference day
-      
-      integer, parameter :: itime = 1345       ! Frame number of OCEAN_FILE
-      
-      integer, parameter :: mode = 1        ! mode=1, linear intrtporation
-      
-     ! NetCDF file     
-      character(len=*), parameter :: GRID_FILE1 = "D:/ROMS/Yaeyama/Data/Yaeyama1_grd_v8.nc"
-      character(len=*), parameter :: GRID_FILE2 = "D:/ROMS/Yaeyama/Data/Yaeyama2_grd_v9.nc"
-      character(len=*), parameter :: OCEAN_FILE =                      &
-     &     "D:/ROMS/Yaeyama/Y1_pNAO_13_2/ocean_his_Yaeyama1_NAO_130427.nc"
-      character(len=*), parameter :: INI_FILE  =                        &
-     &     "D:/ROMS/Yaeyama/Data/Yaeyama2_ini_Nz15_ROMS_130525.nc"
-     
-! ----- Configulation for NAOTIDE ---------------------------------------
-! -----< Set mode, location, epoch, data interval, and output file >-----
-!      
-! Mode selection
-      integer, parameter :: itmode   = 2
-!      Set itmode = 1 to calculate geocentric tide
-!                 = 2 to calculate pure ocean tide 
-!                        with respect to ocean floor
-!                 = 3 to calculate radial loading tide 
-      integer, parameter :: lpmode  = 1
-!      Set lpmode = 1 to use long-period ocean tide map of Takanezawa
-!                 = 2 to use equilibrium tide (Valid for itmode = 1,2)
-!
-      
-! -------------------------------------------------------------------------
-
-      character(33) :: TIME_ATT  = "seconds since 2000-01-01 00:00:00"
-      
-      real(8), parameter :: grav = 9.80665d0
-      real(8), parameter :: dynz = 0.0d0
-      real(8), parameter :: ref_press = 0.0d0
-      real(8) :: press, potemp
-      
-
-      real(8), allocatable :: time_all(:)
-      integer :: start1D(1), count1D(1)
-      integer :: start2D(2), count2D(2)
-      integer :: start3D(3), count3D(3)
-      integer :: start4D(4), count4D(4)
-      
-      integer :: N_s_rho1
-      real(8), allocatable :: lat_rho1(:, :)
-      real(8), allocatable :: lon_rho1(:, :)
-      real(8), allocatable :: lat_u1(:, :)
-      real(8), allocatable :: lon_u1(:, :)
-      real(8), allocatable :: lat_v1(:, :)
-      real(8), allocatable :: lon_v1(:, :)
-      real(8), allocatable :: h1(:,:)        ! depth (meter)
-      real(8), allocatable :: mask_rho1(:,:)        ! land mask
-      real(8), allocatable :: h_u1(:,:)        ! depth (meter)
-      real(8), allocatable :: h_v1(:,:)        ! depth (meter)
-      real(8), allocatable :: z_w1(:,:,:)  ! vertical depths z_w(x,y,0:N(ng)) at  W-points (top/bottom cell) (meter)
-      real(8), allocatable :: z_r1(:,:,:)  ! vertical depths z_w(x,y,1:N(ng)) at  RHO-points (cell center) (meter)
-      real(8), allocatable :: z_r_u1(:,:,:)  ! vertical depths z_w(x,y,1:N(ng)) at  RHO-points (cell center) (meter)
-      real(8), allocatable :: z_r_v1(:,:,:)  ! vertical depths z_w(x,y,1:N(ng)) at  RHO-points (cell center) (meter)
-     
-      real(8) :: ocean_time(3)            ! Ocean time
-      real(8), allocatable :: zeta1(:,:,:)   ! free-surface (meter)
-      real(8), allocatable :: ubar1(:,:,:)   ! vertically integrated u-momentum component (meter second-1)
-      real(8), allocatable :: vbar1(:,:,:)   ! vertically integrated v-momentum component (milibar=hPa)
-      real(8), allocatable :: u1(:,:,:,:)    ! u-momentum component (meter second-1)
-      real(8), allocatable :: v1(:,:,:,:)    ! v-momentum component (meter second-1)
-      real(8), allocatable :: temp1(:,:,:,:) ! potential temperature (Celsius)
-      real(8), allocatable :: salt1(:,:,:,:) ! salinity (psu)    
-      integer :: N_xi_rho1, N_eta_rho1
-      integer :: N_xi_u1, N_eta_u1
-      integer :: N_xi_v1, N_eta_v1
-      real(8), allocatable :: Cs_w1(:)       
-      real(8), allocatable :: Cs_r1(:)  
-
-      
-      real(8), allocatable :: lat_rho(:, :)
-      real(8), allocatable :: lon_rho(:, :)
-      real(8), allocatable :: lat_u(:, :)
-      real(8), allocatable :: lon_u(:, :)
-      real(8), allocatable :: lat_v(:, :)
-      real(8), allocatable :: lon_v(:, :)
-      real(8), allocatable :: h(:,:)        ! depth (meter)
-      real(8), allocatable :: mask_rho(:,:)        ! land mask
-      real(8), allocatable :: h_u(:,:)        ! depth (meter)
-      real(8), allocatable :: h_v(:,:)        ! depth (meter)
-      real(8), allocatable :: z_w(:,:,:)  ! vertical depths z_w(x,y,0:N(ng)) at  W-points (top/bottom cell) (meter)
-      real(8), allocatable :: z_r(:,:,:)  ! vertical depths z_w(x,y,1:N(ng)) at  RHO-points (cell center) (meter)
-      real(8), allocatable :: z_r_u(:,:,:)  ! vertical depths z_w(x,y,1:N(ng)) at  RHO-points (cell center) (meter)
-      real(8), allocatable :: z_r_v(:,:,:)  ! vertical depths z_w(x,y,1:N(ng)) at  RHO-points (cell center) (meter)
-     
-      real(8), allocatable :: zeta(:,:,:)   ! free-surface (meter)
-      real(8), allocatable :: ubar(:,:,:)   ! vertically integrated u-momentum component (meter second-1)
-      real(8), allocatable :: vbar(:,:,:)   ! vertically integrated v-momentum component (milibar=hPa)
-      real(8), allocatable :: u(:,:,:,:)    ! u-momentum component (meter second-1)
-      real(8), allocatable :: v(:,:,:,:)    ! v-momentum component (meter second-1)
-      real(8), allocatable :: temp(:,:,:,:) ! potential temperature (Celsius)
-      real(8), allocatable :: salt(:,:,:,:) ! salinity (psu)    
-
-      real(8), allocatable :: zeta_tide(:,:)   ! free-surface by tide (meter)
-
-      
-      real(8) :: hc       
-      real(8) :: sc_w(0:N_s_rho)       
-      real(8) :: sc_r(1:N_s_rho)  
-      real(8) :: Cs_w(0:N_s_rho)       
-      real(8) :: Cs_r(1:N_s_rho)  
-      
-      integer :: i,j,k
-      integer :: idt,incdf
-      real(8) :: wf  
-      real(8) :: Smjd
-      
-      character(4) :: YYYY
-      character(2) :: MM
-      character(2) :: DD
-      
-      integer :: N_xi_rho, N_eta_rho
-      integer :: N_xi_u, N_eta_u
-      integer :: N_xi_v, N_eta_v
-      
-      integer :: ncid,var_id
-      integer :: ncid2,var_id2
-      
-      real(8) :: sf, off
-      integer :: Im, Jm, Nz, Nt
-      integer :: IL, IR, JB, JT
-      integer :: ItS, ItE
-
-			real(8) :: height, hsp, hlp, jtime
-      real(8) :: ramp
-      Logical ::  Ldata
-!      integer :: time_varid, Uwind_varid
-      
-      
-      call mjdymd(Smjd, Ryear, Rmonth, Rday , 0,    &
-     &            0, 0     , 1                      )  ! from naotidej.f
-
-      
-      write (YYYY, "(I4.4)") Ryear
-      write (MM, "(I2.2)") Rmonth
-      write (DD, "(I2.2)") Rday
-      
-      
-      
-!---- Modify time-unit description ---------------------------------
-      
-      TIME_ATT(15:18)=YYYY
-      TIME_ATT(20:21)=MM
-      TIME_ATT(23:24)=DD
-      
-!---- Read ROMS ocean_his netCDF file --------------------------------
-
-      ! Open NetCDF file
-      write(*,*) "OPEN: ", OCEAN_FILE
-      call check( nf90_open(OCEAN_FILE, nf90_nowrite, ncid) )
-      call get_dimension(ncid, 'ocean_time', Nt)
-      allocate(time_all(Nt))
-      call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
-      call check( nf90_get_var(ncid, var_id, time_all) )
-      ! Get dimension data
-      call get_dimension(ncid, 's_rho', N_s_rho1)
-      allocate(Cs_w1(0:N_s_rho1))
-      allocate(Cs_r1(1:N_s_rho1))
-      
-      call check( nf90_inq_varid(ncid, 'Cs_w', var_id) ) ! S-coordinate stretching curves at W-points
-      call check( nf90_get_var(ncid, var_id, Cs_w1) )
-      call check( nf90_inq_varid(ncid, 'Cs_r', var_id) ) ! S-coordinate stretching curves at RHO-points
-      call check( nf90_get_var(ncid, var_id, Cs_r1) )
-      
-      ! Close NetCDF file
-      call check( nf90_close(ncid) )
-      write(*,*) "CLOSE: ", OCEAN_FILE
-      write(*,*) "*********************************************"
-
-!---- Read ROMS grid(1) netCDF file --------------------------------
-      write(*,*) "OPEN: ", GRID_FILE1
-      
-      ! Open NetCDF grid file
-      call check( nf90_open(GRID_FILE1, nf90_nowrite, ncid) )
-      ! Get dimension data
-      call get_dimension(ncid, 'xi_rho',  N_xi_rho1)
-      call get_dimension(ncid, 'eta_rho', N_eta_rho1)
-      call get_dimension(ncid, 'xi_u',  N_xi_u1)
-      call get_dimension(ncid, 'eta_u', N_eta_u1)
-      call get_dimension(ncid, 'xi_v',  N_xi_v1)
-      call get_dimension(ncid, 'eta_v', N_eta_v1)
-      
-      allocate(lat_rho1(N_xi_rho1, N_eta_rho1))
-      allocate(lon_rho1(N_xi_rho1, N_eta_rho1))
-      allocate(lat_u1(N_xi_u1, N_eta_u1))
-      allocate(lon_u1(N_xi_u1, N_eta_u1))
-      allocate(lat_v1(N_xi_v1, N_eta_v1))
-      allocate(lon_v1(N_xi_v1, N_eta_v1))
-      allocate(h1(N_xi_rho1, N_eta_rho1))
-      allocate(mask_rho1(N_xi_rho1, N_eta_rho1))
-      allocate(h_u1(N_xi_u1, N_eta_u1))
-      allocate(h_v1(N_xi_v1, N_eta_v1))
-      allocate(z_w1(N_xi_rho1, N_eta_rho1, 0:N_s_rho1))
-      allocate(z_r1(N_xi_rho1, N_eta_rho1, 1:N_s_rho1))
-      allocate(z_r_u1(N_xi_u1, N_eta_u1, 1:N_s_rho1))
-      allocate(z_r_v1(N_xi_v1, N_eta_v1, 1:N_s_rho1))
-      
-      allocate(zeta1(N_xi_rho1, N_eta_rho1, 3))
-      allocate(ubar1(N_xi_u1, N_eta_u1, 3))
-      allocate(vbar1(N_xi_v1, N_eta_v1, 3))
-      allocate(u1(N_xi_u1, N_eta_u1, N_s_rho1, 3))
-      allocate(v1(N_xi_v1, N_eta_v1, N_s_rho1, 3))
-      allocate(temp1(N_xi_rho1, N_eta_rho1, N_s_rho1, 3))
-      allocate(salt1(N_xi_rho1, N_eta_rho1, N_s_rho1, 3))
-      
-      allocate(zeta_tide(N_xi_rho1, N_eta_rho1))
-      
-      ! Get variable id
-      call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lat_rho1) )
-      call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lon_rho1) )
-      call check( nf90_inq_varid(ncid, 'lat_u', var_id) ) ! latitude at U-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lat_u1) )
-      call check( nf90_inq_varid(ncid, 'lon_u', var_id) ) ! longitude at U-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lon_u1) )
-      call check( nf90_inq_varid(ncid, 'lat_v', var_id) ) ! latitude at V-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lat_v1) )
-      call check( nf90_inq_varid(ncid, 'lon_v', var_id) ) ! longitude at V-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lon_v1) )
-      call check( nf90_inq_varid(ncid, 'h', var_id) ) 
-      call check( nf90_get_var(ncid, var_id, h1) )
-      call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
-      call check( nf90_get_var(ncid, var_id, mask_rho1) )
-      ! Close NetCDF file
-      call check( nf90_close(ncid) )
-      
-      write(*,*) "CLOSE: ", GRID_FILE1
-      
-      do i=1,N_xi_u1
-        do j=1,N_eta_u1
-          h_u1(i,j)= (h1(i,j)+h1(i+1,j))*0.5d0
-        enddo
-      enddo
-      do i=1,N_xi_v1
-        do j=1,N_eta_v1
-          h_v1(i,j)= (h1(i,j)+h1(i,j+1))*0.5d0
-        enddo
-      enddo
-      
-      do i=1,N_xi_rho1
-        do j=1,N_eta_rho1
-          do k=1,N_s_rho1
-            z_r1(i,j,k)= -h1(i,j)*Cs_r1(k)
-          enddo
-        enddo
-      enddo
-      do i=1,N_xi_u1
-        do j=1,N_eta_u1
-          do k=1,N_s_rho1
-            z_r_u1(i,j,k)= -h_u1(i,j)*Cs_r1(k)
-          enddo
-        enddo
-      enddo
-      do i=1,N_xi_v1
-        do j=1,N_eta_v1
-          do k=1,N_s_rho1
-            z_r_v1(i,j,k)= -h_v1(i,j)*Cs_r1(k)
-          enddo
-        enddo
-      enddo
-      do i=1,N_xi_rho
-        do j=1,N_eta_rho
-          do k=0,N_s_rho
-            z_w1(i,j,k)= -h1(i,j)*Cs_w1(k)
-          enddo
-        enddo
-      enddo
-            
-!---- Read ROMS grid(2) netCDF file --------------------------------
-      write(*,*) "OPEN: ", GRID_FILE2
-      
-      ! Open NetCDF grid file
-      call check( nf90_open(GRID2_FILE2, nf90_nowrite, ncid) )
-      ! Get dimension data
-      call get_dimension(ncid, 'xi_rho',  N_xi_rho)
-      call get_dimension(ncid, 'eta_rho', N_eta_rho)
-      call get_dimension(ncid, 'xi_u',  N_xi_u)
-      call get_dimension(ncid, 'eta_u', N_eta_u)
-      call get_dimension(ncid, 'xi_v',  N_xi_v)
-      call get_dimension(ncid, 'eta_v', N_eta_v)
-      
-      allocate(lat_rho(N_xi_rho, N_eta_rho))
-      allocate(lon_rho(N_xi_rho, N_eta_rho))
-      allocate(lat_u(N_xi_u, N_eta_u))
-      allocate(lon_u(N_xi_u, N_eta_u))
-      allocate(lat_v(N_xi_v, N_eta_v))
-      allocate(lon_v(N_xi_v, N_eta_v))
-      allocate(h(N_xi_rho, N_eta_rho))
-      allocate(mask_rho(N_xi_rho, N_eta_rho))
-      allocate(h_u(N_xi_u, N_eta_u))
-      allocate(h_v(N_xi_v, N_eta_v))
-      allocate(z_w(N_xi_rho, N_eta_rho, 0:N_s_rho))
-      allocate(z_r(N_xi_rho, N_eta_rho, 1:N_s_rho))
-      allocate(z_r_u(N_xi_u, N_eta_u, 1:N_s_rho))
-      allocate(z_r_v(N_xi_v, N_eta_v, 1:N_s_rho))
-      
-      allocate(zeta(N_xi_rho, N_eta_rho, 3))
-      allocate(ubar(N_xi_u, N_eta_u, 3))
-      allocate(vbar(N_xi_v, N_eta_v, 3))
-      allocate(u(N_xi_u, N_eta_u, N_s_rho, 3))
-      allocate(v(N_xi_v, N_eta_v, N_s_rho, 3))
-      allocate(temp(N_xi_rho, N_eta_rho, N_s_rho, 3))
-      allocate(salt(N_xi_rho, N_eta_rho, N_s_rho, 3))
-      
-      allocate(zeta_tide(N_xi_rho, N_eta_rho))
-      
-      ! Get variable id
-      call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lat_rho) )
-      call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lon_rho) )
-      call check( nf90_inq_varid(ncid, 'lat_u', var_id) ) ! latitude at U-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lat_u) )
-      call check( nf90_inq_varid(ncid, 'lon_u', var_id) ) ! longitude at U-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lon_u) )
-      call check( nf90_inq_varid(ncid, 'lat_v', var_id) ) ! latitude at V-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lat_v) )
-      call check( nf90_inq_varid(ncid, 'lon_v', var_id) ) ! longitude at V-points (degree_east)
-      call check( nf90_get_var(ncid, var_id, lon_v) )
-      call check( nf90_inq_varid(ncid, 'h', var_id) ) 
-      call check( nf90_get_var(ncid, var_id, h) )
-      call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
-      call check( nf90_get_var(ncid, var_id, mask_rho) )
-      ! Close NetCDF file
-      call check( nf90_close(ncid) )
-      
-      write(*,*) "CLOSE: ", GRID_FILE2
-      
-      
-      
-      call set_scoord (             &
-!        input parameters
-     &              N_s_rho         &
-     &            , Vtransform      &
-     &            , Vstretching     &
-     &            , THETA_S         &
-     &            , THETA_B         &
-     &            , TCLINE          &
-     &            , DCRIT           &
-!        output parameters
-     &            , hc              &
-     &            , sc_w            &
-     &            , sc_r            &
-     &            , Cs_w            &
-     &            , Cs_r            &
-     &           )
-
-      
-      do i=1,N_xi_u
-        do j=1,N_eta_u
-          h_u(i,j)= (h(i,j)+h(i+1,j))*0.5d0
-        enddo
-      enddo
-      do i=1,N_xi_v
-        do j=1,N_eta_v
-          h_v(i,j)= (h(i,j)+h(i,j+1))*0.5d0
-        enddo
-      enddo
-      
-      do i=1,N_xi_rho
-        do j=1,N_eta_rho
-          do k=1,N_s_rho
-            z_r(i,j,k)= -h(i,j)*Cs_r(k)
-          enddo
-        enddo
-      enddo
-      do i=1,N_xi_u
-        do j=1,N_eta_u
-          do k=1,N_s_rho
-            z_r_u(i,j,k)= -h_u(i,j)*Cs_r(k)
-          enddo
-        enddo
-      enddo
-      do i=1,N_xi_v
-        do j=1,N_eta_v
-          do k=1,N_s_rho
-            z_r_v(i,j,k)= -h_v(i,j)*Cs_r(k)
-          enddo
-        enddo
-      enddo
-      do i=1,N_xi_rho
-        do j=1,N_eta_rho
-          do k=0,N_s_rho
-            z_w(i,j,k)= -h(i,j)*Cs_w(k)
-          enddo
-        enddo
-      enddo
-      
-!---- Create the ROMS initial conditions netCDF file --------------------------------
-          
-      call createNetCDFini(           &
-!          input parameters
-     &        INI_FILE               &
-     &      , TIME_ATT               &  
-     &      , N_xi_rho, N_eta_rho, N_s_rho, 1          &   
-     &      )
-      
-      call check( nf90_open(INI_FILE, NF90_WRITE, ncid) )
-      call check( nf90_inq_varid(ncid, 'spherical', var_id) )
-      call check( nf90_put_var(ncid, var_id, spherical) )
-      call check( nf90_inq_varid(ncid, 'Vtransform', var_id) )
-      call check( nf90_put_var(ncid, var_id, Vtransform ) )
-      call check( nf90_inq_varid(ncid, 'Vstretching', var_id) )
-      call check( nf90_put_var(ncid, var_id, Vstretching ) )
-      call check( nf90_inq_varid(ncid, 'theta_s', var_id) )
-      call check( nf90_put_var(ncid, var_id, THETA_S ) )
-      call check( nf90_inq_varid(ncid, 'theta_b', var_id) )
-      call check( nf90_put_var(ncid, var_id, THETA_B) )
-      call check( nf90_inq_varid(ncid, 'Tcline', var_id) )
-      call check( nf90_put_var(ncid, var_id, TCLINE) )
-      call check( nf90_inq_varid(ncid, 'hc', var_id) )
-      call check( nf90_put_var(ncid, var_id, hc ) )
-      call check( nf90_close(ncid) )
-      
-!---- Write ROMS initial conditions netCDF file --------------------------------
-      
-      start1D = (/ 1 /)
-      count1D = (/ N_s_rho /)
-      call writeNetCDF_1d(           &
-!          input parameters
-     &        's_rho'                &
-     &      , INI_FILE               &
-     &      , N_s_rho                &
-     &      , sc_r                   &
-     &      , start1D, count1D       &
-     &      )
-      call writeNetCDF_1d(           &
-!          input parameters
-     &        'Cs_r'                 &
-     &      , INI_FILE               &
-     &      , N_s_rho                &
-     &      , Cs_r                   &
-     &      , start1D, count1D       &
-     &      )
-     
-      start1D = (/ 1 /)
-      count1D = (/ N_s_rho+1 /)
-      call writeNetCDF_1d(           &
-!          input parameters
-     &        's_w'                  &
-     &      , INI_FILE               &
-     &      , N_s_rho+1              &
-     &      , sc_w                   &
-     &      , start1D, count1D       &
-     &      )
-      call writeNetCDF_1d(           &
-!          input parameters
-     &        'Cs_w'                 &
-     &      , INI_FILE               &
-     &      , N_s_rho+1              &
-     &      , Cs_w                   &
-     &      , start1D, count1D       &
-     &      )
-     
-
-!---- Read ROMS ocean_his netCDF file --------------------------------
-
-      write(*,*) 'time (days) = ', time_all(itime)
-
-      write(*,*) "OPEN: ", OCEAN_FILE
-      call check( nf90_open(OCEAN_FILE, nf90_nowrite, ncid) )
-      
-      start3D = (/ 1,  1,  itime /)
-      count3D = (/ N_xi_rho1, N_eta_rho1, 1 /)
-      call check( nf90_inq_varid(ncid, 'zeta', var_id) )
-      call check( nf90_get_var(ncid, var_id, zeta1, start=start3D, count=count3D)  )
-      start3D = (/ 1,  1,  itime /)
-      count3D = (/ N_xi_u1, N_eta_u1, 1 /)
-      call check( nf90_inq_varid(ncid, 'ubar', var_id) )
-      call check( nf90_get_var(ncid, var_id, ubar1, start=start3D, count=count3D)  )
-      start3D = (/ 1,  1,  itime /)
-      count3D = (/ N_xi_v1, N_eta_v1, 1 /)
-      call check( nf90_inq_varid(ncid, 'vbar', var_id) )
-      call check( nf90_get_var(ncid, var_id, vbar1, start=start3D, count=count3D)  )
-
-      start4D = (/ 1,  1,  1,  itime /)
-      count4D = (/ N_xi_rho1, N_eta_rho1, N_s_rho1, 1 /)
-      call check( nf90_inq_varid(ncid, 'temp', var_id) )
-      call check( nf90_get_var(ncid, var_id, temp1, start=start4D, count=count4D)  )
-      call check( nf90_inq_varid(ncid, 'salt', var_id) )
-      call check( nf90_get_var(ncid, var_id, salt1, start=start4D, count=count4D)  )
-      start4D = (/ 1,  1,  1,  itime /)
-      count4D = (/ N_xi_u1, N_eta_u1, N_s_rho1, 1 /)
-      call check( nf90_inq_varid(ncid, 'u1', var_id) )
-      call check( nf90_get_var(ncid, var_id, water_u1, start=start4D, count=count4D)  )
-      start4D = (/ 1,  1,  1,  itime /)
-      count4D = (/ N_xi_v1, N_eta_v1, N_s_rho1, 1 /)
-      call check( nf90_inq_varid(ncid, 'v1', var_id) )
-      call check( nf90_get_var(ncid, var_id, water_v1, start=start4D, count=count4D)  )
-
-      ! Close NetCDF file
-      call check( nf90_close(ncid) )
-      write(*,*) "CLOSE: ", OCEAN_FILE
-      
-! --------------------------------------------------------
-
-      ocean_time(1) = time_all(itime)
-
-! --- Linear interporation --------------------------------
-      
-      if (mode==1) then
-      
-        write(*,*) 'Linear Interporation'
-      
-        call LinearInterpolation2D_grid2(Im, Jm, lon, lat               &
-     &                  , surf_el(:,:,1), -5.0d0, 5.0d0                 &
-     &                  , N_xi_rho, N_eta_rho, lon_rho, lat_rho, zeta(:,:,1) )
-      
-        call LinearInterpolation3D_grid3(Im, Jm, Nz, lon, lat, depth    &
-     &                  , water_temp(:,:,:,1),  0.0d0, 40.0d0           &
-     &                  , N_xi_rho, N_eta_rho, N_s_rho                  &
-     &                  , lon_rho, lat_rho, z_r                         &
-     &                  , temp(:,:,:,1) )
-     
-        call LinearInterpolation3D_grid3(Im, Jm, Nz, lon, lat, depth    &
-     &                  , salinity(:,:,:,1),  20.0d0, 36.0d0            &
-     &                  , N_xi_rho, N_eta_rho, N_s_rho                  &
-     &                  , lon_rho, lat_rho, z_r                         &
-     &                  , salt(:,:,:,1) )
-
-        call LinearInterpolation3D_grid3(Im, Jm, Nz, lon, lat, depth    &
-     &                  , water_u(:,:,:,1),  -5.0d0, 5.0d0              &
-     &                  , N_xi_u, N_eta_u, N_s_rho                      &
-     &                  , lon_u, lat_u, z_r_u                           &
-     &                  , u(:,:,:,1) )
-
-        call LinearInterpolation3D_grid3(Im, Jm, Nz, lon, lat, depth    &
-     &                  , water_v(:,:,:,1),  -5.0d0, 5.0d0              &
-     &                  , N_xi_v, N_eta_v, N_s_rho                      &
-     &                  , lon_v, lat_v, z_r_v                           &
-     &                  , v(:,:,:,1) )
-     
-        write(*,*) '*** SUCCESS Linear Interporation'
-        
-      else if (mode ==2) then
-      
-      end if
-
-#ifdef ADD_TIDES          
-!---- NAOTIDE calculation --------------------------------
-          
-      jtime = dble(Smjd) + ocean_time(1)/86400.0d0
-!      write(*,*) jtime, Smjd
-      do i=1,N_xi_rho
-        do j=1,N_eta_rho
-          call naotidej(lon_rho(i,j), lat_rho(i,j), jtime  , itmode, lpmode,       &
-     &               zeta_tide(i,j), hsp   , hlp   , Ldata          )
-          
-          zeta_tide(i,j)=zeta_tide(i,j)*0.01d0
-
-        enddo
-      enddo
-      
-      call FillExtraPoints2D(N_xi_rho, N_eta_rho, zeta_tide, -5.0d0, 5.0d0)
-# ifdef RAMP_TIDES
-      ramp=TANH((ocean_time(1)/86400.0d0)/1.0d0)
-# else
-      ramp=1.0d0
-# endif          
-      zeta(:,:,1)=zeta(:,:,1)+ramp*zeta_tide(:,:)
-      
+  real(8) :: ocean_time(1)                 ! Ocean time (sec)
+  real(8), allocatable :: zeta_dg(:,:,:)   ! free-surface (meter)
+  real(8), allocatable :: ubar_dg(:,:,:)   ! vertically integrated u-momentum component (meter second-1)
+  real(8), allocatable :: vbar_dg(:,:,:)   ! vertically integrated v-momentum component (milibar=hPa)
+  real(8), allocatable :: u_dg(:,:,:,:)    ! u-momentum component (meter second-1)
+  real(8), allocatable :: v_dg(:,:,:,:)    ! v-momentum component (meter second-1)
+  real(8), allocatable :: t_dg(:,:,:,:)    ! tracer 
+#if defined WET_DRY
+  real(8), allocatable :: umask_wet_dg(:,:,:)
+  real(8), allocatable :: vmask_wet_dg(:,:,:)
 #endif
-          
-!---- Depth averaged velocity calculation --------------------------------
+  integer, allocatable :: ID_cnt2Dr(:,:)
+  real(8), allocatable :: w_cnt2Dr (:,:)
+  integer, allocatable :: ID_cnt2Du(:,:)
+  real(8), allocatable :: w_cnt2Du (:,:)
+  integer, allocatable :: ID_cnt2Dv(:,:)
+  real(8), allocatable :: w_cnt2Dv (:,:)
+  integer, allocatable :: ID_cnt3Dr(:,:)
+  real(8), allocatable :: w_cnt3Dr (:,:)
+  integer, allocatable :: ID_cnt3Du(:,:)
+  real(8), allocatable :: w_cnt3Du (:,:)
+  integer, allocatable :: ID_cnt3Dv(:,:)
+  real(8), allocatable :: w_cnt3Dv (:,:)
+
+  integer :: i,j,k
+  integer :: idt,incdf
+  real(8) :: wf  
+  real(8) :: Smjd
+  
+  character(4) :: YYYY
+  character(2) :: MM
+  character(2) :: DD
+  character(11) :: YYYYMMDDpHH
+  
+  integer :: Nxr, Nyr, Nxu, Nyu, Nxv, Nyv
+  integer :: L, M, N
+  integer :: Ldg, Mdg, Ndg
+  integer :: irg, jrg, krg
+  integer :: Idg, Jdg, Kdg
+  integer :: Nxr_dg, Nyr_dg, Nxu_dg, Nyu_dg, Nxv_dg, Nyv_dg
+  integer :: Nt
+  integer :: Irdg_min, Irdg_max, Jrdg_min, Jrdg_max  ! Minimum and maximum ID of donor grid index.
+  integer :: Iudg_min, Iudg_max, Judg_min, Judg_max  ! Minimum and maximum ID of donor grid index.
+  integer :: Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max  ! Minimum and maximum ID of donor grid index.
+
+  integer :: ncid,var_id
+  integer :: ncid2,var_id2
+  !
+  namelist/grd/GRID_FILE
+  namelist/refinement/parent_grid
+  namelist/refinement/parent_Imin, parent_Imax
+  namelist/refinement/parent_Jmin, parent_Jmax
+  namelist/refinement/refine_factor
+  namelist/refdate/Ryear, Rmonth, Rday
+  namelist/roms2roms/ROMS_HISFILE
+  namelist/ini/INI_prefix
+  namelist/ini/itime
+  namelist/hcoord/spherical
+  namelist/zcoord/N_s_rho
+  namelist/zcoord/Vtransform, Vstretching
+  namelist/zcoord/THETA_S, THETA_B, TCLINE, DCRIT
+
+  ! Read parameters in namelist file
+  
+  read (*, nml=grd)
+  read (*, nml=refinement)
+  read (*, nml=refdate)
+  read (*, nml=roms2roms)
+  read (*, nml=ini)
+  read (*, nml=hcoord)
+  read (*, nml=zcoord)
+           
+!-Modify time-unit description ---------------------------------
+  
+  write (YYYY, "(I4.4)") Ryear
+  write (MM, "(I2.2)") Rmonth
+  write (DD, "(I2.2)") Rday
+  TIME_ATT(15:18)=YYYY
+  TIME_ATT(20:21)=MM
+  TIME_ATT(23:24)=DD
+  
+!-Read ROMS grid netCDF file --------------------------------
+  write(*,*) "OPEN: ", trim( GRID_FILE )
+  
+  ! Open NetCDF grid file
+  call check( nf90_open(trim( GRID_FILE ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'xi_rho',  Nxr)
+  call get_dimension(ncid, 'eta_rho', Nyr)
+  Nxu  = Nxr-1
+  Nyu = Nyr
+  Nxv  = Nxr
+  Nyv = Nyr-1
+  Nzr = N_s_rho
+
+  L = Nxr-1
+  M = Nyr-1
+  N = Nzr
+  
+  allocate( latr(0:L, 0:M) )
+  allocate( lonr(0:L, 0:M) )
+  allocate( latu(1:L, 0:M) )
+  allocate( lonu(1:L, 0:M) )
+  allocate( latv(0:L, 1:M) )
+  allocate( lonv(0:L, 1:M) )
+  allocate( rmask(0:L, 0:M) )
+  allocate( umask(1:L, 0:M) )
+  allocate( vmask(0:L, 1:M) )
+  allocate( h(0:L, 0:M) )
+  allocate( sc_w(0:N) )
+  allocate( sc_r(1:N) )
+  allocate( Cs_w(0:N) )
+  allocate( Cs_r(1:N) )
+  allocate( z_r(0:L, 0:M, 1:N) )
+  allocate( z_w(0:L, 0:M, 0:N) )
+  allocate( z_u(1:L, 0:M, 1:N) )
+  allocate( z_v(0:L, 1:M, 1:N) )
+  
+  allocate( zeta(0:L, 0:M, 1) )
+  allocate( ubar(1:L, 0:M, 1) )
+  allocate( vbar(0:L, 1:M, 1) )
+  allocate( u(1:L, 0:M, 1:N, 1) )
+  allocate( v(0:L, 1:M, 1:N, 1) )
+  allocate( t(0:L, 0:M, 1:N, 1) )
+!  allocate( salt(0:L, 0:M, 1:N, 1) )
+  
+  
+  ! Get variables
+  start2D = (/ 1,  1 /)
+  count2D = (/ Nxr, Nyr /)
+  call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latr(0:L, 0:M)) )
+  call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonr) )
+  call check( nf90_inq_varid(ncid, 'lat_u', var_id) ) ! latitude at U-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latu) )
+  call check( nf90_inq_varid(ncid, 'lon_u', var_id) ) ! longitude at U-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonu) )
+  call check( nf90_inq_varid(ncid, 'lat_v', var_id) ) ! latitude at V-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latv) )
+  call check( nf90_inq_varid(ncid, 'lon_v', var_id) ) ! longitude at V-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonv) )
+  call check( nf90_inq_varid(ncid, 'h', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, h) )
+  call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, rmask) )
+  call check( nf90_inq_varid(ncid, 'mask_u', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, umask) )
+  call check( nf90_inq_varid(ncid, 'mask_v', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, vmask) )
+  ! Close NetCDF file
+  call check( nf90_close(ncid) )
+  
+  write(*,*) "CLOSE: ", trim( GRID_FILE )
       
-      ubar(:,:,1)=0.0d0
-      do i=1,N_xi_u
-        do j=1,N_eta_u
-          do k=1,N_s_rho
-            ubar(i,j,1)= ubar(i,j,1)+u(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
-          enddo
-        enddo
+  call set_scoord (  Nzr, Vtransform, Vstretching    &
+        , THETA_S, THETA_B, TCLINE, DCRIT            &
+!    output parameters
+        , hc, sc_w, sc_r, Cs_w, Cs_r )
+
+  call set_depth ( Nxr, Nyr, Nzr, h                  &
+        , Vtransform, hc, sc_w, sc_r, Cs_w, Cs_r     &
+!    output parameters
+        , z_r, z_w)
+  z_r = -z_r
+  z_w = -z_w
+  
+  do i=1,L
+    do j=0,M
+      do k=1,N
+        z_u(i,j,k)= (z_r(i-1,j,k)+z_r(i,j,k))*0.5d0
       enddo
-      vbar(:,:,1)=0.0d0
-      do i=1,N_xi_v
-        do j=1,N_eta_v
-          do k=1,N_s_rho
-            vbar(i,j,1)= vbar(i,j,1)+v(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
-          enddo
-        enddo
+    enddo
+  enddo
+  do i=0,L
+    do j=1,M
+      do k=1,N
+        z_v(i,j,k)= (z_r(i,j-1,k)+z_r(i,j,k))*0.5d0
       enddo
+    enddo
+  enddo
+
+!-Read ROMS parent grid netCDF file --------------------------------
+  write(*,*) "OPEN: ", trim( parent_grid )
+  
+  ! Open NetCDF grid file
+  call check( nf90_open(trim( parent_grid ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'xi_rho',  Nxr_dg)
+  call get_dimension(ncid, 'eta_rho', Nyr_dg)
+  Nxu_dg = Nxr_dg-1
+  Nyu_dg = Nyr_dg
+  Nxv_dg = Nxr_dg
+  Nyv_dg = Nyr_dg-1
+  Ldg = Nxr_dg-1
+  Mdg = Nyr_dg-1
+       
+  allocate( latr_dg(0:Ldg, 0:Mdg) )
+  allocate( lonr_dg(0:Ldg, 0:Mdg) )
+  allocate( latu_dg(1:Ldg, 0:Mdg) )
+  allocate( lonu_dg(1:Ldg, 0:Mdg) )
+  allocate( latv_dg(0:Ldg, 1:Mdg) )
+  allocate( lonv_dg(0:Ldg, 1:Mdg) )
+  allocate( rmask_dg(0:Ldg, 0:Mdg) )
+  allocate( umask_dg(1:Ldg, 0:Mdg) )
+  allocate( vmask_dg(0:Ldg, 1:Mdg) )
+  allocate( h_dg(0:Ldg, 0:Mdg) )
+  
+  ! Get variables
+  call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latr_dg) )
+  call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonr_dg) )
+  call check( nf90_inq_varid(ncid, 'lat_u', var_id) ) ! latitude at U-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latu_dg) )
+  call check( nf90_inq_varid(ncid, 'lon_u', var_id) ) ! longitude at U-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonu_dg) )
+  call check( nf90_inq_varid(ncid, 'lat_v', var_id) ) ! latitude at V-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latv_dg) )
+  call check( nf90_inq_varid(ncid, 'lon_v', var_id) ) ! longitude at V-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonv_dg) )
+  call check( nf90_inq_varid(ncid, 'h', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, h_dg) )
+  call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, rmask_dg) )
+  call check( nf90_inq_varid(ncid, 'mask_u', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, umask_dg) )
+  call check( nf90_inq_varid(ncid, 'mask_v', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, vmask_dg) )
+  ! Close NetCDF file
+  call check( nf90_close(ncid) )
+  
+  write(*,*) "CLOSE: ", trim( parent_grid )
+
+!-Read ROMS ocean_his netCDF file --------------------------------
+
+  ! Open NetCDF file
+  write(*,*) "OPEN: ", trim( ROMS_HISFILE )
+  call check( nf90_open(trim( ROMS_HISFILE ), nf90_nowrite, ncid) )
+  call get_dimension(ncid, 'ocean_time', Nt)
+  call get_dimension(ncid, 's_rho', Nzr_dg)
+
+  allocate(time_all(Nt))
+  Ndg = Nzr_dg
+  allocate( sc_w_dg(0:Ndg ) )
+  allocate( sc_r_dg(1:Ndg ) )
+  allocate( Cs_w_dg(0:Ndg ) )
+  allocate( Cs_r_dg(1:Ndg ) )
+  allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_w_dg(0:Ldg, 0:Mdg, 0:Ndg ) )
+  allocate( z_u_dg(1:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_v_dg(0:Ldg, 1:Mdg, 1:Ndg ) )
+
+  call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
+  call check( nf90_get_var(ncid, var_id, time_all) )
+  call check( nf90_inq_varid(ncid, 's_rho', var_id) )
+  call check( nf90_get_var(ncid, var_id, sc_r_dg ) )
+  call check( nf90_inq_varid(ncid, 's_w', var_id) )
+  call check( nf90_get_var(ncid, var_id, sc_w_dg ) )
+  call check( nf90_inq_varid(ncid, 'Cs_r', var_id) )
+  call check( nf90_get_var(ncid, var_id, Cs_r_dg ) )
+  call check( nf90_inq_varid(ncid, 'Cs_w', var_id) )
+  call check( nf90_get_var(ncid, var_id, Cs_w_dg ) )
+  call check( nf90_inq_varid(ncid, 'Vtransform', var_id) )
+  call check( nf90_get_var(ncid, var_id, Vtransform_dg ) )
+  call check( nf90_inq_varid(ncid, 'hc', var_id) )
+  call check( nf90_get_var(ncid, var_id, hc_dg ) )
+ 
+  call set_depth ( Nxr_dg, Nyr_dg, Nzr, h_dg                         &
+        , Vtransform_dg, hc_dg, sc_w_dg, sc_r_dg, Cs_w_dg, Cs_r_dg   &
+!    output parameters
+        , z_r_dg, z_w_dg)
+
+  z_r_dg = -z_r_dg
+  z_w_dg = -z_w_dg
+  
+  do i=1,Ldg
+    do j=0,Mdg
+      do k=1,Ndg
+        z_u_dg(i,j,k)= (z_r_dg(i,j,k)+z_r_dg(i+1,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+  do i=0,Ldg
+    do j=1,Mdg
+      do k=1,Ndg
+        z_v_dg(i,j,k)= (z_r_dg(i,j,k)+z_r_dg(i,j+1,k))*0.5d0
+      enddo
+    enddo
+  enddo
+
+! ----------------------------------------------------
+  write(*,*) "*** Calculate weight factor ***"
+
+  allocate( ID_cnt2Dr(8, Nxr*Nyr) )
+  allocate( w_cnt2Dr (3, Nxr*Nyr) )
+  allocate( ID_cnt2Du(8, Nxu*Nyu) )
+  allocate( w_cnt2Du (3, Nxu*Nyu) )
+  allocate( ID_cnt2Dv(8, Nxv*Nyv) )
+  allocate( w_cnt2Dv (3, Nxv*Nyv) )
+
+  allocate( ID_cnt3Dr(10, Nxr*Nyr*Nzr) )
+  allocate( w_cnt3Dr (6,  Nxr*Nyr*Nzr) )
+  allocate( ID_cnt3Du(10, Nxu*Nyu*Nzr) )
+  allocate( w_cnt3Du (6,  Nxu*Nyu*Nzr) )
+  allocate( ID_cnt3Dv(10, Nxv*Nyv*Nzr) )
+  allocate( w_cnt3Dv (6,  Nxv*Nyv*Nzr) )
+
+  write(*,*) "Seek rho point donor IJ range"
+  call seek_IJrange(                                   &
+          0, Ldg, 0, Mdg, lonr_dg, latr_dg             & 
+        , 0, L,   0, M,   lonr,    latr                &
+        , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max)
+  write(*,*) Irdg_min, Irdg_max, Jrdg_min, Jrdg_max
+  Nxr_dg =Irdg_max-Irdg_min+1
+  Nyr_dg =Jrdg_max-Jrdg_min+1
+
+  write(*,*) "Calculate 2D rho point weight factor"
+  call weight2D_grid3(                                  &
+          Irdg_min, Irdg_max, Jrdg_min, Jrdg_max        &
+        , lonr_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
+        , latr_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
+        , rmask_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max) & 
+        , 0, L,   0, M,   lonr,    latr                 &
+        , ID_cnt2Dr, w_cnt2Dr )
+
+  write(*,*) "Seek u point donor IJ range"
+  call seek_IJrange(                                   &
+          1, Ldg, 0, Mdg, lonu_dg, latu_dg             & 
+        , 1, L,   0, M,   lonu,    latu                &
+        , Iudg_min, Iudg_max, Judg_min, Judg_max)
+!  Iudg_max=Iudg_max+2
+  write(*,*) Iudg_min, Iudg_max, Judg_min, Judg_max
+  Nxu_dg =Iudg_max-Iudg_min+1
+  Nyu_dg =Judg_max-Judg_min+1
+
+  write(*,*) "Calculate 2D u point weight factor"
+  call weight2D_grid3(                                 &
+          Iudg_min, Iudg_max, Judg_min, Judg_max        &
+        , lonu_dg(Iudg_min:Iudg_max,Judg_min:Judg_max)  &
+        , latu_dg(Iudg_min:Iudg_max,Judg_min:Judg_max)  &
+        , umask_dg(Iudg_min:Iudg_max,Judg_min:Judg_max) & 
+        , 1, L,   0, M,   lonu,    latu                 &
+        , ID_cnt2Du, w_cnt2Du )
+
+  write(*,*) "Seek v point donor IJ range"
+  call seek_IJrange(                                   &
+          0, Ldg, 1, Mdg, lonv_dg, latv_dg             & 
+        , 0, L,   1, M,   lonv,    latv                &
+        , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max)
+!  Jvdg_max=Jvdg_max+2
+  write(*,*) Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max
+  Nxv_dg =Ivdg_max-Ivdg_min+1
+  Nyv_dg =Jvdg_max-Jvdg_min+1
+
+  write(*,*) "Calculate 2D v point weight factor"
+  call weight2D_grid3(                                 &
+          Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max        &
+        , lonv_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)  &
+        , latv_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)  &
+        , vmask_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max) & 
+        , 0, L,   1, M,   lonv,    latv                 &
+        , ID_cnt2Dv, w_cnt2Dv )
+
+  write(*,*) "Calculate 3D rho point weight factor"
+  call weight3D_grid3(                                      &
+          Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg    &
+        , z_r_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max,1:Ndg) &
+        , 0, L,   0, M,   1, N,   z_r                       &
+        , ID_cnt2Dr, w_cnt2Dr                               &
+        , ID_cnt3Dr, w_cnt3Dr )
+
+  write(*,*) "Calculate 3D u point weight factor"
+  call weight3D_grid3(                                      &
+          Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg    &
+        , z_u_dg(Iudg_min:Iudg_max,Judg_min:Judg_max,1:Ndg) &
+        , 1, L,   0, M,   1, N,   z_u                       &
+        , ID_cnt2Du, w_cnt2Du                               &
+        , ID_cnt3Du, w_cnt3Du )
+
+  write(*,*) "Calculate 3D v point weight factor"
+  call weight3D_grid3(                                      &
+          Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg    &
+        , z_v_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max,1:Ndg) &
+        , 0, L,   1, M,   1, N,   z_v                       &
+        , ID_cnt2Dv, w_cnt2Dv                               &
+        , ID_cnt3Dv, w_cnt3Dv )
+
+
+  allocate( zeta_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1) )
+  allocate( ubar_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
+  allocate( vbar_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
+  allocate( u_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
+  allocate( v_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
+  allocate( t_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Nzr_dg, 1) )
+#if defined WET_DRY
+  allocate( umask_wet_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
+  allocate( vmask_wet_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
+#endif
+
+  write(*,*) "*********************************************"
+!-Read ROMS ocean_his netCDF file --------------------------------
+
+  ocean_time(1) = time_all(itime)
+!-Initial netcdf file name -------------------------------------------------
+  call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
+  INI_suffix(2:12)=YYYYMMDDpHH
+  INI_FILE = trim( INI_prefix )//INI_suffix
+
+!-Create the ROMS initial conditions netCDF file --------------------------------
       
-      
-!---- Write ROMS initial conditions netCDF file --------------------------------
+  call createNetCDFini(  trim( INI_FILE )                         &
+        , TIME_ATT , Nxr, Nyr, Nzr, 1   )
 
-      start1D = (/ 1 /)
-      count1D = (/ 1 /)
-      call writeNetCDF_1d(           &
-!          input parameters
-     &        'ocean_time'           &
-     &      , INI_FILE               &
-     &      , 1                      &
-     &      , ocean_time(1)             &
-     &      , start1D, count1D       &
-     &      )
+!-Write ROMS initial conditions netCDF file --------------------------------
+ 
+  call check( nf90_open(trim( INI_FILE ), NF90_WRITE, ncid2) )
+  call check( nf90_inq_varid(ncid2, 'spherical', var_id) )
+  call check( nf90_put_var(ncid2, var_id, spherical) )
+  call check( nf90_inq_varid(ncid2, 'Vtransform', var_id) )
+  call check( nf90_put_var(ncid2, var_id, Vtransform ) )
+  call check( nf90_inq_varid(ncid2, 'Vstretching', var_id) )
+  call check( nf90_put_var(ncid2, var_id, Vstretching ) )
+  call check( nf90_inq_varid(ncid2, 'theta_s', var_id) )
+  call check( nf90_put_var(ncid2, var_id, THETA_S ) )
+  call check( nf90_inq_varid(ncid2, 'theta_b', var_id) )
+  call check( nf90_put_var(ncid2, var_id, THETA_B) )
+  call check( nf90_inq_varid(ncid2, 'Tcline', var_id) )
+  call check( nf90_put_var(ncid2, var_id, TCLINE) )
+  call check( nf90_inq_varid(ncid2, 'hc', var_id) )
+  call check( nf90_put_var(ncid2, var_id, hc ) )
+  start1D = (/ 1 /)
+  count1D = (/ Nzr /)
+  call check( nf90_inq_varid(ncid2, 's_rho', var_id) )
+  call check( nf90_put_var(ncid2, var_id, sc_r, start1D, count1D) )
+  call check( nf90_inq_varid(ncid2, 'Cs_r', var_id) )
+  call check( nf90_put_var(ncid2, var_id, Cs_r, start1D, count1D) )
+  start1D = (/ 1 /)
+  count1D = (/ Nzr+1 /)
+  call check( nf90_inq_varid(ncid2, 's_w', var_id) )
+  call check( nf90_put_var(ncid2, var_id, sc_w, start1D,  count1D) )
+  call check( nf90_inq_varid(ncid2, 'Cs_w', var_id) )
+  call check( nf90_put_var(ncid2, var_id, Cs_w, start1D, count1D) )
+  call check( nf90_close(ncid2) )
 
-     
-      start3D = (/ 1,  1,  1 /)
-      count3D = (/ N_xi_rho, N_eta_rho, 1 /)
-      call writeNetCDF_3d(                      &
-!          input parameters
-     &        'zeta'                            &
-     &      , INI_FILE                          &
-     &      , N_xi_rho, N_eta_rho, 1            &
-     &      , zeta(:,:,1)                              &
-     &      , start3D, count3D                  &
-     &      )
+!-Write ROMS initial conditions netCDF file --------------------------------
 
-      start3D = (/ 1,  1,  1 /)
-      count3D = (/ N_xi_u, N_eta_u, 1 /)
-      call writeNetCDF_3d(                      &
-!          input parameters
-     &        'ubar'                            &
-     &      , INI_FILE                          &
-     &      , N_xi_u, N_eta_u, 1                &
-     &      , ubar(:,:,1)                       &
-     &      , start3D, count3D                  &
-     &      )
-      start3D = (/ 1,  1,  1 /)
-      count3D = (/ N_xi_v, N_eta_v, 1 /)
-      call writeNetCDF_3d(                      &
-!          input parameters
-     &        'vbar'                            &
-     &      , INI_FILE                          &
-     &      , N_xi_v, N_eta_v, 1                &
-     &      , vbar(:,:,1)                              &
-     &      , start3D, count3D                  &
-     &      )
-          
-      start4D = (/ 1,  1,  1,  1 /)
-      count4D = (/ N_xi_rho, N_eta_rho, N_s_rho, 1 /)
-      call writeNetCDF_4d(                  &
-!          input parameters
-     &        'temp'                            &
-     &      , INI_FILE                          &
-     &      , N_xi_rho, N_eta_rho, N_s_rho, 1   &
-     &      , temp(:,:,:,1)                              &
-     &      , start4D, count4D                  &
-     &      )
+  start1D = (/ 1 /)
+  count1D = (/ 1 /)
+  call writeNetCDF_1d( 'ocean_time' , trim( INI_FILE )            &
+        , 1, ocean_time(1), start1D, count1D )
+  
+!- zeta --------------------------------
+  write(*,*) 'Read: zeta'
+  start3D = (/ Irdg_min+1, Jrdg_min+1, itime /)
+  count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
+  call check( nf90_inq_varid(ncid, 'zeta', var_id) )
+  call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
 
-      call writeNetCDF_4d(                      &
-!          input parameters
-     &        'salt'                            &
-     &      , INI_FILE                          &
-     &      , N_xi_rho, N_eta_rho, N_s_rho, 1   &
-     &      , salt(:,:,:,1)                               &
-     &      , start4D, count4D                  &
-     &      )
+  write(*,*) 'Linear Interporation: zeta'
+  call interp2D_grid3(                                                &
+          Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg             &
+        , 0, L, 0, M                                                  &
+        , Id_cnt2Dr, w_cnt2Dr                                         &
+        , zeta  ) 
 
-      start4D = (/ 1,  1,  1,  1 /)
-      count4D = (/ N_xi_u, N_eta_u, N_s_rho, 1 /)
-      call writeNetCDF_4d(                      &
-!          input parameters
-     &        'u'                               &
-     &      , INI_FILE                          &
-     &      , N_xi_u, N_eta_u, N_s_rho, 1       &
-     &      , u(:,:,:,1)                                  &
-     &      , start4D, count4D                  &
-     &      )
+  start3D = (/ 1,  1,  1 /)
+  count3D = (/ Nxr, Nyr, 1 /)
+  call writeNetCDF_3d( 'zeta' , trim( INI_FILE )             &
+        , Nxr, Nyr, 1, zeta                                  &
+        , start3D, count3D )
 
-      start4D = (/ 1,  1,  1,  1 /)
-      count4D = (/ N_xi_v, N_eta_v, N_s_rho, 1 /)
-      call writeNetCDF_4d(                      &
-!          input parameters
-     &        'v'                               &
-     &      , INI_FILE                          &
-     &      , N_xi_v, N_eta_v, N_s_rho, 1       &
-     &      , v(:,:,:,1)                                  &
-     &      , start4D, count4D                  &
-     &      )
+!- u --------------------------------
 
-     
+  write(*,*) 'Read: u'
+  start4D = (/ Iudg_min, Judg_min+1, 1,      itime /)
+  count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1     /)
+  call check( nf90_open(trim( INI_FILE ), NF90_WRITE, ncid2) )
+  call check( nf90_inq_varid(ncid, 'u', var_id) )
+  call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
 
-      write(*,*) 'FINISH!!'
-      
+#if defined WET_DRY
+  start3D = (/ Iudg_min, Judg_min+1, itime /)
+  count3D = (/ Nxu_dg,     Nyu_dg,     1     /)
+  call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
+  call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
+  
+  do i=Iudg_min,Iudg_max
+    do j=Judg_min,Judg_max
+      u_dg(i,j,:,1)= u_dg(i,j,:,1)*umask_wet_dg(i,j,1)
+    enddo
+  enddo
+#endif
 
-!**** End of Main program **********************************************
-        
-    CONTAINS
+  write(*,*) 'Linear Interporation: u'
+  call interp3D_grid3(                                    &
+          Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
+        , u_dg                                            &
+        , 1, L, 0, M , 1, N                               &
+        , Id_cnt3Du, w_cnt3Du                             &
+        , u ) 
+
+  start4D = (/ 1,  1,  1,  1 /)
+  count4D = (/ Nxu, Nyu, Nzr, 1 /)
+  call writeNetCDF_4d( 'u' , trim( INI_FILE )             &
+        , Nxu, Nyu, Nzr, 1, u                             &
+        , start4D, count4D )
+
+!- v --------------------------------
+
+  write(*,*) 'Read: v'
+  start4D = (/ Ivdg_min+1, Jvdg_min, 1,      itime /)
+  count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1     /)
+  call check( nf90_inq_varid(ncid, 'v', var_id) )
+  call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
+
+#if defined WET_DRY
+  start3D = (/ Ivdg_min+1, Jvdg_min, itime /)
+  count3D = (/ Nxv_dg,     Nyv_dg,     1     /)
+  call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
+  call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
+  
+  do i=Ivdg_min,Ivdg_max
+    do j=Jvdg_min,Jvdg_max
+      v_dg(i,j,:,1)= v_dg(i,j,:,1)*vmask_wet_dg(i,j,1)
+    enddo
+  enddo
+#endif
+
+  write(*,*) 'Linear Interporation: v'
+  call interp3D_grid3(                                    &
+          Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg  &
+        , v_dg                                            &
+        , 0, L, 1, M , 1, N                               &
+        , Id_cnt3Dv, w_cnt3Dv                             &
+        , v  ) 
+
+  start4D = (/ 1,  1,  1,  1 /)
+  count4D = (/ Nxv, Nyv, Nzr, 1 /)
+  call writeNetCDF_4d( 'v' , trim( INI_FILE )             &
+        , Nxv, Nyv, Nzr, 1, v                             &
+        , start4D, count4D )
+
+!-Depth averaged velocity calculation --------------------------------
+  
+  ubar(:,:,1)=0.0d0
+  do i=1,L
+    do j=0,M
+      do k=1,N
+        ubar(i,j,1)= ubar(i,j,1)+u(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+      enddo
+    enddo
+  enddo
+  vbar(:,:,1)=0.0d0
+  do i=0,L
+    do j=1,M
+      do k=1,N
+        vbar(i,j,1)= vbar(i,j,1)+v(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+      enddo
+    enddo
+  enddo
+
+  start3D = (/ 1,  1,  1 /)
+  count3D = (/ Nxu, Nyu, 1 /)
+  call writeNetCDF_3d( 'ubar' , trim( INI_FILE )             &
+        , Nxu, Nyu, 1, ubar                                  &
+        , start3D, count3D )
+
+  start3D = (/ 1,  1,  1 /)
+  count3D = (/ Nxv, Nyv, 1 /)
+  call writeNetCDF_3d( 'vbar' , trim( INI_FILE )             &
+        , Nxv, Nyv, 1, vbar                                  &
+        , start3D, count3D )
+
+!- Tracer (temp, salt, etc.) --------------------------------
+
+  do i=1, N_Param   
+
+    write(*,*) 'Read: ', trim( NC_NAME(i) )
+    start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      itime /)
+    count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1     /)
+    call check( nf90_inq_varid(ncid, trim( NC_NAME(i) ), var_id) )
+    call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
     
-!**** create initial conditions NetCDF file **********************************************
+    write(*,*) 'Linear Interporation: ', trim( NC_NAME(i) )
+    call interp3D_grid3(                                  &
+          Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg  &
+        , t_dg                                            &
+        , 0, L, 0, M , 1, N                               &
+        , Id_cnt3Dr, w_cnt3Dr                             &
+        , t  ) 
 
-      SUBROUTINE createNetCDFini(   &
-!        input parameters
-     &      OUT_FILE             &
-     &    , TIME_ATT             &  
-     &    , Im, Jm, Nz, Nt       &   
-     &)
-                               
-!    input parameters
-      character(len=*),  intent( in) :: OUT_FILE
-      character(len=*),  intent( in) :: TIME_ATT
-      integer, intent( in) :: Im, Jm, Nz, Nt
+    start4D = (/ 1,  1,  1,  1 /)
+    count4D = (/ Nxr, Nyr, Nzr, 1 /)
+    call writeNetCDF_4d( trim( NC_NAME(i) ) , trim( INI_FILE )  &
+          , Nxr, Nyr, Nzr, 1, t                                 &
+          , start4D, count4D )
+  
+  enddo
+
+  call check( nf90_close(ncid) )
+
+  write(*,*) 'FINISH!!'
       
-      integer :: ncid2,var_id2
-!      integer :: lat_dimid, lon_dimid, depth_dimid, time_dimid
-      integer :: xi_rho_dimid, eta_rho_dimid
-      integer :: xi_u_dimid, eta_u_dimid
-      integer :: xi_v_dimid, eta_v_dimid
-      integer :: s_rho_dimid, s_w_dimid
-      integer :: ocean_time_dimid
-      integer :: dim3Dids(3), dim4Dids(4)
       
-!---- Create the ROMS initial condition netCDF file --------------------------------
-
-      write(*,*) "CREATE: ", OUT_FILE
-
-      call check( nf90_create(OUT_FILE, nf90_clobber, ncid2) )
-
-      call check( nf90_def_dim(ncid2, 'xi_rho', Im, xi_rho_dimid) )
-      call check( nf90_def_dim(ncid2, 'xi_u', Im-1, xi_u_dimid) )
-      call check( nf90_def_dim(ncid2, 'xi_v', Im, xi_v_dimid) )
-      call check( nf90_def_dim(ncid2, 'eta_rho', Jm, eta_rho_dimid) )
-      call check( nf90_def_dim(ncid2, 'eta_u', Jm, eta_u_dimid) )
-      call check( nf90_def_dim(ncid2, 'eta_v', Jm-1, eta_v_dimid) )
-      call check( nf90_def_dim(ncid2, 's_rho', Nz, s_rho_dimid) )
-      call check( nf90_def_dim(ncid2, 's_w', Nz+1, s_w_dimid) )
-      call check( nf90_def_dim(ncid2, 'ocean_time', NF90_UNLIMITED, ocean_time_dimid) )
-      
-    ! Define the netCDF variables.
-      call check( nf90_def_var(ncid2, 'spherical', NF90_INT, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'grid type logical switch') )
-      call check( nf90_put_att(ncid2, var_id2, 'flag_values', '0, 1') )
-      call check( nf90_put_att(ncid2, var_id2, 'flag_meanings', 'Cartesian spherical' ) )
-      
-      call check( nf90_def_var(ncid2, 'Vtransform', NF90_INT, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'vertical terrain-following transformation equation') )
-
-      call check( nf90_def_var(ncid2, 'Vstretching', NF90_INT, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'vertical terrain-following stretching function') )
-
-      call check( nf90_def_var(ncid2, 'theta_s', NF90_DOUBLE, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate surface control parameter') )
-
-      call check( nf90_def_var(ncid2, 'theta_b', NF90_DOUBLE, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate bottom control parameter') )
-
-      call check( nf90_def_var(ncid2, 'Tcline', NF90_DOUBLE, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate surface/bottom layer width') )
-
-      call check( nf90_def_var(ncid2, 'hc', NF90_DOUBLE, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate parameter, critical depth') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
-
-
-      call check( nf90_def_var(ncid2, 's_rho', NF90_DOUBLE, s_rho_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate at RHO-points') )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_min',  -1.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_max',   0.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'positive',  'up' ) )
-      call check( nf90_put_att(ncid2, var_id2, 'standard_name', 'ocean_s_coordinate_g1') )
-      call check( nf90_put_att(ncid2, var_id2, 'formula_terms', 's: s_rho C: Cs_r eta: zeta depth: h depth_c: hc') )
-
-      call check( nf90_def_var(ncid2, 's_w', NF90_DOUBLE, s_w_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate at W-points') )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_min',  -1.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_max',   0.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'positive',  'up' ) )
-      call check( nf90_put_att(ncid2, var_id2, 'standard_name', 'ocean_s_coordinate_g1') )
-      call check( nf90_put_att(ncid2, var_id2, 'formula_terms', 's: s_w C: Cs_w eta: zeta depth: h depth_c: hc') )
-
-      call check( nf90_def_var(ncid2, 'Cs_r', NF90_DOUBLE, s_rho_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate stretching curves at RHO-points') )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_min',  -1.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_max',   0.0d0 ) )
-
-      call check( nf90_def_var(ncid2, 'Cs_w', NF90_DOUBLE, s_w_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate stretching curves at W-points') )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_min',  -1.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_max',   0.0d0 ) )
-
-
-      call check( nf90_def_var(ncid2, 'ocean_time', NF90_DOUBLE, ocean_time_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'time since initialization') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     TIME_ATT ) )
-
-      dim3Dids = (/ xi_rho_dimid, eta_rho_dimid, ocean_time_dimid /)
-
-      call check( nf90_def_var(ncid2, 'zeta', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'free-surface') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'ocean_time') )
-      
-      dim3Dids = (/ xi_u_dimid, eta_u_dimid, ocean_time_dimid /)
-
-      call check( nf90_def_var(ncid2, 'ubar', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'vertically integrated u-momentum component') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'ocean_time') )
-      
-      dim3Dids = (/ xi_v_dimid, eta_v_dimid, ocean_time_dimid /)
-
-      call check( nf90_def_var(ncid2, 'vbar', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'vertically integrated v-momentum component') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'ocean_time') )
-      
-      dim4Dids = (/ xi_rho_dimid, eta_rho_dimid, s_rho_dimid, ocean_time_dimid /)
-
-      call check( nf90_def_var(ncid2, 'temp', NF90_DOUBLE, dim4Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'potential temperature') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'ocean_time') )
-
-      call check( nf90_def_var(ncid2, 'salt', NF90_DOUBLE, dim4Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'salinity') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'psu') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'ocean_time') )
-      
-      dim4Dids = (/ xi_u_dimid, eta_u_dimid, s_rho_dimid, ocean_time_dimid /)
-
-      call check( nf90_def_var(ncid2, 'u', NF90_DOUBLE, dim4Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'u-momentum component') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'ocean_time') )
-      
-      dim4Dids = (/ xi_v_dimid, eta_v_dimid, s_rho_dimid, ocean_time_dimid /)
-
-      call check( nf90_def_var(ncid2, 'v', NF90_DOUBLE, dim4Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'v-momentum component') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'ocean_time') )
-
-  ! End define mode.
-      call check( nf90_enddef(ncid2) )
-      call check( nf90_close(ncid2) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE createNetCDFini
-      
-!**** create boundary conditions NetCDF file **********************************************
-
-      SUBROUTINE createNetCDFbry(   &
-!        input parameters
-     &      OUT_FILE             &
-     &    , TIME_ATT             &  
-     &    , Im, Jm, Nz, Nt       &   
-     &)
-                               
-!    input parameters
-      character(len=*),  intent( in) :: OUT_FILE
-      character(len=*),  intent( in) :: TIME_ATT
-      integer, intent( in) :: Im, Jm, Nz, Nt
-      
-      integer :: ncid2,var_id2
-!      integer :: lat_dimid, lon_dimid, depth_dimid, time_dimid
-      integer :: xi_rho_dimid, eta_rho_dimid
-      integer :: xi_u_dimid, eta_u_dimid
-      integer :: xi_v_dimid, eta_v_dimid
-      integer :: s_rho_dimid, s_w_dimid
-      integer :: bry_time_dimid
-      integer :: dim2Dids(2), dim3Dids(3), dim4Dids(4)
-      
-!---- Create the ROMS initial condition netCDF file --------------------------------
-
-      write(*,*) "CREATE: ", OUT_FILE
-
-      call check( nf90_create(OUT_FILE, nf90_clobber, ncid2) )
-
-      call check( nf90_def_dim(ncid2, 'xi_rho', Im, xi_rho_dimid) )
-      call check( nf90_def_dim(ncid2, 'xi_u', Im-1, xi_u_dimid) )
-      call check( nf90_def_dim(ncid2, 'xi_v', Im, xi_v_dimid) )
-      call check( nf90_def_dim(ncid2, 'eta_rho', Jm, eta_rho_dimid) )
-      call check( nf90_def_dim(ncid2, 'eta_u', Jm, eta_u_dimid) )
-      call check( nf90_def_dim(ncid2, 'eta_v', Jm-1, eta_v_dimid) )
-      call check( nf90_def_dim(ncid2, 's_rho', Nz, s_rho_dimid) )
-      call check( nf90_def_dim(ncid2, 's_w', Nz+1, s_w_dimid) )
-      call check( nf90_def_dim(ncid2, 'bry_time', NF90_UNLIMITED, bry_time_dimid) )
-      
-    ! Define the netCDF variables.
-      call check( nf90_def_var(ncid2, 'spherical', NF90_INT, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'grid type logical switch') )
-      call check( nf90_put_att(ncid2, var_id2, 'flag_values', '0, 1') )
-      call check( nf90_put_att(ncid2, var_id2, 'flag_meanings', 'Cartesian spherical' ) )
-      
-      call check( nf90_def_var(ncid2, 'Vtransform', NF90_INT, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'vertical terrain-following transformation equation') )
-
-      call check( nf90_def_var(ncid2, 'Vstretching', NF90_INT, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'vertical terrain-following stretching function') )
-
-      call check( nf90_def_var(ncid2, 'theta_s', NF90_DOUBLE, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate surface control parameter') )
-
-      call check( nf90_def_var(ncid2, 'theta_b', NF90_DOUBLE, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate bottom control parameter') )
-
-      call check( nf90_def_var(ncid2, 'Tcline', NF90_DOUBLE, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate surface/bottom layer width') )
-
-      call check( nf90_def_var(ncid2, 'hc', NF90_DOUBLE, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate parameter, critical depth') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
-
-
-      call check( nf90_def_var(ncid2, 's_rho', NF90_DOUBLE, s_rho_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate at RHO-points') )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_min',  -1.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_max',   0.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'positive',  'up' ) )
-      call check( nf90_put_att(ncid2, var_id2, 'standard_name', 'ocean_s_coordinate_g1') )
-      call check( nf90_put_att(ncid2, var_id2, 'formula_terms', 's: s_rho C: Cs_r eta: zeta depth: h depth_c: hc') )
-
-      call check( nf90_def_var(ncid2, 's_w', NF90_DOUBLE, s_w_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate at W-points') )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_min',  -1.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_max',   0.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'positive',  'up' ) )
-      call check( nf90_put_att(ncid2, var_id2, 'standard_name', 'ocean_s_coordinate_g1') )
-      call check( nf90_put_att(ncid2, var_id2, 'formula_terms', 's: s_w C: Cs_w eta: zeta depth: h depth_c: hc') )
-
-      call check( nf90_def_var(ncid2, 'Cs_r', NF90_DOUBLE, s_rho_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate stretching curves at RHO-points') )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_min',  -1.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_max',   0.0d0 ) )
-
-      call check( nf90_def_var(ncid2, 'Cs_w', NF90_DOUBLE, s_w_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'S-coordinate stretching curves at W-points') )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_min',  -1.0d0 ) )
-      call check( nf90_put_att(ncid2, var_id2, 'valid_max',   0.0d0 ) )
-
-
-      call check( nf90_def_var(ncid2, 'bry_time', NF90_DOUBLE, bry_time_dimid, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'open boundary conditions time') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     TIME_ATT ) )
-
-      dim2Dids = (/ eta_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'zeta_west', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'free-surface western boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'zeta_east', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'free-surface eastern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      dim2Dids = (/ xi_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'zeta_south', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'free-surface southern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'zeta_north', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'free-surface northern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      
-      dim2Dids = (/ eta_u_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'ubar_west', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', '2D u-momentum western boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'ubar_east', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', '2D u-momentum eastern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      dim2Dids = (/ xi_u_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'ubar_south', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', '2D u-momentum southern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'ubar_north', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', '2D u-momentum northern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      
-      dim2Dids = (/ eta_v_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'vbar_west', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', '2D v-momentum western boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'vbar_east', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', '2D v-momentum eastern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      dim2Dids = (/ xi_v_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'vbar_south', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', '2D v-momentum southern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'vbar_north', NF90_DOUBLE, dim2Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', '2D v-momentum northern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-
-      dim3Dids = (/ eta_u_dimid, s_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'u_west', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'u-momentum western boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'u_east', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'u-momentum eastern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      dim3Dids = (/ xi_u_dimid, s_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'u_south', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'u-momentum southern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'u_north', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'u-momentum northern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-
-      dim3Dids = (/ eta_v_dimid, s_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'v_west', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'v-momentum western boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'v_east', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'v-momentum eastern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      dim3Dids = (/ xi_v_dimid, s_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'v_south', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'v-momentum southern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'v_north', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'v-momentum northern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-
-      dim3Dids = (/ eta_rho_dimid, s_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'temp_west', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'potential temperature western boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'temp_east', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'potential temperature eastern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      dim3Dids = (/ xi_rho_dimid, s_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'temp_south', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'potential temperature southern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'temp_north', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'potential temperature northern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-
-      dim3Dids = (/ eta_rho_dimid, s_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'salt_west', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'salinity western boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'salt_east', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'salinity eastern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      dim3Dids = (/ xi_rho_dimid, s_rho_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid2, 'salt_south', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'salinity southern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid2, 'salt_north', NF90_DOUBLE, dim3Dids, var_id2) )
-      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'salinity northern boundary condition') )
-      call check( nf90_put_att(ncid2, var_id2, 'time',      'bry_time') )
-
-
-  ! End define mode.
-      call check( nf90_enddef(ncid2) )
-      call check( nf90_close(ncid2) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE createNetCDFbry
-      
-!**** writeNetCDF_1d **********************************************
-      
-      SUBROUTINE writeNetCDF_1d(   &
-!        input parameters
-     &      NCNAME                 &
-     &    , OUT_FILE               &
-     &    , Im                     &
-     &    , data                   &
-     &    , start1D, count1D       &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NCNAME
-      character(len=*), intent( in) :: OUT_FILE
-      integer, intent( in) :: Im 
-      real(8), intent( in) :: data(Im )
-      integer, intent( in) :: start1D(1), count1D(1)
-      
-      integer :: ncid,var_id
-      
-! --- Write NetCDF file ------------------------
-      
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
-      call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
-      call check( nf90_inq_varid(ncid, NCNAME, var_id) )
-      call check( nf90_put_var(ncid, var_id, data, start = start1D, count = count1D) )
-      call check( nf90_close(ncid) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE writeNetCDF_1d
-      
-!**** writeNetCDF_2d **********************************************
-      
-      SUBROUTINE writeNetCDF_2d(   &
-!        input parameters
-     &      NCNAME                 &
-     &    , OUT_FILE               &
-     &    , Im, Jm                 &
-     &    , data                   &
-     &    , start2D, count2D       &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NCNAME
-      character(len=*), intent( in) :: OUT_FILE
-      integer, intent( in) :: Im, Jm
-      real(8), intent( in) :: data(Im, Jm)
-      integer, intent( in) :: start2D(2), count2D(2)
-      
-      integer :: ncid,var_id
-      
-! --- Write NetCDF file ------------------------
-      
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
-      call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
-      call check( nf90_inq_varid(ncid, NCNAME, var_id) )
-      call check( nf90_put_var(ncid, var_id, data, start = start2D, count = count2D) )
-      call check( nf90_close(ncid) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE writeNetCDF_2d
-      
-!**** writeNetCDF_3d **********************************************
-      
-      SUBROUTINE writeNetCDF_3d(   &
-!        input parameters
-     &      NCNAME                 &
-     &    , OUT_FILE               &
-     &    , Im, Jm, Nt             &
-     &    , data                   &
-     &    , start3D, count3D       &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NCNAME
-      character(len=*), intent( in) :: OUT_FILE
-      integer, intent( in) :: Im, Jm, Nt 
-      real(8), intent( in) :: data(Im, Jm, Nt )
-      integer, intent( in) :: start3D(3), count3D(3)
-      
-      integer :: ncid,var_id
-      
-! --- Write NetCDF file ------------------------
-      
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
-      call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
-      call check( nf90_inq_varid(ncid, NCNAME, var_id) )
-      call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
-      call check( nf90_close(ncid) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE writeNetCDF_3d
-      
-!**** writeNetCDF_4d **********************************************
-      
-      SUBROUTINE writeNetCDF_4d(   &
-!        input parameters
-     &      NCNAME                 &
-     &    , OUT_FILE               &
-     &    , Im, Jm, Nz, Nt         &
-     &    , data                   &
-     &    , start4D, count4D       &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NCNAME
-      character(len=*), intent( in) :: OUT_FILE
-      integer, intent( in) :: Im, Jm, Nz, Nt
-      real(8), intent( in) :: data(Im, Jm, Nz, Nt)
-      integer, intent( in) :: start4D(4), count4D(4)
-      
-      integer :: ncid,var_id
-      
-! --- Write NetCDF file ------------------------
-      
-      write(*,*) "WRITE ", NCNAME," to ", OUT_FILE
-      call check( nf90_open(OUT_FILE, NF90_WRITE, ncid) )
-      call check( nf90_inq_varid(ncid, NCNAME, var_id) )
-      call check( nf90_put_var(ncid, var_id, data, start = start4D, count = count4D) )
-      call check( nf90_close(ncid) )
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE writeNetCDF_4d
-      
-!**** readNetCDF_3d **********************************************
-      
-      SUBROUTINE readNetCDF_3d(    &
-!        input parameters
-     &      NC_FILE                &
-     &    , NCNAME                 &
-     &    , Im, Jm, Nt             &
-     &    , start3D, count3D       &
-!        output parameters
-     &    , data                   &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NC_FILE
-      character(len=*), intent( in) :: NCNAME
-      integer, intent( in) :: Im, Jm, Nt
-      integer, intent( in) :: start3D(3), count3D(3)
-      real(8), intent(out) :: data(Im, Jm, Nt)
-      
-      integer :: ncid,var_id
-      integer :: err_flag
-      
-! --- Read NetCDF file ------------------------
-      
-      do
-        write(*,*) "OPEN: ", NC_FILE
-        call check( nf90_open(NC_FILE, nf90_nowrite, ncid) )
-      
-        write(*,*) 'DOWNLOAD ', NCNAME
-        
-!       Get variable id
-        call check2( nf90_inq_varid(ncid, NCNAME, var_id), err_flag ) ! Water Temperature (degC)
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 1: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_var(ncid, var_id, data, start=start3D, count=count3D), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** DOWNLOAD FAILED: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_att(ncid, var_id, 'scale_factor', sf), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 2: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_att(ncid, var_id, 'add_offset', off), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 3: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check( nf90_close(ncid) )
-        write(*,*) "CLOSE: ", NC_FILE
-        exit
-      end do
-
-      data(:,:,:)=data(:,:,:)*sf+off
-      write(*,*) '*** SUCCESS'
-
-
-      END SUBROUTINE readNetCDF_3d
-      
-!**** readNetCDF_4d **********************************************
-      
-      SUBROUTINE readNetCDF_4d(    &
-!        input parameters
-     &      NC_FILE                &
-     &    , NCNAME                 &
-     &    , Im, Jm, Nz, Nt         &
-     &    , start4D, count4D       &
-!        output parameters
-     &    , data                   &
-     &)
-                               
-!    input parameters
-      character(len=*), intent( in) :: NC_FILE
-      character(len=*), intent( in) :: NCNAME
-      integer, intent( in) :: Im, Jm, Nz, Nt
-      integer, intent( in) :: start4D(4), count4D(4)
-      real(8), intent(out) :: data(Im, Jm, Nz, Nt)
-      
-      integer :: ncid,var_id
-      integer :: err_flag
-      
-! --- Read NetCDF file ------------------------
-      
-      do
-        write(*,*) "OPEN: ", NC_FILE
-        call check( nf90_open(NC_FILE, nf90_nowrite, ncid) )
-      
-        write(*,*) 'DOWNLOAD ', NCNAME
-        
-!       Get variable id
-        call check2( nf90_inq_varid(ncid, NCNAME, var_id), err_flag ) ! Water Temperature (degC)
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 1: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_var(ncid, var_id, data, start=start4D, count=count4D), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** DOWNLOAD FAILED: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_att(ncid, var_id, 'scale_factor', sf), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 2: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check2( nf90_get_att(ncid, var_id, 'add_offset', off), err_flag  )
-        if(err_flag == 1) then
-          write(*,*) '*** FAILED 3: Retry!'
-          call check( nf90_close(ncid) )
-          write(*,*) "CLOSE: ", NC_FILE
-          cycle
-        end if
-        
-        call check( nf90_close(ncid) )
-        write(*,*) "CLOSE: ", NC_FILE
-        exit
-      end do
-      
-      data(:,:,:,:)=data(:,:,:,:)*sf+off
-      write(*,*) '*** SUCCESS'
-
-
-      END SUBROUTINE readNetCDF_4d
-      
-!**** NetCDF utility **********************************************
-      
-      SUBROUTINE get_dimension(ncid, name, dim)
-      
-      integer,           intent( in) :: ncid
-      character(len=*),  intent( in) :: name
-      integer,           intent(out) :: dim
-
-      integer :: dimid
-      call check( nf90_inq_dimid(ncid, name, dimid) )
-      call check( nf90_inquire_dimension(ncid, dimid, len=dim) )
-      
-      END SUBROUTINE get_dimension
-
-! -------------------------------------------------------------------------
-
-      SUBROUTINE check(status)
-      
-      integer, intent(in) :: status
-
-      if (status /= nf90_noerr) then 
-          print *, trim(nf90_strerror(status))
-          stop "Stopped"
-      end if
-      
-      END SUBROUTINE check
-      
-! -------------------------------------------------------------------------
-      
-      SUBROUTINE check2(status, err_flag)
-      
-      integer, intent( in) :: status
-      integer, intent(out) :: err_flag
-      
-      err_flag = 0
-
-      if (status /= nf90_noerr) then 
-          print *, trim(nf90_strerror(status))
-          err_flag = 1
-!          stop "Stopped"
-      end if
-      
-      END SUBROUTINE check2
-      
-! -------------------------------------------------------------------------
-      
-    END PROGRAM iniROMS2ROMS
+END PROGRAM iniROMS2ROMS
       
