@@ -58,6 +58,10 @@ PROGRAM iniROMS2ROMS
   real(8), allocatable :: lonu(:, :)
   real(8), allocatable :: latv(:, :)
   real(8), allocatable :: lonv(:, :)
+  real(8), allocatable :: cosAu(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
+  real(8), allocatable :: sinAu(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
+  real(8), allocatable :: cosAv(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
+  real(8), allocatable :: sinAv(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
   real(8) :: hc       
   real(8), allocatable :: sc_w(:)       
   real(8), allocatable :: sc_r(:)  
@@ -74,6 +78,12 @@ PROGRAM iniROMS2ROMS
   real(8), allocatable :: u(:,:,:,:)    ! u-momentum component (meter second-1)
   real(8), allocatable :: v(:,:,:,:)    ! v-momentum component (meter second-1)
   real(8), allocatable :: t(:,:,:,:)    ! tracer 
+  real(8), allocatable :: ull(:,:,:,:)  ! u-momentum component on lat lon coordinate (meter second-1)
+  real(8), allocatable :: vll(:,:,:,:)  ! v-momentum component on lat lon coordinate (meter second-1)
+  real(8), allocatable :: uu(:,:,:,:)
+  real(8), allocatable :: uv(:,:,:,:)
+  real(8), allocatable :: vu(:,:,:,:)
+  real(8), allocatable :: vv(:,:,:,:)
 
   real(8), allocatable :: h_dg(:,:)      ! depth (meter) of donor grid
   real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
@@ -85,6 +95,10 @@ PROGRAM iniROMS2ROMS
   real(8), allocatable :: lonu_dg(:,:)
   real(8), allocatable :: latv_dg(:,:)
   real(8), allocatable :: lonv_dg(:,:)
+  real(8), allocatable :: cosAu_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
+  real(8), allocatable :: sinAu_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
+  real(8), allocatable :: cosAv_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
+  real(8), allocatable :: sinAv_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
   real(8) :: hc_dg       
   real(8), allocatable :: sc_w_dg(:)       
   real(8), allocatable :: sc_r_dg(:)  
@@ -102,6 +116,12 @@ PROGRAM iniROMS2ROMS
   real(8), allocatable :: u_dg(:,:,:,:)    ! u-momentum component (meter second-1)
   real(8), allocatable :: v_dg(:,:,:,:)    ! v-momentum component (meter second-1)
   real(8), allocatable :: t_dg(:,:,:,:)    ! tracer 
+  real(8), allocatable :: ull_dg(:,:,:,:)  ! u-momentum component on lat lon coordinate (meter second-1)
+  real(8), allocatable :: vll_dg(:,:,:,:)  ! v-momentum component on lat lon coordinate (meter second-1)
+  real(8), allocatable :: ullu_dg(:,:,:,:)
+  real(8), allocatable :: ullv_dg(:,:,:,:)
+  real(8), allocatable :: vllu_dg(:,:,:,:)
+  real(8), allocatable :: vllv_dg(:,:,:,:)
 #if defined WET_DRY
   real(8), allocatable :: umask_wet_dg(:,:,:)
   real(8), allocatable :: vmask_wet_dg(:,:,:)
@@ -123,6 +143,7 @@ PROGRAM iniROMS2ROMS
   integer :: idt,incdf
   real(8) :: wf  
   real(8) :: Smjd
+  real(8) :: d_lat,d_lon
   
   character(4) :: YYYY
   character(2) :: MM
@@ -203,6 +224,10 @@ PROGRAM iniROMS2ROMS
   allocate( rmask(0:L, 0:M) )
   allocate( umask(1:L, 0:M) )
   allocate( vmask(0:L, 1:M) )
+  allocate( cosAu(1:L, 0:M) )
+  allocate( sinAu(1:L, 0:M) )
+  allocate( cosAv(0:L, 1:M) )
+  allocate( sinAv(0:L, 1:M) )
   allocate( h(0:L, 0:M) )
   allocate( sc_w(0:N) )
   allocate( sc_r(1:N) )
@@ -218,6 +243,12 @@ PROGRAM iniROMS2ROMS
   allocate( vbar(0:L, 1:M, 1) )
   allocate( u(1:L, 0:M, 1:N, 1) )
   allocate( v(0:L, 1:M, 1:N, 1) )
+  allocate( ull(1:L, 0:M, 1:N, 1) )
+  allocate( uu (1:L, 0:M, 1:N, 1) )
+  allocate( vu (1:L, 0:M, 1:N, 1) )
+  allocate( vll(0:L, 1:M, 1:N, 1) )
+  allocate( uv (0:L, 1:M, 1:N, 1) )
+  allocate( vv (0:L, 1:M, 1:N, 1) )
   allocate( t(0:L, 0:M, 1:N, 1) )
 !  allocate( salt(0:L, 0:M, 1:N, 1) )
   
@@ -277,6 +308,25 @@ PROGRAM iniROMS2ROMS
     enddo
   enddo
 
+  do i=1,L
+    do j=0,M
+      d_lat=latr(i,j)-latr(i-1,j)
+      d_lon=lonr(i,j)-lonr(i-1,j)
+      d_lon=d_lon*cos(latu(i,j)/180.0d0*PI)
+      cosAu(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+      sinAu(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+    enddo
+  enddo
+  do i=0,L
+    do j=1,M
+      d_lat=latr(i,j)-latr(i,j-1)
+      d_lon=lonr(i,j-1)-lonr(i,j)
+      d_lon=d_lon*cos(latv(i,j)/180.0d0*PI)
+      cosAv(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+      sinAv(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+    enddo         
+  enddo
+
 !-Read ROMS parent grid netCDF file --------------------------------
   write(*,*) "OPEN: ", trim( parent_grid )
   
@@ -301,6 +351,10 @@ PROGRAM iniROMS2ROMS
   allocate( rmask_dg(0:Ldg, 0:Mdg) )
   allocate( umask_dg(1:Ldg, 0:Mdg) )
   allocate( vmask_dg(0:Ldg, 1:Mdg) )
+  allocate( cosAu_dg(1:Ldg, 0:Mdg) )
+  allocate( sinAu_dg(1:Ldg, 0:Mdg) )
+  allocate( cosAv_dg(0:Ldg, 1:Mdg) )
+  allocate( sinAv_dg(0:Ldg, 1:Mdg) )
   allocate( h_dg(0:Ldg, 0:Mdg) )
   
   ! Get variables
@@ -374,16 +428,35 @@ PROGRAM iniROMS2ROMS
   do i=1,Ldg
     do j=0,Mdg
       do k=1,Ndg
-        z_u_dg(i,j,k)= (z_r_dg(i,j,k)+z_r_dg(i+1,j,k))*0.5d0
+        z_u_dg(i,j,k)= (z_r_dg(i-1,j,k)+z_r_dg(i,j,k))*0.5d0
       enddo
     enddo
   enddo
   do i=0,Ldg
     do j=1,Mdg
       do k=1,Ndg
-        z_v_dg(i,j,k)= (z_r_dg(i,j,k)+z_r_dg(i,j+1,k))*0.5d0
+        z_v_dg(i,j,k)= (z_r_dg(i,j-1,k)+z_r_dg(i,j,k))*0.5d0
       enddo
     enddo
+  enddo
+
+  do i=1,Ldg
+    do j=0,Mdg
+      d_lat=latr_dg(i,j)-latr_dg(i-1,j)
+      d_lon=lonr_dg(i,j)-lonr_dg(i-1,j)
+      d_lon=d_lon*cos(latu_dg(i,j)/180.0d0*PI)
+      cosAu_dg(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+      sinAu_dg(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+    enddo
+  enddo
+  do i=0,Ldg
+    do j=1,Mdg
+      d_lat=latr_dg(i,j)-latr_dg(i,j-1)
+      d_lon=lonr_dg(i,j-1)-lonr_dg(i,j)
+      d_lon=d_lon*cos(latv_dg(i,j)/180.0d0*PI)
+      cosAv_dg(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+      sinAv_dg(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+    enddo         
   enddo
 
 ! ----------------------------------------------------
@@ -408,9 +481,28 @@ PROGRAM iniROMS2ROMS
           0, Ldg, 0, Mdg, lonr_dg, latr_dg             & 
         , 0, L,   0, M,   lonr,    latr                &
         , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max)
-  write(*,*) Irdg_min, Irdg_max, Jrdg_min, Jrdg_max
+
+  Irdg_min = Irdg_min-2
+  Irdg_max = Irdg_max+2
+  Jrdg_min = Jrdg_min-2
+  Jrdg_max = Jrdg_max+2
+  Iudg_min = Irdg_min+1
+  Iudg_max = Irdg_max
+  Judg_min = Jrdg_min
+  Judg_max = Jrdg_max
+  Ivdg_min = Irdg_min
+  Ivdg_max = Irdg_max
+  Jvdg_min = Jrdg_min+1
+  Jvdg_max = Jrdg_max
+
   Nxr_dg =Irdg_max-Irdg_min+1
   Nyr_dg =Jrdg_max-Jrdg_min+1
+  Nxu_dg =Iudg_max-Iudg_min+1
+  Nyu_dg =Judg_max-Judg_min+1
+  Nxv_dg =Ivdg_max-Ivdg_min+1
+  Nyv_dg =Jvdg_max-Jvdg_min+1
+
+  write(*,*) Irdg_min, Irdg_max, Jrdg_min, Jrdg_max
 
   write(*,*) "Calculate 2D rho point weight factor"
   call weight2D_grid3(                                  &
@@ -421,16 +513,6 @@ PROGRAM iniROMS2ROMS
         , 0, L,   0, M,   lonr,    latr                 &
         , ID_cnt2Dr, w_cnt2Dr )
 
-  write(*,*) "Seek u point donor IJ range"
-  call seek_IJrange(                                   &
-          1, Ldg, 0, Mdg, lonu_dg, latu_dg             & 
-        , 1, L,   0, M,   lonu,    latu                &
-        , Iudg_min, Iudg_max, Judg_min, Judg_max)
-!  Iudg_max=Iudg_max+2
-  write(*,*) Iudg_min, Iudg_max, Judg_min, Judg_max
-  Nxu_dg =Iudg_max-Iudg_min+1
-  Nyu_dg =Judg_max-Judg_min+1
-
   write(*,*) "Calculate 2D u point weight factor"
   call weight2D_grid3(                                 &
           Iudg_min, Iudg_max, Judg_min, Judg_max        &
@@ -439,16 +521,6 @@ PROGRAM iniROMS2ROMS
         , umask_dg(Iudg_min:Iudg_max,Judg_min:Judg_max) & 
         , 1, L,   0, M,   lonu,    latu                 &
         , ID_cnt2Du, w_cnt2Du )
-
-  write(*,*) "Seek v point donor IJ range"
-  call seek_IJrange(                                   &
-          0, Ldg, 1, Mdg, lonv_dg, latv_dg             & 
-        , 0, L,   1, M,   lonv,    latv                &
-        , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max)
-!  Jvdg_max=Jvdg_max+2
-  write(*,*) Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max
-  Nxv_dg =Ivdg_max-Ivdg_min+1
-  Nyv_dg =Jvdg_max-Jvdg_min+1
 
   write(*,*) "Calculate 2D v point weight factor"
   call weight2D_grid3(                                 &
@@ -489,6 +561,12 @@ PROGRAM iniROMS2ROMS
   allocate( vbar_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
   allocate( u_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
   allocate( v_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
+  allocate( ull_dg (Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
+  allocate( ullu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
+  allocate( vllu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
+  allocate( vll_dg (Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
+  allocate( vllv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
+  allocate( ullv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
   allocate( t_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Nzr_dg, 1) )
 #if defined WET_DRY
   allocate( umask_wet_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
@@ -589,20 +667,6 @@ PROGRAM iniROMS2ROMS
   enddo
 #endif
 
-  write(*,*) 'Linear Interporation: u'
-  call interp3D_grid3(                                    &
-          Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
-        , u_dg                                            &
-        , 1, L, 0, M , 1, N                               &
-        , Id_cnt3Du, w_cnt3Du                             &
-        , u ) 
-
-  start4D = (/ 1,  1,  1,  1 /)
-  count4D = (/ Nxu, Nyu, Nzr, 1 /)
-  call writeNetCDF_4d( 'u' , trim( INI_FILE )             &
-        , Nxu, Nyu, Nzr, 1, u                             &
-        , start4D, count4D )
-
 !- v --------------------------------
 
   write(*,*) 'Read: v'
@@ -624,13 +688,83 @@ PROGRAM iniROMS2ROMS
   enddo
 #endif
 
+!- convert ROMS donor coordinate to lat lon coordinate --------------------------------
+
+  do i=Iudg_min,Iudg_max
+    do j=Judg_min,Judg_max
+      ullu_dg(i,j,:,1) = u_dg(i,j,:,1)*cosAu_dg(i,j)
+      vllu_dg(i,j,:,1) = u_dg(i,j,:,1)*sinAu_dg(i,j)
+    enddo
+  enddo
+  do i=Ivdg_min,Ivdg_max
+    do j=Jvdg_min,Jvdg_max
+      ullv_dg(i,j,:,1) = -v_dg(i,j,:,1)*sinAv_dg(i,j)
+      vllv_dg(i,j,:,1) =  v_dg(i,j,:,1)*cosAv_dg(i,j)
+    enddo
+  enddo
+  do i=Iudg_min,Iudg_max
+    do j=Judg_min,Judg_max-1
+      ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
+    enddo
+    ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
+  enddo
+  do j=Jvdg_min,Jvdg_max
+    do i=Ivdg_min,Ivdg_max-1
+      vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i+1,j-1,:,1)
+    enddo
+    vll_dg(Ivdg_max,j,:,1) = vllv_dg(Ivdg_max,j,:,1)+vllu_dg(Ivdg_max,j-1,:,1)
+  enddo
+
+  write(*,*) 'Linear Interporation: u'
+  call interp3D_grid3(                                    &
+          Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
+        , ull_dg                                          &
+        , 1, L, 0, M , 1, N                               &
+        , Id_cnt3Du, w_cnt3Du                             &
+        , ull ) 
+
   write(*,*) 'Linear Interporation: v'
+
   call interp3D_grid3(                                    &
           Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg  &
-        , v_dg                                            &
+        , vll_dg                                          &
         , 0, L, 1, M , 1, N                               &
         , Id_cnt3Dv, w_cnt3Dv                             &
-        , v  ) 
+        , vll  ) 
+  
+!- convert lat lon coordinate to ROMS refine coordinate --------------------------------
+
+  do i=1,L
+    do j=0,M
+      uu(i,j,:,1) =  ull(i,j,:,1)*cosAu(i,j)
+      vu(i,j,:,1) = -ull(i,j,:,1)*sinAu(i,j)
+    enddo
+  enddo
+  do i=0,L
+    do j=1,M
+      uv(i,j,:,1) = vll(i,j,:,1)*sinAv(i,j)
+      vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
+    enddo
+  enddo
+  do i=1,L
+    do j=0,M-1
+      u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
+    enddo
+    u(i,M,:,1) = uu(i,M,:,1)+uv(i-1,M,:,1)
+  enddo
+  do j=1,M
+    do i=0,L-1
+      v(i,j,:,1) = vv(i,j,:,1)+vu(i+1,j-1,:,1)
+    enddo
+    v(L,j,:,1) = vv(L,j,:,1)+vu(L,j-1,:,1)
+  enddo
+
+!- Write u v --------------------------------
+  start4D = (/ 1,  1,  1,  1 /)
+  count4D = (/ Nxu, Nyu, Nzr, 1 /)
+  call writeNetCDF_4d( 'u' , trim( INI_FILE )             &
+        , Nxu, Nyu, Nzr, 1, u                             &
+        , start4D, count4D )
 
   start4D = (/ 1,  1,  1,  1 /)
   count4D = (/ Nxv, Nyv, Nzr, 1 /)
