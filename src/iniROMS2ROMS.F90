@@ -20,7 +20,8 @@ PROGRAM iniROMS2ROMS
   integer :: parent_Imin, parent_Imax
   integer :: parent_Jmin, parent_Jmax
   integer :: refine_factor
-  character(256) :: HYCOM_prefix
+  character(256) :: ROMS_HISFILE
+  integer :: romsvar(N_var)
   character(256) :: INI_prefix
   integer :: N_s_rho
   integer :: Nzr
@@ -30,15 +31,7 @@ PROGRAM iniROMS2ROMS
   integer :: Nzr_dg
   integer :: Vtransform_dg, Vstretching_dg
  
-  integer, parameter :: N_Param = 2
-  character(256), parameter :: NC_NAME(N_Param) = (/ &
-     "temp"              &
-    ,"salt"              &
-    /)
-
   character(33) :: TIME_ATT  = "seconds since 2000-01-01 00:00:00"
-
-  character(256) :: ROMS_HISFILE
   character(15) :: INI_suffix   = "_20000101.00.nc"
   character(256) :: INI_FILE
   
@@ -141,8 +134,6 @@ PROGRAM iniROMS2ROMS
 
   integer :: i,j,k
   integer :: idt,incdf
-  real(8) :: wf  
-  real(8) :: Smjd
   real(8) :: d_lat,d_lon
   
   character(4) :: YYYY
@@ -170,7 +161,7 @@ PROGRAM iniROMS2ROMS
   namelist/refinement/parent_Jmin, parent_Jmax
   namelist/refinement/refine_factor
   namelist/refdate/Ryear, Rmonth, Rday
-  namelist/roms2roms/ROMS_HISFILE
+  namelist/roms2roms/ROMS_HISFILE, romsvar
   namelist/ini/INI_prefix
   namelist/ini/itime
   namelist/hcoord/spherical
@@ -584,8 +575,8 @@ PROGRAM iniROMS2ROMS
 
 !-Create the ROMS initial conditions netCDF file --------------------------------
       
-  call createNetCDFini(  trim( INI_FILE )                         &
-        , TIME_ATT , Nxr, Nyr, Nzr, 1   )
+  call createNetCDFini2(  trim( ROMS_HISFILE ),  trim( INI_FILE )   &
+        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar  )
 
 !-Write ROMS initial conditions netCDF file --------------------------------
  
@@ -624,196 +615,209 @@ PROGRAM iniROMS2ROMS
   count1D = (/ 1 /)
   call writeNetCDF_1d( 'ocean_time' , trim( INI_FILE )            &
         , 1, ocean_time(1), start1D, count1D )
+  if( romsvar(1)==1 ) then
+  !- zeta --------------------------------
+    write(*,*) 'Read: zeta'
+    start3D = (/ Irdg_min+1, Jrdg_min+1, itime /)
+    count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
+    call check( nf90_inq_varid(ncid, 'zeta', var_id) )
+    call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
   
-!- zeta --------------------------------
-  write(*,*) 'Read: zeta'
-  start3D = (/ Irdg_min+1, Jrdg_min+1, itime /)
-  count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
-  call check( nf90_inq_varid(ncid, 'zeta', var_id) )
-  call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
+    write(*,*) 'Linear Interporation: zeta'
+    call interp2D_grid3(                                                &
+            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg             &
+          , 0, L, 0, M                                                  &
+          , Id_cnt2Dr, w_cnt2Dr                                         &
+          , zeta  ) 
+  
+    start3D = (/ 1,  1,  1 /)
+    count3D = (/ Nxr, Nyr, 1 /)
+    call writeNetCDF_3d( 'zeta' , trim( INI_FILE )             &
+          , Nxr, Nyr, 1, zeta                                  &
+          , start3D, count3D )
+  endif
 
-  write(*,*) 'Linear Interporation: zeta'
-  call interp2D_grid3(                                                &
-          Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg             &
-        , 0, L, 0, M                                                  &
-        , Id_cnt2Dr, w_cnt2Dr                                         &
-        , zeta  ) 
-
-  start3D = (/ 1,  1,  1 /)
-  count3D = (/ Nxr, Nyr, 1 /)
-  call writeNetCDF_3d( 'zeta' , trim( INI_FILE )             &
-        , Nxr, Nyr, 1, zeta                                  &
-        , start3D, count3D )
-
-!- u --------------------------------
-
-  write(*,*) 'Read: u'
-  start4D = (/ Iudg_min, Judg_min+1, 1,      itime /)
-  count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1     /)
-  call check( nf90_open(trim( INI_FILE ), NF90_WRITE, ncid2) )
-  call check( nf90_inq_varid(ncid, 'u', var_id) )
-  call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
+  if( romsvar(2)==1 .or. romsvar(3)==1 .or.         &
+      romsvar(4)==1 .or. romsvar(5)==1      ) then
+  !- u --------------------------------
+  
+    write(*,*) 'Read: u'
+    start4D = (/ Iudg_min, Judg_min+1, 1,      itime /)
+    count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1     /)
+    call check( nf90_open(trim( INI_FILE ), NF90_WRITE, ncid2) )
+    call check( nf90_inq_varid(ncid, 'u', var_id) )
+    call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
 
 #if defined WET_DRY
-  start3D = (/ Iudg_min, Judg_min+1, itime /)
-  count3D = (/ Nxu_dg,     Nyu_dg,     1     /)
-  call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
-  call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
-  
-  do i=Iudg_min,Iudg_max
-    do j=Judg_min,Judg_max
-      u_dg(i,j,:,1)= u_dg(i,j,:,1)*umask_wet_dg(i,j,1)
+    start3D = (/ Iudg_min, Judg_min+1, itime /)
+    count3D = (/ Nxu_dg,     Nyu_dg,     1     /)
+    call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
+    call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
+    
+    do i=Iudg_min,Iudg_max
+      do j=Judg_min,Judg_max
+        u_dg(i,j,:,1)= u_dg(i,j,:,1)*umask_wet_dg(i,j,1)
+      enddo
     enddo
-  enddo
 #endif
 
-!- v --------------------------------
-
-  write(*,*) 'Read: v'
-  start4D = (/ Ivdg_min+1, Jvdg_min, 1,      itime /)
-  count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1     /)
-  call check( nf90_inq_varid(ncid, 'v', var_id) )
-  call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
+  !- v --------------------------------
+  
+    write(*,*) 'Read: v'
+    start4D = (/ Ivdg_min+1, Jvdg_min, 1,      itime /)
+    count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1     /)
+    call check( nf90_inq_varid(ncid, 'v', var_id) )
+    call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
 
 #if defined WET_DRY
-  start3D = (/ Ivdg_min+1, Jvdg_min, itime /)
-  count3D = (/ Nxv_dg,     Nyv_dg,     1     /)
-  call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
-  call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
-  
-  do i=Ivdg_min,Ivdg_max
-    do j=Jvdg_min,Jvdg_max
-      v_dg(i,j,:,1)= v_dg(i,j,:,1)*vmask_wet_dg(i,j,1)
+    start3D = (/ Ivdg_min+1, Jvdg_min, itime /)
+    count3D = (/ Nxv_dg,     Nyv_dg,     1     /)
+    call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
+    call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
+    
+    do i=Ivdg_min,Ivdg_max
+      do j=Jvdg_min,Jvdg_max
+        v_dg(i,j,:,1)= v_dg(i,j,:,1)*vmask_wet_dg(i,j,1)
+      enddo
     enddo
-  enddo
 #endif
 
-!- convert ROMS donor coordinate to lat lon coordinate --------------------------------
-
-  do i=Iudg_min,Iudg_max
-    do j=Judg_min,Judg_max
-      ullu_dg(i,j,:,1) = u_dg(i,j,:,1)*cosAu_dg(i,j)
-      vllu_dg(i,j,:,1) = u_dg(i,j,:,1)*sinAu_dg(i,j)
+  !- convert ROMS donor coordinate to lat lon coordinate --------------------------------
+  
+    do i=Iudg_min,Iudg_max
+      do j=Judg_min,Judg_max
+        ullu_dg(i,j,:,1) = u_dg(i,j,:,1)*cosAu_dg(i,j)
+        vllu_dg(i,j,:,1) = u_dg(i,j,:,1)*sinAu_dg(i,j)
+      enddo
     enddo
-  enddo
-  do i=Ivdg_min,Ivdg_max
+    do i=Ivdg_min,Ivdg_max
+      do j=Jvdg_min,Jvdg_max
+        ullv_dg(i,j,:,1) = -v_dg(i,j,:,1)*sinAv_dg(i,j)
+        vllv_dg(i,j,:,1) =  v_dg(i,j,:,1)*cosAv_dg(i,j)
+      enddo
+    enddo
+    do i=Iudg_min,Iudg_max
+      do j=Judg_min,Judg_max-1
+        ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
+      enddo
+      ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
+    enddo
     do j=Jvdg_min,Jvdg_max
-      ullv_dg(i,j,:,1) = -v_dg(i,j,:,1)*sinAv_dg(i,j)
-      vllv_dg(i,j,:,1) =  v_dg(i,j,:,1)*cosAv_dg(i,j)
+      do i=Ivdg_min,Ivdg_max-1
+        vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i+1,j-1,:,1)
+      enddo
+      vll_dg(Ivdg_max,j,:,1) = vllv_dg(Ivdg_max,j,:,1)+vllu_dg(Ivdg_max,j-1,:,1)
     enddo
-  enddo
-  do i=Iudg_min,Iudg_max
-    do j=Judg_min,Judg_max-1
-      ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
-    enddo
-    ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
-  enddo
-  do j=Jvdg_min,Jvdg_max
-    do i=Ivdg_min,Ivdg_max-1
-      vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i+1,j-1,:,1)
-    enddo
-    vll_dg(Ivdg_max,j,:,1) = vllv_dg(Ivdg_max,j,:,1)+vllu_dg(Ivdg_max,j-1,:,1)
-  enddo
-
-  write(*,*) 'Linear Interporation: u'
-  call interp3D_grid3(                                    &
-          Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
-        , ull_dg                                          &
-        , 1, L, 0, M , 1, N                               &
-        , Id_cnt3Du, w_cnt3Du                             &
-        , ull ) 
-
-  write(*,*) 'Linear Interporation: v'
-
-  call interp3D_grid3(                                    &
-          Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg  &
-        , vll_dg                                          &
-        , 0, L, 1, M , 1, N                               &
-        , Id_cnt3Dv, w_cnt3Dv                             &
-        , vll  ) 
   
-!- convert lat lon coordinate to ROMS refine coordinate --------------------------------
-
-  do i=1,L
-    do j=0,M
-      uu(i,j,:,1) =  ull(i,j,:,1)*cosAu(i,j)
-      vu(i,j,:,1) = -ull(i,j,:,1)*sinAu(i,j)
-    enddo
-  enddo
-  do i=0,L
-    do j=1,M
-      uv(i,j,:,1) = vll(i,j,:,1)*sinAv(i,j)
-      vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
-    enddo
-  enddo
-  do i=1,L
-    do j=0,M-1
-      u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
-    enddo
-    u(i,M,:,1) = uu(i,M,:,1)+uv(i-1,M,:,1)
-  enddo
-  do j=1,M
-    do i=0,L-1
-      v(i,j,:,1) = vv(i,j,:,1)+vu(i+1,j-1,:,1)
-    enddo
-    v(L,j,:,1) = vv(L,j,:,1)+vu(L,j-1,:,1)
-  enddo
-
-!- Write u v --------------------------------
-  start4D = (/ 1,  1,  1,  1 /)
-  count4D = (/ Nxu, Nyu, Nzr, 1 /)
-  call writeNetCDF_4d( 'u' , trim( INI_FILE )             &
-        , Nxu, Nyu, Nzr, 1, u                             &
-        , start4D, count4D )
-
-  start4D = (/ 1,  1,  1,  1 /)
-  count4D = (/ Nxv, Nyv, Nzr, 1 /)
-  call writeNetCDF_4d( 'v' , trim( INI_FILE )             &
-        , Nxv, Nyv, Nzr, 1, v                             &
-        , start4D, count4D )
-
-!-Depth averaged velocity calculation --------------------------------
+    write(*,*) 'Linear Interporation: u'
+    call interp3D_grid3(                                    &
+            Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
+          , ull_dg                                          &
+          , 1, L, 0, M , 1, N                               &
+          , Id_cnt3Du, w_cnt3Du                             &
+          , ull ) 
   
-  ubar(:,:,1)=0.0d0
-  do i=1,L
-    do j=0,M
-      do k=1,N
-        ubar(i,j,1)= ubar(i,j,1)+u(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+    write(*,*) 'Linear Interporation: v'
+  
+    call interp3D_grid3(                                    &
+            Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg  &
+          , vll_dg                                          &
+          , 0, L, 1, M , 1, N                               &
+          , Id_cnt3Dv, w_cnt3Dv                             &
+          , vll  ) 
+    
+  !- convert lat lon coordinate to ROMS refine coordinate --------------------------------
+  
+    do i=1,L
+      do j=0,M
+        uu(i,j,:,1) =  ull(i,j,:,1)*cosAu(i,j)
+        vu(i,j,:,1) = -ull(i,j,:,1)*sinAu(i,j)
       enddo
     enddo
-  enddo
-  vbar(:,:,1)=0.0d0
-  do i=0,L
-    do j=1,M
-      do k=1,N
-        vbar(i,j,1)= vbar(i,j,1)+v(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+    do i=0,L
+      do j=1,M
+        uv(i,j,:,1) = vll(i,j,:,1)*sinAv(i,j)
+        vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
       enddo
     enddo
-  enddo
+    do i=1,L
+      do j=0,M-1
+        u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
+      enddo
+      u(i,M,:,1) = uu(i,M,:,1)+uv(i-1,M,:,1)
+    enddo
+    do j=1,M
+      do i=0,L-1
+        v(i,j,:,1) = vv(i,j,:,1)+vu(i+1,j-1,:,1)
+      enddo
+      v(L,j,:,1) = vv(L,j,:,1)+vu(L,j-1,:,1)
+    enddo
+  
+    if( romsvar(2)==1 ) then
+      !- Write u v --------------------------------
+      start4D = (/ 1,  1,  1,  1 /)
+      count4D = (/ Nxu, Nyu, Nzr, 1 /)
+      call writeNetCDF_4d( 'u' , trim( INI_FILE )             &
+            , Nxu, Nyu, Nzr, 1, u                             &
+            , start4D, count4D )
+    endif
+    if( romsvar(3)==1 ) then
+      start4D = (/ 1,  1,  1,  1 /)
+      count4D = (/ Nxv, Nyv, Nzr, 1 /)
+      call writeNetCDF_4d( 'v' , trim( INI_FILE )             &
+            , Nxv, Nyv, Nzr, 1, v                             &
+            , start4D, count4D )
+    endif
+  
+  !-Depth averaged velocity calculation --------------------------------
+  
+    if( romsvar(4)==1 ) then
+      ubar(:,:,1)=0.0d0
+      do i=1,L
+        do j=0,M
+          do k=1,N
+            ubar(i,j,1)= ubar(i,j,1)+u(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+          enddo
+        enddo
+      enddo
+      start3D = (/ 1,  1,  1 /)
+      count3D = (/ Nxu, Nyu, 1 /)
+      call writeNetCDF_3d( 'ubar' , trim( INI_FILE )             &
+            , Nxu, Nyu, 1, ubar                                  &
+            , start3D, count3D )
+    endif
 
-  start3D = (/ 1,  1,  1 /)
-  count3D = (/ Nxu, Nyu, 1 /)
-  call writeNetCDF_3d( 'ubar' , trim( INI_FILE )             &
-        , Nxu, Nyu, 1, ubar                                  &
-        , start3D, count3D )
-
-  start3D = (/ 1,  1,  1 /)
-  count3D = (/ Nxv, Nyv, 1 /)
-  call writeNetCDF_3d( 'vbar' , trim( INI_FILE )             &
-        , Nxv, Nyv, 1, vbar                                  &
-        , start3D, count3D )
-
+    if( romsvar(5)==1 ) then   
+      vbar(:,:,1)=0.0d0
+      do i=0,L
+        do j=1,M
+          do k=1,N
+            vbar(i,j,1)= vbar(i,j,1)+v(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+          enddo
+        enddo
+      enddo
+      start3D = (/ 1,  1,  1 /)
+      count3D = (/ Nxv, Nyv, 1 /)
+      call writeNetCDF_3d( 'vbar' , trim( INI_FILE )             &
+            , Nxv, Nyv, 1, vbar                                  &
+            , start3D, count3D )
+    endif
+  
+  endif
+  
 !- Tracer (temp, salt, etc.) --------------------------------
 
-  do i=1, N_Param   
+  do i=6, N_var 
+      
+    if( romsvar(i)==0 ) cycle
 
-    write(*,*) 'Read: ', trim( NC_NAME(i) )
+    write(*,*) 'Read: ', trim( VAR_NAME(i) )
     start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      itime /)
     count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1     /)
-    call check( nf90_inq_varid(ncid, trim( NC_NAME(i) ), var_id) )
+    call check( nf90_inq_varid(ncid, trim( VAR_NAME(i) ), var_id) )
     call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
     
-    write(*,*) 'Linear Interporation: ', trim( NC_NAME(i) )
+    write(*,*) 'Linear Interporation: ', trim( VAR_NAME(i) )
     call interp3D_grid3(                                  &
           Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg  &
         , t_dg                                            &
@@ -823,7 +827,7 @@ PROGRAM iniROMS2ROMS
 
     start4D = (/ 1,  1,  1,  1 /)
     count4D = (/ Nxr, Nyr, Nzr, 1 /)
-    call writeNetCDF_4d( trim( NC_NAME(i) ) , trim( INI_FILE )  &
+    call writeNetCDF_4d( trim( VAR_NAME(i) ) , trim( INI_FILE )  &
           , Nxr, Nyr, Nzr, 1, t                                 &
           , start4D, count4D )
   

@@ -88,14 +88,33 @@
   HYCOM_prefix  = "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted"
 /
 
+&roms2roms      
+! ROMS coraes NetCDF histry file name
+  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
+! 8: mud_, 9: sand_,
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
+! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
+! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
+! 26: TI13C, 27: DO13C, 28: PO13C, 
+! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
+!    
+!           1       5        10        15        20        25        30
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+/
+
 &bry
-  BRY_prefix  = "CT_0.08_bry_HYCOM_Nz30"
+  BRY_prefix  = "Palau3_bry_Nz30"
+  !    south north west east
+  SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "CT_0.08_ini_HYCOMwNAO_Nz30"
-!  INI_prefix  = "CT_0.08_ini_HYCOM_Nz30"
-  itime = 9       ! Frame number of HYCOME file
+  INI_prefix  = "Palau3_ini_Nz30"
+  itime = 9       ! Frame number of HYCOME/ROMS file
 /
 
 &hcoord
@@ -126,7 +145,7 @@
   GRIB_FCST_SURF_dir  =  "N:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
   GRIB_FCST_PHY2M_dir =  "N:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
   
-  FRC_prefix  = "CT_0.08_frc_JRA55"
+  FRC_prefix  = "Palau3_frc_JRA55"
 /
 
 &frc_dsjra55
@@ -134,5 +153,5 @@
   GRIB_FCST_PHY2M_dir =  "N:/Data/DSJRA-55/Hist/Daily/fcst_phy2m/199609/"
   GRIB_LL = "N:/Data/DSJRA-55/Consts/Lambert5km_latlon.dat"
   
-  FRC_prefix  = "CT_0.08_frc_DSJRA55"
+  FRC_prefix  = "Palau3_frc_DSJRA55"
 /

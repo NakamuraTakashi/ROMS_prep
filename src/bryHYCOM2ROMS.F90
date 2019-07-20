@@ -16,6 +16,7 @@
       character(256) :: GRID_FILE
       character(256) :: HYCOM_prefix
       character(256) :: BRY_prefix
+      integer :: SNWE(4)
       integer :: N_s_rho
       integer :: spherical
       integer :: Vtransform, Vstretching
@@ -110,7 +111,7 @@
       namelist/refdate/Ryear, Rmonth, Rday
       namelist/intpmode/mode
       namelist/hycom/HYCOM_prefix
-      namelist/bry/BRY_prefix
+      namelist/bry/BRY_prefix, SNWE
       namelist/hcoord/spherical
       namelist/zcoord/N_s_rho
       namelist/zcoord/Vtransform, Vstretching

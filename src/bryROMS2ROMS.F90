@@ -20,8 +20,10 @@ PROGRAM bryROMS2ROMS
   integer :: parent_Imin, parent_Imax
   integer :: parent_Jmin, parent_Jmax
   integer :: refine_factor
-  character(256) :: HYCOM_prefix
+  character(256) :: ROMS_HISFILE
+  integer :: romsvar(N_var)
   character(256) :: BRY_prefix
+  integer :: SNWE(4)
   integer :: N_s_rho
   integer :: Nzr
   integer :: spherical
@@ -33,18 +35,10 @@ PROGRAM bryROMS2ROMS
   integer :: LBui, UBui, LBuj, UBuj
   integer :: LBvi, UBvi, LBvj, UBvj
  
-  integer, parameter :: N_Param = 2
-  character(256), parameter :: NC_NAME(N_Param) = (/ &
-     "temp"              &
-    ,"salt"              &
-    /)
-  character(256), parameter :: BRY_NAME(4) =  &
-    (/ "south", "north", "west ", "east " /)
   integer :: Nrbry,Nubry,Nvbry
 
   character(33) :: TIME_ATT  = "seconds since 2000-01-01 00:00:00"
 
-  character(256) :: ROMS_HISFILE
   character(15) :: BRY_suffix   = "_20000101.00.nc"
   character(256) :: BRY_FILE
   
@@ -153,8 +147,6 @@ PROGRAM bryROMS2ROMS
 
   integer :: i,j,k
   integer :: idt,incdf
-  real(8) :: wf  
-  real(8) :: Smjd
   real(8) :: d_lat,d_lon
 
   character(4) :: YYYY
@@ -182,8 +174,8 @@ PROGRAM bryROMS2ROMS
   namelist/refinement/parent_Jmin, parent_Jmax
   namelist/refinement/refine_factor
   namelist/refdate/Ryear, Rmonth, Rday
-  namelist/roms2roms/ROMS_HISFILE
-  namelist/bry/BRY_prefix
+  namelist/roms2roms/ROMS_HISFILE, romsvar
+  namelist/bry/BRY_prefix, SNWE
   namelist/hcoord/spherical
   namelist/zcoord/N_s_rho
   namelist/zcoord/Vtransform, Vstretching
@@ -474,8 +466,8 @@ PROGRAM bryROMS2ROMS
 
 !-Create the ROMS initial conditions netCDF file --------------------------------
       
-  call createNetCDFbry(  trim( BRY_FILE )                         &
-        , TIME_ATT , Nxr, Nyr, Nzr, 1   )
+  call createNetCDFbry2(   trim( ROMS_HISFILE ), trim( BRY_FILE )                         &
+        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar ,SNWE   )
 
 !-Write ROMS initial conditions netCDF file --------------------------------
  
@@ -514,6 +506,9 @@ PROGRAM bryROMS2ROMS
 
 !-Write ROMS initial conditions netCDF file --------------------------------
   do ibry=1,4
+    
+    if( SNWE(ibry)==0 ) cycle
+
     if (ibry == 1) then     ! south
       LBri = 0
       UBri = L
@@ -734,245 +729,259 @@ PROGRAM bryROMS2ROMS
       write(*,*) "*********************************************"
       ocean_time(1) = time_all(itime)
       call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
-      Write(*,*) 'Time = ',YYYYMMDDpHH, 'bry = ',trim( BRY_NAME(ibry) )
+      Write(*,*) 'Time = ',YYYYMMDDpHH, ',  bry = ',trim( BRY_NAME(ibry) )
       
-    !- zeta --------------------------------
-      write(*,*) 'Read: zeta'
-      start3D = (/ Irdg_min+1, Jrdg_min+1, itime /)
-      count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
-      call check( nf90_inq_varid(ncid, 'zeta', var_id) )
-      call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
-    
-      write(*,*) 'Linear Interporation: zeta'
-      call interp2D_grid3(                                                &
-              Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg             &
-            , LBri, UBri, LBrj, UBrj                                                  &
-            , Id_cnt2Dr, w_cnt2Dr                                         &
-            , zeta  ) 
+      if( romsvar(1)==1 ) then
+        !- zeta --------------------------------
+        write(*,*) 'Read: zeta'
+        start3D = (/ Irdg_min+1, Jrdg_min+1, itime /)
+        count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
+        call check( nf90_inq_varid(ncid, 'zeta', var_id) )
+        call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
       
-      if(ibry == 1) then       ! South
-        zeta_bry(:,1) = zeta(LBri:UBri, 0, 1)
-      elseif(ibry == 2) then ! North
-        zeta_bry(:,1) = zeta(LBri:UBri, M, 1)
-      elseif(ibry == 3) then ! West
-        zeta_bry(:,1) = zeta(0, LBrj:UBrj, 1)
-      else                   ! East
-        zeta_bry(:,1) = zeta(L, LBrj:UBrj, 1)
+        write(*,*) 'Linear Interporation: zeta'
+        call interp2D_grid3(                                                &
+                Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg             &
+              , LBri, UBri, LBrj, UBrj                                                  &
+              , Id_cnt2Dr, w_cnt2Dr                                         &
+              , zeta  ) 
+        
+        if(ibry == 1) then     ! South
+          zeta_bry(:,1) = zeta(LBri:UBri, 0, 1)
+        elseif(ibry == 2) then ! North
+          zeta_bry(:,1) = zeta(LBri:UBri, M, 1)
+        elseif(ibry == 3) then ! West
+          zeta_bry(:,1) = zeta(0, LBrj:UBrj, 1)
+        else                   ! East
+          zeta_bry(:,1) = zeta(L, LBrj:UBrj, 1)
+        endif
+  
+        start2D = (/ 1,     itime /)
+        count2D = (/ Nrbry, 1     /)
+        call writeNetCDF_2d( 'zeta_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
+              , Nrbry, 1, zeta_bry                                  &
+              , start2D, count2D )
       endif
-
-      start2D = (/ 1,     itime /)
-      count2D = (/ Nrbry, 1     /)
-      call writeNetCDF_2d( 'zeta_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-            , Nrbry, 1, zeta_bry                                  &
-            , start2D, count2D )
     
+      if( romsvar(2)==1 .or. romsvar(3)==1 .or.         &
+          romsvar(4)==1 .or. romsvar(5)==1      ) then
     !- u --------------------------------
     
-      write(*,*) 'Read: u'
-      start4D = (/ Iudg_min, Judg_min+1, 1,      itime /)
-      count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1     /)
-      call check( nf90_open(trim( BRY_FILE ), NF90_WRITE, ncid2) )
-      call check( nf90_inq_varid(ncid, 'u', var_id) )
-      call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
+        write(*,*) 'Read: u'
+        start4D = (/ Iudg_min, Judg_min+1, 1,      itime /)
+        count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1     /)
+        call check( nf90_open(trim( BRY_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_inq_varid(ncid, 'u', var_id) )
+        call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
     
 #if defined WET_DRY
-      start3D = (/ Iudg_min, Judg_min+1, itime /)
-      count3D = (/ Nxu_dg,     Nyu_dg,     1     /)
-      call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
-      call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
-      
-      do i=Iudg_min,Iudg_max
-        do j=Judg_min,Judg_max
-          u_dg(i,j,:,1)= u_dg(i,j,:,1)*umask_wet_dg(i,j,1)
+        start3D = (/ Iudg_min, Judg_min+1, itime /)
+        count3D = (/ Nxu_dg,     Nyu_dg,     1     /)
+        call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
+        call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
+        
+        do i=Iudg_min,Iudg_max
+          do j=Judg_min,Judg_max
+            u_dg(i,j,:,1)= u_dg(i,j,:,1)*umask_wet_dg(i,j,1)
+          enddo
         enddo
-      enddo
 #endif
-    
-    
     !- v --------------------------------
     
-      write(*,*) 'Read: v'
-      start4D = (/ Ivdg_min+1, Jvdg_min, 1,      itime /)
-      count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1     /)
-      call check( nf90_inq_varid(ncid, 'v', var_id) )
-      call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
+        write(*,*) 'Read: v'
+        start4D = (/ Ivdg_min+1, Jvdg_min, 1,      itime /)
+        count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1     /)
+        call check( nf90_inq_varid(ncid, 'v', var_id) )
+        call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
     
 #if defined WET_DRY
-      start3D = (/ Ivdg_min+1, Jvdg_min, itime /)
-      count3D = (/ Nxv_dg,     Nyv_dg,     1     /)
-      call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
-      call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
-      
-      do i=Ivdg_min,Ivdg_max
-        do j=Jvdg_min,Jvdg_max
-          v_dg(i,j,:,1)= v_dg(i,j,:,1)*vmask_wet_dg(i,j,1)
+        start3D = (/ Ivdg_min+1, Jvdg_min, itime /)
+        count3D = (/ Nxv_dg,     Nyv_dg,     1     /)
+        call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
+        call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
+        
+        do i=Ivdg_min,Ivdg_max
+          do j=Jvdg_min,Jvdg_max
+            v_dg(i,j,:,1)= v_dg(i,j,:,1)*vmask_wet_dg(i,j,1)
+          enddo
         enddo
-      enddo
 #endif
       !- convert ROMS donor coordinate to lat lon coordinate --------------------------------
       
-      do i=Iudg_min,Iudg_max
-        do j=Judg_min,Judg_max
-          ullu_dg(i,j,:,1) = u_dg(i,j,:,1)*cosAu_dg(i,j)
-          vllu_dg(i,j,:,1) = u_dg(i,j,:,1)*sinAu_dg(i,j)
+        do i=Iudg_min,Iudg_max
+          do j=Judg_min,Judg_max
+            ullu_dg(i,j,:,1) = u_dg(i,j,:,1)*cosAu_dg(i,j)
+            vllu_dg(i,j,:,1) = u_dg(i,j,:,1)*sinAu_dg(i,j)
+          enddo
         enddo
-      enddo
-      do i=Ivdg_min,Ivdg_max
+        do i=Ivdg_min,Ivdg_max
+          do j=Jvdg_min,Jvdg_max
+            ullv_dg(i,j,:,1) = -v_dg(i,j,:,1)*sinAv_dg(i,j)
+            vllv_dg(i,j,:,1) =  v_dg(i,j,:,1)*cosAv_dg(i,j)
+          enddo
+        enddo
+        do i=Iudg_min,Iudg_max
+          do j=Judg_min,Judg_max-1
+            ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
+          enddo
+          ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
+        enddo
         do j=Jvdg_min,Jvdg_max
-          ullv_dg(i,j,:,1) = -v_dg(i,j,:,1)*sinAv_dg(i,j)
-          vllv_dg(i,j,:,1) =  v_dg(i,j,:,1)*cosAv_dg(i,j)
+          do i=Ivdg_min,Ivdg_max-1
+            vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i+1,j-1,:,1)
+          enddo
+          vll_dg(Ivdg_max,j,:,1) = vllv_dg(Ivdg_max,j,:,1)+vllu_dg(Ivdg_max,j-1,:,1)
         enddo
-      enddo
-      do i=Iudg_min,Iudg_max
-        do j=Judg_min,Judg_max-1
-          ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
+  
+  
+        write(*,*) 'Linear Interporation: u'
+        call interp3D_grid3(                                    &
+                Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
+              , ull_dg                                          &
+              , LBui, UBui, LBuj, UBuj, 1, N                    &
+              , Id_cnt3Du, w_cnt3Du                             &
+              , ull )
+        
+        write(*,*) 'Linear Interporation: v'
+        call interp3D_grid3(                                    &
+                Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg  &
+              , vll_dg                                          &
+              , LBvi, UBvi, LBvj, UBvj, 1, N                    &
+              , Id_cnt3Dv, w_cnt3Dv                             &
+              , vll  ) 
+        
+        ! convert lat lon coordinate to ROMS refine coordinate --------------------------------
+  
+        do i=LBui,UBui
+          do j=LBuj,UBuj
+            uu(i,j,:,1) =  ull(i,j,:,1)*cosAu(i,j)
+            vu(i,j,:,1) = -ull(i,j,:,1)*sinAu(i,j)
+          enddo
         enddo
-        ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
-      enddo
-      do j=Jvdg_min,Jvdg_max
-        do i=Ivdg_min,Ivdg_max-1
-          vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i+1,j-1,:,1)
+        do i=LBvi,UBvi
+          do j=LBvj,UBvj
+            uv(i,j,:,1) = vll(i,j,:,1)*sinAv(i,j)
+            vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
+          enddo
         enddo
-        vll_dg(Ivdg_max,j,:,1) = vllv_dg(Ivdg_max,j,:,1)+vllu_dg(Ivdg_max,j-1,:,1)
-      enddo
-
-
-      write(*,*) 'Linear Interporation: u'
-      call interp3D_grid3(                                    &
-              Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
-            , ull_dg                                          &
-            , LBui, UBui, LBuj, UBuj, 1, N                    &
-            , Id_cnt3Du, w_cnt3Du                             &
-            , ull )
-      
-      write(*,*) 'Linear Interporation: v'
-      call interp3D_grid3(                                    &
-              Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg  &
-            , vll_dg                                          &
-            , LBvi, UBvi, LBvj, UBvj, 1, N                    &
-            , Id_cnt3Dv, w_cnt3Dv                             &
-            , vll  ) 
-      
-      ! convert lat lon coordinate to ROMS refine coordinate --------------------------------
-
-      do i=LBui,UBui
-        do j=LBuj,UBuj
-          uu(i,j,:,1) =  ull(i,j,:,1)*cosAu(i,j)
-          vu(i,j,:,1) = -ull(i,j,:,1)*sinAu(i,j)
+        do i=LBui,UBui
+          do j=LBuj,UBuj-1
+            u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
+          enddo
+!          write(*,*) 'DEBUG 1', i,j, UBuj
+          u(i,UBuj,:,1) = uu(i,UBuj,:,1)+uv(i-1,UBuj,:,1)
         enddo
-      enddo
-      do i=LBvi,UBvi
         do j=LBvj,UBvj
-          uv(i,j,:,1) = vll(i,j,:,1)*sinAv(i,j)
-          vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
+          do i=LBvi,UBvi-1
+            v(i,j,:,1) = vv(i,j,:,1)+vu(i+1,j-1,:,1)
+          enddo
+          v(UBvi,j,:,1) = vv(UBvi,j,:,1)+vu(UBvi,j-1,:,1)
         enddo
-      enddo
-      do i=LBui,UBui
-        do j=LBuj,UBuj-1
-          u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
-        enddo
-!        write(*,*) 'DEBUG 1', i,j, UBuj
-        u(i,UBuj,:,1) = uu(i,UBuj,:,1)+uv(i-1,UBuj,:,1)
-      enddo
-      do j=LBvj,UBvj
-        do i=LBvi,UBvi-1
-          v(i,j,:,1) = vv(i,j,:,1)+vu(i+1,j-1,:,1)
-        enddo
-        v(UBvi,j,:,1) = vv(UBvi,j,:,1)+vu(UBvi,j-1,:,1)
-      enddo
-          
-      ! Write u v --------------------------------
-          
-      if(ibry == 1) then     ! South
-        u_bry(:,:,1) = u(LBui:UBui, 0, 1:N, 1)
-      elseif(ibry == 2) then ! North
-        u_bry(:,:,1) = u(LBui:UBui, M, 1:N, 1)
-      elseif(ibry == 3) then ! West
-        u_bry(:,:,1) = u(1, LBuj:UBuj, 1:N, 1)
-      else                   ! East
-        u_bry(:,:,1) = u(L, LBuj:UBuj, 1:N, 1)
-      endif
-      start3D = (/ 1,     1,   itime /)
-      count3D = (/ Nubry, Nzr, 1     /)
-      call writeNetCDF_3d( 'u_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-            , Nubry, Nzr, 1, u_bry                             &
-            , start3D, count3D )
-       
-      if(ibry == 1) then     ! South
-        v_bry(:,:,1) = v(LBvi:UBvi, 1, 1:N, 1)
-      elseif(ibry == 2) then ! North
-        v_bry(:,:,1) = v(LBvi:UBvi, M, 1:N, 1)
-      elseif(ibry == 3) then ! West
-        v_bry(:,:,1) = v(0, LBvj:UBvj, 1:N, 1)
-      else                   ! East
-        v_bry(:,:,1) = v(L, LBvj:UBvj, 1:N, 1)
-      endif
-      start3D = (/ 1,    1,   itime /)
-      count3D = (/ Nvbry, Nzr, 1     /)
-      call writeNetCDF_3d( 'v_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-            , Nvbry, Nzr, 1, v_bry                             &
-            , start3D, count3D )
-    
-    ! Depth averaged velocity calculation --------------------------------
+
+        if( romsvar(2)==1 ) then
+        ! Write u v --------------------------------
+            
+          if(ibry == 1) then     ! South
+            u_bry(:,:,1) = u(LBui:UBui, 0, 1:N, 1)
+          elseif(ibry == 2) then ! North
+            u_bry(:,:,1) = u(LBui:UBui, M, 1:N, 1)
+          elseif(ibry == 3) then ! West
+            u_bry(:,:,1) = u(1, LBuj:UBuj, 1:N, 1)
+          else                   ! East
+            u_bry(:,:,1) = u(L, LBuj:UBuj, 1:N, 1)
+          endif
+          start3D = (/ 1,     1,   itime /)
+          count3D = (/ Nubry, Nzr, 1     /)
+          call writeNetCDF_3d( 'u_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
+                , Nubry, Nzr, 1, u_bry                             &
+                , start3D, count3D )
+        endif
+
+        if( romsvar(3)==1 ) then
+          if(ibry == 1) then     ! South
+            v_bry(:,:,1) = v(LBvi:UBvi, 1, 1:N, 1)
+          elseif(ibry == 2) then ! North
+            v_bry(:,:,1) = v(LBvi:UBvi, M, 1:N, 1)
+          elseif(ibry == 3) then ! West
+            v_bry(:,:,1) = v(0, LBvj:UBvj, 1:N, 1)
+          else                   ! East
+            v_bry(:,:,1) = v(L, LBvj:UBvj, 1:N, 1)
+          endif
+          start3D = (/ 1,    1,   itime /)
+          count3D = (/ Nvbry, Nzr, 1     /)
+          call writeNetCDF_3d( 'v_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
+                , Nvbry, Nzr, 1, v_bry                             &
+                , start3D, count3D )
+        endif
       
-      ubar(:,:,1)=0.0d0
-      do i=LBui, UBui
-        do j=LBuj, UBuj
-          do k=1,N
-            ubar(i,j,1)= ubar(i,j,1)+u(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+    !   Depth averaged velocity calculation --------------------------------
+        
+        if( romsvar(4)==1 ) then
+          ubar(:,:,1)=0.0d0
+          do i=LBui, UBui
+            do j=LBuj, UBuj
+              do k=1,N
+                ubar(i,j,1)= ubar(i,j,1)+u(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+              enddo
+            enddo
           enddo
-        enddo
-      enddo
-      vbar(:,:,1)=0.0d0
-      do i=LBvi, UBvi
-        do j=LBvj, UBvj
-          do k=1,N
-            vbar(i,j,1)= vbar(i,j,1)+v(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+  
+          if(ibry == 1) then     ! South
+            ubar_bry(:,1) = ubar(LBui:UBui, 0, 1)
+          elseif(ibry == 2) then ! North
+            ubar_bry(:,1) = ubar(LBui:UBui, M, 1)
+          elseif(ibry == 3) then ! West
+            ubar_bry(:,1) = ubar(1, LBuj:UBuj, 1)
+          else                   ! East
+            ubar_bry(:,1) = ubar(L, LBuj:UBuj, 1)
+          endif      
+          start2D = (/ 1,    itime /)
+          count2D = (/ Nubry, 1     /)
+          call writeNetCDF_2d( 'ubar_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
+                , Nubry, 1, ubar_bry                                  &
+                , start2D, count2D )
+        endif
+        
+        if( romsvar(5)==1 ) then 
+          vbar(:,:,1)=0.0d0
+          do i=LBvi, UBvi
+            do j=LBvj, UBvj
+              do k=1,N
+                vbar(i,j,1)= vbar(i,j,1)+v(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
+              enddo
+            enddo
           enddo
-        enddo
-      enddo
-
-      if(ibry == 1) then     ! South
-        ubar_bry(:,1) = ubar(LBui:UBui, 0, 1)
-      elseif(ibry == 2) then ! North
-        ubar_bry(:,1) = ubar(LBui:UBui, M, 1)
-      elseif(ibry == 3) then ! West
-        ubar_bry(:,1) = ubar(1, LBuj:UBuj, 1)
-      else                   ! East
-        ubar_bry(:,1) = ubar(L, LBuj:UBuj, 1)
-      endif      
-      start2D = (/ 1,    itime /)
-      count2D = (/ Nubry, 1     /)
-      call writeNetCDF_2d( 'ubar_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-            , Nubry, 1, ubar_bry                                  &
-            , start2D, count2D )
-
-      if(ibry == 1) then     ! South
-        vbar_bry(:,1) = vbar(LBvi:UBvi, 1, 1)
-      elseif(ibry == 2) then ! North
-        vbar_bry(:,1) = vbar(LBvi:UBvi, M, 1)
-      elseif(ibry == 3) then ! West
-        vbar_bry(:,1) = vbar(0, LBvj:UBvj, 1)
-      else                   ! East
-        vbar_bry(:,1) = vbar(L, LBvj:UBvj, 1)
-      endif      
-       start2D = (/ 1,    itime /)
-      count2D = (/ Nvbry, 1     /)
-      call writeNetCDF_2d( 'vbar_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-            , Nvbry, 1, vbar_bry                                  &
-            , start2D, count2D )
+  
+          if(ibry == 1) then     ! South
+            vbar_bry(:,1) = vbar(LBvi:UBvi, 1, 1)
+          elseif(ibry == 2) then ! North
+            vbar_bry(:,1) = vbar(LBvi:UBvi, M, 1)
+          elseif(ibry == 3) then ! West
+            vbar_bry(:,1) = vbar(0, LBvj:UBvj, 1)
+          else                   ! East
+            vbar_bry(:,1) = vbar(L, LBvj:UBvj, 1)
+          endif      
+           start2D = (/ 1,    itime /)
+          count2D = (/ Nvbry, 1     /)
+          call writeNetCDF_2d( 'vbar_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
+                , Nvbry, 1, vbar_bry                                  &
+                , start2D, count2D )
+        endif
+      endif
     
     !- Tracer (temp, salt, etc.) --------------------------------
     
-      do i=1, N_Param   
+      do i=6, N_var
+        
+        if( romsvar(i)==0 ) cycle
     
-        write(*,*) 'Read: ', trim( NC_NAME(i) )
+        write(*,*) 'Read: ', trim( VAR_NAME(i) )
         start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      itime /)
         count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1     /)
-        call check( nf90_inq_varid(ncid, trim( NC_NAME(i) ), var_id) )
+        call check( nf90_inq_varid(ncid, trim( VAR_NAME(i) ), var_id) )
         call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
         
-        write(*,*) 'Linear Interporation: ', trim( NC_NAME(i) )
+        write(*,*) 'Linear Interporation: ', trim( VAR_NAME(i) )
         call interp3D_grid3(                                  &
               Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg  &
             , t_dg                                            &
@@ -991,7 +1000,7 @@ PROGRAM bryROMS2ROMS
         endif
           start3D = (/ 1,    1,   itime /)
         count3D = (/ Nrbry, Nzr, 1     /)
-        call writeNetCDF_3d( trim( NC_NAME(i) )//'_'//trim(BRY_NAME(ibry)) &
+        call writeNetCDF_3d( trim( VAR_NAME(i) )//'_'//trim(BRY_NAME(ibry)) &
               , trim( BRY_FILE )  &
               , Nrbry, Nzr, 1, t_bry                                 &
               , start3D, count3D )
