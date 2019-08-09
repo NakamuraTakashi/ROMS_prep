@@ -90,7 +90,8 @@
 
 &roms2roms      
 ! ROMS coraes NetCDF histry file name
-  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+  ROMS_HISFILE  = "O:/Data/Coral_Triangle/CT_0.08_his_201704.nc"
+!  ROMS_HISFILE  = "D:/cygwin64/home/Takashi/COAWST/Projects/Coral_Triangle/CT_0.08_his_201704.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !

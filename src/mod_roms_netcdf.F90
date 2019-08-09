@@ -502,7 +502,19 @@ MODULE mod_roms_netcdf
           dimids = (/ xr_dimid, yr_dimid, zr_dimid, t_dimid /)
         endif
 
-        if( i == 8 .or. i ==9 ) then  ! mud_
+        if( i == 4 ) then  ! ubar
+          write(*,*) 'Add variable: ', trim( VAR_NAME(i) )
+          call check( nf90_def_var(ncid, trim( VAR_NAME(i) ), NF90_DOUBLE, dimids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'vertically integrated u-momentum component') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'ocean_time') )
+        else if( i == 5 ) then  ! vbar
+          write(*,*) 'Add variable: ', trim( VAR_NAME(i) )
+          call check( nf90_def_var(ncid, trim( VAR_NAME(i) ), NF90_DOUBLE, dimids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'vertically integrated v-momentum component') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'ocean_time') )
+        else if( i == 8 .or. i ==9 ) then  ! mud_
           do j=1,99
             write(sednum,'(I2.2)') j
             sedname = trim( VAR_NAME(i) )//sednum
@@ -828,8 +840,21 @@ MODULE mod_roms_netcdf
               dimids = (/ yr_dimid, zr_dimid, t_dimid /)
             endif
           endif
-  
-          if( i == 8 .or. i ==9 ) then  ! mud_
+          if( i == 4 .or. i ==5 ) then  ! ubar, vbar
+            varname = trim( VAR_NAME(i) )//'_'//trim( BRY_NAME(ibry) )
+            write(*,*) 'Add variable: ', trim( varname )
+            call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dimids, var_id) )
+            if(i==4) then
+              longname = '2D u-momentum '//BRY_LONGNAME(ibry)
+            elseif(i==5) then
+              longname = '2D v-momentum '//BRY_LONGNAME(ibry)
+            else
+              longname = trim(longname)//' '//BRY_LONGNAME(ibry)
+            endif
+            call check( nf90_put_att(ncid, var_id, 'long_name', longname) )
+            call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+            call check( nf90_put_att(ncid, var_id, 'time', 'bry_time') )
+          else if( i == 8 .or. i ==9 ) then  ! mud_
             do j=1,99
               write(sednum,'(I2.2)') j
               sedname = trim( VAR_NAME(i) )//sednum
@@ -854,10 +879,6 @@ MODULE mod_roms_netcdf
               longname = 'u-momentum '//BRY_LONGNAME(ibry)
             elseif(i==3) then
               longname = 'v-momentum '//BRY_LONGNAME(ibry)
-            elseif(i==4) then
-              longname = '2D u-momentum '//BRY_LONGNAME(ibry)
-            elseif(i==5) then
-              longname = '2D v-momentum '//BRY_LONGNAME(ibry)
             else
               longname = trim(longname)//' '//BRY_LONGNAME(ibry)
             endif
