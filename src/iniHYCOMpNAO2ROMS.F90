@@ -354,7 +354,7 @@
       
 !---- Read extracted HYCOM netCDF file --------------------------------
 
-      CALL cdate2(time_all(itime)/24.0d0,Ryear,Rmonth,Rday,YYYYMMDDpHH)
+      CALL oceantime2cdate(time_all(itime)/24.0d0,Ryear,Rmonth,Rday,YYYYMMDDpHH)
       write(*,*) 'time = ', YYYYMMDDpHH
 
       write(*,*) "OPEN: ", trim( HYCOM_FILE )
