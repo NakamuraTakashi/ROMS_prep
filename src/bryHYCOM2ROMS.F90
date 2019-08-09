@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2018 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2019 Takashi NAKAMURA  =====
 
     PROGRAM bryHYCOM2ROMS
       use netcdf
@@ -396,7 +396,7 @@
       
 !---- Read extracted HYCOM netCDF file --------------------------------
 
-        CALL oceantime2cdate(time_all(itime)/24.0d0,Ryear,Rmonth,Rday,YYYYMMDDpHH)
+        CALL oceantime2cdate(time_all(itime)*3600.0d0,Ryear,Rmonth,Rday,YYYYMMDDpHH)
         write(*,*) 'time = ', YYYYMMDDpHH
 
         write(*,*) "OPEN: ", trim( HYCOM_FILE )
