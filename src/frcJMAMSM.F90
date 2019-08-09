@@ -312,7 +312,7 @@
           
           do k=1, Nt
           
-            CALL cdate2(time(k),Ryear,Rmonth,Rday,YYYYMMDDpHH)
+            CALL oceantime2cdate(time(k),Ryear,Rmonth,Rday,YYYYMMDDpHH)
             write(*,*) 'time = ', YYYYMMDDpHH
           
             write(*,*) 'Linear Interporation: ',trim( NC_NAME(iparam) )

@@ -362,7 +362,7 @@
         
           write(*,*) "******************************************************************"
 
-          CALL cdate2(time(1)/24.0d0,Ryear,Rmonth,Rday,YYYYMMDDpHH)
+          CALL oceantime2cdate(time(1)/24.0d0,Ryear,Rmonth,Rday,YYYYMMDDpHH)
           write(*,*) 'time = ', YYYYMMDDpHH
           
 ! --- Read NetCDF file ------------------------
