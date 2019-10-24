@@ -90,7 +90,8 @@
 
 &roms2roms      
 ! ROMS coraes NetCDF histry file name
-  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+!  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+  ROMS_HISFILE  = "O:/Data/Coral_Triangle/CT_0.08_his_201704.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -115,7 +116,7 @@
 
 &ini
   INI_prefix  = "Berau1_ini_Nz30"
-  itime = 9       ! Frame number of HYCOME/ROMS file
+  itime = 73       ! Frame number of HYCOME/ROMS file
 /
 
 &hcoord
@@ -141,10 +142,10 @@
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "N:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "N:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
+  GRIB_FCST_SURF_dir  =  "O:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
+  GRIB_FCST_PHY2M_dir =  "O:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
   
-  FRC_prefix  = "Berau1__frc_JRA55"
+  FRC_prefix  = "Berau1_frc_JRA55"
 /
 
 &frc_dsjra55

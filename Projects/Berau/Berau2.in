@@ -114,7 +114,7 @@
 
 &ini
   INI_prefix  = "Berau2_ini_Nz30"
-  itime = 9       ! Frame number of HYCOME/ROMS file
+  itime = 25       ! Frame number of HYCOME/ROMS file
 /
 
 &hcoord
