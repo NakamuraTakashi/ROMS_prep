@@ -50,6 +50,7 @@ Projects/test/*
 
 # MATLAB temp. files
 *.asv
+*.mat
 
 # Fortran temp. output files
 fort.*
