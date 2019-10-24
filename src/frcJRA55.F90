@@ -301,7 +301,7 @@
             time(1) = time(1)+1.5d0/24.0d0  !!! + 1.5 hours
           end if
           
-          CALL oceantime2cdate(time(1),Ryear,Rmonth,Rday,YYYYMMDDpHH)
+          CALL oceantime2cdate(time(1)*86400.0d0,Ryear,Rmonth,Rday,YYYYMMDDpHH)
           write(*,*) 'time = ', YYYYMMDDpHH
           
           write(*,*) 'Linear Interporation: ',trim( NC_NAME(iparam) )
