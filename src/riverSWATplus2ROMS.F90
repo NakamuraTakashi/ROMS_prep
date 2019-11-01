@@ -1,7 +1,7 @@
 
-!!!=== Copyright (c) 2014-2019 Takashi NAKAMURA  ===== 
-
-PROGRAM iniROMS2ROMS
+!!!=== Copyright (c) 2019 Takashi NAKAMURA  ===== 
+!!!!!!!!!!!!!!!!! Under developping !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+PROGRAM riverSWATplus2ROMS
   use netcdf
   use mod_utility
   use mod_roms_netcdf
@@ -11,18 +11,10 @@ PROGRAM iniROMS2ROMS
   implicit none
       
 ! ---------------------------------------------------------------------
-  integer :: Syear, Smonth, Sday
   integer :: Ryear, Rmonth, Rday
   integer :: itime
   integer :: mode
   character(256) :: GRID_FILE
-  character(256) :: parent_grid
-  integer :: parent_Imin, parent_Imax
-  integer :: parent_Jmin, parent_Jmax
-  integer :: refine_factor
-  character(256) :: ROMS_HISFILE
-  integer :: romsvar(N_var)
-  character(256) :: INI_prefix
   integer :: N_s_rho
   integer :: Nzr
   integer :: spherical
@@ -42,96 +34,7 @@ PROGRAM iniROMS2ROMS
   integer :: start4D(4), count4D(4)
   
   real(8), allocatable :: h(:,:)        ! depth (meter)
-  real(8), allocatable :: rmask(:,:)    ! land mask
-  real(8), allocatable :: umask(:,:)    ! land mask
-  real(8), allocatable :: vmask(:,:)    ! land mask
-  real(8), allocatable :: latr(:, :)
-  real(8), allocatable :: lonr(:, :)
-  real(8), allocatable :: latu(:, :)
-  real(8), allocatable :: lonu(:, :)
-  real(8), allocatable :: latv(:, :)
-  real(8), allocatable :: lonv(:, :)
-  real(8), allocatable :: cosAu(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
-  real(8), allocatable :: sinAu(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
-  real(8), allocatable :: cosAv(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
-  real(8), allocatable :: sinAv(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
-  real(8) :: hc       
-  real(8), allocatable :: sc_w(:)       
-  real(8), allocatable :: sc_r(:)  
-  real(8), allocatable :: Cs_w(:)       
-  real(8), allocatable :: Cs_r(:)  
-  real(8), allocatable :: z_r(:,:,:)
-  real(8), allocatable :: z_w(:,:,:)
-  real(8), allocatable :: z_u(:,:,:)
-  real(8), allocatable :: z_v(:,:,:)
-  
-  real(8), allocatable :: zeta(:,:,:)   ! free-surface (meter)
-  real(8), allocatable :: ubar(:,:,:)   ! vertically integrated u-momentum component (meter second-1)
-  real(8), allocatable :: vbar(:,:,:)   ! vertically integrated v-momentum component (milibar=hPa)
-  real(8), allocatable :: u(:,:,:,:)    ! u-momentum component (meter second-1)
-  real(8), allocatable :: v(:,:,:,:)    ! v-momentum component (meter second-1)
-  real(8), allocatable :: t(:,:,:,:)    ! tracer 
-  real(8), allocatable :: ull(:,:,:,:)  ! u-momentum component on lat lon coordinate (meter second-1)
-  real(8), allocatable :: vll(:,:,:,:)  ! v-momentum component on lat lon coordinate (meter second-1)
-  real(8), allocatable :: uu(:,:,:,:)
-  real(8), allocatable :: uv(:,:,:,:)
-  real(8), allocatable :: vu(:,:,:,:)
-  real(8), allocatable :: vv(:,:,:,:)
 
-  real(8), allocatable :: h_dg(:,:)      ! depth (meter) of donor grid
-  real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
-  real(8), allocatable :: umask_dg(:,:)  ! land mask of donor grid
-  real(8), allocatable :: vmask_dg(:,:)  ! land mask of donor grid
-  real(8), allocatable :: latr_dg(:,:)
-  real(8), allocatable :: lonr_dg(:,:)
-  real(8), allocatable :: latu_dg(:,:)
-  real(8), allocatable :: lonu_dg(:,:)
-  real(8), allocatable :: latv_dg(:,:)
-  real(8), allocatable :: lonv_dg(:,:)
-  real(8), allocatable :: cosAu_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
-  real(8), allocatable :: sinAu_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
-  real(8), allocatable :: cosAv_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
-  real(8), allocatable :: sinAv_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
-  real(8) :: hc_dg       
-  real(8), allocatable :: sc_w_dg(:)       
-  real(8), allocatable :: sc_r_dg(:)  
-  real(8), allocatable :: Cs_w_dg(:)       
-  real(8), allocatable :: Cs_r_dg(:)  
-  real(8), allocatable :: z_r_dg(:,:,:)
-  real(8), allocatable :: z_w_dg(:,:,:)
-  real(8), allocatable :: z_u_dg(:,:,:)
-  real(8), allocatable :: z_v_dg(:,:,:)
-
-  real(8) :: ocean_time(1)                 ! Ocean time (sec)
-  real(8), allocatable :: zeta_dg(:,:,:)   ! free-surface (meter)
-  real(8), allocatable :: ubar_dg(:,:,:)   ! vertically integrated u-momentum component (meter second-1)
-  real(8), allocatable :: vbar_dg(:,:,:)   ! vertically integrated v-momentum component (milibar=hPa)
-  real(8), allocatable :: u_dg(:,:,:,:)    ! u-momentum component (meter second-1)
-  real(8), allocatable :: v_dg(:,:,:,:)    ! v-momentum component (meter second-1)
-  real(8), allocatable :: t_dg(:,:,:,:)    ! tracer 
-  real(8), allocatable :: ull_dg(:,:,:,:)  ! u-momentum component on lat lon coordinate (meter second-1)
-  real(8), allocatable :: vll_dg(:,:,:,:)  ! v-momentum component on lat lon coordinate (meter second-1)
-  real(8), allocatable :: ullu_dg(:,:,:,:)
-  real(8), allocatable :: ullv_dg(:,:,:,:)
-  real(8), allocatable :: vllu_dg(:,:,:,:)
-  real(8), allocatable :: vllv_dg(:,:,:,:)
-#if defined WET_DRY
-  real(8), allocatable :: rmask_wet_dg(:,:,:)
-  real(8), allocatable :: umask_wet_dg(:,:,:)
-  real(8), allocatable :: vmask_wet_dg(:,:,:)
-#endif
-  integer, allocatable :: ID_cnt2Dr(:,:)
-  real(8), allocatable :: w_cnt2Dr (:,:)
-  integer, allocatable :: ID_cnt2Du(:,:)
-  real(8), allocatable :: w_cnt2Du (:,:)
-  integer, allocatable :: ID_cnt2Dv(:,:)
-  real(8), allocatable :: w_cnt2Dv (:,:)
-  integer, allocatable :: ID_cnt3Dr(:,:)
-  real(8), allocatable :: w_cnt3Dr (:,:)
-  integer, allocatable :: ID_cnt3Du(:,:)
-  real(8), allocatable :: w_cnt3Du (:,:)
-  integer, allocatable :: ID_cnt3Dv(:,:)
-  real(8), allocatable :: w_cnt3Dv (:,:)
 
   integer :: i,j,k
   integer :: idt,incdf
@@ -370,10 +273,9 @@ PROGRAM iniROMS2ROMS
   call check( nf90_get_var(ncid, var_id, umask_dg) )
   call check( nf90_inq_varid(ncid, 'mask_v', var_id) ) 
   call check( nf90_get_var(ncid, var_id, vmask_dg) )
-
   ! Close NetCDF file
   call check( nf90_close(ncid) )
-
+  
   write(*,*) "CLOSE: ", trim( parent_grid )
 
 !-Read ROMS ocean_his netCDF file --------------------------------
@@ -409,21 +311,6 @@ PROGRAM iniROMS2ROMS
   call check( nf90_get_var(ncid, var_id, Vtransform_dg ) )
   call check( nf90_inq_varid(ncid, 'hc', var_id) )
   call check( nf90_get_var(ncid, var_id, hc_dg ) )
-  
-#if defined WET_DRY
-  start3D = (/ 1,      1,      itime /)
-  count3D = (/ Nxr_dg, Nyr_dg, 1     /)
-  call check( nf90_inq_varid(ncid, 'wetdry_mask_rho', var_id) )
-  call check( nf90_get_var(ncid, var_id, rmask_dg, start3D, count3D)  )
-#endif
-
-  do i=0,Ldg
-    do j=0,Mdg
-      if ( h_dg(i,j)<0.0d0 ) then
-        rmask_dg(i,j) = 0.0d0
-      end if
-    end do
-  end do
  
   call set_depth ( Nxr_dg, Nyr_dg, Nzr, h_dg                         &
         , Vtransform_dg, hc_dg, sc_w_dg, sc_r_dg, Cs_w_dg, Cs_r_dg   &
@@ -577,7 +464,6 @@ PROGRAM iniROMS2ROMS
   allocate( ullv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
   allocate( t_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Nzr_dg, 1) )
 #if defined WET_DRY
-  allocate( rmask_wet_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1) )
   allocate( umask_wet_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
   allocate( vmask_wet_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
 #endif
@@ -856,5 +742,5 @@ PROGRAM iniROMS2ROMS
   write(*,*) 'FINISH!!'
       
       
-END PROGRAM iniROMS2ROMS
+END PROGRAM riverSWATplus2ROMS
       
