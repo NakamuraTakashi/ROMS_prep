@@ -726,7 +726,7 @@
       integer, intent( in) :: Im
       real(8), intent(out) :: data(Im)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 50
       integer :: var_id
       integer :: status
       integer :: itry
@@ -772,7 +772,7 @@
       integer, intent( in) :: start(2), count(2)
       real(8), intent(out) :: data(Im, Jm)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 30
       integer :: var_id
       integer :: err_flag, status
       integer :: itry
@@ -835,7 +835,7 @@
       integer, intent( in) :: start(3), count(3)
       real(8), intent(out) :: data(Im, Jm, Nt)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 30
       integer :: var_id
       integer :: err_flag, status
       integer :: itry
@@ -900,7 +900,7 @@
       integer, intent( in) :: start(4), count(4)
       real(8), intent(out) :: data(Im, Jm, Nz, Nt)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 30
       integer :: var_id
       integer :: err_flag, status
       integer :: itry
@@ -963,7 +963,7 @@
       integer, intent( in) :: start(4), count(4)
       real(8), intent(out) :: data(Im, Jm, Nz, Nt)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 30
       integer :: start2(4), count2(4)
       integer :: var_id
       integer :: err_flag, status
@@ -1026,7 +1026,7 @@
       integer,           intent( in) :: nf90_open_mode
       integer,           intent(out) :: ncid
 
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 30
       integer :: status
       integer :: itry
       
@@ -1048,7 +1048,7 @@
       character(len=*),  intent( in) :: name
       integer,           intent(out) :: dim
 
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 30
       integer :: dimid
       integer :: status
       integer :: itry

@@ -377,7 +377,15 @@ PROGRAM bryROMS2ROMS
   call check( nf90_get_var(ncid, var_id, vmask_dg) )
   ! Close NetCDF file
   call check( nf90_close(ncid) )
-  
+
+  do i=0,Ldg
+    do j=0,Mdg
+      if ( h_dg(i,j)<0.0d0 ) then
+        rmask_dg(i,j) = 0.0d0
+      end if
+    end do
+  end do
+    
   write(*,*) "CLOSE: ", trim( parent_grid )
 
 !-Read ROMS ocean_his netCDF file --------------------------------

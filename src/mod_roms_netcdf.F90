@@ -42,6 +42,72 @@ MODULE mod_roms_netcdf
     ,"phytoplankton2_13C" &
     ,"zooplankton_13C   " &
     /)
+  character(256), parameter :: VAR_LONG_NAME(N_var) = (/ &
+     "zeta              " &
+    ,"u                 " &
+    ,"v                 " &
+    ,"ubar              " &
+    ,"vbar              " &
+    ,"temp              " &
+    ,"salt              " &
+    ,"mud_              " &
+    ,"sand_             " &
+    ,"TIC               " &
+    ,"alkalinity        " &
+    ,"oxygen            " &
+    ,"DOC               " &
+    ,"POC               " &
+    ,"NO3               " &
+    ,"NO2               " &
+    ,"NH4               " &
+    ,"PO4               " &
+    ,"DON               " &
+    ,"PON               " &
+    ,"DOP               " &
+    ,"POP               " &
+    ,"phytoplankton1    " &
+    ,"phytoplankton2    " &
+    ,"zooplankton       " &
+    ,"TI13C             " &
+    ,"DO13C             " &
+    ,"PO13C             " &
+    ,"phytoplankton1_13C" &
+    ,"phytoplankton2_13C" &
+    ,"zooplankton_13C   " &
+    /)
+  character(256), parameter :: VAR_UNIT(N_var) = (/ &
+     "zeta              " &
+    ,"u                 " &
+    ,"v                 " &
+    ,"ubar              " &
+    ,"vbar              " &
+    ,"Celsius           " &
+    ,"PSU               " &
+    ,"kilogram meter-3  " &
+    ,"kilogram meter-3  " &
+    ,"umol kg-1         " &
+    ,"umol kg-1         " &
+    ,"umol L-1          " &
+    ,"umolC L-1         " &
+    ,"umolC L-1         " &
+    ,"umolN L-1         " &
+    ,"umolN L-1         " &
+    ,"umolN L-1         " &
+    ,"umolP L-1         " &
+    ,"umolN L-1         " &
+    ,"umolN L-1         " &
+    ,"umolP L-1         " &
+    ,"umolP L-1         " &
+    ,"umolC L-1         " &
+    ,"umolC L-1         " &
+    ,"umolC L-1         " &
+    ,"TI13C             " &
+    ,"DO13C             " &
+    ,"PO13C             " &
+    ,"phytoplankton1_13C" &
+    ,"phytoplankton2_13C" &
+    ,"zooplankton_13C   " &
+    /)
   character(256), parameter :: BRY_NAME(4) =  &
     (/ "south", "north", "west ", "east " /)
   character(256), parameter :: BRY_LONGNAME(4) = (/ &
@@ -899,6 +965,109 @@ MODULE mod_roms_netcdf
 
     END SUBROUTINE createNetCDFbry2
 
+!**** Create river forcing NetCDF file **********************************************
+
+    SUBROUTINE createNetCDFriver( &
+!        input parameters
+            OUT_FILE              &
+          , TIME_ATT              &  
+          , Nriv, Nzr, Nt         &   
+          , name_flag             &   
+      )
+                               
+!    input parameters
+      character(len=*),  intent( in) :: OUT_FILE
+      character(len=*),  intent( in) :: TIME_ATT
+      integer, intent( in) :: Nriv, Nzr, Nt
+      integer, intent( in) :: name_flag( N_var )
+      character(256) :: sedname, varname
+      character(2) :: sednum
+
+      integer :: ncid,var_id
+      integer :: zr_dimid
+      integer :: riv_dimid
+      integer :: t_dimid
+      integer :: status
+      integer, allocatable :: dimids(:)
+      integer :: i,j
+
+!---- Create the ROMS initial condition netCDF file --------------------------------
+
+      write(*,*) "CREATE: ", trim( OUT_FILE )
+
+      call check( nf90_create( trim( OUT_FILE ), nf90_clobber, ncid) )
+
+      call check( nf90_def_dim(ncid, 'river', Nriv, riv_dimid) )
+      call check( nf90_def_dim(ncid, 's_rho', Nzr, zr_dimid) )
+      call check( nf90_def_dim(ncid, 'river_time', NF90_UNLIMITED, t_dimid) )
+
+      call check( nf90_def_var(ncid, 'river', NF90_DOUBLE, riv_dimid, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'river runoff identification number') )
+
+      call check( nf90_def_var(ncid, 'river_time', NF90_DOUBLE, t_dimid, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'river runoff time') )
+      call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
+
+      call check( nf90_def_var(ncid, 'river_direction', NF90_DOUBLE, riv_dimid, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'river runoff direction') )
+      call check( nf90_put_att(ncid, var_id, 'flag_values', '0, 1') )
+      call check( nf90_put_att(ncid, var_id, 'flag_meanings', 'flow across u-face, flow across v-face') )
+      call check( nf90_put_att(ncid, var_id, 'LwSrc_True', 'flag not used') )
+
+      call check( nf90_def_var(ncid, 'river_Xposition', NF90_DOUBLE, riv_dimid, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'river XI-position') )
+      call check( nf90_put_att(ncid, var_id, 'LuvSrc_meaning', 'i point index of U or V face source/sink') )
+      call check( nf90_put_att(ncid, var_id, 'LwSrc_meaning', 'i point index of RHO center source/sink') )
+
+      call check( nf90_def_var(ncid, 'river_Eposition', NF90_DOUBLE, riv_dimid, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'river ETA-position') )
+      call check( nf90_put_att(ncid, var_id, 'LuvSrc_meaning', 'j point index of U or V face source/sink') )
+      call check( nf90_put_att(ncid, var_id, 'LwSrc_meaning', 'j point index of RHO center source/sink') )
+
+      dimids = (/ zr_dimid, riv_dimid /)
+      call check( nf90_def_var(ncid, 'river_Vshape', NF90_DOUBLE, dimids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'river runoff mass transport vertical profile') )
+      call check( nf90_put_att(ncid, var_id, 'requires', 'must sum to 1 over s_rho') )
+
+      dimids = (/ t_dimid, riv_dimid /)
+      call check( nf90_def_var(ncid, 'river_transport', NF90_DOUBLE, dimids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'river ETA-position') )
+      call check( nf90_put_att(ncid, var_id, 'LuvSrc_meaning', 'j point index of U or V face source/sink') )
+      call check( nf90_put_att(ncid, var_id, 'LwSrc_meaning', 'j point index of RHO center source/sink') )
+
+      do i=6, N_var
+        
+        if( i == 8 .or. i ==9 ) then  ! mud_
+          do j=1,99
+            write(sednum,'(I2.2)') j
+            sedname = 'river_'//trim( VAR_NAME(i) )//sednum
+            status = nf90_inq_varid(ncid, trim( sedname ), var_id)
+            if (status /= nf90_noerr) exit
+            write(*,*) 'Add variable: ', trim( sedname )
+            call check( nf90_def_var(ncid, trim( sedname ), NF90_DOUBLE, dimids, var_id) )
+            call check( nf90_copy_att(ncid, var_id, 'long_name', ncid, var_id) )
+            call check( nf90_copy_att(ncid, var_id, 'units', ncid, var_id) )
+            call check( nf90_copy_att(ncid, var_id, 'time', ncid, var_id) )
+          enddo
+        else
+          varname = 'river_'//trim( VAR_NAME(i) )
+          write(*,*) 'Add variable: ', varname
+          call check( nf90_inq_varid(ncid, varname, var_id) )
+          call check( nf90_def_var(ncid, varname, NF90_DOUBLE, dimids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'river runoff time') )
+          call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
+              call check( nf90_copy_att(ncid, var_id, 'time', ncid, var_id) )
+        endif
+      enddo
+
+  ! End define mode.
+      call check( nf90_enddef(ncid) )
+      call check( nf90_close(ncid) )
+      write(*,*) '*** SUCCESS'
+
+    END SUBROUTINE createNetCDFriver
+                   
+      
 !**** writeNetCDF_1d **********************************************
       
     SUBROUTINE writeNetCDF_1d(   &
@@ -1040,7 +1209,7 @@ MODULE mod_roms_netcdf
       integer, intent( in) :: Nxr
       real(8), intent(out) :: data(Nxr)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 50
       integer :: var_id
       integer :: status
       integer :: itry
@@ -1086,7 +1255,7 @@ MODULE mod_roms_netcdf
       integer, intent( in) :: start(2), count(2)
       real(8), intent(out) :: data(Nxr, Nyr)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 50
       integer :: var_id
       integer :: err_flag, status
       integer :: itry
@@ -1149,7 +1318,7 @@ MODULE mod_roms_netcdf
       integer, intent( in) :: start(3), count(3)
       real(8), intent(out) :: data(Nxr, Nyr, Nt)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 50
       integer :: var_id
       integer :: err_flag, status
       integer :: itry
@@ -1214,7 +1383,7 @@ MODULE mod_roms_netcdf
       integer, intent( in) :: start(4), count(4)
       real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 50
       integer :: var_id
       integer :: err_flag, status
       integer :: itry
@@ -1277,7 +1446,7 @@ MODULE mod_roms_netcdf
       integer, intent( in) :: start(4), count(4)
       real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
       
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 50
       integer :: start2(4), count2(4)
       integer :: var_id
       integer :: err_flag, status
@@ -1340,7 +1509,7 @@ MODULE mod_roms_netcdf
       integer,           intent( in) :: nf90_open_mode
       integer,           intent(out) :: ncid
 
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 50
       integer :: status
       integer :: itry
       
@@ -1362,7 +1531,7 @@ MODULE mod_roms_netcdf
       character(len=*),  intent( in) :: name
       integer,           intent(out) :: dim
 
-      integer, parameter :: Num_try = 10
+      integer, parameter :: Num_try = 50
       integer :: dimid
       integer :: status
       integer :: itry

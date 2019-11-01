@@ -282,6 +282,29 @@
       
 !---- Read HYCOM netCDF file --------------------------------
       write(*,*) "******************************************************************"
+
+#if defined GOFS_31
+# if defined ANALYSIS
+     open(50, file='time_HYCOM_GOF_31_analysis.dat')
+# elif defined REANALYSIS
+     open(50, file='time_HYCOM_GOF_31_reanalysis.dat')
+# endif
+#elif defined GOFS_30
+# if defined ANALYSIS
+     open(50, file='time_HYCOM_GOF_30_analysis.dat')
+# elif defined REANALYSIS
+     open(50, file='time_HYCOM_GOF_30_reanalysis.dat')
+# endif
+#endif
+#if defined SKIP_CHECK_TIME
+      write(*,*) 'READ: Time'
+      do iNC=1, NCnum
+        read(50,*) NC(iNC)%Nt
+        write(*,*) NC(iNC)%Nt
+        allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+        read(50,*) NC(iNC)%time_all
+      end do
+#else
       do iNC=1, NCnum
         write(*,*) 'CHECK: Time'
         ! Open NetCDF file
@@ -289,12 +312,19 @@
         call try_nf_open(NC_FILE(iNC), nf90_nowrite, ncid)
         call get_dimension(ncid, 'time', NC(iNC)%Nt)
         write(*,*) NC(iNC)%Nt
-        allocate(NC(iNC)%time_all(NC(iNC)%Nt))
-        call readNetCDF_1d(ncid, 'time', NC(iNC)%Nt, NC(iNC)%time_all)
+        write(50,*) NC(iNC)%Nt
+        allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+        allocate( time2(NC(iNC)%Nt) )
+        call readNetCDF_1d(ncid, 'time', NC(iNC)%Nt, time2)
         call check( nf90_close(ncid) )
         write(*,*) "CLOSE: ", NC_FILE(iNC)
+        NC(iNC)%time_all = time2
+        write(50,*) NC(iNC)%time_all
+        deallocate(time2)
       end do
-      
+#endif
+      close(50)   
+
       write(*,*) NC(:)%Nt
       
       do iNC=1, NCnum-1
@@ -362,7 +392,7 @@
         
           write(*,*) "******************************************************************"
 
-          CALL oceantime2cdate(time(1)/24.0d0,Ryear,Rmonth,Rday,YYYYMMDDpHH)
+          CALL oceantime2cdate(time(1)*3600,Ryear,Rmonth,Rday,YYYYMMDDpHH)
           write(*,*) 'time = ', YYYYMMDDpHH
           
 ! --- Read NetCDF file ------------------------
