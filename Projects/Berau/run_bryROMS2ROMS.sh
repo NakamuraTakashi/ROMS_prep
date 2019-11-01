@@ -10,6 +10,7 @@ gfortran ${SRC_DIR}/set_scoord.f90 ${SRC_DIR}/set_depth.f90  ${SRC_DIR}/mod_util
 
 rm *.mod
 
-export OMP_NUM_THREADS=12
+export OMP_NUM_THREADS=1
 
-./bryROMS2ROMS.exe < Berau1.in
+#./bryROMS2ROMS.exe < Berau1.in
+./bryROMS2ROMS.exe < Berau2.in

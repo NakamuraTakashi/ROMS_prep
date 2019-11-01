@@ -1,0 +1,46 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "../../COAWST/Data/Shiraho_reef/shiraho_reef_grid16.3.nc"
+/
+
+&refdate
+
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&river      
+  RIV_prefix  = "shiraho_river"
+
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
+! 8: mud_, 9: sand_,
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
+! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
+! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
+! 26: TI13C, 27: DO13C, 28: PO13C, 
+! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
+!    
+!           1       5        10        15        20        25        30
+  rivvar =  1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+/
+
+&zcoord
+  N_s_rho = 30
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see below for details), [1:Ngrids].
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see below for details), [1:Ngrids].
+
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+
+/

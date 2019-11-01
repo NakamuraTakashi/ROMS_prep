@@ -142,16 +142,8 @@
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "N:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "N:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
+  GRIB_FCST_SURF_dir  =  "O:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
+  GRIB_FCST_PHY2M_dir =  "O:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
   
   FRC_prefix  = "Palau2_frc_JRA55"
-/
-
-&frc_dsjra55
-  GRIB_FCST_SURF_dir  =  "N:/Data/DSJRA-55/Hist/Daily/fcst_surf/199609/"
-  GRIB_FCST_PHY2M_dir =  "N:/Data/DSJRA-55/Hist/Daily/fcst_phy2m/199609/"
-  GRIB_LL = "N:/Data/DSJRA-55/Consts/Lambert5km_latlon.dat"
-  
-  FRC_prefix  = "Palau2_frc_DSJRA55"
 /

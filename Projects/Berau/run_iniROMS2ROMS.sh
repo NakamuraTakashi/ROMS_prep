@@ -12,4 +12,5 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./iniROMS2ROMS.exe < Berau1.in
+#./iniROMS2ROMS.exe < Berau1.in
+./iniROMS2ROMS.exe < Berau2.in

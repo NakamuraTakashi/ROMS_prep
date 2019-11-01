@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Berau2_grd_v1.0.nc"
+  GRID_FILE = "Berau2_grd_v3.2.nc"
 /
 
 &bath
@@ -19,12 +19,12 @@
   RESOLUTION = 60.0d0 ! 1/12*1/5 degree resolution
 
   hmin = -9.8d0  ! Minimum depth
-  rx0max = 5.0d0  ! Smoothing parameter
+  rx0max = 0.2d0  ! Smoothing parameter
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Berau1_grd_v1.0.nc"
+  parent_grid = "Berau1_grd_v1.2.nc"
   parent_Imin = 100
   parent_Imax = 200
   parent_Jmin = 446
@@ -85,12 +85,12 @@
 
 &hycom      
 ! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted"
+  HYCOM_prefix  = "D:/COAWST/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted"
 /
 
 &roms2roms      
 ! ROMS coraes NetCDF histry file name
-  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+  ROMS_HISFILE  = "../../../COAWST/Projects/Berau/Berau1_his_201704_3.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -109,12 +109,12 @@
 &bry
   BRY_prefix  = "Berau2_bry_Nz30"
   !    south north west east
-  SNWE =  1,   1,   1,   1
+  SNWE =  1,   1,   0,   1
 /
 
 &ini
   INI_prefix  = "Berau2_ini_Nz30"
-  itime = 25       ! Frame number of HYCOME/ROMS file
+  itime = 16       ! Frame number of HYCOME/ROMS file
 /
 
 &hcoord
@@ -140,16 +140,9 @@
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "N:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "N:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
+  GRIB_FCST_SURF_dir  =  "O:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
+  GRIB_FCST_PHY2M_dir =  "O:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
   
   FRC_prefix  = "Berau2_frc_JRA55"
 /
 
-&frc_dsjra55
-  GRIB_FCST_SURF_dir  =  "N:/Data/DSJRA-55/Hist/Daily/fcst_surf/199609/"
-  GRIB_FCST_PHY2M_dir =  "N:/Data/DSJRA-55/Hist/Daily/fcst_phy2m/199609/"
-  GRIB_LL = "N:/Data/DSJRA-55/Consts/Lambert5km_latlon.dat"
-  
-  FRC_prefix  = "Berau2_frc_DSJRA55"
-/
