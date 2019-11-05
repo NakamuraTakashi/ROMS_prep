@@ -35,6 +35,9 @@
 
 # Data Files
 Data/*
+fcst_surf125.*
+fcst_phy2m125.*
+
 roms_cdl/*
 CDL/*
 ROMS_grid_Yaeyama/*
