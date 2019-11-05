@@ -130,8 +130,8 @@
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "N:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "N:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
+  GRIB_FCST_SURF_dir  =  "Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
+  GRIB_FCST_PHY2M_dir =  "Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
   
   FRC_prefix  = "CT_0.08_frc_JRA55"
 /
