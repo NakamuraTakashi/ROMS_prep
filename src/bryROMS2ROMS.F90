@@ -506,11 +506,13 @@ PROGRAM bryROMS2ROMS
   call check( nf90_put_var(ncid2, var_id, sc_w, start1D,  count1D) )
   call check( nf90_inq_varid(ncid2, 'Cs_w', var_id) )
   call check( nf90_put_var(ncid2, var_id, Cs_w, start1D, count1D) )
-  call check( nf90_close(ncid2) )
+!  call check( nf90_close(ncid2) )
   start1D = (/ 1 /)
   count1D = (/ Nt /)
-  call writeNetCDF_1d( 'bry_time' , trim( BRY_FILE )            &
-  , Nt, time_all, start1D, count1D )
+!  call writeNetCDF_1d( 'bry_time' , trim( BRY_FILE )            &
+!  , Nt, time_all, start1D, count1D )
+  call check( nf90_inq_varid(ncid2, 'bry_time', var_id) )
+  call check( nf90_put_var(ncid2, var_id, time_all, start = start1D, count = count1D) )
 
 !-Write ROMS initial conditions netCDF file --------------------------------
   do ibry=1,4
@@ -766,9 +768,10 @@ PROGRAM bryROMS2ROMS
   
         start2D = (/ 1,     itime /)
         count2D = (/ Nrbry, 1     /)
-        call writeNetCDF_2d( 'zeta_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-              , Nrbry, 1, zeta_bry                                  &
-              , start2D, count2D )
+        write(*,*)  'Write: ', 'zeta_'//trim(BRY_NAME(ibry))
+        call check( nf90_inq_varid(ncid2, 'zeta_'//trim(BRY_NAME(ibry)), var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, zeta_bry, start = start2D, count = count2D) )
+  
       endif
     
       if( romsvar(2)==1 .or. romsvar(3)==1 .or.         &
@@ -778,7 +781,6 @@ PROGRAM bryROMS2ROMS
         write(*,*) 'Read: u'
         start4D = (/ Iudg_min, Judg_min+1, 1,      itime /)
         count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1     /)
-        call check( nf90_open(trim( BRY_FILE ), NF90_WRITE, ncid2) )
         call check( nf90_inq_varid(ncid, 'u', var_id) )
         call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
     
@@ -900,9 +902,9 @@ PROGRAM bryROMS2ROMS
           endif
           start3D = (/ 1,     1,   itime /)
           count3D = (/ Nubry, Nzr, 1     /)
-          call writeNetCDF_3d( 'u_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-                , Nubry, Nzr, 1, u_bry                             &
-                , start3D, count3D )
+          write(*,*)  'Write: ', 'u_'//trim(BRY_NAME(ibry))
+          call check( nf90_inq_varid(ncid2, 'u_'//trim(BRY_NAME(ibry)), var_id2) )
+          call check( nf90_put_var(ncid2, var_id2, u_bry, start = start3D, count = count3D) )
         endif
 
         if( romsvar(3)==1 ) then
@@ -917,9 +919,10 @@ PROGRAM bryROMS2ROMS
           endif
           start3D = (/ 1,    1,   itime /)
           count3D = (/ Nvbry, Nzr, 1     /)
-          call writeNetCDF_3d( 'v_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-                , Nvbry, Nzr, 1, v_bry                             &
-                , start3D, count3D )
+          write(*,*)  'Write: ', 'v_'//trim(BRY_NAME(ibry))
+          call check( nf90_inq_varid(ncid2, 'v_'//trim(BRY_NAME(ibry)), var_id2) )
+          call check( nf90_put_var(ncid2, var_id2, v_bry, start = start3D, count = count3D) )
+    
         endif
       
     !   Depth averaged velocity calculation --------------------------------
@@ -945,9 +948,10 @@ PROGRAM bryROMS2ROMS
           endif      
           start2D = (/ 1,    itime /)
           count2D = (/ Nubry, 1     /)
-          call writeNetCDF_2d( 'ubar_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-                , Nubry, 1, ubar_bry                                  &
-                , start2D, count2D )
+          write(*,*)  'Write: ', 'ubar_'//trim(BRY_NAME(ibry))
+          call check( nf90_inq_varid(ncid2, 'ubar_'//trim(BRY_NAME(ibry)), var_id2) )
+          call check( nf90_put_var(ncid2, var_id2, ubar_bry, start = start2D, count = count2D) )
+          
         endif
         
         if( romsvar(5)==1 ) then 
@@ -971,9 +975,10 @@ PROGRAM bryROMS2ROMS
           endif      
            start2D = (/ 1,    itime /)
           count2D = (/ Nvbry, 1     /)
-          call writeNetCDF_2d( 'vbar_'//trim(BRY_NAME(ibry)) , trim( BRY_FILE )             &
-                , Nvbry, 1, vbar_bry                                  &
-                , start2D, count2D )
+          write(*,*)  'Write: ', 'vbar_'//trim(BRY_NAME(ibry))
+          call check( nf90_inq_varid(ncid2, 'vbar_'//trim(BRY_NAME(ibry)), var_id2) )
+          call check( nf90_put_var(ncid2, var_id2, vbar_bry, start = start2D, count = count2D) )
+    
         endif
       endif
     
@@ -1006,12 +1011,11 @@ PROGRAM bryROMS2ROMS
         else                   ! East
           t_bry(:,:,1) = t(L, LBrj:UBrj, 1:N, 1)
         endif
-          start3D = (/ 1,    1,   itime /)
+        start3D = (/ 1,    1,   itime /)
         count3D = (/ Nrbry, Nzr, 1     /)
-        call writeNetCDF_3d( trim( VAR_NAME(i) )//'_'//trim(BRY_NAME(ibry)) &
-              , trim( BRY_FILE )  &
-              , Nrbry, Nzr, 1, t_bry                                 &
-              , start3D, count3D )
+        write(*,*)  'Write: ', trim( VAR_NAME(i) )//'_'//trim(BRY_NAME(ibry))
+        call check( nf90_inq_varid(ncid2, trim( VAR_NAME(i) )//'_'//trim(BRY_NAME(ibry)), var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, t_bry, start = start3D, count = count3D) )
       
       enddo
     enddo
@@ -1067,6 +1071,7 @@ PROGRAM bryROMS2ROMS
   enddo
 
   call check( nf90_close(ncid) )
+  call check( nf90_close(ncid2) )
 
   write(*,*) 'FINISH!!'
       
