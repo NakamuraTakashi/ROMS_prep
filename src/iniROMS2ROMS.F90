@@ -625,14 +625,15 @@ PROGRAM iniROMS2ROMS
   call check( nf90_put_var(ncid2, var_id, sc_w, start1D,  count1D) )
   call check( nf90_inq_varid(ncid2, 'Cs_w', var_id) )
   call check( nf90_put_var(ncid2, var_id, Cs_w, start1D, count1D) )
-  call check( nf90_close(ncid2) )
 
 !-Write ROMS initial conditions netCDF file --------------------------------
 
   start1D = (/ 1 /)
   count1D = (/ 1 /)
-  call writeNetCDF_1d( 'ocean_time' , trim( INI_FILE )            &
-        , 1, ocean_time(1), start1D, count1D )
+  write(*,*)  'Write: ocean_time'
+  call check( nf90_inq_varid(ncid2, 'ocean_time', var_id2) )
+  call check( nf90_put_var(ncid2, var_id2, ocean_time, start = start1D, count = count1D) )
+      
   if( romsvar(1)==1 ) then
   !- zeta --------------------------------
     write(*,*) 'Read: zeta'
@@ -650,9 +651,9 @@ PROGRAM iniROMS2ROMS
   
     start3D = (/ 1,  1,  1 /)
     count3D = (/ Nxr, Nyr, 1 /)
-    call writeNetCDF_3d( 'zeta' , trim( INI_FILE )             &
-          , Nxr, Nyr, 1, zeta                                  &
-          , start3D, count3D )
+    write(*,*)  'Write: zeta'
+    call check( nf90_inq_varid(ncid2, 'zeta', var_id2) )
+    call check( nf90_put_var(ncid2, var_id2, zeta, start = start3D, count = count3D) )
   endif
 
   if( romsvar(2)==1 .or. romsvar(3)==1 .or.         &
@@ -662,7 +663,6 @@ PROGRAM iniROMS2ROMS
     write(*,*) 'Read: u'
     start4D = (/ Iudg_min, Judg_min+1, 1,      itime /)
     count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1     /)
-    call check( nf90_open(trim( INI_FILE ), NF90_WRITE, ncid2) )
     call check( nf90_inq_varid(ncid, 'u', var_id) )
     call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
 
@@ -775,16 +775,16 @@ PROGRAM iniROMS2ROMS
       !- Write u v --------------------------------
       start4D = (/ 1,  1,  1,  1 /)
       count4D = (/ Nxu, Nyu, Nzr, 1 /)
-      call writeNetCDF_4d( 'u' , trim( INI_FILE )             &
-            , Nxu, Nyu, Nzr, 1, u                             &
-            , start4D, count4D )
+      write(*,*)  'Write: u'
+      call check( nf90_inq_varid(ncid2, 'u', var_id2) )
+      call check( nf90_put_var(ncid2, var_id2, u, start = start4D, count = count4D) )
     endif
     if( romsvar(3)==1 ) then
       start4D = (/ 1,  1,  1,  1 /)
       count4D = (/ Nxv, Nyv, Nzr, 1 /)
-      call writeNetCDF_4d( 'v' , trim( INI_FILE )             &
-            , Nxv, Nyv, Nzr, 1, v                             &
-            , start4D, count4D )
+      write(*,*)  'Write: v'
+      call check( nf90_inq_varid(ncid2, 'v', var_id2) )
+      call check( nf90_put_var(ncid2, var_id2, v, start = start4D, count = count4D) )
     endif
   
   !-Depth averaged velocity calculation --------------------------------
@@ -800,9 +800,9 @@ PROGRAM iniROMS2ROMS
       enddo
       start3D = (/ 1,  1,  1 /)
       count3D = (/ Nxu, Nyu, 1 /)
-      call writeNetCDF_3d( 'ubar' , trim( INI_FILE )             &
-            , Nxu, Nyu, 1, ubar                                  &
-            , start3D, count3D )
+      write(*,*)  'Write: ubar'
+      call check( nf90_inq_varid(ncid2, 'ubar', var_id2) )
+      call check( nf90_put_var(ncid2, var_id2, ubar, start = start3D, count = count3D) )
     endif
 
     if( romsvar(5)==1 ) then   
@@ -816,9 +816,9 @@ PROGRAM iniROMS2ROMS
       enddo
       start3D = (/ 1,  1,  1 /)
       count3D = (/ Nxv, Nyv, 1 /)
-      call writeNetCDF_3d( 'vbar' , trim( INI_FILE )             &
-            , Nxv, Nyv, 1, vbar                                  &
-            , start3D, count3D )
+      write(*,*)  'Write: vbar'
+      call check( nf90_inq_varid(ncid2, 'vbar', var_id2) )
+      call check( nf90_put_var(ncid2, var_id2, vbar, start = start3D, count = count3D) )
     endif
   
   endif
@@ -845,13 +845,14 @@ PROGRAM iniROMS2ROMS
 
     start4D = (/ 1,  1,  1,  1 /)
     count4D = (/ Nxr, Nyr, Nzr, 1 /)
-    call writeNetCDF_4d( trim( VAR_NAME(i) ) , trim( INI_FILE )  &
-          , Nxr, Nyr, Nzr, 1, t                                 &
-          , start4D, count4D )
+    write(*,*)  'Write: ', trim( VAR_NAME(i) )
+    call check( nf90_inq_varid(ncid2, trim( VAR_NAME(i) ), var_id2) )
+    call check( nf90_put_var(ncid2, var_id2, t, start = start4D, count = count4D) )
   
   enddo
 
   call check( nf90_close(ncid) )
+  call check( nf90_close(ncid2) )
 
   write(*,*) 'FINISH!!'
       
