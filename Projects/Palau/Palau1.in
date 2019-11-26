@@ -19,12 +19,12 @@
   RESOLUTION = 60.0d0 ! 1/12*1/5 degree resolution
 
   hmin = -3.0d0  ! Minimum depth
-  rx0max = 1.0  ! Smoothing parameter
+  rx0max = 0.2  ! Smoothing parameter
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "D:/ROMS/Data/Coral_Triangle/CT_0.08_grd_v2.nc"
+  parent_grid = "../../../COAWST/Data/Coral_Triangle/CT_0.08_grd_v2.nc"
   parent_Imin = 520
   parent_Imax = 545
   parent_Jmin = 290
@@ -90,7 +90,7 @@
 
 &roms2roms      
 ! ROMS coraes NetCDF histry file name
-  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+  ROMS_HISFILE  = "../../../COAWST/Projects/Coral_Triangle/CT_0.08_his_201704.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -107,14 +107,14 @@
 /
 
 &bry
-  BRY_prefix  = "Palau1_bry_Nz30"
+  BRY_prefix  = "Palau1_bry_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Palau1_ini_Nz30"
-  itime = 9       ! Frame number of HYCOME/ROMS file
+  INI_prefix  = "Palau1_ini_Nz15"
+  itime = 25       ! Frame number of HYCOME/ROMS file
 /
 
 &hcoord
@@ -122,7 +122,7 @@
 /
 
 &zcoord
-  N_s_rho = 30
+  N_s_rho = 15
 
 ! Set vertical, terrain-following coordinates transformation equation and
 ! stretching function (see below for details), [1:Ngrids].

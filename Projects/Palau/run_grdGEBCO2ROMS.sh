@@ -10,6 +10,6 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-#./grdGEBCO2ROMS.exe < Palau1.in
+./grdGEBCO2ROMS.exe < Palau1.in
 #./grdGEBCO2ROMS.exe < Palau2.in
-./grdGEBCO2ROMS.exe < Palau3.in
+#./grdGEBCO2ROMS.exe < Palau3.in
