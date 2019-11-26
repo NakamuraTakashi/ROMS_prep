@@ -906,7 +906,7 @@ CONTAINS
 ! input parameters
     integer, intent( in) :: Ids, Ide, Jds, Jde, Kds, Kde       ! start and end indices of donor X and Y points
     real(8), intent( in) :: Zd(Ids:Ide, Jds:Jde, Kds:Kde)      ! donor Y positions (2D fields)
-    integer, intent( in) :: irs, ire, jrs, jre, krs, kre       ! Number of receiver x and y points
+    integer, intent( in) :: irs, ire, jrs, jre, krs, kre       ! start and end indices of receiver x and y points
     real(8), intent( in) :: zr(irs:ire, jrs:jre, krs:kre)     ! receiver x and y positions (2D fields)
     integer, intent( in) :: Id_cont2D(8, (ire-irs+1)*(jre-jrs+1))      
     ! 1:      ir,jr, Id1,Jd1, Id2,Jd2, Id3,Jd3

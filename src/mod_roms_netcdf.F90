@@ -117,6 +117,68 @@ MODULE mod_roms_netcdf
     , "eastern boundary condition " &
     /)
 
+! ----- HYCOM OpenDAP URL -----
+
+#if defined GOFS_31
+# if defined ANALYSIS
+! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-07-01 to present) -----
+  integer, parameter :: NCnum   = 6
+  character(53) :: NC_FILE(NCnum) = (/                          &
+       "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_56.3"  &  ! lon(4500): -180 - 179.92
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_57.2"  &  ! lon(4500): -180 - 179.92
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_92.8"  &  ! lon(4500): 0 - 359.92
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_57.7"  &  ! lon(4500): -180 - 179.92
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_92.9"  &  ! lon(4500): 0 - 359.92
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_93.0"  &  ! lon(4500): 0 - 359.92
+    /)
+# elif defined REANALYSIS
+! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (since 1994-01-01 to 2015-12-31) -----
+  integer, parameter :: NCnum   = 22
+  character(63) :: NC_FILE(NCnum) = (/                          &
+       "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1994"  &  ! lon(4500): -180 - 179.92
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1995"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1996"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1997"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1998"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1999"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2000"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2001"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2002"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2003"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2004"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2005"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2006"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2007"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2008"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2009"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2010"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2011"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2012"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2013"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2014"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/2015"  &  ! lon(4500): -180 - 179.92
+    /)
+# endif
+#elif defined GOFS_30
+# if defined ANALYSIS
+! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to present) -----
+  integer, parameter :: NCnum   = 4
+  character(53) :: NC_FILE(NCnum) = (/                          &
+       "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_90.9"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.0"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.2"  &
+    /)
+# elif defined REANALYSIS
+! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Reanalysis (since 1992-10-02 to 2012-12-31) -----
+  integer, parameter :: NCnum   = 2
+  character(53) :: NC_FILE(NCnum) = (/                          &
+       "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.0"  &
+      ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.1"  &
+    /)
+# endif
+#endif
+
   CONTAINS
 
 !**** create initial conditions NetCDF file **********************************************
@@ -1067,7 +1129,87 @@ MODULE mod_roms_netcdf
 
     END SUBROUTINE createNetCDFriver
                    
-      
+!**** create HYCOM NetCDF **********************************************
+
+  SUBROUTINE createNetCDF_HYCOM(   &
+!    input parameters
+        OUT_FILE             &
+      , TIME_ATT             &  
+      , Im, Jm, Nz, Nt       &   
+  )
+                           
+! input parameters
+    character(len=*),  intent( in) :: OUT_FILE
+    character(len=*),  intent( in) :: TIME_ATT
+    integer, intent( in) :: Im, Jm, Nz, Nt
+    
+    integer :: ncid2,var_id2
+    integer :: lat_dimid, lon_dimid, depth_dimid, time_dimid
+    integer :: dim3Dids(3), dim4Dids(4)
+  
+!---- Create the extracted HYCOM netCDF file --------------------------------
+
+    write(*,*) "CREATE: ", trim( OUT_FILE )
+  
+    call check( nf90_create(trim( OUT_FILE ), nf90_clobber, ncid2) )
+  
+    call check( nf90_def_dim(ncid2, 'lat', Jm, lat_dimid) )
+    call check( nf90_def_dim(ncid2, 'lon', Im, lon_dimid) )
+    call check( nf90_def_dim(ncid2, 'depth',Nz, depth_dimid) )
+    call check( nf90_def_dim(ncid2, 'time', NF90_UNLIMITED, time_dimid) )
+  
+    dim3Dids = (/ lon_dimid, lat_dimid, time_dimid /)
+    dim4Dids = (/ lon_dimid, lat_dimid, depth_dimid, time_dimid /)
+    
+!   Define the netCDF variables.
+    call check( nf90_def_var(ncid2, 'time', NF90_DOUBLE, time_dimid, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Valid Time') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     TIME_ATT ) )
+  
+    call check( nf90_def_var(ncid2, 'depth', NF90_DOUBLE, depth_dimid, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Depth') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     'meter' ) )
+  
+    call check( nf90_def_var(ncid2, 'lon', NF90_DOUBLE, lon_dimid, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Longitude') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     'degrees_east') )
+  
+    call check( nf90_def_var(ncid2, 'lat', NF90_DOUBLE, lat_dimid, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Latitude') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     'degrees_north' ) )
+  
+    call check( nf90_def_var(ncid2, 'surf_el', NF90_DOUBLE, dim3Dids, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Water Surface Elevation') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
+    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+  
+    call check( nf90_def_var(ncid2, 'water_temp', NF90_DOUBLE, dim4Dids, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Water Temperature') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     'degC') )
+    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+  
+    call check( nf90_def_var(ncid2, 'salinity', NF90_DOUBLE, dim4Dids, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Salinity') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     'psu') )
+    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+  
+    call check( nf90_def_var(ncid2, 'water_u', NF90_DOUBLE, dim4Dids, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Eastward Water Velocity') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     'm/s') )
+    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+  
+    call check( nf90_def_var(ncid2, 'water_v', NF90_DOUBLE, dim4Dids, var_id2) )
+    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Northward Water Velocity') )
+    call check( nf90_put_att(ncid2, var_id2, 'units',     'm/s') )
+    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+  
+    ! End define mode.
+    call check( nf90_enddef(ncid2) )
+    call check( nf90_close(ncid2) )
+    write(*,*) '*** SUCCESS'
+  
+  END SUBROUTINE createNetCDF_HYCOM
+     
 !**** writeNetCDF_1d **********************************************
       
     SUBROUTINE writeNetCDF_1d(   &
@@ -1191,8 +1333,208 @@ MODULE mod_roms_netcdf
       write(*,*) '*** SUCCESS'
 
     END SUBROUTINE writeNetCDF_4d
+!**** readNetCDF_2d **********************************************
       
+  SUBROUTINE readNetCDF_2d(    &
+!      input parameters
+          ncid                   &
+        , NCNAME                 &
+        , Im, Jm                 &
+        , start, count           &
+!      output parameters
+        , data                   &
+    )
+                               
+!    input parameters
+    integer, intent( in) :: ncid
+    character(len=*), intent( in) :: NCNAME
+    integer, intent( in) :: Im, Jm
+    integer, intent( in) :: start(2), count(2)
+    real(8), intent(out) :: data(Im, Jm)
+    
+    integer, parameter :: Num_try = 30
+    integer :: var_id
+    integer :: err_flag, status
+    integer :: itry
+    real(8) :: sf, off
+      
+! --- Read NetCDF file ------------------------
+      
+    write(*,*) 'READ: ', NCNAME
+    ! Get variable id
+    do itry=1,Num_try
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 1: Retry!'
+    end do        
+    do itry=1,Num_try
+      status = nf90_get_var(ncid, var_id, data, start=start, count=count)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** READ FAILED: Retry!'
+    end do        
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 2: Retry!'
+    end do          
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'add_offset', off)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 3: Retry!'
+    end do          
+      
+    data = data*sf+off
+    write(*,*) '*** SUCCESS'
+
+  END SUBROUTINE readNetCDF_2d
+
+!**** readNetCDF_3d **********************************************
+      
+  SUBROUTINE readNetCDF_3d(    &
+!    input parameters
+        ncid                   &
+      , NCNAME                 &
+      , Im, Jm, Nt             &
+      , start, count           &
+!    output parameters
+      , data                   &
+    )
+                           
+!    input parameters
+    integer, intent( in) :: ncid
+    character(len=*), intent( in) :: NCNAME
+    integer, intent( in) :: Im, Jm, Nt
+    integer, intent( in) :: start(3), count(3)
+    real(8), intent(out) :: data(Im, Jm, Nt)
+    
+    integer, parameter :: Num_try = 30
+    integer :: var_id
+    integer :: err_flag, status
+    integer :: itry
+    real(8) :: sf, off
+    
+    data(:,:,:)=-9999.0d0
+      
+! --- Read NetCDF file ------------------------
+      
+    write(*,*) 'READ: ', NCNAME
+    ! Get variable id
+    do itry=1,Num_try
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 1: Retry!'
+    end do        
+    do itry=1,Num_try
+      status = nf90_get_var(ncid, var_id, data, start=start, count=count)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr .and. data(Im,Jm,Nt)/=-9999.0d0) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** READ FAILED: Retry!'
+    end do        
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 2: Retry!'
+    end do          
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'add_offset', off)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 3: Retry!'
+    end do          
+      
+    data = data*sf+off
+    write(*,*) '*** SUCCESS'
+
+  END SUBROUTINE readNetCDF_3d
+
 !
+!**** readNetCDF_4d ver 2 **********************************************
+      
+  SUBROUTINE readNetCDF_4d_2(  &
+!    input parameters
+        ncid                 &
+      , NCNAME               &
+      , Nxr, Nyr, Nzr, Nt    &
+      , start, count         &
+!    output parameters
+      , data                 &
+    )
+                               
+!    input parameters
+    integer, intent( in) :: ncid
+    character(len=*), intent( in) :: NCNAME
+    integer, intent( in) :: Nxr, Nyr, Nzr, Nt
+    integer, intent( in) :: start(4), count(4)
+    real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
+    
+    integer, parameter :: Num_try = 50
+    integer :: start2(4), count2(4)
+    integer :: var_id
+    integer :: err_flag, status
+    integer :: itry
+    integer :: k
+    real(8) :: sf, off
+    
+    start2 = start
+    count2 = count
+    count2(3)=1
+    
+    data(:,:,:,:) = -9999.0d0
+      
+! --- Read NetCDF file ------------------------
+      
+    write(*,*) 'READ: ', NCNAME
+    ! Get variable id
+    do itry=1,Num_try
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 1: Retry!'
+    end do        
+    do k=1,Nzr
+      start2(3)=k
+      do itry=1,Num_try
+        status = nf90_get_var(ncid, var_id, data(:,:,k,:), start=start2, count=count2)
+        write(*,*) trim(nf90_strerror(status)), k
+        if (status == nf90_noerr .and. data(Nxr,Nyr,k,Nt)/=-9999.0d0) exit
+        if (itry== Num_try) stop
+        write(*,*) '*** READ FAILED: Retry!'
+      end do
+    end do        
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 2: Retry!'
+    end do          
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'add_offset', off)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 3: Retry!'
+    end do          
+      
+    data = data*sf+off
+    write(*,*) '*** SUCCESS'
+
+  END SUBROUTINE readNetCDF_4d_2
 !
 !**** readNetCDF_1d **********************************************
       
@@ -1236,352 +1578,67 @@ MODULE mod_roms_netcdf
 
   END SUBROUTINE readNetCDF_1d
 
-!**** readNetCDF_2d **********************************************
-      
-    SUBROUTINE readNetCDF_2d(    &
-!        input parameters
-            ncid                 &
-          , NCNAME               &
-          , Nxr, Nyr             &
-          , start, count         &
-!        output parameters
-          , data                 &
-      )
-                               
-!    input parameters
-      integer, intent( in) :: ncid
-      character(len=*), intent( in) :: NCNAME
-      integer, intent( in) :: Nxr, Nyr
-      integer, intent( in) :: start(2), count(2)
-      real(8), intent(out) :: data(Nxr, Nyr)
-      
-      integer, parameter :: Num_try = 50
-      integer :: var_id
-      integer :: err_flag, status
-      integer :: itry
-      real(8) :: sf, off
-      
-! --- Read NetCDF file ------------------------
-      
-      write(*,*) 'READ: ', NCNAME
-      ! Get variable id
-      do itry=1,Num_try
-        status = nf90_inq_varid(ncid, NCNAME, var_id)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 1: Retry!'
-      end do        
-      do itry=1,Num_try
-        status = nf90_get_var(ncid, var_id, data, start=start, count=count)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** READ FAILED: Retry!'
-      end do        
-      do itry=1,Num_try
-        status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 2: Retry!'
-      end do          
-      do itry=1,Num_try
-        status = nf90_get_att(ncid, var_id, 'add_offset', off)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 3: Retry!'
-      end do          
-        
-      data = data*sf+off
-      write(*,*) '*** SUCCESS'
-
-    END SUBROUTINE readNetCDF_2d
-
-!**** readNetCDF_3d **********************************************
-      
-    SUBROUTINE readNetCDF_3d(    &
-!        input parameters
-            ncid                 &
-          , NCNAME               &
-          , Nxr, Nyr, Nt         &
-          , start, count         &
-!        output parameters
-          , data                 &
-      )
-                               
-!    input parameters
-      integer, intent( in) :: ncid
-      character(len=*), intent( in) :: NCNAME
-      integer, intent( in) :: Nxr, Nyr, Nt
-      integer, intent( in) :: start(3), count(3)
-      real(8), intent(out) :: data(Nxr, Nyr, Nt)
-      
-      integer, parameter :: Num_try = 50
-      integer :: var_id
-      integer :: err_flag, status
-      integer :: itry
-      real(8) :: sf, off
-      
-      data(:,:,:)=-9999.0d0
-      
-! --- Read NetCDF file ------------------------
-      
-      write(*,*) 'READ: ', NCNAME
-      ! Get variable id
-      do itry=1,Num_try
-        status = nf90_inq_varid(ncid, NCNAME, var_id)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 1: Retry!'
-      end do        
-      do itry=1,Num_try
-        status = nf90_get_var(ncid, var_id, data, start=start, count=count)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr .and. data(Nxr,Nyr,Nt)/=-9999.0d0) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** READ FAILED: Retry!'
-      end do        
-      do itry=1,Num_try
-        status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 2: Retry!'
-      end do          
-      do itry=1,Num_try
-        status = nf90_get_att(ncid, var_id, 'add_offset', off)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 3: Retry!'
-      end do          
-        
-      data = data*sf+off
-      write(*,*) '*** SUCCESS'
-
-    END SUBROUTINE readNetCDF_3d
-      
-!**** readNetCDF_4d **********************************************
-      
-    SUBROUTINE readNetCDF_4d(    &
-!      input parameters
-          ncid                   &
-        , NCNAME                 &
-        , Nxr, Nyr, Nzr, Nt      &
-        , start, count           &
-!      output parameters
-        , data                   &
-      )
-                               
-!    input parameters
-      integer, intent( in) :: ncid
-      character(len=*), intent( in) :: NCNAME
-      integer, intent( in) :: Nxr, Nyr, Nzr, Nt
-      integer, intent( in) :: start(4), count(4)
-      real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
-      
-      integer, parameter :: Num_try = 50
-      integer :: var_id
-      integer :: err_flag, status
-      integer :: itry
-      real(8) :: sf, off
-      
-! --- Read NetCDF file ------------------------
-      
-      write(*,*) 'READ: ', NCNAME
-      ! Get variable id
-      do itry=1,Num_try
-        status = nf90_inq_varid(ncid, NCNAME, var_id)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 1: Retry!'
-      end do        
-      do itry=1,Num_try
-        status = nf90_get_var(ncid, var_id, data, start=start, count=count)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** READ FAILED: Retry!'
-      end do        
-      do itry=1,Num_try
-        status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 2: Retry!'
-      end do          
-      do itry=1,Num_try
-        status = nf90_get_att(ncid, var_id, 'add_offset', off)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 3: Retry!'
-      end do          
-        
-      data = data*sf+off
-      write(*,*) '*** SUCCESS'
-
-      END SUBROUTINE readNetCDF_4d
-!
-!**** readNetCDF_4d ver 2 **********************************************
-      
-    SUBROUTINE readNetCDF_4d_2(  &
-!        input parameters
-            ncid                 &
-          , NCNAME               &
-          , Nxr, Nyr, Nzr, Nt    &
-          , start, count         &
-!        output parameters
-          , data                 &
-      )
-                               
-!    input parameters
-      integer, intent( in) :: ncid
-      character(len=*), intent( in) :: NCNAME
-      integer, intent( in) :: Nxr, Nyr, Nzr, Nt
-      integer, intent( in) :: start(4), count(4)
-      real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
-      
-      integer, parameter :: Num_try = 50
-      integer :: start2(4), count2(4)
-      integer :: var_id
-      integer :: err_flag, status
-      integer :: itry
-      integer :: k
-      real(8) :: sf, off
-      
-      start2 = start
-      count2 = count
-      count2(3)=1
-      
-      data(:,:,:,:) = -9999.0d0
-      
-! --- Read NetCDF file ------------------------
-      
-      write(*,*) 'READ: ', NCNAME
-      ! Get variable id
-      do itry=1,Num_try
-        status = nf90_inq_varid(ncid, NCNAME, var_id)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 1: Retry!'
-      end do        
-      do k=1,Nzr
-        start2(3)=k
-        do itry=1,Num_try
-          status = nf90_get_var(ncid, var_id, data(:,:,k,:), start=start2, count=count2)
-          write(*,*) trim(nf90_strerror(status)), k
-          if (status == nf90_noerr .and. data(Nxr,Nyr,k,Nt)/=-9999.0d0) exit
-          if (itry== Num_try) stop
-          write(*,*) '*** READ FAILED: Retry!'
-        end do
-      end do        
-      do itry=1,Num_try
-        status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 2: Retry!'
-      end do          
-      do itry=1,Num_try
-        status = nf90_get_att(ncid, var_id, 'add_offset', off)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** FAILED 3: Retry!'
-      end do          
-        
-      data = data*sf+off
-      write(*,*) '*** SUCCESS'
-
-    END SUBROUTINE readNetCDF_4d_2
-      
 !**** NetCDF utility **********************************************
             
-    SUBROUTINE try_nf_open(NC_FILE, nf90_open_mode, ncid)
-      
-      character(len=*),  intent( in) :: NC_FILE
-      integer,           intent( in) :: nf90_open_mode
-      integer,           intent(out) :: ncid
+  SUBROUTINE try_nf_open(NC_FILE, nf90_open_mode, ncid)
+    
+    character(len=*),  intent( in) :: NC_FILE
+    integer,           intent( in) :: nf90_open_mode
+    integer,           intent(out) :: ncid
 
-      integer, parameter :: Num_try = 50
-      integer :: status
-      integer :: itry
-      
-      do itry=1,Num_try
-        status = nf90_open(NC_FILE, nf90_open_mode, ncid)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop
-        write(*,*) '*** OPEN FAILED: Retry!'
-      end do
-      
-    END SUBROUTINE try_nf_open
-      
+    integer, parameter :: Num_try = 30
+    integer :: status
+    integer :: itry
+    
+    do itry=1,Num_try
+      status = nf90_open(NC_FILE, nf90_open_mode, ncid)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** OPEN FAILED: Retry!'
+    end do
+    
+  END SUBROUTINE try_nf_open
+    
 ! -------------------------------------------------------------------------
-      
-    SUBROUTINE get_dimension(ncid, name, dim)
-      
-      integer,           intent( in) :: ncid
-      character(len=*),  intent( in) :: name
-      integer,           intent(out) :: dim
+     
+  SUBROUTINE get_dimension(ncid, name, dim)
+    
+    integer,           intent( in) :: ncid
+    character(len=*),  intent( in) :: name
+    integer,           intent(out) :: dim
 
-      integer, parameter :: Num_try = 50
-      integer :: dimid
-      integer :: status
-      integer :: itry
-      
-      do itry=1,Num_try
-        status = nf90_inq_dimid(ncid, name, dimid)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry== Num_try) stop 
-      end do
-      do itry=1,Num_try
-        status = nf90_inquire_dimension(ncid, dimid, len=dim)
-        write(*,*) trim(nf90_strerror(status))
-        if (status == nf90_noerr) exit
-        if (itry == Num_try) stop 
-      end do
-      
-    END SUBROUTINE get_dimension
-
-
+    integer, parameter :: Num_try = 50
+    integer :: dimid
+    integer :: status
+    integer :: itry
+    
+    do itry=1,Num_try
+      status = nf90_inq_dimid(ncid, name, dimid)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop 
+    end do
+    do itry=1,Num_try
+      status = nf90_inquire_dimension(ncid, dimid, len=dim)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry == Num_try) stop 
+    end do
+    
+  END SUBROUTINE get_dimension
 ! -------------------------------------------------------------------------
-
-    SUBROUTINE check(status)
-      
-      integer, intent(in) :: status
-      
-!      print *, trim(nf90_strerror(status))
-      if (status /= nf90_noerr) then 
-        write(*,*) trim(nf90_strerror(status))
-        stop "Stopped"
-      end if
-      
-    END SUBROUTINE check
-      
-! -------------------------------------------------------------------------
-      
-    SUBROUTINE check2(status, err_flag)
-      
-      integer, intent( in) :: status
-      integer, intent(out) :: err_flag
-      
-      err_flag = 0
-
-      if (status /= nf90_noerr) then 
-        write(*,*) trim(nf90_strerror(status))
-        err_flag = 1
-!        stop "Stopped"
-      end if
-      
-    END SUBROUTINE check2
+  SUBROUTINE check(status)
+    
+    integer, intent(in) :: status
+    
+!    print *, trim(nf90_strerror(status))
+    if (status /= nf90_noerr) then 
+      write(*,*) trim(nf90_strerror(status))
+      stop "Stopped"
+    end if
+    
+  END SUBROUTINE check    
       
 END MODULE mod_roms_netcdf
       

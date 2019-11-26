@@ -425,7 +425,7 @@ PROGRAM iniROMS2ROMS
     end do
   end do
  
-  call set_depth ( Nxr_dg, Nyr_dg, Nzr, h_dg                         &
+  call set_depth ( Nxr_dg, Nyr_dg, Nzr_dg, h_dg                         &
         , Vtransform_dg, hc_dg, sc_w_dg, sc_r_dg, Cs_w_dg, Cs_r_dg   &
 !    output parameters
         , z_r_dg, z_w_dg)
