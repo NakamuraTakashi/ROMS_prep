@@ -1,0 +1,23 @@
+&grd
+! ROMS NetCDF grid file     
+!  GRID_FILE = "D:/cygwin64/home/Takashi/COAWST/Projects/Fukido_reef/Fukido_mangrove_4m_grd_v1.nc"
+  GRID_FILE = "D:/cygwin64/home/Takashi/COAWST/Projects/Fukido_reef/Fukido_20m_grd_v8.nc"
+/
+&bath
+! GEBCO bathymetry NetCDF file     
+!  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2014_2D/GEBCO_2014_2D.nc"
+  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+
+! Set lat, lon at specific station.  !!!**Not used for grid refinment
+  s_lat = -5.96666666666667
+  e_lat = 4.46666666666667
+  s_lon = 116.033333333333
+  e_lon = 119.966666666667
+
+! Set ROMS grid resolution
+!  RESOLUTION = 24.0d0 ! 1/24 degree resolution
+  RESOLUTION = 60.0d0 ! 1/12*1/5 degree resolution
+
+  hmin = -9.0d0  ! Minimum depth
+  rx0max = 0.5  ! Smoothing parameter
+/
