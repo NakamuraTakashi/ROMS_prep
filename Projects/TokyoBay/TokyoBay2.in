@@ -1,0 +1,153 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "TokyoBay2_grd_v0.1.nc"
+/
+
+&bath
+! GEBCO bathymetry NetCDF file     
+!  BATH_FILE = "N:/Data/GEBCO_2014_2D/GEBCO_2014_2D.nc"
+  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+! Set lat, lon at specific station. 
+  s_lat = 33.4d0
+  e_lat = 35.75d0
+  s_lon = 138.8d0  ! 138.8d0
+  e_lon = 140.8d0
+
+! Set ROMS grid resolution
+!  RESOLUTION = 24.0d0 ! 1/24 degree resolution
+  RESOLUTION = 36.0d0 ! 1/60 degree resolution
+
+  hmin = 1.0d0  ! Minimum depth
+  rx0max = 0.2  ! Smoothing parameter
+/
+
+&refinement
+! ROMS NetCDF coarse grid file     
+  parent_grid = "TokyoBay1_grd_v0.nc"
+  parent_Imin = 10
+  parent_Imax = 48  !49
+  parent_Jmin = 56
+  parent_Jmax = 83  !84
+  refine_factor = 5
+/
+&range
+! -------------------------------------------------------------------------
+! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
+!
+!                 ______ (Rlon,Tlat)
+!                |      |
+!                |      |
+!                |______|
+!     (Llon,Blat)                     
+!
+! On Input:
+!
+!    Llon         Box left-edge   longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Rlon         Box right-edge  longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Blat         Box bottom-edge latitude  (degress, -80 to 80 )
+!    Tlat         Box top-edge    latitude  (degress, -80 to 80 )
+!
+! Geographical and Grid parameters --------
+!
+  Llon = 137.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+  Rlon = 142.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+  Blat =  31.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+  Tlat =  36.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+/
+
+&sdate
+
+  Syear  = 2020   ! Starting year
+  Smonth = 9      ! Starting month
+  Sday   = 1     ! Starting day
+/
+
+&edate
+
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 10     ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&refdate
+
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&intpmode
+
+  mode = 1        ! mode=1, linear interpolation
+/
+
+&hycom      
+! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
+  HYCOM_prefix  = "TokyoBay_HYCOM_extracted"
+/
+
+&roms2roms      
+! ROMS coraes NetCDF histry file name
+  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
+! 8: mud_, 9: sand_,
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
+! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
+! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
+! 26: TI13C, 27: DO13C, 28: PO13C, 
+! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
+!    
+!           1       5        10        15        20        25        30
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+/
+
+&bry
+  BRY_prefix  = "TokyoBay2_bry_JCOPE-T_Nz30"
+  !    south north west east
+  SNWE =  1,   0,   0,   0
+/
+
+&ini
+  INI_prefix  = "TokyoBay2_ini_JCOPE-T_Nz30"
+!  INI_prefix  = "CT_0.08_ini_HYCOM_Nz30"
+  itime = 9       ! Frame number of HYCOME/ROMS file
+/
+
+&hcoord
+  spherical  = 1   
+/
+
+&zcoord
+  N_s_rho = 30
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see below for details), [1:Ngrids].
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see below for details), [1:Ngrids].
+
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+
+/
+
+&frc_dsjra55
+  GRIB_FCST_SURF_dir  =  "M:/Data/dsjra55/Hist/Daily/fcst_surf/199609/"
+  GRIB_FCST_PHY2M_dir =  "M:/Data/dsjra55/Hist/Daily/fcst_phy2m/199609/"
+  GRIB_LL = "M:/Data/dsjra55/Consts/Lambert5km_latlon.dat"
+  
+  FRC_prefix  = "TokyoBay2_frc_DSJRA55"
+/
+
+&frc_jmamsm
+!  MSM_dir  =  "W:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  MSM_dir  =  "W:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+  FRC_prefix  = "TokyoBay2_frc_JMAMSMnc"
+/

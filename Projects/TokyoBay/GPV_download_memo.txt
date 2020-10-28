@@ -1,0 +1,6 @@
+# Mirroring with remote server
+
+[hoge@$ lftp
+lftp :~> set ftp:proxy http://proxy.noc.titech.ac.jp:3128
+lftp :~> open http://database.rish.kyoto-u.ac.jp
+lftp :~> mirror --only-missing --include-glob *_CWM_* --include-glob *_MSM_GPV_Rjp_Lsurf_FH00-15_* --include-glob MSM*SFC018_* /arch/jmadata/data/gpv/original/2019 /cygdrive/w/JMA_DATA/JMA_GPV/2019
