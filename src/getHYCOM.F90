@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2019 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2020 Takashi NAKAMURA  =====
 
 PROGRAM getHYCOM
   use netcdf
@@ -200,7 +200,9 @@ PROGRAM getHYCOM
   write(*,*) "******************************************************************"
 
 #if defined GOFS_31
-# if defined ANALYSIS
+# if defined ANALYSIS_Y
+  open(50, file='time_HYCOM_GOF_31_analysisY.dat')
+# elif defined ANALYSIS
   open(50, file='time_HYCOM_GOF_31_analysis.dat')
 # elif defined REANALYSIS
   open(50, file='time_HYCOM_GOF_31_reanalysis.dat')

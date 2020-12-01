@@ -1,35 +1,24 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Palau2_grd_v2.0.nc"
+  GRID_FILE = "TokyoBay1_grd_v0.nc"
 /
 
 &bath
 ! GEBCO bathymetry NetCDF file     
-!  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2014_2D/GEBCO_2014_2D.nc"
-  BATH_FILE = "../../../Data/gebco_2020_netcdf/GEBCO_2020.nc"
-
-! Set lat, lon at specific station.  !!!**Not used for grid refinment
-  s_lat = 6.11666666666666
-  e_lat = 9.05
-  s_lon = 133.283333333333
-  e_lon = 135.383333333333
+!  BATH_FILE = "N:/Data/GEBCO_2014_2D/GEBCO_2014_2D.nc"
+  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+! Set lat, lon at specific station. 
+  s_lat = 33.4d0
+  e_lat = 36.7d0
+  s_lon = 137.0d0
+  e_lon = 142.0d0
 
 ! Set ROMS grid resolution
 !  RESOLUTION = 24.0d0 ! 1/24 degree resolution
-  RESOLUTION = 60.0d0 ! 1/12*1/5 degree resolution
+  RESOLUTION = 36.0d0 ! 1/60 degree resolution
 
-  hmin = -5.0d0  ! Minimum depth
-  rx0max = 10.0  ! Smoothing parameter
-/
-
-&refinement
-! ROMS NetCDF coarse grid file     
-  parent_grid = "Palau1_grd_v2.0.nc"
-  parent_Imin = 49
-  parent_Imax = 86
-  parent_Jmin = 52
-  parent_Jmax = 91
-  refine_factor = 5
+  hmin = 5.0d0  ! Minimum depth
+  rx0max = 0.2  ! Smoothing parameter
 /
 
 &range
@@ -51,23 +40,23 @@
 !
 ! Geographical and Grid parameters --------
 !
-  Llon =  85.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-  Rlon = 170.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
-  Blat = -20.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
-  Tlat =  35.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+  Llon = 137.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+  Rlon = 142.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+  Blat =  31.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+  Tlat =  36.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
 /
 
 &sdate
 
-  Syear  = 2017   ! Starting year
-  Smonth = 4      ! Starting month
+  Syear  = 2014   ! Starting year
+  Smonth = 7      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
 
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 5      ! Ending month
+  Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 8      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -85,7 +74,7 @@
 
 &hycom      
 ! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted"
+  HYCOM_prefix  = "TokyoBay_HYCOM_extracted"
 /
 
 &roms2roms      
@@ -107,23 +96,22 @@
 /
 
 &bry
-  BRY_prefix  = "Palau2_bry_Nz30"
+  BRY_prefix  = "CT_0.08_bry_HYCOM_Nz30"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Palau2_ini_Nz30"
+  INI_prefix  = "CT_0.08_ini_HYCOMwNAO_Nz30"
+!  INI_prefix  = "CT_0.08_ini_HYCOM_Nz30"
   itime = 9       ! Frame number of HYCOME/ROMS file
 /
 
 &hcoord
-
   spherical  = 1   
 /
 
 &zcoord
-
   N_s_rho = 30
 
 ! Set vertical, terrain-following coordinates transformation equation and
@@ -142,8 +130,8 @@
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "O:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "O:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
+  GRIB_FCST_SURF_dir  =  "Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
+  GRIB_FCST_PHY2M_dir =  "Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
   
-  FRC_prefix  = "Palau2_frc_JRA55"
+  FRC_prefix  = "CT_0.08_frc_JRA55"
 /
