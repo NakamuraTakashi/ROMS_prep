@@ -95,7 +95,7 @@ CONTAINS
   END SUBROUTINE weight2D_grid
     
 ! **********************************************************************
-    !
+!
   SUBROUTINE weight2D_grid2(NXd, NYd, Xd, Yd, nxr, nyr, xr, yr, Id_cont, w_cont)
 
     implicit none
@@ -105,35 +105,35 @@ CONTAINS
     integer, intent( in) :: nxr, nyr
     real(8), intent( in) :: xr(nxr,nyr), yr(nxr,nyr)
 ! output parameters
-    integer, intent(out) :: Id_cont(8, nxr*nyr)  ! ir,jr, Id1,Jd1, Id2,Jd2, Id3,Jd3
-    real(8), intent(out) :: w_cont(3, nxr*nyr)   ! w1, w2, w3
+    integer, intent(out) :: Id_cont(4, nxr*nyr)  ! ir,jr, Id1,Jd1
+    real(8), intent(out) :: w_cont(4, nxr*nyr)    ! w1, w2, w3, w4
     
-    real(8) :: w(3)
+    real(8) :: w(4)
     integer :: ir,jr,idc
-    integer :: Idn,Jdn
-    integer :: Id(3),Jd(3)
-    real(8) :: dmin(3)
-    real(8) :: d
-    real(8) :: a(3)
+    integer :: Idn,Jdn,Idmin,Jdmin
+    integer :: Id(4),Jd(4)
+    real(8) :: dmin
+    real(8) :: d,d1,d2,d3,d4,wt
     integer :: is,js,ie,je,istep
 
 !
-!      nearest           2nd
-!     (Jd1,Jd1)|-------/ (Id2,Jd2) 
-!              |      / 
-!              | *   /  
-!              | (ir,jr)   
-!              |   /    
-!              |  /    
-!              | /   
-!    (Jd3,Jd3) |/
-!     3rd               
-!  
+!          Xd(Id1)          Xd(Id1+1)
+! Yd(Jd1+1) |----------------| Yd(Jd1+1) 
+!           |                |
+!           |                |
+!           |   f            |
+! yr(ir,jr) |------*         |
+!           |      |g        |
+!           |      |         |
+!   Yd(Jd1) |----------------| Yd(Jd1) 
+!         Xd(Id1) xr(ir,jr) Xd(Id1+1)
+!
+!
 
     do ir=1,nxr
       do jr=1,nyr
       
-        istep = max(NXd/2,NYd/2)
+        istep = min(NXd/2,NYd/2)
         js = 1
         is = 1
         je = NYd
@@ -146,87 +146,75 @@ CONTAINS
             do Jdn=js,je, istep
               ! Check nearest points.
               d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
-              if( d < dmin(1) ) then
-                dmin(3) = dmin(2)
-                dmin(2) = dmin(1)
-                dmin(1) = d
-                Id(3) = Id(2)
-                Id(2) = Id(1)
-                Id(1) = Idn
-                Jd(3) = Jd(2)
-                Jd(2) = Jd(1)
-                Jd(1) = Jdn
-              else if( d < dmin(2) ) then
-                dmin(3) = dmin(2)
-                dmin(2) = d
-                Id(3) = Id(2)
-                Id(2) = Idn
-                Jd(3) = Jd(2)
-                Jd(2) = Jdn
-              else if( d < dmin(3) ) then
-                dmin(3) = d
-                Id(3) = Idn
-                Jd(3) = Jdn
+              if( d < dmin ) then
+                dmin = d
+                Idmin = Idn
+                Jdmin = Jdn
               end if
             enddo
           enddo
-!          write(*,*) istep,Id,Jd,dmin
+
           if(istep == 1) then
             exit 
           else if (istep < 5 ) then
             istep = 1
-            js = max(1,Jd(1)-3)
-            is = max(1,Id(1)-3)
-            je = min(NYd,Jd(1)+3)
-            ie = min(NXd,Id(1)+3)
+            js = max(1,Jdmin-10)
+            is = max(1,Idmin-10)
+            je = min(NYd,Jdmin+10)
+            ie = min(NXd,Idmin+10)
           else
             istep = istep/2
-            js = max(1,Jd(1)-istep-2)
-            is = max(1,Id(1)-istep-2)
-            je = min(NYd,Jd(1)+istep+2)
-            ie = min(NXd,Id(1)+istep+2)
+            js = max(1,Jdmin-istep*2)
+            is = max(1,Idmin-istep*2)
+            je = min(NYd,Jdmin+istep*2)
+            ie = min(NXd,Idmin+istep*2)
           end if
           
         enddo
-        
-        a(1) = 0.5d0*abs((Xd(Id(2),Jd(2))-xr(ir,jr))*(Yd(Id(3),Jd(3))-yr(ir,jr)) &
-                        -(Xd(Id(3),Jd(3))-xr(ir,jr))*(Yd(Id(2),Jd(2))-yr(ir,jr)))
-        a(2) = 0.5d0*abs((Xd(Id(1),Jd(1))-xr(ir,jr))*(Yd(Id(3),Jd(3))-yr(ir,jr)) &
-                        -(Xd(Id(3),Jd(3))-xr(ir,jr))*(Yd(Id(1),Jd(1))-yr(ir,jr)))
-        a(3) = 0.5d0*abs((Xd(Id(2),Jd(2))-xr(ir,jr))*(Yd(Id(1),Jd(1))-yr(ir,jr)) &
-                        -(Xd(Id(1),Jd(1))-xr(ir,jr))*(Yd(Id(2),Jd(2))-yr(ir,jr)))
-        
-        if(a(1)==0.0d0) then
-          w(1) = 1.0d0
-          w(2) = 0.0d0
-          w(3) = 0.0d0
+
+        d1 = sqrt((Xd(Idmin-1,Jdmin)-xr(ir,jr))**2.0d0 + (Yd(Idmin-1,Jdmin)-yr(ir,jr))**2.0d0 )
+        d2 = sqrt((Xd(Idmin+1,Jdmin)-xr(ir,jr))**2.0d0 + (Yd(Idmin+1,Jdmin)-yr(ir,jr))**2.0d0 )
+        if(d1<d2) then
+          Id(1) = Idmin-1
         else
-          w(1) = a(1)/(a(1)+a(2)+a(3))
-          w(2) = a(2)/(a(1)+a(2)+a(3))
-          w(3) = a(3)/(a(1)+a(2)+a(3))
+          Id(1) = Idmin
         endif
-        
+        Id(2) = Id(1)+1
+        Id(3) = Id(1)+1
+        Id(4) = Id(1)
+
+        d1 = sqrt((Xd(Idmin,Jdmin-1)-xr(ir,jr))**2.0d0 + (Yd(Idmin,Jdmin-1)-yr(ir,jr))**2.0d0 )
+        d2 = sqrt((Xd(Idmin,Jdmin+1)-xr(ir,jr))**2.0d0 + (Yd(Idmin,Jdmin+1)-yr(ir,jr))**2.0d0 )
+        if(d1<d2) then
+          Jd(1) = Jdmin-1
+        else
+          Jd(1) = Jdmin
+        endif
+        Jd(2) = Jd(1)
+        Jd(3) = Jd(1)+1
+        Jd(4) = Jd(1)+1
+
+        call Weight_Area( Xd(Id(1),Jd(1)), Yd(Id(1),Jd(1)), Xd(Id(2),Jd(2)), Yd(Id(2),Jd(2))  &
+                        , Xd(Id(3),Jd(3)), Yd(Id(3),Jd(3)), Xd(Id(4),Jd(4)), Yd(Id(4),Jd(4))  &
+                        , xr(ir,jr), yr(ir,jr), w(1),w(2),w(3),w(4) )
+ 
         idc = nyr*(ir-1)+jr
         
         Id_cont(1, idc)=ir
         Id_cont(2, idc)=jr
         Id_cont(3, idc)=Id(1)
         Id_cont(4, idc)=Jd(1)
-        Id_cont(5, idc)=Id(2)
-        Id_cont(6, idc)=Jd(2)
-        Id_cont(7, idc)=Id(3)
-        Id_cont(8, idc)=Jd(3)
         
         w_cont(1, idc)=w(1)
         w_cont(2, idc)=w(2)
         w_cont(3, idc)=w(3)
+        w_cont(4, idc)=w(4)
         
       enddo
     enddo
 
   END SUBROUTINE weight2D_grid2
     
-! **********************************************************************
 ! **********************************************************************
   ! Seek maixmum and minimum indecs of donor X Y
   SUBROUTINE seek_IJrange(                     &
@@ -507,7 +495,278 @@ CONTAINS
     enddo
 
   END SUBROUTINE weight2D_grid3
+! **********************************************************************
+!
+  SUBROUTINE weight2D_grid3_2(                          &
+        Ids, Ide, Jds, Jde, Xd, Yd, Maskd             & 
+      , irs, ire, jrs, jre, xr, yr                    &
+      , Id_cont, w_cont )
 
+    implicit none
+! input parameters
+    integer, intent( in) :: Ids, Ide, Jds, Jde       ! start and end indices of donor X and Y points
+    real(8), intent( in) :: Xd(Ids:Ide, Jds:Jde)      ! donor X positions (2D fields)
+    real(8), intent( in) :: Yd(Ids:Ide, Jds:Jde)      ! donor Y positions (2D fields)
+    real(8), intent( in) :: Maskd(Ids:Ide, Jds:Jde)   ! donor land mask (land:0, water:1)
+    integer, intent( in) :: irs, ire, jrs, jre       ! Number of receiver x and y points
+    real(8), intent( in) :: xr(irs:ire, jrs:jre)     ! receiver x and y positions (2D fields)
+    real(8), intent( in) :: yr(irs:ire, jrs:jre)     ! receiver x and y positions (2D fields)
+! output parameters
+    integer, intent(out) :: Id_cont(4, (ire-irs+1)*(jre-jrs+1))  ! ir,jr, Id1,Jd1
+    real(8), intent(out) :: w_cont(4, (ire-irs+1)*(jre-jrs+1))    ! w1, w2, w3, w4
+    
+    real(8) :: w(4)
+    integer :: NXd,NYd,nxr,nyr
+    integer :: ir,jr,idc
+    integer :: Idn,Jdn,Idmin,Jdmin
+    integer :: Id(4),Jd(4)
+    real(8) :: dmin
+    real(8) :: d,d1,d2,d3,d4,wt
+    integer :: is,js,ie,je,istep
+    integer :: i,j,lnd,Imsk(3)
+    real(8) :: wm
+
+!
+!          Xd(Id1)          Xd(Id1+1)
+! Yd(Jd1+1) |----------------| Yd(Jd1+1) 
+!           |                |
+!           |                |
+!           |   f            |
+! yr(ir,jr) |------*         |
+!           |      |g        |
+!           |      |         |
+!   Yd(Jd1) |----------------| Yd(Jd1) 
+!         Xd(Id1) xr(ir,jr) Xd(Id1+1)
+!
+!
+    NXd = Ide-Ids+1
+    NYd = Jde-Jds+1
+    nxr = ire-irs+1
+    nyr = jre-jrs+1
+
+    do ir=irs,ire
+      do jr=jrs,jre
+      
+!        istep = min(NXd/2,NYd/2)
+        js = Jds
+        is = Ids
+        je = Jde
+        ie = Ide
+
+!        do
+          dmin = sqrt((Xd(Ide,Jde)-Xd(Ids,Ids))**2.0d0 + (Yd(Ide,Jde)-Yd(Ids,Ids))**2.0d0 )
+
+          do Idn=is,ie!, istep
+            do Jdn=js,je!, istep
+              if( Maskd(Idn,Jdn)==0.0d0 ) cycle
+              ! Check nearest points.
+              d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
+              if( d < dmin ) then
+                dmin = d
+                Idmin = Idn
+                Jdmin = Jdn
+              end if
+            enddo
+          enddo
+
+!          if(istep == 1) then
+!            exit 
+!          else if (istep < 5 ) then
+!            istep = 1
+!            js = max(Jds,Jdmin-10)
+!            is = max(Ids,Idmin-10)
+!            je = min(Jde,Jdmin+10)
+!            ie = min(Jde,Idmin+10)
+!          else
+!            istep = istep/2
+!            js = max(Jds,Jdmin-istep*2)
+!            is = max(Ids,Idmin-istep*2)
+!            je = min(Jde,Jdmin+istep*2)
+!            ie = min(Jde,Idmin+istep*2)
+!          end if
+!          
+!        enddo
+
+        d1 = sqrt((Xd(Idmin-1,Jdmin)-xr(ir,jr))**2.0d0 + (Yd(Idmin-1,Jdmin)-yr(ir,jr))**2.0d0 )
+        d2 = sqrt((Xd(Idmin+1,Jdmin)-xr(ir,jr))**2.0d0 + (Yd(Idmin+1,Jdmin)-yr(ir,jr))**2.0d0 )
+        if(d1<d2) then
+          Id(1) = Idmin-1
+        else
+          Id(1) = Idmin
+        endif
+        Id(2) = Id(1)+1
+        Id(3) = Id(1)+1
+        Id(4) = Id(1)
+
+        d1 = sqrt((Xd(Idmin,Jdmin-1)-xr(ir,jr))**2.0d0 + (Yd(Idmin,Jdmin-1)-yr(ir,jr))**2.0d0 )
+        d2 = sqrt((Xd(Idmin,Jdmin+1)-xr(ir,jr))**2.0d0 + (Yd(Idmin,Jdmin+1)-yr(ir,jr))**2.0d0 )
+        if(d1<d2) then
+          Jd(1) = Jdmin-1
+        else
+          Jd(1) = Jdmin
+        endif
+        Jd(2) = Jd(1)
+        Jd(3) = Jd(1)+1
+        Jd(4) = Jd(1)+1
+
+        call Weight_Area( Xd(Id(1),Jd(1)), Yd(Id(1),Jd(1)), Xd(Id(2),Jd(2)), Yd(Id(2),Jd(2))  &
+                        , Xd(Id(3),Jd(3)), Yd(Id(3),Jd(3)), Xd(Id(4),Jd(4)), Yd(Id(4),Jd(4))  &
+                        , xr(ir,jr), yr(ir,jr), w(1),w(2),w(3),w(4) )
+ 
+        idc = nyr*(ir-irs)+jr-jrs+1
+        
+        Id_cont(1, idc)=ir
+        Id_cont(2, idc)=jr
+        Id_cont(3, idc)=Id(1)
+        Id_cont(4, idc)=Jd(1)
+        
+        w_cont(1, idc)=w(1)
+        w_cont(2, idc)=w(2)
+        w_cont(3, idc)=w(3)
+        w_cont(4, idc)=w(4)
+
+      
+! fill kland mask
+        lnd = 0
+        wm = 0.0d0
+        do i=1,4
+          if(Maskd(Id(i),Jd(i))==0.0d0) then
+            lnd = lnd + 1
+            Imsk(lnd) = i
+            wm = wm + w(i)
+          endif
+        enddo
+        if(lnd>0) then
+          do i=1,4
+!            w_cont(i, idc) = 1.0d0/dble(4-lnd)  ! = w(i) + wm/dble(4-lnd) 
+            w_cont(i, idc) = w(i) + wm/dble(4-lnd) 
+!            w_cont(i, idc) = w(i)+w(i)*wm/(1.0d0-wm)
+            do j=1,lnd
+              if(Imsk(j)==i)then
+                w_cont(i, idc) = 0.0d0
+              endif
+            enddo
+          enddo
+        endif
+              
+      enddo
+    enddo
+
+  END SUBROUTINE weight2D_grid3_2
+    
+
+! **********************************************************************
+! Heron's formula for calculating triangle area of (x1,y1), (x2,y2),(x3,y3) points
+  SUBROUTINE Triangle_Area(x1,y1,x2,y2,x3,y3,A)
+    implicit none
+    real(8), intent( in) :: x1,y1,x2,y2,x3,y3
+    real(8), intent(out) :: A
+    real(8) :: d12,d23,d31
+    real(8) :: s
+
+    d12 = sqrt((x1-x2)**2+(y1-y2)**2)
+    d23 = sqrt((x2-x3)**2+(y2-y3)**2)
+    d31 = sqrt((x3-x1)**2+(y3-y1)**2)
+
+    s = 0.5d0*( d12 + d23 + d31 )
+
+    A = sqrt( s*(s-d12)*(s-d23)*(s-d31) )
+
+  END SUBROUTINE Triangle_Area
+
+! calculate rectangle area of (x1,y1), (x2,y2),(x3,y3) points
+  SUBROUTINE Rectangle_Area(x1,y1,x2,y2,x3,y3,x4,y4,A)
+    implicit none
+    real(8), intent( in) :: x1,y1,x2,y2,x3,y3,x4,y4
+    real(8), intent(out) :: A
+    real(8) :: s1,s2
+!   (x4,y4)     (x3,y3)
+!      |-----------|
+!      |           |
+!      |-----------|
+!   (x1,y1)     (x2,y2)
+!  
+    call Triangle_Area(x1,y1,x2,y2,x3,y3,s1)
+    call Triangle_Area(x1,y1,x4,y4,x3,y3,s2) 
+
+    A = s1 + s2
+
+  END SUBROUTINE Rectangle_Area
+
+  SUBROUTINE Intersection_Points(Xd1,Yd1,Xd2,Yd2,Xd3,Yd3,Xd4,Yd4,xr,yr &
+                                ,x1,y1,x2,y2,x3,y3,x4,y4)
+    implicit none
+    real(8), intent( in) :: Xd1,Yd1,Xd2,Yd2,Xd3,Yd3,Xd4,Yd4
+    real(8), intent( in) :: xr,yr
+    real(8), intent(out) :: x1,y1,x2,y2,x3,y3,x4,y4
+    real(8) :: a1,a2,b1,b2,c1,c2
+    real(8), parameter :: sv = 1.0d-23
+!
+    a1 = -(Yd1-Yd4)
+    b1 = Xd1-Xd4
+    c1 = -a1*xr-b1*yr
+
+    a2 = -(Yd2-Yd1)
+    b2 = Xd2-Xd1
+    c2 = -a2*Xd1-b2*Yd1
+
+    x1 = (b1*c2-b2*c1)/(a1*b2-a2*b1)
+    y1 = (a2*c1-a1*c2)/(a1*b2-a2*b1)
+!-----
+    a2 = -(Yd3-Yd4)
+    b2 = Xd3-Xd4
+    c2 = -a2*Xd4-b2*Yd4
+
+    x3 = (b1*c2-b2*c1)/(a1*b2-a2*b1)
+    y3 = (a2*c1-a1*c2)/(a1*b2-a2*b1)
+!-----
+    a1 = -(Yd2-Yd1)
+    b1 = xd2-xd1
+    c1 = -a1*xr-b1*yr
+
+    a2 = -(Yd3-Yd2)
+    b2 = xd3-Xd2
+    c2 = -a2*Xd3-b2*Yd3
+
+    x2 = (b1*c2-b2*c1)/(a1*b2-a2*b1)
+    y2 = (a2*c1-a1*c2)/(a1*b2-a2*b1)
+!-----
+    a2 = -(Yd1-Yd4)
+    b2 = xd1-Xd4
+    c2 = -a2*Xd4-b2*Yd4
+
+    x4 = (b1*c2-b2*c1)/(a1*b2-a2*b1)
+    y4 = (a2*c1-a1*c2)/(a1*b2-a2*b1)
+!-----
+
+  END SUBROUTINE Intersection_Points
+  
+  SUBROUTINE Weight_Area(Xd1,Yd1,Xd2,Yd2,Xd3,Yd3,Xd4,Yd4,xr,yr &
+                        ,w1,w2,w3,w4)
+    implicit none
+    real(8), intent( in) :: Xd1,Yd1,Xd2,Yd2,Xd3,Yd3,Xd4,Yd4
+    real(8), intent( in) :: xr,yr
+    real(8), intent(out) :: w1,w2,w3,w4
+    real(8) :: x1,y1,x2,y2,x3,y3,x4,y4
+    real(8) :: a1,a2,a3,a4,at
+!  
+
+    call Intersection_Points(Xd1,Yd1,Xd2,Yd2,Xd3,Yd3,Xd4,Yd4,xr,yr &
+                            ,x1,y1,x2,y2,x3,y3,x4,y4)
+
+    call Rectangle_Area(xr,yr,x2,y2,Xd3,Yd3,x3,y3,a1)
+    call Rectangle_Area(xr,yr,x3,y3,Xd4,Yd4,x4,y4,a2)
+    call Rectangle_Area(xr,yr,x4,y4,Xd1,Yd1,x1,y1,a3)
+    call Rectangle_Area(xr,yr,x1,y1,Xd2,Yd2,x2,y2,a4)
+
+    at = a1 + a2 + a3 + a4
+
+    w1 = a1/at
+    w2 = a2/at
+    w3 = a3/at
+    w4 = a4/at
+
+  END SUBROUTINE Weight_Area
 ! **********************************************************************
 
   SUBROUTINE weight2D_grid_refine        &
@@ -1037,6 +1296,165 @@ CONTAINS
      
   END SUBROUTINE weight3D_grid3
        
+! **********************************************************************
+  !
+  SUBROUTINE weight3D_grid3_2(                 & 
+      Ids, Ide, Jds, Jde, Kds, Kde, Zd         & 
+    , irs, ire, jrs, jre, krs, kre, zr         &
+    , Id_cont2D, w_cont2D                      &
+    , Id_cont3D, w_cont3D )
+
+    implicit none
+! input parameters
+    integer, intent( in) :: Ids, Ide, Jds, Jde, Kds, Kde       ! start and end indices of donor X and Y points
+    real(8), intent( in) :: Zd(Ids:Ide, Jds:Jde, Kds:Kde)      ! donor Y positions (2D fields)
+    integer, intent( in) :: irs, ire, jrs, jre, krs, kre       ! start and end indices of receiver x and y points
+    real(8), intent( in) :: zr(irs:ire, jrs:jre, krs:kre)     ! receiver x and y positions (2D fields)
+    integer, intent( in) :: Id_cont2D(4, (ire-irs+1)*(jre-jrs+1))      
+    real(8), intent( in) :: w_cont2D(4, (ire-irs+1)*(jre-jrs+1))      
+
+! output parameters
+    integer, intent(out) :: Id_cont3D(6, (ire-irs+1)*(jre-jrs+1)*(kre-krs+1))
+      ! 1:      ir,jr,kr, Id,Jd,Kd
+      ! :       :  :  :   :  :  : 
+      !nxr*nyr: ir,jr,kr, Id,Jd,Kd
+      !*nzr
+    real(8), intent(out) :: w_cont3D(8, (ire-irs+1)*(jre-jrs+1)*(kre-krs+1)) 
+      ! 1:      w1, w2, w3, w4, w5, w6, w7, w8
+      ! :       :   :   :   :   :   :   :   :  
+      !nxr*nyr: w1, w2, w3, w4, w5, w6, w7, w8
+      !*nzr
+  
+    real(8) :: w(8)
+    real(8) :: w2(4)
+    integer :: Id(4),Jd(4)
+    integer :: Kd
+    integer :: idc
+
+    integer :: i,j,k
+    integer :: ir,jr,kr
+    integer :: NXd,NYd,NZd,nxr,nyr,nzr
+    real(8) :: Zd1,Zd2
+    real(8) :: h
+
+!
+!     (Id,Jd+1,Kd) 8______________ 7 (Id+1,Jd+1,Kd)
+!                  /             /| 
+!                 / |           / |
+!                /  |          /  |
+!   (Id,Jd,Kd) 5/____________ 6 (Id+1,Jd,Kd)
+!              |    |        |    |
+!              |  __f_ *(ir,jr,kr)|
+!              | /|   /| ___ | __ |
+!              |/____/g|h    |   /3 (Id+1,Jd+1,Kd-1)
+!              |  |  | |     |  /
+!              | /   | /     | /
+!              |_____|_______|/ 
+! (Id,Jd,Kd-1) 1             2 (Id+1,Jd,Kd-1)
+
+    NXd = Ide-Ids+1
+    NYd = Jde-Jds+1
+    NZd = kde-kds+1
+    nxr = ire-irs+1
+    nyr = jre-jrs+1
+    nzr = kre-krs+1
+!    write(*,*) "DEBUG0",NXd,NYd,NZd,nxr,nyr,nzr !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    do i=irs,ire
+      do j=jrs,jre
+        ! Check the cornar points.
+        !
+!        write(*,*) "DEBUG1",i,j !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        idc = nyr*(i-irs)+j-jrs+1
+        
+        ir    = Id_cont2D(1, idc)
+        jr    = Id_cont2D(2, idc)
+        Id(1) = Id_cont2D(3, idc)
+        Jd(1) = Id_cont2D(4, idc)
+        Id(2) = Id(1)+1
+        Jd(2) = Jd(1)
+        Id(3) = Id(1)+1
+        Jd(3) = Jd(1)+1
+        Id(4) = Id(1)
+        Jd(4) = Jd(1)+1
+        
+        w2(1)= w_cont2D(1, idc)
+        w2(2)= w_cont2D(2, idc)
+        w2(3)= w_cont2D(3, idc)
+        w2(4)= w_cont2D(4, idc)
+
+        do kr=krs,kre
+!          write(*,*) "DEBUG2",kr!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          Zd1 =  Zd(Id(1),Jd(1),Kds)*w2(1) + Zd(Id(2),Jd(2),Kds)*w2(2)  &
+               + Zd(Id(3),Jd(3),Kds)*w2(3) + Zd(Id(4),Jd(4),Kds)*w2(4)
+          Zd2 =  Zd(Id(1),Jd(1),kde)*w2(1) + Zd(Id(2),Jd(2),kde)*w2(2)  &
+               + Zd(Id(3),Jd(3),kde)*w2(3) + Zd(Id(4),Jd(4),kde)*w2(4)
+
+          if(Zd1<zr(ir,jr,kr))  then
+            w(1)=w2(1)
+            w(2)=w2(2)
+            w(3)=w2(3)
+            w(4)=w2(4)
+            w(5)=0.0d0
+            w(6)=0.0d0
+            w(7)=0.0d0
+            w(8)=0.0d0
+            Kd = kds+1
+          elseif(Zd2>=zr(ir,jr,kr))  then
+            w(1)=0.0d0
+            w(2)=0.0d0
+            w(3)=0.0d0
+            w(4)=0.0d0
+            w(5)=w2(1)
+            w(6)=w2(2)
+            w(7)=w2(3)
+            w(8)=w2(4)
+            Kd = kde
+          else
+            do k=Kds+1,Kde
+              Zd2 = Zd(Id(1),Jd(1),k)*w2(1) + Zd(Id(2),Jd(2),k)*w2(2)  &
+                  + Zd(Id(3),Jd(3),k)*w2(3) + Zd(Id(4),Jd(4),k)*w2(4)
+              if(Zd2<zr(ir,jr,kr))  then
+                h=abs(Zd1-zr(ir,jr,kr))/abs(Zd1-Zd2)
+                w(1)=w2(1)*(1.0d0-h)
+                w(2)=w2(2)*(1.0d0-h)
+                w(3)=w2(3)*(1.0d0-h)
+                w(4)=w2(4)*(1.0d0-h)
+                w(5)=w2(1)*h
+                w(6)=w2(2)*h
+                w(7)=w2(3)*h
+                w(8)=w2(4)*h
+                Kd = k
+                exit
+              endif
+              Zd1=Zd2
+            enddo
+          endif
+
+          idc = nyr*nzr*(i-irs)+nzr*(j-jrs)+kr-krs+1
+!          write(*,*) "DEBUG3",idc!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
+          Id_cont3D(1, idc)=ir
+          Id_cont3D(2, idc)=jr
+          Id_cont3D(3, idc)=kr
+          Id_cont3D(4, idc)=Id(1)
+          Id_cont3D(5, idc)=Jd(1)
+          Id_cont3D(6, idc)=Kd
+        
+          w_cont3D(1, idc)=w(1)
+          w_cont3D(2, idc)=w(2)
+          w_cont3D(3, idc)=w(3)
+          w_cont3D(4, idc)=w(4)
+          w_cont3D(5, idc)=w(5)
+          w_cont3D(6, idc)=w(6)
+          w_cont3D(7, idc)=w(7)
+          w_cont3D(8, idc)=w(8)      
+        enddo            
+        
+      enddo
+    enddo
+     
+  END SUBROUTINE weight3D_grid3_2
        
 ! **********************************************************************
 ! **********************************************************************
@@ -1209,6 +1627,64 @@ CONTAINS
 !$omp end parallel
 
   END SUBROUTINE interp2D_grid3
+! **********************************************************************
+!   interporation with weight facter by weight2D_grid/weight2D_grid3
+
+  SUBROUTINE interp2D_grid3_2(                           &
+           Ids, Ide, Jds, Jde, Vd                     & 
+         , irs, ire, jrs, jre                         &
+         , Id_cont, w_cont                            &
+         , vr )
+    implicit none
+!   input parameters
+    integer, intent( in) :: Ids, Ide, Jds, Jde       ! start and end indices of donor X and Y points
+    real(8), intent( in) :: Vd(Ids:Ide, Jds:Jde)      ! donor X positions (2D fields)
+    integer, intent( in) :: irs, ire, jrs, jre       ! Number of receiver x and y points
+    integer, intent( in) :: Id_cont(4, (ire-irs+1)*(jre-jrs+1))      
+    real(8), intent( in) :: w_cont(4, (ire-irs+1)*(jre-jrs+1))      
+! output parameters
+    real(8), intent(out) :: vr(irs:ire, jrs:jre)     ! receiver x and y positions (2D fields)
+ 
+    real(8) :: w(4)
+    integer :: ir,jr,idc
+    integer :: Id(4),Jd(4)
+    integer :: nyr
+    integer :: i,j
+!
+    nyr = jre-jrs+1
+!$omp parallel
+!$omp do private(i,j,ir,jr,idc,Id,Jd,w)
+      
+    do i=irs,ire
+      do j=jrs,jre
+        ! Check the cornar points.
+          !
+          idc = nyr*(i-irs)+j-jrs+1
+          
+          ir    = Id_cont(1, idc)
+          jr    = Id_cont(2, idc)
+          Id(1) = Id_cont(3, idc)
+          Jd(1) = Id_cont(4, idc)
+          Id(2) = Id(1)+1
+          Jd(2) = Jd(1)
+          Id(3) = Id(1)+1
+          Jd(3) = Jd(1)+1
+          Id(4) = Id(1)
+          Jd(4) = Jd(1)+1
+          
+          w(1)= w_cont(1, idc)
+          w(2)= w_cont(2, idc)
+          w(3)= w_cont(3, idc)
+          w(4)= w_cont(4, idc)
+          vr(ir,jr) =  Vd(Id(1),Jd(1))*w(1) + Vd(Id(2),Jd(2))*w(2)     &
+                     + Vd(Id(3),Jd(3))*w(3) + Vd(Id(4),Jd(4))*w(4)
+        
+      enddo
+    enddo
+!$omp end do
+!$omp end parallel
+
+  END SUBROUTINE interp2D_grid3_2
 
 ! **********************************************************************
 !   interporation with weight facter by weight3D_grid3
@@ -1289,10 +1765,95 @@ CONTAINS
 !$omp end parallel
 
   END SUBROUTINE interp3D_grid3
-
-
 ! **********************************************************************
-! **********************************************************************
+!   interporation with weight facter by weight3D_grid2
+
+  SUBROUTINE interp3D_grid3_2(                    &
+           Ids, Ide, Jds, Jde, Kds, Kde, Vd       & 
+         , irs, ire, jrs, jre, krs, kre           &
+         , Id_cont, w_cont                        &
+         , vr  )
+    implicit none
+!   input parameters
+    integer, intent( in) :: Ids, Ide, Jds, Jde, Kds, Kde       ! start and end indices of donor X and Y points
+    real(8), intent( in) :: Vd(Ids:Ide, Jds:Jde, Kds:Kde)      ! donor X positions (2D fields)
+    integer, intent( in) :: irs, ire, jrs, jre, krs, kre       ! Number of receiver x and y points
+    integer, intent( in) :: Id_cont(6, (ire-irs+1)*(jre-jrs+1)*(kre-krs+1))
+    real(8), intent( in) :: w_cont(8, (ire-irs+1)*(jre-jrs+1)*(kre-krs+1)) 
+! output parameters
+    real(8), intent(out) :: vr(irs:ire, jrs:jre, krs:kre)     ! receiver x and y positions (2D fields)
+ 
+    real(8) :: w(8)
+    integer :: idc
+    integer :: Id(8),Jd(8),Kd(8)
+    integer :: nyr, nzr
+    integer :: i,j,k
+    integer :: ir,jr,kr
+
+    nyr = jre-jrs+1
+    nzr = kre-krs+1
+!
+!$omp parallel
+!$omp do private(i,j,k,ir,jr,kr,idc,Id,Jd,Kd,w)
+      
+    do i=irs,ire
+      do j=jrs,jre
+        do k=krs,kre
+        ! Check the cornar points.
+          !
+          idc = nyr*nzr*(i-irs)+nzr*(j-jrs)+k-krs+1
+          
+          ir    = Id_cont(1, idc)
+          jr    = Id_cont(2, idc)
+          kr    = Id_cont(3, idc)
+          Id(1) = Id_cont(4, idc)
+          Jd(1) = Id_cont(5, idc)
+          Kd(1) = Id_cont(6, idc)-1
+          Id(2) = Id(1)+1
+          Jd(2) = Jd(1)
+          Kd(2) = Kd(1)
+          Id(3) = Id(1)+1
+          Jd(3) = Jd(1)+1
+          Kd(3) = Kd(1)
+          Id(4) = Id(1)
+          Jd(4) = Jd(1)+1
+          Kd(4) = Kd(1)
+          Id(5) = Id(1)
+          Jd(5) = Jd(1)
+          Kd(5) = Kd(1)+1
+          Id(6) = Id(1)+1
+          Jd(6) = Jd(1)
+          Kd(6) = Kd(1)+1
+          Id(7) = Id(1)+1
+          Jd(7) = Jd(1)+1
+          Kd(7) = Kd(1)+1
+          Id(8) = Id(1)
+          Jd(8) = Jd(1)+1
+          Kd(8) = Kd(1)+1
+          
+          w(1)= w_cont(1, idc)
+          w(2)= w_cont(2, idc)
+          w(3)= w_cont(3, idc)
+          w(4)= w_cont(4, idc)
+          w(5)= w_cont(5, idc)
+          w(6)= w_cont(6, idc)
+          w(7)= w_cont(7, idc)
+          w(8)= w_cont(8, idc)
+          
+          vr(ir,jr,kr) =  Vd(Id(1),Jd(1),Kd(1))*w(1) + Vd(Id(2),Jd(2),Kd(2))*w(2) &
+                        + Vd(Id(3),Jd(3),Kd(3))*w(3) + Vd(Id(4),Jd(4),Kd(4))*w(4) &
+                        + Vd(Id(5),Jd(5),Kd(5))*w(5) + Vd(Id(6),Jd(6),Kd(6))*w(6) &
+                        + Vd(Id(7),Jd(7),Kd(7))*w(7) + Vd(Id(8),Jd(8),Kd(8))*w(8)
+   
+        enddo
+      enddo
+    enddo
+!$omp end do
+!$omp end parallel
+
+  END SUBROUTINE interp3D_grid3_2
+
+  ! **********************************************************************
 !   interporation with weight facter by weight3D_grid2
 
   SUBROUTINE interp3D_grid(NXd, NYd, NZd, Vd, nxr, nyr, nzr, vr, Id_cont, w_cont)

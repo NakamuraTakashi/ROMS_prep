@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018-2019 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2020 Takashi NAKAMURA  =====
 
 !!!**** UTILITY MODULE ****************
 
@@ -135,13 +135,13 @@
 
 ! --- Fill isolated water and one grid bay ---------------------
  
-      SUBROUTINE isolated_water_masking(N_xi_rho, N_eta_rho, mask_rho)
+      SUBROUTINE isolated_water_masking(N_xi_rho, N_eta_rho, is, js, mask_rho)
       integer, intent(in ) :: N_xi_rho
       integer, intent(in ) :: N_eta_rho
+      integer, intent(in ) :: is, js
       real(8), intent(inout) :: mask_rho(N_xi_rho,N_eta_rho) ! Land/Sea mask on RHO-points.
       integer :: i,j,k
       integer :: ip,im,jp,jm
-      integer :: is,js
       integer :: count
       real(8) :: rmsk(N_xi_rho,N_eta_rho)
       real(8) :: xrmsk
@@ -149,24 +149,27 @@
       
       ! Remove isolated water area
       rmsk(:,:) = 0.0d0
+
       ! Generate seed of water area
-      do
-        call random_number(rnd)
-        is = int(rnd*(N_xi_rho-10))
-        call random_number(rnd)
-        js = int(rnd*(N_eta_rho-10))
-        xrmsk=1.0d0
-        do i=0,9
-          do j=0,9
-            xrmsk = xrmsk*mask_rho(is+i,js+j)
-          enddo
-        enddo
-        if(xrmsk == 1.0d0 ) exit
-      enddo
-  
-      rmsk(is:is+9,js:js+9) = 1.0d0  !!! seed
+!      do
+!        call random_number(rnd)
+!        is = int(rnd*(N_xi_rho-10))
+!        call random_number(rnd)
+!        js = int(rnd*(N_eta_rho-10))
+!        xrmsk=1.0d0
+!        do i=0,9
+!          do j=0,9
+!            xrmsk = xrmsk*mask_rho(is+i,js+j)
+!          enddo
+!        enddo
+!        if(xrmsk == 1.0d0 ) exit
+!      enddo
+!  
+!      rmsk(is:is+9,js:js+9) = 1.0d0  !!! seed
+
+      rmsk(is,js) = 1.0d0  !!! seed
       ! Expand water area
-      do k=1,1000
+      do !k=1,1000
         count = 0
         do i=1, N_xi_rho
           do j=1, N_eta_rho

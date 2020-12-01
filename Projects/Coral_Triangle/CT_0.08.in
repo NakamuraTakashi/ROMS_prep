@@ -48,16 +48,16 @@
 
 &sdate
 
-  Syear  = 2019   ! Starting year
-  Smonth = 5      ! Starting month
+  Syear  = 2017   ! Starting year
+  Smonth = 4      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
 
-  Eyear  = 2019   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 6      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 4      ! Ending month
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -130,8 +130,8 @@
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
-  
+!  GRIB_FCST_SURF_dir  =  "Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
+!  GRIB_FCST_PHY2M_dir =  "Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
+  JRA55_dir  =  "M:/Data/JRA-55/"   
   FRC_prefix  = "CT_0.08_frc_JRA55"
 /
