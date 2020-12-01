@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Busuanga1_grd_v1.0.nc"
+  GRID_FILE = "../../../COAWST/Data/Fukido_reef/Fukido3_4m_mangrove_grd_v0.2.nc"
 /
 
 &bath
@@ -24,11 +24,11 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "D:/cygwin64/home/Takashi/COAWST/Data/Coral_Triangle/CT_0.08_grd_v2.nc"
-  parent_Imin = 349  !347
-  parent_Imax = 374  !376
-  parent_Jmin = 349  !338
-  parent_Jmax = 371  !373
+  parent_grid = "../../../COAWST/Data/Fukido_reef/Fukido2_20m_grd_v1.nc"
+  parent_Imin = 105  !347
+  parent_Imax = 141  !376
+  parent_Jmin = 62  !338
+  parent_Jmax = 94  !373
   refine_factor = 5
 /
 
@@ -59,16 +59,16 @@
 
 &sdate
 
-  Syear  = 2017   ! Starting year
-  Smonth = 4      ! Starting month
-  Sday   = 1      ! Starting day
+  Syear  = 2015   ! Starting year
+  Smonth = 7      ! Starting month
+  Sday   = 13      ! Starting day
 /
 
 &edate
 
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 5      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2015   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 8      ! Ending month
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -90,8 +90,7 @@
 
 &roms2roms      
 ! ROMS coraes NetCDF histry file name
-!  ROMS_HISFILE  = "O:/Data/Coral_Triangle/CT_0.08_his_201704.nc"
-  ROMS_HISFILE  = "D:/cygwin64/home/Takashi/COAWST/Projects/Coral_Triangle/CT_0.08_his_201704.nc"
+  ROMS_HISFILE  = "../../../COAWST/Projects/Fukido_reef/FukidoAz_his_20m_river_20190828.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -108,14 +107,14 @@
 /
 
 &bry
-  BRY_prefix  = "Busuanga1_bry_Nz30"
+  BRY_prefix  = "FukidoAz_20m_bry_Nz8r"
   !    south north west east
-  SNWE =  1,   1,   1,   1
+  SNWE =  1,   1,   1,   0
 /
 
 &ini
-  INI_prefix  = "Busuanga1_ini_Nz30"
-  itime = 73       ! Frame number of HYCOME/ROMS file
+  INI_prefix  = "Fukido3_ini_Nz8"
+  itime = 1       ! Frame number of HYCOME/ROMS file
 /
 
 &hcoord
@@ -123,20 +122,20 @@
 /
 
 &zcoord
-  N_s_rho = 30
+  N_s_rho = 8
 
 ! Set vertical, terrain-following coordinates transformation equation and
 ! stretching function (see below for details), [1:Ngrids].
 
   Vtransform  = 2      ! transformation equation
-  Vstretching = 4      ! stretching function
+  Vstretching = 3      ! stretching function
 
 ! Vertical S-coordinates parameters (see below for details), [1:Ngrids].
 
-  THETA_S = 7.0d0      ! surface stretching parameter
-  THETA_B = 0.1d0      ! bottom  stretching parameter
-  TCLINE  = 200.0d0    ! critical depth (m)
-  DCRIT   = 0.10d0     ! critical depth (m)
+  THETA_S = 1.0d0      ! surface stretching parameter
+  THETA_B = 1.0d0      ! bottom  stretching parameter
+  TCLINE  = 30.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m) for wetting and trying
 
 /
 
@@ -145,4 +144,12 @@
   GRIB_FCST_PHY2M_dir =  "O:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
   
   FRC_prefix  = "Busuanga1_frc_JRA55"
+/
+
+&frc_dsjra55
+  GRIB_FCST_SURF_dir  =  "O:/Data/DSJRA-55/Hist/Daily/fcst_surf/199609/"
+  GRIB_FCST_PHY2M_dir =  "O:/Data/DSJRA-55/Hist/Daily/fcst_phy2m/199609/"
+  GRIB_LL = "O:/Data/DSJRA-55/Consts/Lambert5km_latlon.dat"
+  
+  FRC_prefix  = "Busuanga1_frc_DSJRA55"
 /

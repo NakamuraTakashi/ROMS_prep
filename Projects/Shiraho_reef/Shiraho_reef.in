@@ -3,11 +3,53 @@
   GRID_FILE = "../../COAWST/Data/Shiraho_reef/shiraho_reef_grid16.3.nc"
 /
 
+&sdate
+  Syear  = 2019   ! Starting year
+  Smonth = 1     ! Starting month
+  Sday   = 1     ! Starting day
+/
+
+&edate
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1     ! Ending month
+  Eday   = 1      ! Ending day
+/
+
 &refdate
 
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day
+/
+
+&frc_jmaobs
+
+! switches (1/0) for activate/deactivate the variables
+! 1: Pressure, 2: Wind, 3: Air temperature, 4: Humidity, 5: Cloud fraction
+! 6: Precipitation, 7: Short-wave radiation, 8: Down-ward long-wave radiation
+!           1       5      
+  airvar =  1,1,1,1,1,1,1,1
+! airvar =  0,0,0,0,0,0,0,1
+
+  Pair_NAME  = '2019_air/Pair2019.csv'   ! JMA Pressure data CSV file
+  wind_NAME  = '2019_air/wind2019.csv'   ! JMA Wind data CSV file
+  Tair_NAME  = '2019_air/Tair2019.csv'   ! JMA Air temperature data CSV file
+  Qair_NAME  = '2019_air/Qair2019.csv'   ! JMA Humidity data CSV file
+  cloud_NAME = '2019_air/cloud2019.csv'  ! JMA Cloud fraction data CSV file
+  rain_NAME  = '2019_air/rain2019.csv'   ! JMA Precipitation data CSV file
+  swrad_NAME = '2019_air/swrad2019.csv'  ! JMA Short-wave radiation data CSV file
+
+  LW_prefix  = '2019_air/DL2019'   ! JMA long-wave radiation data TXT file
+  LW_suffix  = '_ish.txt'          ! JMA long-wave radiation data TXT file
+
+  FRC_prefix  = "Ishigaki_frc_JMAobs_2019"
+!  FRC_prefix  = "Ishigaki_frc_JMAobs_2019_UTCp9"
+/
+
+&wave_cwm
+  CWM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  SWAN_prefix  = "Shiraho_wave2"
+
 /
 
 &river      
