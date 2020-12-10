@@ -1,12 +1,12 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Palau2_grd_v1.0.nc"
+  GRID_FILE = "Palau2_grd_v2.0.nc"
 /
 
 &bath
 ! GEBCO bathymetry NetCDF file     
 !  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2014_2D/GEBCO_2014_2D.nc"
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+  BATH_FILE = "../../../Data/gebco_2020_netcdf/GEBCO_2020.nc"
 
 ! Set lat, lon at specific station.  !!!**Not used for grid refinment
   s_lat = 6.11666666666666
@@ -24,7 +24,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Palau1_grd_v1.0.nc"
+  parent_grid = "Palau1_grd_v2.0.nc"
   parent_Imin = 49
   parent_Imax = 86
   parent_Jmin = 52

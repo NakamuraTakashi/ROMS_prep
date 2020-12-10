@@ -5,20 +5,27 @@
 
 &bath
 ! GEBCO bathymetry NetCDF file     
-!  BATH_FILE = "N:/Data/GEBCO_2014_2D/GEBCO_2014_2D.nc"
   BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+
 ! Set lat, lon at specific station. 
+! *The information is not used when GRID_REFINEMENT is activated.
   s_lat = 33.4d0
   e_lat = 35.75d0
   s_lon = 138.8d0  ! 138.8d0
   e_lon = 140.8d0
 
 ! Set ROMS grid resolution
+! *The information is not used when GRID_REFINEMENT is activated.
 !  RESOLUTION = 24.0d0 ! 1/24 degree resolution
   RESOLUTION = 36.0d0 ! 1/60 degree resolution
 
   hmin = 1.0d0  ! Minimum depth
-  rx0max = 0.2  ! Smoothing parameter
+  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
+
+! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+! and one-grid bay grids 
+  I_ocn = 50    ! rho point index i
+  J_ocn = 50    ! rho point index j
 /
 
 &refinement
@@ -30,55 +37,23 @@
   parent_Jmax = 83  !84
   refine_factor = 5
 /
-&range
-! -------------------------------------------------------------------------
-! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
-!
-!                 ______ (Rlon,Tlat)
-!                |      |
-!                |      |
-!                |______|
-!     (Llon,Blat)                     
-!
-! On Input:
-!
-!    Llon         Box left-edge   longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
-!    Rlon         Box right-edge  longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
-!    Blat         Box bottom-edge latitude  (degress, -80 to 80 )
-!    Tlat         Box top-edge    latitude  (degress, -80 to 80 )
-!
-! Geographical and Grid parameters --------
-!
-  Llon = 137.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-  Rlon = 142.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
-  Blat =  31.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
-  Tlat =  36.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
-/
 
 &sdate
-
-  Syear  = 2020   ! Starting year
-  Smonth = 9      ! Starting month
+  Syear  = 2017   ! Starting year
+  Smonth = 4     ! Starting month
   Sday   = 1     ! Starting day
 /
 
 &edate
-
-  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 10     ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 4     ! Ending month
+  Eday   = 3      ! Ending day
 /
 
 &refdate
-
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day
-/
-
-&intpmode
-
-  mode = 1        ! mode=1, linear interpolation
 /
 
 &hycom      
@@ -112,7 +87,6 @@
 
 &ini
   INI_prefix  = "TokyoBay2_ini_JCOPE-T_Nz30"
-!  INI_prefix  = "CT_0.08_ini_HYCOM_Nz30"
   itime = 9       ! Frame number of HYCOME/ROMS file
 /
 
@@ -135,19 +109,21 @@
   THETA_B = 0.1d0      ! bottom  stretching parameter
   TCLINE  = 200.0d0    ! critical depth (m)
   DCRIT   = 0.10d0     ! critical depth (m)
+/
 
+&frc_jra55
+  JRA55_dir  =  "M:/Data/JRA-55/" 
+  FRC_prefix  = "TokyoBay2_frc_JRA55"
 /
 
 &frc_dsjra55
-  GRIB_FCST_SURF_dir  =  "M:/Data/dsjra55/Hist/Daily/fcst_surf/199609/"
-  GRIB_FCST_PHY2M_dir =  "M:/Data/dsjra55/Hist/Daily/fcst_phy2m/199609/"
-  GRIB_LL = "M:/Data/dsjra55/Consts/Lambert5km_latlon.dat"
-  
+  DSJRA55_dir = "M:/Data/dsjra55/"  
   FRC_prefix  = "TokyoBay2_frc_DSJRA55"
 /
 
 &frc_jmamsm
-!  MSM_dir  =  "W:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  MSM_dir  =  "W:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-  FRC_prefix  = "TokyoBay2_frc_JMAMSMnc"
+  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  FRC_prefix  = "TokyoBay2_frc_MSMgb"
+!  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+!  FRC_prefix  = "TokyoBay2_frc_MSMnc"
 /

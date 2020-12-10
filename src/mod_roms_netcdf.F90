@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2019 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2020 Takashi NAKAMURA  =====
 
 !!!**** ROMS netCDF MODULE ************************************
 
@@ -120,8 +120,17 @@ MODULE mod_roms_netcdf
 ! ----- HYCOM OpenDAP URL -----
 
 #if defined GOFS_31
-# if defined ANALYSIS
-! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-07-01 to present) -----
+# if defined ANALYSIS_Y
+! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2018-12-04 to present) -----
+!        ** GLBy0.08 grid is 0.08 deg lon x 0.04 deg lat that covers 80 S to 90 N.
+  integer, parameter :: NCnum   = 1
+  character(54) :: NC_FILE(NCnum) = (/                           &
+       "https://tds.hycom.org/thredds/dodsC/GLBy0.08/expt_93.0"  &  ! lon(4500): 0 - 359.92
+    /)
+# elif defined ANALYSIS
+! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-07-01 to 2020-02-18) -----
+!        ** grid is 0.08 deg lon x 0.08 deg lat between 40S-40N. 
+!           Poleward of 40S/40N, the grid is 0.08 deg lon x 0.04 deg lat. It spans 80S to 90N.
   integer, parameter :: NCnum   = 6
   character(53) :: NC_FILE(NCnum) = (/                          &
        "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_56.3"  &  ! lon(4500): -180 - 179.92
@@ -134,7 +143,7 @@ MODULE mod_roms_netcdf
 # elif defined REANALYSIS
 ! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (since 1994-01-01 to 2015-12-31) -----
   integer, parameter :: NCnum   = 22
-  character(63) :: NC_FILE(NCnum) = (/                          &
+  character(63) :: NC_FILE(NCnum) = (/                                    &
        "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1994"  &  ! lon(4500): -180 - 179.92
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1995"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1996"  &
@@ -161,7 +170,7 @@ MODULE mod_roms_netcdf
 # endif
 #elif defined GOFS_30
 # if defined ANALYSIS
-! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to present) -----
+! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to 2018-11-20) -----
   integer, parameter :: NCnum   = 4
   character(53) :: NC_FILE(NCnum) = (/                          &
        "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_90.9"  &

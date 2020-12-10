@@ -11,5 +11,5 @@ rm *.mod
 export OMP_NUM_THREADS=6
 
 #./grdGEBCO2ROMS.exe < TokyoBay1.in
-#./grdGEBCO2ROMS.exe < TokyoBay2.in
-./grdGEBCO2ROMS.exe < TokyoBay3.in
+./grdGEBCO2ROMS.exe < TokyoBay2.in
+#./grdGEBCO2ROMS.exe < TokyoBay3.in

@@ -18,6 +18,7 @@
       real(8) :: rx0max
       integer :: mode
       integer :: spherical
+      integer :: I_ocn, J_ocn
 #if defined GRID_REFINEMENT
       character(256) :: parent_grid
       integer :: parent_Imin, parent_Imax
@@ -103,6 +104,7 @@
       namelist/bath/RESOLUTION
       namelist/bath/hmin
       namelist/bath/rx0max
+      namelist/bath/I_ocn, J_ocn
 #if defined GRID_REFINEMENT
       namelist/refinement/parent_grid
       namelist/refinement/parent_Imin, parent_Imax
@@ -455,7 +457,7 @@
       
 #endif
 
-      CALL isolated_water_masking(N_xi_rho, N_eta_rho, mask_rho)
+      CALL isolated_water_masking(N_xi_rho, N_eta_rho, 50, 50, mask_rho)
 
       CALL uvp_masks(N_xi_rho, N_eta_rho, mask_rho, mask_u, mask_v, mask_psi)
 
