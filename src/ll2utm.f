@@ -1,4 +1,4 @@
-      subroutine ll2utm(x,y,slat,slon,conv,iizone,ispher)
+      subroutine ll2utm(lat,lon,x,y,iizone,ispher)
 c
 c     universal transverse mercator conversion
 c
@@ -11,13 +11,16 @@ c
       implicit none
 c
       real*8 axis(19),bxis(19)
+      real*8 lat,lon
       real*8 radsec
       real*8 ak0,a,b,es
-      real*8 x,y,slat,slon,conv,cm,phi,dlam,epri,en,t
-      real*8 c,aa,s2,s4,s6,f1,f2,f3,f4,em,xx,yy
+      real*8 x,y,slat,slon,cm,phi,dlam,epri,en,t
+      real*8 c,aa,s2,s4,s6,f1,f2,f3,f4,em,xx,yy,secs
 c
       integer iizone,ispher,izone
       integer iiz,iutz
+c
+      data secs/3600.0d0/
 c
       data axis/6378206.4d0,6378249.145d0,6377397.155d0,
      . 6378157.5d0,6378388.d0,6378135.d0,6377276.3452d0,
@@ -36,6 +39,10 @@ c
 c
       data radsec/206264.8062470964d0/
 c
+      slat = lat * secs
+      slon = lon * secs
+      slon = - slon
+c
       a = axis(ispher)
       b = bxis(ispher)
       es= (a**2-b**2)/a**2
@@ -46,7 +53,7 @@ c     compute utm zone(izone) and central meridian in seconds for
 c     geodetic to utm conversion where zone is not input.
 c
       if(izone .eq. 0) then
-         iiz=slon/2.16d4
+         iiz=int(slon/2.16d4)
          izone = 30 - iiz
          if (slon.lt.0.0d0) izone=31- iiz
          if(iabs(izone).gt.30) then

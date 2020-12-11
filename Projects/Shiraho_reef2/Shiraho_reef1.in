@@ -1,0 +1,145 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "shiraho1_grd_v0.0.nc"
+/
+
+&gebco
+! GEBCO bathymetry NetCDF file     
+  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+/
+
+&grd_setting_ll
+! Set lat, lon at specific station. 
+! *The information is not used when GRID_REFINEMENT is activated.
+  s_lat = 33.4d0
+  e_lat = 35.75d0
+  s_lon = 138.8d0  ! 138.8d0
+  e_lon = 140.8d0
+
+! Set ROMS grid resolution
+! *The information is not used when GRID_REFINEMENT is activated.
+!  RESOLUTION = 24.0d0 ! 1/24 degree resolution
+  RESOLUTION = 36.0d0 ! 1/60 degree resolution
+/
+
+&bath_smooth
+  rx0max = 0.5  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
+
+&land_mask
+
+  hmin = -9.0d0  ! Minimum depth
+
+ ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+ ! and one-grid bay grids 
+  I_ocn = 50    ! rho point index i
+  J_ocn = 50    ! rho point index j
+/
+
+&refinement
+! ROMS NetCDF coarse grid file     
+  parent_grid = "../../../COAWST/Data/Yaeyama/Yaeyama2_grd_v10.nc"
+  parent_Imin = 216
+  parent_Imax = 233
+  parent_Jmin = 132
+  parent_Jmax = 193
+  refine_factor = 3
+/
+
+&fine2coarse
+  F2C_OUT_FILE = "Yaeyama2_grd_v10_update.nc"
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 4   ! Zone number counted from equator
+/
+
+&hcoord
+  spherical  = 1   
+/
+
+&sdate
+  Syear  = 2019   ! Starting year
+  Smonth = 1     ! Starting month
+  Sday   = 1     ! Starting day
+/
+
+&edate
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1     ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&refdate
+
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&frc_jmaobs
+
+! switches (1/0) for activate/deactivate the variables
+! 1: Pressure, 2: Wind, 3: Air temperature, 4: Humidity, 5: Cloud fraction
+! 6: Precipitation, 7: Short-wave radiation, 8: Down-ward long-wave radiation
+!           1       5      
+  airvar =  1,1,1,1,1,1,1,1
+! airvar =  0,0,0,0,0,0,0,1
+
+  Pair_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/Pair2020.csv'   ! JMA Pressure data CSV file
+  wind_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/wind2020.csv'   ! JMA Wind data CSV file
+  Tair_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/Tair2020.csv'   ! JMA Air temperature data CSV file
+  Qair_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/Qair2020.csv'   ! JMA Humidity data CSV file
+  cloud_NAME = 'E:/JMA_DATA/Weather_Station/Ishigaki/cloud2020.csv'  ! JMA Cloud fraction data CSV file
+  rain_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/rain2020.csv'   ! JMA Precipitation data CSV file
+  swrad_NAME = 'E:/JMA_DATA/Weather_Station/Ishigaki/swrad2020.csv'  ! JMA Short-wave radiation data CSV file
+
+  LW_prefix  = 'E:/JMA_DATA/Weather_Station/Ishigaki/lwrad_data/DL2020'   ! JMA long-wave radiation data TXT file
+  LW_suffix  = '_ish.txt'          ! JMA long-wave radiation data TXT file
+
+  FRC_prefix  = "Ishigaki_frc_JMAobs_2020"
+!  FRC_prefix  = "Ishigaki_frc_JMAobs_2019_UTCp9"
+/
+
+&wave_cwm
+  CWM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  SWAN_prefix  = "Shiraho_wave2"
+
+/
+
+&river      
+  RIV_prefix  = "shiraho_river"
+
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
+! 8: mud_, 9: sand_,
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
+! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
+! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
+! 26: TI13C, 27: DO13C, 28: PO13C, 
+! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
+!    
+!           1       5        10        15        20        25        30
+  rivvar =  1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+/
+
+&zcoord
+  N_s_rho = 30
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see below for details), [1:Ngrids].
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see below for details), [1:Ngrids].
+
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+
+/

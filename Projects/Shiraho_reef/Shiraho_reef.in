@@ -31,15 +31,15 @@
   airvar =  1,1,1,1,1,1,1,1
 ! airvar =  0,0,0,0,0,0,0,1
 
-  Pair_NAME  = '2019_air/Pair2019.csv'   ! JMA Pressure data CSV file
-  wind_NAME  = '2019_air/wind2019.csv'   ! JMA Wind data CSV file
-  Tair_NAME  = '2019_air/Tair2019.csv'   ! JMA Air temperature data CSV file
-  Qair_NAME  = '2019_air/Qair2019.csv'   ! JMA Humidity data CSV file
-  cloud_NAME = '2019_air/cloud2019.csv'  ! JMA Cloud fraction data CSV file
-  rain_NAME  = '2019_air/rain2019.csv'   ! JMA Precipitation data CSV file
-  swrad_NAME = '2019_air/swrad2019.csv'  ! JMA Short-wave radiation data CSV file
+  Pair_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/Pair2019.csv'   ! JMA Pressure data CSV file
+  wind_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/wind2019.csv'   ! JMA Wind data CSV file
+  Tair_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/Tair2019.csv'   ! JMA Air temperature data CSV file
+  Qair_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/Qair2019.csv'   ! JMA Humidity data CSV file
+  cloud_NAME = 'E:/JMA_DATA/Weather_Station/Ishigaki/cloud2019.csv'  ! JMA Cloud fraction data CSV file
+  rain_NAME  = 'E:/JMA_DATA/Weather_Station/Ishigaki/rain2019.csv'   ! JMA Precipitation data CSV file
+  swrad_NAME = 'E:/JMA_DATA/Weather_Station/Ishigaki/swrad2019.csv'  ! JMA Short-wave radiation data CSV file
 
-  LW_prefix  = '2019_air/DL2019'   ! JMA long-wave radiation data TXT file
+  LW_prefix  = 'E:/JMA_DATA/Weather_Station/Ishigaki/DL2019'   ! JMA long-wave radiation data TXT file
   LW_suffix  = '_ish.txt'          ! JMA long-wave radiation data TXT file
 
   FRC_prefix  = "Ishigaki_frc_JMAobs_2019"

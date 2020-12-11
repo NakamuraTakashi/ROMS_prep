@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Fukido_Aizawa_20mgrd_6_masked.nc"
+  GRID_FILE = "Fukido2_20m_grd_v2.0.nc"
 /
 
 &bath
@@ -90,7 +90,8 @@
 
 &roms2roms      
 ! ROMS coraes NetCDF histry file name
-  ROMS_HISFILE  = "FukidoAz_100m_his_3rivers_20150714.nc"
+!  ROMS_HISFILE  = "FukidoAz_100m_his_3rivers_20150714.nc"
+  ROMS_HISFILE  = "Fukido3_ini_Nz8_20190828.04.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -107,13 +108,13 @@
 /
 
 &bry
-  BRY_prefix  = "FukidoAz_20m_bry_Nz8r"
+  BRY_prefix  = "Fukido2_20m_bry_Nz8"
   !    south north west east
   SNWE =  1,   1,   1,   0
 /
 
 &ini
-  INI_prefix  = "FukidoAz_20m_ini_Nz8"
+  INI_prefix  = "Fukido2_20m_ini_Nz8"
   itime = 25       ! Frame number of HYCOME/ROMS file
 /
 

@@ -294,16 +294,22 @@ PROGRAM frcATM2ROMS
 #endif
   ! Read parameters in namelist file
   
-  read (*, nml=grd)
-  read (*, nml=sdate)
-  read (*, nml=edate)
-  read (*, nml=refdate)
+  read (5, nml=grd)
+  rewind(5)
+  read (5, nml=sdate)
+  rewind(5)
+  read (5, nml=edate)
+  rewind(5)
+  read (5, nml=refdate)
 #if defined JMA_MSM
-  read (*, nml=frc_jmamsm)
+  rewind(5)
+  read (5, nml=frc_jmamsm)
 #elif defined DSJRA55
-  read (*, nml=frc_dsjra55)
+  rewind(5)
+  read (5, nml=frc_dsjra55)
 #elif defined JRA55
-  read (*, nml=frc_jra55)
+  rewind(5)
+  read (5, nml=frc_jra55)
 #endif
 !---- Modify time-unit description ---------------------------------
       

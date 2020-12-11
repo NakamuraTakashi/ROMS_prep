@@ -1,4 +1,4 @@
-      subroutine utm2ll(x,y,slat,slon,conv,iizone,ispher)
+      subroutine utm2ll(x,y,iizone,ispher,lat,lon,conv)
 c
 c     universal transverse mercator conversion
 c
@@ -11,14 +11,17 @@ c
       implicit none
 c
       real*8 axis(19),bxis(19)
+      real*8 lat,lon
       real*8 radsec
       real*8 ak0,a,b,es
       real*8 x,y,slat,slon,conv,cm,phi,dlam,epri,en,t
       real*8 c,em,xx,yy,um,e1
-      real*8 phi1,r,d,alam
+      real*8 phi1,r,d,alam,secs
 c
       integer iizone,ispher,izone
       integer iutz
+
+      data secs/3600.0d0/
 c
       data axis/6378206.4d0,6378249.145d0,6377397.155d0,
      . 6378157.5d0,6378388.d0,6378135.d0,6377276.3452d0,
@@ -95,6 +98,11 @@ c
          slat = phi*radsec
          slon = alam*radsec
          dlam = -(slon-cm)/radsec
+
+         lat = slat / secs
+         lon = -slon / secs
+         if (abs(lon).gt.180.0) lon=360.0+lon
+
 c---------------------------------------------------------------
 c
 c    test to see if within definition of utm projection

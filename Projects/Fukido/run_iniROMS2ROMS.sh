@@ -12,5 +12,5 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-#./iniROMS2ROMS.exe < Fukido20m_parent100m.in
-./iniROMS2ROMS.exe < Fukido3.in
+./iniROMS2ROMS.exe < Fukido2.in
+#./iniROMS2ROMS.exe < Fukido3.in

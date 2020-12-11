@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2019 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2019-2020 Takashi NAKAMURA  =====
 
 PROGRAM grdROMS_LandMasking
   use netcdf
@@ -10,11 +10,9 @@ PROGRAM grdROMS_LandMasking
   
 ! -------------------------------------------------------------------------
   character(256) :: GRID_FILE
-  character(256) :: BATH_FILE
-  real(8) :: s_lat, e_lat, s_lon, e_lon
-  real(8) :: RESOLUTION
   real(8) :: hmin
   real(8) :: rx0max
+  integer :: I_ocn, J_ocn
 ! -------------------------------------------------------------------------
   integer :: start2D(2), count2D(2)
   
@@ -35,12 +33,9 @@ PROGRAM grdROMS_LandMasking
   integer :: ncid,var_id
   
   namelist/grd/GRID_FILE
-  namelist/bath/BATH_FILE
-  namelist/bath/s_lat, e_lat, s_lon, e_lon
-  namelist/bath/RESOLUTION
   namelist/bath/hmin
   namelist/bath/rx0max
-
+  namelist/bath/I_ocn, J_ocn
   ! Read parameters in namelist file
   
   read (*, nml=grd)
@@ -88,17 +83,17 @@ PROGRAM grdROMS_LandMasking
   pmask(:,:) = 1.0d0
   umask(:,:) = 1.0d0
   vmask(:,:) = 1.0d0
-  write(*,*) "DEBUG: 1"  
+
   CALL land_masking(Nxr, Nyr, h, hmin, rmask)
 #if defined BATH_SMOOTHING
   ! Smoothing Bathymetry
   CALL bathy_smooth(Nxr, Nyr, rx0max, rmask, h)
 #endif
-  write(*,*) "DEBUG: 2"  
-  CALL isolated_water_masking(Nxr, Nyr, rmask)
-  write(*,*) "DEBUG: 3"  
+
+  CALL isolated_water_masking(Nxr, Nyr, I_ocn, J_ocn, rmask)
+
   CALL uvp_masks(Nxr, Nyr, rmask, umask, vmask, pmask)
-  write(*,*) "DEBUG: 4"  
+
   do i=0, L
     do j=0, M
       if(rmask(i,j) == 0.0d0) then
