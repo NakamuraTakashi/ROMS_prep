@@ -34,6 +34,10 @@
   refine_factor = 3
 /
 
+&fine2coarse
+  F2C_OUT_FILE = "TokyoBay2_grd_v0.2.nc"
+/
+
 &sdate
 
   Syear  = 2014   ! Starting year

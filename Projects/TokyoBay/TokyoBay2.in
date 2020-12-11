@@ -32,6 +32,10 @@
   refine_factor = 5
 /
 
+&fine2coarse
+  F2C_OUT_FILE = "TokyoBay1_grd_v0.1.nc"
+/
+
 &sdate
   Syear  = 2017   ! Starting year
   Smonth = 4     ! Starting month
