@@ -416,7 +416,7 @@ PROGRAM iniOCN2ROMS
   call jd(INIyear, INImonth, INIday, jdate_Start)
   d_jdate_Start = dble(jdate_Start) + dble(INIhour)/24.0d0
   write(*,*) d_jdate_Start
-  
+
   call jd(Ryear, Rmonth, Rday, jdate_Ref)
   d_jdate_Ref = dble(jdate_Ref)
   write(*,*) d_jdate_Ref
@@ -678,11 +678,15 @@ PROGRAM iniOCN2ROMS
       if(d_jdate>d_jdate_Start) then
         write(*,*) '*** FOUND: Starting point @ HYCOM_FILE',iNC
         NC(iNC)%ItS=i-1
+        itime = NC(iNC)%ItS
         exit LOOP1
       endif
     end do
   end do LOOP1
+
   write(*,*) NC(:)%ItS 
+  write(*,*) 'HYCOM NetCDF #: ', iNC
+  write(*,*) 'HYCOM NetCDF time index: ', itime
     
 !---- Read HYCOM netCDF grid cooredinate --------------------------------
   ! Open NetCDF file
