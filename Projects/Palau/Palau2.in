@@ -96,14 +96,14 @@
 !
 ! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
 ! 8: mud_, 9: sand_,
-! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
-! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
-! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
-! 26: TI13C, 27: DO13C, 28: PO13C, 
-! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC_, 14: POC_, 
+! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON_, 20: PON_, 21: DOP_, 22: POP_, 
+! 23: phytoplankton_, 24: zooplankton_,   
+! 25: TI13C, 26: DO13C_, 27: PO13C_, 
+! 28: phyt_13C_, 29: zoop_13C_
 !    
 !           1       5        10        15        20        25        30
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
 /
 
 &bry

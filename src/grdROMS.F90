@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018-2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2021 Takashi NAKAMURA  =====
 
 PROGRAM grdROMS
   use netcdf
@@ -13,7 +13,7 @@ PROGRAM grdROMS
   character(256) :: BATH_FILE
   character(256) :: GRID_FILE
   real(8) :: s_lat, e_lat, s_lon, e_lon
-  real(8) :: RESOLUTION
+  real(8) :: RESOLUTION, angle
   real(8) :: hmin
   real(8) :: rx0max
   integer :: spherical
@@ -42,7 +42,7 @@ PROGRAM grdROMS
   real(8), allocatable :: pn(:,:)
   real(8), allocatable :: dndx(:,:)
   real(8), allocatable :: dmde(:,:)
-  real(8), allocatable :: angle(:,:)
+  real(8), allocatable :: angler(:,:)
   real(8), allocatable :: latr(:, :)
   real(8), allocatable :: lonr(:, :)
   real(8), allocatable :: rmask(:, :)
@@ -87,9 +87,11 @@ PROGRAM grdROMS
   real(8), allocatable :: P_lonu(:, :)
   real(8), allocatable :: P_latv(:, :)
   real(8), allocatable :: P_lonv(:, :)
+  real(8), allocatable :: P_angler(:, :)
 #endif
 
   real(8) :: d_lat, d_lon
+  real(8) :: latr_min, latr_max, lonr_min, lonr_max
 
   integer :: i,j
   
@@ -126,7 +128,7 @@ PROGRAM grdROMS
   namelist/refinement/refine_factor
 #else
   namelist/grd_setting_ll/s_lat, e_lat, s_lon, e_lon
-  namelist/grd_setting_ll/RESOLUTION
+  namelist/grd_setting_ll/RESOLUTION, angle
 #endif
 #if defined UTM_COORD
   namelist/utm_zone/izone,ispher
@@ -165,8 +167,9 @@ PROGRAM grdROMS
   Nxr = (parent_Imax-parent_Imin)*refine_factor+2
   Nyr = (parent_Jmax-parent_Jmin)*refine_factor+2 
 #else      
-  Nxr = int( (e_lon - s_lon)*RESOLUTION ) + 1
-  Nyr = int( (e_lat - s_lat)*RESOLUTION ) + 1
+!  Nxr = int( (e_lon - s_lon)*RESOLUTION ) + 1
+!  Nyr = int( (e_lat - s_lat)*RESOLUTION ) + 1
+  call grid_size_rectangular(s_lon, s_lat, e_lon, e_lat, RESOLUTION, angle, Nxr, Nyr)
 #endif
   Nxp = Nxr-1
   Nyp = Nyr-1
@@ -184,7 +187,7 @@ PROGRAM grdROMS
   allocate(pn(Nxr, Nyr))
   allocate(dndx(Nxr, Nyr))
   allocate(dmde(Nxr, Nyr))
-  allocate(angle(Nxr, Nyr))
+  allocate(angler(Nxr, Nyr))
   allocate(latr(Nxr, Nyr))
   allocate(lonr(Nxr, Nyr))
   allocate(rmask(Nxr, Nyr))
@@ -238,6 +241,7 @@ PROGRAM grdROMS
   allocate(P_latv(P_Nxv, P_Nyv))
   allocate(P_lonv(P_Nxv, P_Nyv))
   allocate(P_h(P_Nxr, P_Nyr))
+  allocate(P_angler(P_Nxr, P_Nyr))
   allocate(P_rmask(P_Nxr, P_Nyr))
   allocate(Xd(P_Nxr), Yd(P_Nyr))
         
@@ -256,6 +260,8 @@ PROGRAM grdROMS
   call check( nf90_get_var(ncid, var_id, P_h) )
   call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
   call check( nf90_get_var(ncid, var_id, P_rmask) )
+  call check( nf90_inq_varid(ncid, 'angle', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, P_angler) )
 
   ! Close NetCDF file
   call check( nf90_close(ncid) )
@@ -303,6 +309,9 @@ PROGRAM grdROMS
   call LinearInterpolation2D_grid2(P_Nxr, P_Nyr, Xd, Yd    &
                     , P_h , -9.0d0, 10000.0d0              &
                     , Nxr, Nyr, xr0, yr0, hr )
+  call LinearInterpolation2D_grid2(P_Nxr, P_Nyr, Xd, Yd    &
+                    , P_angler , -10.0d0, 10.0d0           &
+                    , Nxr, Nyr, xr0, yr0, angler )
 
   do ip=parent_Imin+1, parent_Imax
     do jp=parent_Jmin+1, parent_Jmax
@@ -322,15 +331,20 @@ PROGRAM grdROMS
 
 #else      
 
-  d_lat = 1.0d0/RESOLUTION
-  d_lon = 1.0d0/RESOLUTION
+!  d_lat = 1.0d0/RESOLUTION
+!  d_lon = 1.0d0/RESOLUTION
+!
+!  do i=1, Nxr
+!    lonr(i,:)=s_lon + d_lon*dble(i-1)
+!  enddo
+!  do j=1, Nyr
+!    latr(:,j)=s_lat + d_lat*dble(j-1)
+!  enddo
+  call grid_gen_rectangular( s_lon, s_lat, RESOLUTION, angle &
+                           , Nxr, Nyr, lonr, latr )
+  
+  angler(:,:) = angle
 
-  do i=1, Nxr
-    lonr(i,:)=s_lon + d_lon*dble(i-1)
-  enddo
-  do j=1, Nyr
-    latr(:,j)=s_lat + d_lat*dble(j-1)
-  enddo
 #endif
 
 #if defined UTM_COORD
@@ -425,8 +439,6 @@ PROGRAM grdROMS
   enddo
   dndx(:,:) = 0.0d0
   dmde(:,:) = 0.0d0
-  angle(:,:) = 0.0d0
-
 
 #if defined GEBCO2ROMS
 !---- Read GEBCO grid netCDF file --------------------------------
@@ -448,36 +460,41 @@ PROGRAM grdROMS
   
   ! Trim GEBCO bathymetry
 # if defined GRID_REFINEMENT
-  s_lat = latr(1,1)
-  e_lat = latr(Nxr,Nyr)
-  s_lon = lonr(1,1)
-  e_lon = lonr(Nxr,Nyr)
+!  s_lat = latr(1,1)
+!  e_lat = latr(Nxr,Nyr)
+!  s_lon = lonr(1,1)
+!  e_lon = lonr(Nxr,Nyr)
 # endif
+!
+!  do i=2, N_lat_all
+!    if(s_lat < lat_all(i)) then
+!      id_slat = i-1
+!      exit
+!    endif
+!  enddo
+!  do i=1, N_lat_all
+!    if(e_lat < lat_all(i)) then
+!      id_elat = i
+!      exit
+!    endif
+!  enddo
+!  do i=2, N_lon_all
+!    if(s_lon < lon_all(i)) then
+!      id_slon = i-1
+!      exit
+!    endif
+!  enddo
+!  do i=1, N_lon_all
+!    if(e_lon < lon_all(i)) then
+!      id_elon = i
+!      exit
+!    endif
+!  enddo
 
-  do i=2, N_lat_all
-    if(s_lat < lat_all(i)) then
-      id_slat = i-1
-      exit
-    endif
-  enddo
-  do i=1, N_lat_all
-    if(e_lat < lat_all(i)) then
-      id_elat = i
-      exit
-    endif
-  enddo
-  do i=2, N_lon_all
-    if(s_lon < lon_all(i)) then
-      id_slon = i-1
-      exit
-    endif
-  enddo
-  do i=1, N_lon_all
-    if(e_lon < lon_all(i)) then
-      id_elon = i
-      exit
-    endif
-  enddo
+  call min_max_2D( Nxr, Nyr, latr, latr_min, latr_max)
+  call min_max_2D( Nxr, Nyr, lonr, lonr_min, lonr_max)
+  call seek_id_range( N_lat_all, lat_all, latr_min, latr_max, id_slat, id_elat)
+  call seek_id_range( N_lon_all, lon_all, lonr_min, lonr_max, id_slon, id_elon)
   
   N_lon = id_elon-id_slon+1
   N_lat = id_elat-id_slat+1
@@ -623,7 +640,7 @@ PROGRAM grdROMS
   call writeNetCDF_2d( 'dmde', trim( GRID_FILE )     &
         , Nxr, Nyr, dmde, start2D, count2D )
   call writeNetCDF_2d( 'angle', trim( GRID_FILE )    &
-        , Nxr, Nyr, angle, start2D, count2D )
+        , Nxr, Nyr, angler, start2D, count2D )
   call writeNetCDF_2d( 'lat_rho', trim( GRID_FILE )  &
         , Nxr, Nyr, latr, start2D, count2D )
   call writeNetCDF_2d( 'lon_rho', trim( GRID_FILE )  &

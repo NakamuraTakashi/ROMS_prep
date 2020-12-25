@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  =====
 
 !!!**** ROMS netCDF MODULE ************************************
 
@@ -8,105 +8,120 @@ MODULE mod_roms_netcdf
   use netcdf
   implicit none  
 
-  integer, parameter :: N_var = 31
+  integer, parameter :: N_var = 36
   character(256), parameter :: VAR_NAME(N_var) = (/ &
-     "zeta              " &
-    ,"u                 " &
-    ,"v                 " &
-    ,"ubar              " &
-    ,"vbar              " &
-    ,"temp              " &
-    ,"salt              " &
-    ,"mud_              " &
-    ,"sand_             " &
-    ,"TIC               " &
-    ,"alkalinity        " &
-    ,"oxygen            " &
-    ,"DOC               " &
-    ,"POC               " &
-    ,"NO3               " &
-    ,"NO2               " &
-    ,"NH4               " &
-    ,"PO4               " &
-    ,"DON               " &
-    ,"PON               " &
-    ,"DOP               " &
-    ,"POP               " &
-    ,"phytoplankton1    " &
-    ,"phytoplankton2    " &
-    ,"zooplankton       " &
-    ,"TI13C             " &
-    ,"DO13C             " &
-    ,"PO13C             " &
-    ,"phytoplankton1_13C" &
-    ,"phytoplankton2_13C" &
-    ,"zooplankton_13C   " &
-    /)
+     "zeta          " &  !  1
+    ,"u             " &  !  2 
+    ,"v             " &  !  3
+    ,"ubar          " &  !  4 
+    ,"vbar          " &  !  5 
+    ,"temp          " &  !  6 
+    ,"salt          " &  !  7 
+    ,"mud_          " &  !  8 
+    ,"sand_         " &  !  9
+    ,"TIC           " &  ! 10
+    ,"alkalinity    " &  ! 11
+    ,"oxygen        " &  ! 12
+    ,"DOC_          " &  ! 13
+    ,"POC_          " &  ! 14
+    ,"phytoplankton_" &  ! 15
+    ,"zooplankton_  " &  ! 16
+    ,"PIC_          " &  ! 17
+    ,"NO3           " &  ! 18
+    ,"NH4           " &  ! 19
+    ,"PO4           " &  ! 20
+    ,"DON_          " &  ! 21
+    ,"PON_          " &  ! 22
+    ,"DOP_          " &  ! 23
+    ,"POP_          " &  ! 24
+    ,"TI13C         " &  ! 25
+    ,"DO13C_        " &  ! 26
+    ,"PO13C_        " &  ! 27
+    ,"phyt13C_      " &  ! 28
+    ,"zoop13C_      " &  ! 29
+    ,"PI13C_        " &  ! 30
+    ,"15NO3         " &  ! 31
+    ,"15NH4         " &  ! 32
+    ,"DO15N_        " &  ! 33
+    ,"PO15N_        " &  ! 34
+    ,"phyt15N_      " &  ! 35
+    ,"zoop15N_      " &  ! 36
+     /)
   character(256), parameter :: VAR_LONG_NAME(N_var) = (/ &
-     "zeta              " &
-    ,"u                 " &
-    ,"v                 " &
-    ,"ubar              " &
-    ,"vbar              " &
-    ,"temp              " &
-    ,"salt              " &
-    ,"mud_              " &
-    ,"sand_             " &
-    ,"TIC               " &
-    ,"alkalinity        " &
-    ,"oxygen            " &
-    ,"DOC               " &
-    ,"POC               " &
-    ,"NO3               " &
-    ,"NO2               " &
-    ,"NH4               " &
-    ,"PO4               " &
-    ,"DON               " &
-    ,"PON               " &
-    ,"DOP               " &
-    ,"POP               " &
-    ,"phytoplankton1    " &
-    ,"phytoplankton2    " &
-    ,"zooplankton       " &
-    ,"TI13C             " &
-    ,"DO13C             " &
-    ,"PO13C             " &
-    ,"phytoplankton1_13C" &
-    ,"phytoplankton2_13C" &
-    ,"zooplankton_13C   " &
+     "free-surface                                " &
+    ,"u-momentum component                        " &
+    ,"v-momentum component                        " &
+    ,"vertically integrated u-momentum component  " &
+    ,"vertically integrated v-momentum component  " &
+    ,"potential temperature                       " &
+    ,"salinity                                    " &
+    ,"suspended cohesive sediment                 " &
+    ,"suspended noncohesive sediment              " &
+    ,"total inorganic carbon                      " &
+    ,"total alkalinity                            " &
+    ,"dissolved oxygen concentration              " &
+    ,"dissolved organic carbon                    " &
+    ,"particulate organic carbon                  " &
+    ,"phytoplankton                               " &
+    ,"zooplankton                                 " &
+    ,"particulate inorganic carbon                " &
+    ,"nitrate concentration                       " &
+    ,"ammonium concentration                      " &
+    ,"phosphate concentration                     " &
+    ,"dissolved organic nitrogen concentration    " &
+    ,"particulate organic nitrogen concentration  " &
+    ,"dissolved organic phosphorus concentration  " &
+    ,"particulate organic phosphorus concentration" &
+    ,"carbon 13 of total inorganic carbon         " &
+    ,"carbon 13 of DOC                            " &
+    ,"carbon 13 of POC                            " &
+    ,"carbon 13 of phytoplankton                  " &
+    ,"carbon 13 of zooplankton                    " &
+    ,"carbon 13 of PIC                            " &
+    ,"nitrogen 15 of nitrate                      " &
+    ,"nitrogen 15 of ammonium                     " &
+    ,"nitrogen 15 of DON                          " &
+    ,"nitrogen 15 of PON                          " &
+    ,"nitrogen 15 of phytoplankton                " &
+    ,"nitrogen 15 of zooplankton                  " &
     /)
   character(256), parameter :: VAR_UNIT(N_var) = (/ &
-     "zeta              " &
-    ,"u                 " &
-    ,"v                 " &
-    ,"ubar              " &
-    ,"vbar              " &
-    ,"Celsius           " &
-    ,"PSU               " &
-    ,"kilogram meter-3  " &
-    ,"kilogram meter-3  " &
-    ,"umol kg-1         " &
-    ,"umol kg-1         " &
-    ,"umol L-1          " &
-    ,"umolC L-1         " &
-    ,"umolC L-1         " &
-    ,"umolN L-1         " &
-    ,"umolN L-1         " &
-    ,"umolN L-1         " &
-    ,"umolP L-1         " &
-    ,"umolN L-1         " &
-    ,"umolN L-1         " &
-    ,"umolP L-1         " &
-    ,"umolP L-1         " &
-    ,"umolC L-1         " &
-    ,"umolC L-1         " &
-    ,"umolC L-1         " &
-    ,"TI13C             " &
-    ,"DO13C             " &
-    ,"PO13C             " &
-    ,"phytoplankton1_13C" &
-    ,"phytoplankton2_13C" &
-    ,"zooplankton_13C   " &
+     "meter           " &
+    ,"meter second-1  " &
+    ,"meter second-1  " &
+    ,"meter second-1  " &
+    ,"meter second-1  " &
+    ,"Celsius         " &
+    ,"nondimensional  " &
+    ,"kilogram meter-3" &
+    ,"kilogram meter-3" &
+    ,"umol kg-1       " &
+    ,"umol kg-1       " &
+    ,"oxygen          " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
+    ,"umol L-1        " &
     /)
   character(256), parameter :: BRY_NAME(4) =  &
     (/ "south", "north", "west ", "east " /)
@@ -124,7 +139,7 @@ MODULE mod_roms_netcdf
 ! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2018-12-04 to present) -----
 !        ** GLBy0.08 grid is 0.08 deg lon x 0.04 deg lat that covers 80 S to 90 N.
   integer, parameter :: NCnum   = 1
-  character(54) :: NC_FILE(NCnum) = (/                           &
+  character(54) :: HYCOM_FILE(NCnum) = (/                           &
        "https://tds.hycom.org/thredds/dodsC/GLBy0.08/expt_93.0"  &  ! lon(4500): 0 - 359.92
     /)
 # elif defined ANALYSIS
@@ -132,7 +147,7 @@ MODULE mod_roms_netcdf
 !        ** grid is 0.08 deg lon x 0.08 deg lat between 40S-40N. 
 !           Poleward of 40S/40N, the grid is 0.08 deg lon x 0.04 deg lat. It spans 80S to 90N.
   integer, parameter :: NCnum   = 6
-  character(53) :: NC_FILE(NCnum) = (/                          &
+  character(53) :: HYCOM_FILE(NCnum) = (/                          &
        "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_56.3"  &  ! lon(4500): -180 - 179.92
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_57.2"  &  ! lon(4500): -180 - 179.92
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_92.8"  &  ! lon(4500): 0 - 359.92
@@ -143,7 +158,7 @@ MODULE mod_roms_netcdf
 # elif defined REANALYSIS
 ! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (since 1994-01-01 to 2015-12-31) -----
   integer, parameter :: NCnum   = 22
-  character(63) :: NC_FILE(NCnum) = (/                                    &
+  character(63) :: HYCOM_FILE(NCnum) = (/                                    &
        "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1994"  &  ! lon(4500): -180 - 179.92
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1995"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1996"  &
@@ -172,7 +187,7 @@ MODULE mod_roms_netcdf
 # if defined ANALYSIS
 ! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to 2018-11-20) -----
   integer, parameter :: NCnum   = 4
-  character(53) :: NC_FILE(NCnum) = (/                          &
+  character(53) :: HYCOM_FILE(NCnum) = (/                          &
        "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_90.9"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.0"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1"  &
@@ -181,7 +196,7 @@ MODULE mod_roms_netcdf
 # elif defined REANALYSIS
 ! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Reanalysis (since 1992-10-02 to 2012-12-31) -----
   integer, parameter :: NCnum   = 2
-  character(53) :: NC_FILE(NCnum) = (/                          &
+  character(53) :: HYCOM_FILE(NCnum) = (/                          &
        "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.0"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.1"  &
     /)
@@ -575,8 +590,8 @@ MODULE mod_roms_netcdf
       character(len=*),  intent( in) :: TIME_ATT
       integer, intent( in) :: Nxr, Nyr, Nzr, Nt
       integer, intent( in) :: name_flag( N_var )
-      character(256) :: sedname
-      character(2) :: sednum
+      character(256) :: varname
+      character(2) :: varnum
 
       integer :: ncid,var_id, ncid2,var_id2
 !      integer :: lat_dimid, lon_dimid, depth_dimid, time_dimid
@@ -651,14 +666,17 @@ MODULE mod_roms_netcdf
           call check( nf90_put_att(ncid, var_id, 'long_name', 'vertically integrated v-momentum component') )
           call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
           call check( nf90_put_att(ncid, var_id, 'time',      'ocean_time') )
-        else if( i == 8 .or. i ==9 ) then  ! mud_
-          do j=1,99
-            write(sednum,'(I2.2)') j
-            sedname = trim( VAR_NAME(i) )//sednum
-            status = nf90_inq_varid(ncid2, trim( sedname ), var_id2)
+        else if( i==8  .or. i==9  .or. i==13 .or. i==14 .or. i==15 .or. i==16 .or.  &
+                 i==17 .or. i==21 .or. i==22 .or. i==23 .or. i==24 .or. i==26 .or.  &
+                 i==27 .or. i==28 .or. i==29 .or. i==30 .or. i==33 .or. i==34 .or.  &
+                 i==35 .or. i==36  ) then  ! mud_, sand_, etc...
+           do j=1,99
+            write(varnum,'(I2.2)') j
+            varname = trim( VAR_NAME(i) )//varnum
+            status = nf90_inq_varid(ncid2, trim( varname ), var_id2)
             if (status /= nf90_noerr) exit
-            write(*,*) 'Add variable: ', trim( sedname )
-            call check( nf90_def_var(ncid, trim( sedname ), NF90_DOUBLE, dimids, var_id) )
+            write(*,*) 'Add variable: ', trim( varname )
+            call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dimids, var_id) )
             call check( nf90_copy_att(ncid2, var_id2, 'long_name', ncid, var_id) )
             call check( nf90_copy_att(ncid2, var_id2, 'units', ncid, var_id) )
             call check( nf90_copy_att(ncid2, var_id2, 'time', ncid, var_id) )
@@ -690,12 +708,16 @@ MODULE mod_roms_netcdf
             OUT_FILE             &
           , TIME_ATT             &  
           , Nxr, Nyr, Nzr, Nt    &   
+          , name_flag            &   
+          , snwe_flag            &   
       )
                                
 !    input parameters
       character(len=*),  intent( in) :: OUT_FILE
       character(len=*),  intent( in) :: TIME_ATT
       integer, intent( in) :: Nxr, Nyr, Nzr, Nt
+      integer, intent( in) :: name_flag( 7 )
+      integer, intent( in) :: snwe_flag(4)
       
       integer :: ncid,var_id
 !      integer :: lat_dimid, lon_dimid, depth_dimid, time_dimid
@@ -729,135 +751,204 @@ MODULE mod_roms_netcdf
       call check( nf90_put_att(ncid, var_id, 'long_name', 'open boundary conditions time') )
       call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
 
-      dim2Dids = (/ yr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'zeta_west', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'free-surface western boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'zeta_east', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'free-surface eastern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      dim2Dids = (/ xr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'zeta_south', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'free-surface southern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'zeta_north', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'free-surface northern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      
-      dim2Dids = (/ yu_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'ubar_west', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', '2D u-momentum western boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'ubar_east', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', '2D u-momentum eastern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      dim2Dids = (/ xu_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'ubar_south', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', '2D u-momentum southern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'ubar_north', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', '2D u-momentum northern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      
-      dim2Dids = (/ yv_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'vbar_west', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', '2D v-momentum western boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'vbar_east', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', '2D v-momentum eastern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      dim2Dids = (/ xv_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'vbar_south', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', '2D v-momentum southern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'vbar_north', NF90_DOUBLE, dim2Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', '2D v-momentum northern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+      if( name_flag(1) == 1 ) then
+        dim2Dids = (/ yr_dimid, bry_time_dimid /)
+        if( snwe_flag(3) == 1 ) then
+          call check( nf90_def_var(ncid, 'zeta_west', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'free-surface western boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(4) == 1 ) then
+          call check( nf90_def_var(ncid, 'zeta_east', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'free-surface eastern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        dim2Dids = (/ xr_dimid, bry_time_dimid /)
+        if( snwe_flag(1) == 1 ) then
+          call check( nf90_def_var(ncid, 'zeta_south', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'free-surface southern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(2) == 1 ) then
+          call check( nf90_def_var(ncid, 'zeta_north', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'free-surface northern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+      endif
 
-      dim3Dids = (/ yu_dimid, zr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'u_west', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'u-momentum western boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'u_east', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'u-momentum eastern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      dim3Dids = (/ xu_dimid, zr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'u_south', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'u-momentum southern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'u_north', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'u-momentum northern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+      if( name_flag(4) == 1 ) then
+        dim2Dids = (/ yu_dimid, bry_time_dimid /)
+        if( snwe_flag(3) == 1 ) then
+          call check( nf90_def_var(ncid, 'ubar_west', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', '2D u-momentum western boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(4) == 1 ) then
+          call check( nf90_def_var(ncid, 'ubar_east', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', '2D u-momentum eastern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        dim2Dids = (/ xu_dimid, bry_time_dimid /)
+        if( snwe_flag(1) == 1 ) then
+          call check( nf90_def_var(ncid, 'ubar_south', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', '2D u-momentum southern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(2) == 1 ) then
+          call check( nf90_def_var(ncid, 'ubar_north', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', '2D u-momentum northern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+      endif
 
-      dim3Dids = (/ yv_dimid, zr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'v_west', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'v-momentum western boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'v_east', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'v-momentum eastern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      dim3Dids = (/ xv_dimid, zr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'v_south', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'v-momentum southern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'v_north', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'v-momentum northern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+      if( name_flag(5) == 1 ) then
+        dim2Dids = (/ yv_dimid, bry_time_dimid /)
+        if( snwe_flag(3) == 1 ) then
+          call check( nf90_def_var(ncid, 'vbar_west', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', '2D v-momentum western boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(4) == 1 ) then
+          call check( nf90_def_var(ncid, 'vbar_east', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', '2D v-momentum eastern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        dim2Dids = (/ xv_dimid, bry_time_dimid /)
+        if( snwe_flag(1) == 1 ) then
+          call check( nf90_def_var(ncid, 'vbar_south', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', '2D v-momentum southern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(2) == 1 ) then
+          call check( nf90_def_var(ncid, 'vbar_north', NF90_DOUBLE, dim2Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', '2D v-momentum northern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif         
+      endif
 
-      dim3Dids = (/ yr_dimid, zr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'temp_west', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'potential temperature western boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'temp_east', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'potential temperature eastern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      dim3Dids = (/ xr_dimid, zr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'temp_south', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'potential temperature southern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'temp_north', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'potential temperature northern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'units',     'Celsius') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+      if( name_flag(2) == 1 ) then
+        dim3Dids = (/ yu_dimid, zr_dimid, bry_time_dimid /)
+        if( snwe_flag(3) == 1 ) then
+          call check( nf90_def_var(ncid, 'u_west', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'u-momentum western boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(4) == 1 ) then
+          call check( nf90_def_var(ncid, 'u_east', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'u-momentum eastern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        dim3Dids = (/ xu_dimid, zr_dimid, bry_time_dimid /)
+        if( snwe_flag(1) == 1 ) then
+          call check( nf90_def_var(ncid, 'u_south', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'u-momentum southern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(2) == 1 ) then
+          call check( nf90_def_var(ncid, 'u_north', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'u-momentum northern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+      endif
 
-      dim3Dids = (/ yr_dimid, zr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'salt_west', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'salinity western boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'salt_east', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'salinity eastern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      dim3Dids = (/ xr_dimid, zr_dimid, bry_time_dimid /)
-      call check( nf90_def_var(ncid, 'salt_south', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'salinity southern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
-      call check( nf90_def_var(ncid, 'salt_north', NF90_DOUBLE, dim3Dids, var_id) )
-      call check( nf90_put_att(ncid, var_id, 'long_name', 'salinity northern boundary condition') )
-      call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+      if( name_flag(3) == 1 ) then
+        dim3Dids = (/ yv_dimid, zr_dimid, bry_time_dimid /)
+        if( snwe_flag(3) == 1 ) then
+          call check( nf90_def_var(ncid, 'v_west', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'v-momentum western boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(4) == 1 ) then
+          call check( nf90_def_var(ncid, 'v_east', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'v-momentum eastern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        dim3Dids = (/ xv_dimid, zr_dimid, bry_time_dimid /)
+        if( snwe_flag(1) == 1 ) then
+          call check( nf90_def_var(ncid, 'v_south', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'v-momentum southern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(2) == 1 ) then
+          call check( nf90_def_var(ncid, 'v_north', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'v-momentum northern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+      endif
 
+      if( name_flag(6) == 1 ) then
+        dim3Dids = (/ yr_dimid, zr_dimid, bry_time_dimid /)
+        if( snwe_flag(3) == 1 ) then
+          call check( nf90_def_var(ncid, 'temp_west', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'potential temperature western boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'Celsius') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(4) == 1 ) then
+          call check( nf90_def_var(ncid, 'temp_east', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'potential temperature eastern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'Celsius') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        dim3Dids = (/ xr_dimid, zr_dimid, bry_time_dimid /)
+        if( snwe_flag(1) == 1 ) then
+          call check( nf90_def_var(ncid, 'temp_south', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'potential temperature southern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'Celsius') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(2) == 1 ) then
+          call check( nf90_def_var(ncid, 'temp_north', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'potential temperature northern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'units',     'Celsius') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+      endif
+
+      if( name_flag(7) == 1 ) then
+        dim3Dids = (/ yr_dimid, zr_dimid, bry_time_dimid /)
+        if( snwe_flag(3) == 1 ) then
+          call check( nf90_def_var(ncid, 'salt_west', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'salinity western boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(4) == 1 ) then
+          call check( nf90_def_var(ncid, 'salt_east', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'salinity eastern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        dim3Dids = (/ xr_dimid, zr_dimid, bry_time_dimid /)
+        if( snwe_flag(1) == 1 ) then
+          call check( nf90_def_var(ncid, 'salt_south', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'salinity southern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+        if( snwe_flag(2) == 1 ) then
+          call check( nf90_def_var(ncid, 'salt_north', NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', 'salinity northern boundary condition') )
+          call check( nf90_put_att(ncid, var_id, 'time',      'bry_time') )
+        endif
+      endif
 
   ! End define mode.
       call check( nf90_enddef(ncid) )
@@ -885,8 +976,8 @@ MODULE mod_roms_netcdf
       integer, intent( in) :: Nxr, Nyr, Nzr, Nt
       integer, intent( in) :: name_flag( N_var )
       integer, intent( in) :: snwe_flag(4)
-      character(256) :: sedname, varname, longname
-      character(2) :: sednum
+      character(256) :: varname, varname2, longname
+      character(2) :: varnum
 
       integer :: ncid,var_id, ncid2,var_id2
 !      integer :: lat_dimid, lon_dimid, depth_dimid, time_dimid
@@ -991,12 +1082,15 @@ MODULE mod_roms_netcdf
             call check( nf90_put_att(ncid, var_id, 'long_name', longname) )
             call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
             call check( nf90_put_att(ncid, var_id, 'time', 'bry_time') )
-          else if( i == 8 .or. i ==9 ) then  ! mud_
+          else if( i==8  .or. i==9  .or. i==13 .or. i==14 .or. i==15 .or. i==16 .or.  &
+                   i==17 .or. i==21 .or. i==22 .or. i==23 .or. i==24 .or. i==26 .or.  &
+                   i==27 .or. i==28 .or. i==29 .or. i==30 .or. i==33 .or. i==34 .or.  &
+                   i==35 .or. i==36  ) then  ! mud_, sand_, etc...
             do j=1,99
-              write(sednum,'(I2.2)') j
-              sedname = trim( VAR_NAME(i) )//sednum
-              varname = trim( VAR_NAME(i) )//trim( BRY_NAME(ibry) )//'_'//sednum
-              status = nf90_inq_varid(ncid2, trim( sedname ), var_id2)
+              write(varnum,'(I2.2)') j
+              varname2 = trim( VAR_NAME(i) )//varnum
+              varname = trim( VAR_NAME(i) )//trim( BRY_NAME(ibry) )//'_'//varnum
+              status = nf90_inq_varid(ncid2, trim( varname2 ), var_id2)
               if (status /= nf90_noerr) exit
               write(*,*) 'Add variable: ', trim( varname )
               call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dimids, var_id) )
@@ -1051,8 +1145,8 @@ MODULE mod_roms_netcdf
       character(len=*),  intent( in) :: TIME_ATT
       integer, intent( in) :: Nriv, Nzr, Nt
       integer, intent( in) :: name_flag( N_var )
-      character(256) :: sedname, varname
-      character(2) :: sednum
+      character(256) :: varname_dg, varname
+      character(2) :: varnum
 
       integer :: ncid,var_id
       integer :: zr_dimid
@@ -1110,12 +1204,12 @@ MODULE mod_roms_netcdf
         
         if( i == 8 .or. i ==9 ) then  ! mud_
           do j=1,99
-            write(sednum,'(I2.2)') j
-            sedname = 'river_'//trim( VAR_NAME(i) )//sednum
-            status = nf90_inq_varid(ncid, trim( sedname ), var_id)
+            write(varnum,'(I2.2)') j
+            varname = 'river_'//trim( VAR_NAME(i) )//varnum
+            status = nf90_inq_varid(ncid, trim( varname ), var_id)
             if (status /= nf90_noerr) exit
-            write(*,*) 'Add variable: ', trim( sedname )
-            call check( nf90_def_var(ncid, trim( sedname ), NF90_DOUBLE, dimids, var_id) )
+            write(*,*) 'Add variable: ', trim( varname )
+            call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dimids, var_id) )
             call check( nf90_copy_att(ncid, var_id, 'long_name', ncid, var_id) )
             call check( nf90_copy_att(ncid, var_id, 'units', ncid, var_id) )
             call check( nf90_copy_att(ncid, var_id, 'time', ncid, var_id) )
@@ -1407,7 +1501,7 @@ MODULE mod_roms_netcdf
 
 !**** readNetCDF_3d **********************************************
       
-  SUBROUTINE readNetCDF_3d(    &
+  SUBROUTINE readNetCDF_3d_hycom(    &
 !    input parameters
         ncid                   &
       , NCNAME                 &
@@ -1468,7 +1562,7 @@ MODULE mod_roms_netcdf
     data = data*sf+off
     write(*,*) '*** SUCCESS'
 
-  END SUBROUTINE readNetCDF_3d
+  END SUBROUTINE readNetCDF_3d_hycom
 
 !
 !**** readNetCDF_4d ver 2 **********************************************
@@ -1544,7 +1638,94 @@ MODULE mod_roms_netcdf
     write(*,*) '*** SUCCESS'
 
   END SUBROUTINE readNetCDF_4d_2
-!
+
+!**** readNetCDF_4d ver 3 **********************************************
+      
+  SUBROUTINE readNetCDF_4d_hycom(  &
+!    input parameters
+        ncid                 &
+      , NCNAME               &
+      , Nxr, Nyr, Nzr, Nt    &
+      , start, count         &
+!    output parameters
+      , data                 &
+    )
+                               
+!    input parameters
+    integer, intent( in) :: ncid
+    character(len=*), intent( in) :: NCNAME
+    integer, intent( in) :: Nxr, Nyr, Nzr, Nt
+    integer, intent( in) :: start(4), count(4)
+    real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
+    
+    integer, parameter :: Num_try = 50
+    integer :: start2(4), count2(4)
+    integer :: var_id
+    integer :: err_flag, status
+    integer :: itry
+    integer :: i,j,k,l
+    real(8) :: sf, off
+    
+    start2 = start
+    count2 = count
+    count2(3)=1
+    
+    data(:,:,:,:) = -9999.0d0
+      
+! --- Read NetCDF file ------------------------
+      
+    write(*,*) 'READ: ', NCNAME
+    ! Get variable id
+    do itry=1,Num_try
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 1: Retry!'
+    end do        
+    do k=1,Nzr
+      start2(3)=k
+      do itry=1,Num_try
+        status = nf90_get_var(ncid, var_id, data(:,:,Nzr-k+1,:), start=start2, count=count2)
+        write(*,*) trim(nf90_strerror(status)), k
+        if (status == nf90_noerr .and. data(Nxr,Nyr,Nzr-k+1,Nt)/=-9999.0d0) exit
+        if (itry== Num_try) stop
+        write(*,*) '*** READ FAILED: Retry!'
+      end do
+    end do        
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 2: Retry!'
+    end do          
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'add_offset', off)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 3: Retry!'
+    end do          
+      
+    data = data*sf+off
+
+    do i=1,Nxr
+      do j=1,Nyr
+        do k=Nzr-1,1,-1
+          do l=1,Nt
+            if ( data(i,j,k,l) <-9.0d0 ) then
+              data(i,j,k,l) = data(i,j,k+1,l)
+            endif
+          end do
+        end do
+      end do
+    end do
+
+    write(*,*) '*** SUCCESS'
+
+  END SUBROUTINE readNetCDF_4d_hycom
+
 !**** readNetCDF_1d **********************************************
       
     SUBROUTINE readNetCDF_1d(   &

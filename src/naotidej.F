@@ -939,7 +939,7 @@ c
             w   = c(i+1) - d(i)
             den = ho - hp
 c
-            if (den.eq.0.d0) pause
+            if (den.eq.0.d0) stop !pause
 c
             den  = w/den
             d(i) = hp*den

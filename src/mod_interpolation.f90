@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2019 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  =====
 
 !!!**** Interpolation MODULE ************************************
 
@@ -553,57 +553,50 @@ CONTAINS
         je = Jde
         ie = Ide
 
-!        do
-          dmin = sqrt((Xd(Ide,Jde)-Xd(Ids,Ids))**2.0d0 + (Yd(Ide,Jde)-Yd(Ids,Ids))**2.0d0 )
+        dmin = sqrt((Xd(Ide,Jde)-Xd(Ids,Jds))**2.0d0 + (Yd(Ide,Jde)-Yd(Ids,Jds))**2.0d0 )
 
-          do Idn=is,ie!, istep
-            do Jdn=js,je!, istep
-              if( Maskd(Idn,Jdn)==0.0d0 ) cycle
-              ! Check nearest points.
-              d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
-              if( d < dmin ) then
-                dmin = d
-                Idmin = Idn
-                Jdmin = Jdn
-              end if
-            enddo
+        do Idn=is,ie!, istep
+          do Jdn=js,je!, istep
+            if( Maskd(Idn,Jdn)==0.0d0 ) cycle
+            ! Check nearest points.
+            d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
+            if( d < dmin ) then
+              dmin = d
+              Idmin = Idn
+              Jdmin = Jdn
+            end if
           enddo
+        enddo
 
-!          if(istep == 1) then
-!            exit 
-!          else if (istep < 5 ) then
-!            istep = 1
-!            js = max(Jds,Jdmin-10)
-!            is = max(Ids,Idmin-10)
-!            je = min(Jde,Jdmin+10)
-!            ie = min(Jde,Idmin+10)
-!          else
-!            istep = istep/2
-!            js = max(Jds,Jdmin-istep*2)
-!            is = max(Ids,Idmin-istep*2)
-!            je = min(Jde,Jdmin+istep*2)
-!            ie = min(Jde,Idmin+istep*2)
-!          end if
-!          
-!        enddo
-
-        d1 = sqrt((Xd(Idmin-1,Jdmin)-xr(ir,jr))**2.0d0 + (Yd(Idmin-1,Jdmin)-yr(ir,jr))**2.0d0 )
-        d2 = sqrt((Xd(Idmin+1,Jdmin)-xr(ir,jr))**2.0d0 + (Yd(Idmin+1,Jdmin)-yr(ir,jr))**2.0d0 )
-        if(d1<d2) then
+        if(Idmin==Ide) then
           Id(1) = Idmin-1
-        else
+        elseif(Idmin==Ids) then
           Id(1) = Idmin
+        else
+          d1 = sqrt((Xd(Idmin-1,Jdmin)-xr(ir,jr))**2.0d0 + (Yd(Idmin-1,Jdmin)-yr(ir,jr))**2.0d0 )
+          d2 = sqrt((Xd(Idmin+1,Jdmin)-xr(ir,jr))**2.0d0 + (Yd(Idmin+1,Jdmin)-yr(ir,jr))**2.0d0 )
+          if(d1<d2) then
+            Id(1) = Idmin-1
+          else
+            Id(1) = Idmin
+          endif
         endif
         Id(2) = Id(1)+1
         Id(3) = Id(1)+1
         Id(4) = Id(1)
 
-        d1 = sqrt((Xd(Idmin,Jdmin-1)-xr(ir,jr))**2.0d0 + (Yd(Idmin,Jdmin-1)-yr(ir,jr))**2.0d0 )
-        d2 = sqrt((Xd(Idmin,Jdmin+1)-xr(ir,jr))**2.0d0 + (Yd(Idmin,Jdmin+1)-yr(ir,jr))**2.0d0 )
-        if(d1<d2) then
+        if(Jdmin==Jde) then
           Jd(1) = Jdmin-1
-        else
+        elseif(Jdmin==Jds) then
           Jd(1) = Jdmin
+        else
+          d1 = sqrt((Xd(Idmin,Jdmin-1)-xr(ir,jr))**2.0d0 + (Yd(Idmin,Jdmin-1)-yr(ir,jr))**2.0d0 )
+          d2 = sqrt((Xd(Idmin,Jdmin+1)-xr(ir,jr))**2.0d0 + (Yd(Idmin,Jdmin+1)-yr(ir,jr))**2.0d0 )
+          if(d1<d2) then
+            Jd(1) = Jdmin-1
+          else
+            Jd(1) = Jdmin
+          endif
         endif
         Jd(2) = Jd(1)
         Jd(3) = Jd(1)+1
@@ -626,7 +619,7 @@ CONTAINS
         w_cont(4, idc)=w(4)
 
       
-! fill kland mask
+! fill land mask
         lnd = 0
         wm = 0.0d0
         do i=1,4
@@ -670,8 +663,8 @@ CONTAINS
 
     s = 0.5d0*( d12 + d23 + d31 )
 
-    A = sqrt( s*(s-d12)*(s-d23)*(s-d31) )
-
+!    A = sqrt( s*(s-d12)*(s-d23)*(s-d31) )
+    A = sqrt( abs(s*(s-d12)*(s-d23)*(s-d31)) )
   END SUBROUTINE Triangle_Area
 
 ! calculate rectangle area of (x1,y1), (x2,y2),(x3,y3) points

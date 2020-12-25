@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018-2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2021 Takashi NAKAMURA  =====
 
 PROGRAM getJMACWM
   use netcdf

@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  =====
 
 PROGRAM getHYCOM
   use netcdf
@@ -103,12 +103,12 @@ PROGRAM getHYCOM
   write (MM, "(I2.2)") Smonth
   HYCOM_suffix(2:5)=YYYY
   HYCOM_suffix(6:7)=MM
-  HYCOM_FILE = trim( HYCOM_prefix )//HYCOM_suffix
+  HYCOM_OUT_FILE = trim( HYCOM_prefix )//HYCOM_suffix
 
 !---- Allocate lat, lon dimension data ---------------------------------
   
-  write(*,*) "OPEN: ", NC_FILE(1)
-  call try_nf_open(NC_FILE(1), nf90_nowrite, ncid)
+  write(*,*) "OPEN: ", HYCOM_FILE(1)
+  call try_nf_open(HYCOM_FILE(1), nf90_nowrite, ncid)
   
   ! Get dimension data
   call get_dimension(ncid, 'lat', Jm_all)
@@ -125,7 +125,7 @@ PROGRAM getHYCOM
   call readNetCDF_1d(ncid, 'lon', Im_all, lon_all)
   call readNetCDF_1d(ncid, 'depth', Nz, depth)
   call check( nf90_close(ncid) )         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST code
-  write(*,*) "CLOSE: ", NC_FILE(1)     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST code
+  write(*,*) "CLOSE: ", HYCOM_FILE(1)     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST code
   write(*,*) Im, lon_all(1), lon_all(Im_all)
   JB=1
   do j=1,Jm_all
@@ -172,12 +172,12 @@ PROGRAM getHYCOM
       
   call createNetCDF_HYCOM(  &
 !      input parameters
-      trim( HYCOM_FILE )     &
+      trim( HYCOM_OUT_FILE ) &
     , TIME_ATT               &  
     , Im, Jm, Nz, N_days+1   &   
     )
   
-  call check( nf90_open( trim( HYCOM_FILE ), NF90_WRITE, ncid2 ) )
+  call check( nf90_open( trim( HYCOM_OUT_FILE ), NF90_WRITE, ncid2 ) )
 
   start1D = (/ 1  /)
   count1D = (/ Im /) 
@@ -226,8 +226,8 @@ PROGRAM getHYCOM
   do iNC=1, NCnum
     write(*,*) 'CHECK: Time'
     ! Open NetCDF file
-    write(*,*) "OPEN: ", NC_FILE(iNC)
-    call try_nf_open(NC_FILE(iNC), nf90_nowrite, ncid)
+    write(*,*) "OPEN: ", HYCOM_FILE(iNC)
+    call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
     call get_dimension(ncid, 'time', NC(iNC)%Nt)
     write(*,*) NC(iNC)%Nt
     write(50,*) NC(iNC)%Nt
@@ -235,7 +235,7 @@ PROGRAM getHYCOM
     allocate( time2(NC(iNC)%Nt) )
     call readNetCDF_1d(ncid, 'time', NC(iNC)%Nt, time2)
     call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", NC_FILE(iNC)
+    write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
     NC(iNC)%time_all = time2
     write(50,*) NC(iNC)%time_all
     deallocate(time2)
@@ -266,7 +266,7 @@ PROGRAM getHYCOM
     do i=NC(iNC)%Nt-1,1,-1
       d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24.0d0
       if(d_jdate < dble(jdate_End)) then
-        write(*,*) '*** FOUND: Ending point @ NC_FILE',iNC
+        write(*,*) '*** FOUND: Ending point @ HYCOM_FILE',iNC
         NC(iNC)%ItE=i+1
         exit
       endif
@@ -278,7 +278,7 @@ PROGRAM getHYCOM
     do i=2,NC(iNC)%ItE
       d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24.0d0
       if(d_jdate>dble(jdate_Start)) then
-        write(*,*) '*** FOUND: Starting point @ NC_FILE',iNC
+        write(*,*) '*** FOUND: Starting point @ HYCOM_FILE',iNC
         NC(iNC)%ItS=i-1
         exit
       endif
@@ -293,8 +293,8 @@ PROGRAM getHYCOM
       cycle
     end if
     ! Seek lon index IL
-    write(*,*) "OPEN: ", NC_FILE(iNC)
-    call try_nf_open(NC_FILE(iNC), nf90_nowrite, ncid)
+    write(*,*) "OPEN: ", HYCOM_FILE(iNC)
+    call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
     call readNetCDF_1d(ncid, 'lon', Im_all, lon_all)
     write(*,*) Im_all, lon_all(1), lon_all(Im_all)
     IL=1
@@ -339,7 +339,7 @@ PROGRAM getHYCOM
 ! --- Write NetCDF file ------------------------
       write(*,*) "Write: HYCOM data"
 
-      call check( nf90_open( trim( HYCOM_FILE ), NF90_WRITE, ncid2 ) )
+      call check( nf90_open( trim( HYCOM_OUT_FILE ), NF90_WRITE, ncid2 ) )
             
       start1D = (/ st  /)
       count1D = (/ 1 /)
@@ -368,7 +368,7 @@ PROGRAM getHYCOM
     
     end do
     call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", NC_FILE(iNC)
+    write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
     
     write(*,*) "******************************************************************"
   end do

@@ -15,6 +15,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./grdROMS.exe < TokyoBay1.in
-#./grdROMS.exe < TokyoBay2.in
-#./grdROMS.exe < TokyoBay3.in
+./grdROMS.exe < RedSea1.in

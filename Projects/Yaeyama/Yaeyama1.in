@@ -1,45 +1,20 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "D:/ROMS/Data/Yaeyama/Yaeyama1_grd_v10.nc"
-/
-
-&range
-! -------------------------------------------------------------------------
-! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
-!
-!                 ______ (Rlon,Tlat)
-!                |      |
-!                |      |
-!                |______|
-!     (Llon,Blat)                     
-!
-! On Input:
-!
-!    Llon         Box left-edge   longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
-!    Rlon         Box right-edge  longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
-!    Blat         Box bottom-edge latitude  (degress, -80 to 80 )
-!    Tlat         Box top-edge    latitude  (degress, -80 to 80 )
-!
-! Geographical and Grid parameters --------
-!
-  Llon = 120.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-  Rlon = 128.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
-  Blat =  22.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
-  Tlat =  28.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+  GRID_FILE = "../../../COAWST/Data/Yaeyama/Yaeyama1_grd_v10.nc"
 /
 
 &sdate
 
-  Syear  = 1996   ! Starting year
-  Smonth = 9      ! Starting month
-  Sday   = 1      ! Starting day
+  Syear  = 2017   ! Starting year
+  Smonth = 6      ! Starting month
+  Sday   = 2      ! Starting day
 /
 
 &edate
 
-  Eyear  = 1996   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 10     ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 6      ! Ending month
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -49,27 +24,39 @@
   Rday   = 1      ! Reference day
 /
 
-&intpmode
 
-  mode = 1        ! mode=1, linear interpolation
-/
-
-&hycom      
-! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "D:/ROMS/Data/Yaeyama/HYCOM_extracted_data/Yaeyama_HYCOM_extracted"
+&ocn2roms      
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+  romsvar = 1,1,1,1,1,1,1        
 /
 
 &bry
   BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
+  !    south north west east
+  SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Yaeyama1_ini_HYCOM_Nz15"
-  itime = 9       ! Frame number of HYCOME file
+  INI_prefix  = "Yaeyama1_ini_HYCOMwNAO_Nz15"
+
+! for ROMS: please choose frame number (itime) or
+!           Specific date & time (INIyera, INImonth, INIday, INIhour)
+  itime = 0       ! Frame number of ROMS file 
+                  ! if itime <= 0, time index will be sought from 
+                  ! the following Specific date & time
+
+! for ROMS, HYCOM, or JCOPE 
+  INIyear  = 2013   ! Initial year
+  INImonth = 4      ! Initial month
+  INIday   = 2      ! Initial day
+  INIhour  = 0      ! Initial hour
 /
 
 &hcoord
-
   spherical  = 1   
 /
 
@@ -93,25 +80,18 @@
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "M:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "M:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
-  
+  JRA55_dir  =  "W:/JRA-55/" 
   FRC_prefix  = "Yaeyama1_frc_JRA55"
 /
 
 &frc_dsjra55
-  GRIB_FCST_SURF_dir  =  "M:/Data/dsjra55/Hist/Daily/fcst_surf/199609/"
-  GRIB_FCST_PHY2M_dir =  "M:/Data/dsjra55/Hist/Daily/fcst_phy2m/199609/"
-  GRIB_LL = "M:/Data/dsjra55/Consts/Lambert5km_latlon.dat"
-  
+  DSJRA55_dir = "E:/Data/dsjra55/"  
   FRC_prefix  = "Yaeyama1_frc_DSJRA55"
 /
 
 &frc_jmamsm
-!  MSM_SURF_dir  =  "http://opendap.rish.kyoto-u.ac.jp/opendap/hyrax/jmadata/gpv/netcdf/MSM-S/"
-!  MSM_R1H_dir =  "http://opendap.rish.kyoto-u.ac.jp/opendap/hyrax/jmadata/gpv/netcdf/MSM-S/r1h/"
-  MSM_SURF_dir  =  "M:/Data/JMA-MSM/MSM-S/"
-  MSM_R1H_dir =  "M:/Data/JMA-MSM/MSM-S/r1h/"
-  
-  FRC_prefix  = "Yaeyama1_frc_JMAMSM"
+  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  FRC_prefix  = "Yaeyama1_frc_MSMgb"
+!  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+!  FRC_prefix  = "TokyoBay3_frc_MSMnc"
 /

@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2020-2021 Takashi NAKAMURA  =====
 
 PROGRAM frcJMAobs2ROMS
   use netcdf
@@ -211,7 +211,7 @@ PROGRAM frcJMAobs2ROMS
         allocate( cdata(9) )
         allocate( rdata(1:1+nnc,data_num) )
 
-        open(51, file = ANGLE_DIR//'/angle.csv' )
+        open(51, file = ANGLE_DIR//'/wind_angle.csv' )
         do i=1,16
           read(51,*) cangle(i), rangle(i)
 !          write(*,*) cangle(i), rangle(i)
