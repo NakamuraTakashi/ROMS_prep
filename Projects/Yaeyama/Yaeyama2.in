@@ -14,21 +14,18 @@
 /
 
 &sdate
-
   Syear  = 2019   ! Starting year
   Smonth = 10     ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-
   Eyear  = 2019   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 11     ! Ending month
   Eday   = 1      ! Ending day
 /
 
 &refdate
-
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day

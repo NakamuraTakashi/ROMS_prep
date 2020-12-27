@@ -100,8 +100,10 @@ PROGRAM frcJMAobs2ROMS
   namelist/frc_jmaobs/LW_prefix, LW_suffix
   namelist/frc_jmaobs/FRC_prefix
   ! Read parameters in namelist file
-  read (*, nml=refdate)
-  read (*, nml=frc_jmaobs)
+  read (5, nml=refdate)
+  rewind(5)
+  read (5, nml=frc_jmaobs)
+  rewind(5)
 
 !---- Modify time-unit description for NetCDF output ---------------------------------
       

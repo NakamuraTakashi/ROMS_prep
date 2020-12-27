@@ -29,3 +29,4 @@ export OMP_NUM_THREADS=12
 rm *.mod
 
 ./frcATM2ROMS.exe < RedSea1.in
+#./frcATM2ROMS.exe < RedSea2.in

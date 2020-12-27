@@ -3,23 +3,23 @@
   GRID_FILE = "Fukido2_20m_grd_v2.0.nc"
 /
 
-&bath
+&gebco
 ! GEBCO bathymetry NetCDF file     
-!  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2014_2D/GEBCO_2014_2D.nc"
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
+/
 
-! Set lat, lon at specific station. !!!**Not used for grid refinment
-  s_lat = 6.11666666666666
-  e_lat = 9.05
-  s_lon = 133.283333333333
-  e_lon = 135.383333333333
+&bath_smooth
+  rx0max = 0.3  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
 
-! Set ROMS grid resolution
-!  RESOLUTION = 24.0d0 ! 1/24 degree resolution
-  RESOLUTION = 60.0d0 ! 1/12*1/5 degree resolution
+&land_mask
 
   hmin = -5.0d0  ! Minimum depth
-  rx0max = 0.3  ! Smoothing parameter
+
+! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+! and one-grid bay grids 
+  I_ocn = 50    ! rho point index i
+  J_ocn = 50    ! rho point index j
 /
 
 &refinement
@@ -32,60 +32,26 @@
   refine_factor = 5
 /
 
-&range
-! -------------------------------------------------------------------------
-! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
-!
-!                 ______ (Rlon,Tlat)
-!                |      |
-!                |      |
-!                |______|
-!     (Llon,Blat)                     
-!
-! On Input:
-!
-!    Llon         Box left-edge   longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
-!    Rlon         Box right-edge  longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
-!    Blat         Box bottom-edge latitude  (degress, -80 to 80 )
-!    Tlat         Box top-edge    latitude  (degress, -80 to 80 )
-!
-! Geographical and Grid parameters --------
-!
-  Llon =  85.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-  Rlon = 170.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
-  Blat = -20.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
-  Tlat =  35.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+&fine2coarse
+  F2C_OUT_FILE = "Fukido_100mgrd_Aizawa_v2.0.nc"
 /
 
 &sdate
-
   Syear  = 2015   ! Starting year
   Smonth = 7      ! Starting month
   Sday   = 13      ! Starting day
 /
 
 &edate
-
   Eyear  = 2015   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 8      ! Ending month
   Eday   = 3      ! Ending day
 /
 
 &refdate
-
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day
-/
-
-&intpmode
-
-  mode = 1        ! mode=1, linear interpolation
-/
-
-&hycom      
-! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "D:/ROMS/Data/Coral_Triangle/HYCOM_extracted_data/CT_HYCOM_extracted"
 /
 
 &roms2roms      
@@ -97,14 +63,17 @@
 !
 ! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
 ! 8: mud_, 9: sand_,
-! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
-! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
-! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
-! 26: TI13C, 27: DO13C, 28: PO13C, 
-! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC_, 14: POC_, 
+! 15: phytoplankton_, 16: zooplankton_, 17: PIC_ 
+! 18: NO3, 19: NH4, 20: PO4, 21: DON_, 22: PON_, 23: DOP_, 24: POP_, 
+! 25: TI13C, 26: DO13C_, 27: PO13C_, 
+! 28: phyt13C_, 29: zoop13C_, 30: PI13C_
+! 31: 15NO3, 32: 15NH4, 33: DO15N_, 34: PO15N_
+! 35: phyt15N_, 36: zoop15N_
 !    
-!           1       5        10        15        20        25        30
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+!           1       5        10        15        20        25        30        35  
+!           |       |         |         |         |         |         |         |  
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &bry
@@ -115,7 +84,18 @@
 
 &ini
   INI_prefix  = "Fukido2_20m_ini_Nz8"
-  itime = 25       ! Frame number of HYCOME/ROMS file
+
+! for ROMS: please choose frame number (itime) or
+!           Specific date & time (INIyera, INImonth, INIday, INIhour)
+  itime = 0       ! Frame number of ROMS file 
+                  ! if itime <= 0, time index will be sought from 
+                  ! the following Specific date & time
+
+! for ROMS, HYCOM, or JCOPE 
+  INIyear  = 2015   ! Initial year
+  INImonth = 7      ! Initial month
+  INIday   = 20     ! Initial day
+  INIhour  = 0      ! Initial hour
 /
 
 &hcoord
@@ -137,20 +117,45 @@
   THETA_B = 1.0d0      ! bottom  stretching parameter
   TCLINE  = 30.0d0    ! critical depth (m)
   DCRIT   = 0.10d0     ! critical depth (m) for wetting and trying
-
 /
 
 &frc_jra55
-  GRIB_FCST_SURF_dir  =  "O:/Data/JRA-55/Hist/Daily/fcst_surf125/201704/"
-  GRIB_FCST_PHY2M_dir =  "O:/Data/JRA-55/Hist/Daily/fcst_phy2m125/201704/"
-  
-  FRC_prefix  = "Busuanga1_frc_JRA55"
+  JRA55_dir  =  "W:/JRA-55/"  
+  FRC_prefix  = "Fukido2_frc_JRA55"
 /
 
 &frc_dsjra55
-  GRIB_FCST_SURF_dir  =  "O:/Data/DSJRA-55/Hist/Daily/fcst_surf/199609/"
-  GRIB_FCST_PHY2M_dir =  "O:/Data/DSJRA-55/Hist/Daily/fcst_phy2m/199609/"
-  GRIB_LL = "O:/Data/DSJRA-55/Consts/Lambert5km_latlon.dat"
-  
-  FRC_prefix  = "Busuanga1_frc_DSJRA55"
+  DSJRA55_dir = "E:/Data/dsjra55/"  
+  FRC_prefix  = "Fukido2_frc_DSJRA55"
+/
+
+&frc_jmamsm
+  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  FRC_prefix  = "Fukido2_frc_MSMgb"
+!  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+!  FRC_prefix  = "Fukido2_frc_MSMnc"
+/
+
+&frc_jmaobs
+
+! switches (1/0) for activate/deactivate the variables
+! 1: Pressure, 2: Wind, 3: Air temperature, 4: Humidity, 5: Cloud fraction
+! 6: Precipitation, 7: Short-wave radiation, 8: Down-ward long-wave radiation
+!           1       5      
+  airvar =  1,1,1,1,1,1,1,1
+! airvar =  0,0,0,0,0,0,0,1
+
+  Pair_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/Pair2020.csv'   ! JMA Pressure data CSV file
+  wind_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/wind2020.csv'   ! JMA Wind data CSV file
+  Tair_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/Tair2020.csv'   ! JMA Air temperature data CSV file
+  Qair_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/Qair2020.csv'   ! JMA Humidity data CSV file
+  cloud_NAME = 'E:/JMA_DATA/Weather_Station/Ishigaki/cloud2020.csv'  ! JMA Cloud fraction data CSV file
+  rain_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/rain2020.csv'   ! JMA Precipitation data CSV file
+  swrad_NAME = 'E:/JMA_DATA/Weather_Station/Ishigaki/swrad2020.csv'  ! JMA Short-wave radiation data CSV file
+
+  LW_prefix  = 'E:/JMA_DATA/Weather_Station/Ishigaki/lwrad_data/DL2020'   ! JMA long-wave radiation data TXT file
+  LW_suffix  = '_ish.txt'          ! JMA long-wave radiation data TXT file
+
+  FRC_prefix  = "Ishigaki_frc_JMAobs_2020"
+!  FRC_prefix  = "Ishigaki_frc_JMAobs_2019_UTCp9"
 /

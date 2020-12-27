@@ -5,7 +5,7 @@
 
 &gebeco
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
 /
 
 &bath_smooth
@@ -54,14 +54,9 @@
   Rday   = 1      ! Reference day
 /
 
-&hycom      
-! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "TokyoBay_HYCOM_extracted"
-/
-
 &roms2roms      
 ! ROMS coraes NetCDF histry file name
-  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+  ROMS_HISFILE  = "ocean_his.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -84,7 +79,7 @@
 /
 
 &ini
-  INI_prefix  = "TokyoBay2_ini_JCOPE-T_Nz30"
+  INI_prefix  = "TokyoBay2_ini_JCOPET_Nz30"
   itime = 9       ! Frame number of HYCOME/ROMS file
 /
 
@@ -110,7 +105,7 @@
 /
 
 &frc_jra55
-  JRA55_dir  =  "M:/Data/JRA-55/" 
+  JRA55_dir  =  "W:/JRA-55/" 
   FRC_prefix  = "TokyoBay2_frc_JRA55"
 /
 

@@ -10,7 +10,6 @@
 
 &grd_setting_ll
 ! Set lat, lon at specific station. 
-! *The information is not used when GRID_REFINEMENT is activated.
   s_lat = 8.895d0   !  8.89523301776748
   e_lat = 31.027d0    ! 31.0271833744719
   s_lon = 43.404d0  ! 43.4048446504213
@@ -38,62 +37,53 @@
 /
 
 &sdate
-
-  Syear  = 2017   ! Starting year
+  Syear  = 2018   ! Starting year
   Smonth = 7      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2018   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 8      ! Ending month
   Eday   = 1      ! Ending day
 /
 
 &refdate
-
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day
 /
 
-&roms2roms      
-! ROMS coraes NetCDF histry file name
-  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
-
+&ocn2roms      
 ! switches (1/0) for activate/deactivate the variables
 !
-! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
-! 8: mud_, 9: sand_,
-! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
-! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
-! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
-! 26: TI13C, 27: DO13C, 28: PO13C, 
-! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
-!    
-!           1       5        10        15        20        25        30
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+!           |       |   |
+  romsvar = 1,1,1,1,1,1,1        
 /
 
 &bry
-  BRY_prefix  = "RedSea1_bry_HYCOM_Nz30"
+  BRY_prefix  = "RedSea1_bry_ROMS_Nz30"
   !    south north west east
-  SNWE =  1,   1,   1,   1
+  SNWE =  0,   0,   0,   1
 /
 
 &ini
-  INI_prefix  = "RedSea1_ini_HYCOMwNAO_Nz30"
+  INI_prefix  = "RedSea1_ini_ROMS_Nz30"
+
 ! for ROMS: please choose frame number (itime) or
-!           Specific date (INIyera, INImonth, INIday)
-  itime = 9       ! Frame number of ROMS file
+!           Specific date & time (INIyera, INImonth, INIday, INIhour)
+  itime = 0       ! Frame number of ROMS file 
+                  ! if itime <= 0, time index will be sought from 
+                  ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2017   ! Initial year
+  INIyear  = 2018   ! Initial year
   INImonth = 7      ! Initial month
   INIday   = 2      ! Initial day
   INIhour  = 0      ! Initial hour
-
 /
 
 &hcoord
@@ -115,10 +105,9 @@
   THETA_B = 0.1d0      ! bottom  stretching parameter
   TCLINE  = 200.0d0    ! critical depth (m)
   DCRIT   = 0.10d0     ! critical depth (m)
-
 /
 
 &frc_jra55
-  JRA55_dir  =  "M:/Data/JRA-55/"
+  JRA55_dir  =  "W:/JRA-55/"
   FRC_prefix  = "RedSea1_frc_JRA55"
 /

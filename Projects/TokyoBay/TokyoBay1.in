@@ -5,7 +5,7 @@
 
 &gebco
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
 /
 
 &grd_setting_ll
@@ -18,8 +18,7 @@
 
 ! Set ROMS grid resolution
 ! *The information is not used when GRID_REFINEMENT is activated.
-!  RESOLUTION = 24.0d0 ! 1/24 degree resolution
-  RESOLUTION = 36.0d0 ! 1/60 degree resolution
+  RESOLUTION = 36.0d0 ! 1/36 degree resolution
 
   angle = 0.0d0   ! Angle (radians) between XI-axis and true EAST at RHO-points
 /
@@ -29,7 +28,6 @@
 /
 
 &land_mask
-
   hmin = 1.0d0  ! Minimum depth
 
  ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
@@ -112,7 +110,7 @@
 /
 
 &frc_jra55
-  JRA55_dir  =  "E:/Data/JRA-55/" 
+  JRA55_dir  =  "W:/JRA-55/" 
   FRC_prefix  = "TokyoBay1_frc_JRA55"
 /
 

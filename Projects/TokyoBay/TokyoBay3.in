@@ -6,7 +6,7 @@
 
 &gebco
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2019/GEBCO_2019.nc"
+  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
 /
 
 &bath_smooth
@@ -21,7 +21,6 @@
 ! and one-grid bay grids 
   I_ocn = 50    ! rho point index i
   J_ocn = 50    ! rho point index j
-
 /
 
 &refinement
@@ -39,59 +38,74 @@
 /
 
 &sdate
-
   Syear  = 2014   ! Starting year
   Smonth = 7      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-
   Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 8      ! Ending month
   Eday   = 1      ! Ending day
 /
 
 &refdate
-
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day
 /
 
-&hycom      
-! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "TokyoBay_HYCOM_extracted"
-/
-
 &roms2roms      
 ! ROMS coraes NetCDF histry file name
-  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
+  ROMS_HISFILE  = "ocean_his.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
 ! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
 ! 8: mud_, 9: sand_,
-! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
-! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
-! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
-! 26: TI13C, 27: DO13C, 28: PO13C, 
-! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC_, 14: POC_, 
+! 15: phytoplankton_, 16: zooplankton_, 17: PIC_ 
+! 18: NO3, 19: NH4, 20: PO4, 21: DON_, 22: PON_, 23: DOP_, 24: POP_, 
+! 25: TI13C, 26: DO13C_, 27: PO13C_, 
+! 28: phyt13C_, 29: zoop13C_, 30: PI13C_
+! 31: 15NO3, 32: 15NH4, 33: DO15N_, 34: PO15N_
+! 35: phyt15N_, 36: zoop15N_
 !    
-!           1       5        10        15        20        25        30
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+!           1       5        10        15        20        25        30        35  
+!           |       |         |         |         |         |         |         |  
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+/
+
+&ocn2roms      
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+!           |       |   |
+  romsvar = 1,1,1,1,1,1,1        
 /
 
 &bry
-  BRY_prefix  = "CT_0.08_bry_HYCOM_Nz30"
+  BRY_prefix  = "TokyoBay3_bry_ROMS_Nz30"
   !    south north west east
-  SNWE =  1,   1,   1,   1
+  SNWE =  1,   0,   0,   0
 /
 
 &ini
-  INI_prefix  = "CT_0.08_ini_HYCOMwNAO_Nz30"
-!  INI_prefix  = "CT_0.08_ini_HYCOM_Nz30"
-  itime = 9       ! Frame number of HYCOME/ROMS file
+  INI_prefix  = "TokyoBay3_ini_ROMS_Nz30"
+
+! for ROMS: please choose frame number (itime) or
+!           Specific date & time (INIyera, INImonth, INIday, INIhour)
+  itime = 0       ! Frame number of ROMS file 
+                  ! if itime <= 0, time index will be sought from 
+                  ! the following Specific date & time
+
+! for ROMS, HYCOM, or JCOPE 
+  INIyear  = 2014   ! Initial year
+  INImonth = 8      ! Initial month
+  INIday   = 3      ! Initial day
+  INIhour  = 0      ! Initial hour
 /
 
 &hcoord
@@ -117,7 +131,7 @@
 /
 
 &frc_jra55
-  JRA55_dir  =  "M:/Data/JRA-55/" 
+  JRA55_dir  =  "W:/JRA-55/"
   FRC_prefix  = "TokyoBay3_frc_JRA55"
 /
 

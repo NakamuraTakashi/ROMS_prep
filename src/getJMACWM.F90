@@ -76,10 +76,14 @@ PROGRAM getJMACWM
   namelist/wave_cwm/SWAN_prefix
 
 !  read (*, nml=grd)
-  read (*, nml=sdate)
-  read (*, nml=edate)
-  read (*, nml=refdate)
-  read (*, nml=wave_cwm)
+  read (5, nml=sdate)
+  rewind(5)
+  read (5, nml=edate)
+  rewind(5)
+  read (5, nml=refdate)
+  rewind(5)
+  read (5, nml=wave_cwm)
+  rewind(5)
 
 !---- Read JMA CWM GRIB2 file --------------------------------
 

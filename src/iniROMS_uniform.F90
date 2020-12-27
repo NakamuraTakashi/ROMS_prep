@@ -14,6 +14,7 @@ PROGRAM iniROMS_uniform
   integer :: Syear, Smonth, Sday
   integer :: Ryear, Rmonth, Rday
   integer :: itime
+  integer :: INIyear, INImonth, INIday, INIhour
   integer :: mode
   character(256) :: GRID_FILE
   character(256) :: ROMS_HISFILE
@@ -73,6 +74,7 @@ PROGRAM iniROMS_uniform
   namelist/roms2roms/ROMS_HISFILE, romsvar
   namelist/ini/INI_prefix
   namelist/ini/itime
+  namelist/ini/INIyear, INImonth, INIday, INIhour
   namelist/hcoord/spherical
   namelist/zcoord/N_s_rho
   namelist/zcoord/Vtransform, Vstretching
@@ -80,12 +82,18 @@ PROGRAM iniROMS_uniform
 
   ! Read parameters in namelist file
   
-  read (*, nml=grd)
-  read (*, nml=refdate)
-  read (*, nml=roms2roms)
-  read (*, nml=ini)
-  read (*, nml=hcoord)
-  read (*, nml=zcoord)
+  read (5, nml=grd)
+  rewind(5)
+  read (5, nml=refdate)
+  rewind(5)
+  read (5, nml=roms2roms)
+  rewind(5)
+  read (5, nml=ini)
+  rewind(5)
+  read (5, nml=hcoord)
+  rewind(5)
+  read (5, nml=zcoord)
+  rewind(5)
            
 !-Modify time-unit description ---------------------------------
   
