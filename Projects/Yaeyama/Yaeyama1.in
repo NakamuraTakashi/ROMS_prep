@@ -4,26 +4,22 @@
 /
 
 &sdate
-
-  Syear  = 2017   ! Starting year
-  Smonth = 6      ! Starting month
-  Sday   = 2      ! Starting day
+  Syear  = 2020   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 3      ! Starting day
 /
 
 &edate
-
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 6      ! Ending month
-  Eday   = 3      ! Ending day
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 6      ! Ending day
 /
 
 &refdate
-
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day
 /
-
 
 &ocn2roms      
 ! switches (1/0) for activate/deactivate the variables
@@ -34,14 +30,28 @@
   romsvar = 1,1,1,1,1,1,1        
 /
 
+&jcope
+! JCOPE-T
+  JCOPE_info_dir  =  "E:/JCOPE_DATA/JCOPE-T/yaeyama/2020/"
+  JCOPE_data_dir  =  "E:/JCOPE_DATA/JCOPE-T/yaeyama/202001/"
+! JCOPE-2M
+!  JCOPE_info_dir  =  "E:/JCOPE_DATA/JCOPE-2M/yaeyama/"
+!  JCOPE_data_dir  =  "E:/JCOPE_DATA/JCOPE-2M/yaeyama/"
+
+/
+
 &bry
   BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
+!  BRY_prefix  = "Yaeyama1_bry_JCOPET_Nz15"
+!  BRY_prefix  = "Yaeyama1_bry_JCOPE2M_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
   INI_prefix  = "Yaeyama1_ini_HYCOMwNAO_Nz15"
+!  INI_prefix  = "Yaeyama1_ini_JCOPET_Nz15"
+!  INI_prefix  = "Yaeyama1_ini_JCOPE2MwNAO_Nz15"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -50,9 +60,9 @@
                   ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2013   ! Initial year
-  INImonth = 4      ! Initial month
-  INIday   = 2      ! Initial day
+  INIyear  = 2020   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 3      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -61,7 +71,6 @@
 /
 
 &zcoord
-
   N_s_rho = 15
 
 ! Set vertical, terrain-following coordinates transformation equation and
@@ -76,7 +85,6 @@
   THETA_B = 0.1d0      ! bottom  stretching parameter
   TCLINE  = 200.0d0    ! critical depth (m)
   DCRIT   = 0.10d0     ! critical depth (m)
-
 /
 
 &frc_jra55

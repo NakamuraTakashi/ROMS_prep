@@ -14,6 +14,9 @@ PROGRAM iniOCN2ROMS
   use mod_roms_netcdf
   use mod_calendar
   use mod_interpolation
+#if defined JCOPE_MODEL
+  use mod_jcope
+#endif
  
   implicit none
       
@@ -98,6 +101,7 @@ PROGRAM iniOCN2ROMS
   real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: umask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: vmask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: pmask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: latr_dg(:,:)
   real(8), allocatable :: lonr_dg(:,:)
   real(8), allocatable :: latu_dg(:,:)
@@ -157,7 +161,10 @@ PROGRAM iniOCN2ROMS
   character(4) :: YYYY
   character(2) :: MM
   character(2) :: DD
+  character(2) :: hh
   character(11) :: YYYYMMDDpHH
+  character(12) :: YYYYMMDDhhmm
+  character(8) :: YYYYMMDD
   
   integer :: Nxr, Nyr, Nxu, Nyu, Nxv, Nyv
   integer :: L, M, N
@@ -178,7 +185,7 @@ PROGRAM iniOCN2ROMS
 
   character(256) :: varname
   character(2) :: varnum
-  integer :: status
+  integer :: status, access
 
 #if defined HYCOM_MODEL
 
@@ -196,6 +203,15 @@ PROGRAM iniOCN2ROMS
   integer :: iNC
   integer :: jdate_20000101
   real(8) :: d_jdate_20000101
+#endif
+
+#if defined JCOPE_MODEL
+  character(256) :: JCOPE_info_dir, JCOPE_data_dir
+  character(256) :: JCOPE_data_file
+  real(8), allocatable :: jcope_data(:,:,:)
+  real(8), allocatable :: z(:,:,:), zz(:,:,:), dz(:,:,:)
+  real(8), allocatable :: lat(:), lon(:)
+  character(20) :: JCOPE_sufix
 #endif
 
 #if defined NAOTIDE || defined NAOTIDEJ
@@ -228,6 +244,9 @@ PROGRAM iniOCN2ROMS
 #else
   namelist/ocn2roms/romsvar
 #endif
+#if defined JCOPE_MODEL
+  namelist/jcope/JCOPE_info_dir, JCOPE_data_dir
+#endif
   namelist/refdate/Ryear, Rmonth, Rday
   namelist/ini/INI_prefix
   namelist/ini/itime
@@ -248,6 +267,10 @@ PROGRAM iniOCN2ROMS
   rewind(5)
 #else
   read (5, nml=ocn2roms)
+  rewind(5)
+#endif
+#if defined JCOPE_MODEL
+  read (5, nml=jcope)
   rewind(5)
 #endif
   read (5, nml=refdate)
@@ -777,10 +800,117 @@ PROGRAM iniOCN2ROMS
 #elif defined JCOPE_MODEL
   write(*,*) "************ JCOPE MODEL ************"
 
+  write(*,*) "Read domain description file: "
+
+  call read_jcope_info( JCOPE_info_dir, Nxr_dg, Nyr_dg, Nzr_dg )
+
+  allocate( lon( Nxr_dg ) )
+  allocate( lat( Nyr_dg ) )
+  allocate( z( Nxr_dg, Nyr_dg, Nzr_dg ) )
+  allocate( zz( Nxr_dg, Nyr_dg, Nzr_dg ) )
+  allocate( dz( Nxr_dg, Nyr_dg, Nzr_dg ) )
+
+  Nxu_dg = Nxr_dg-1
+  Nyu_dg = Nyr_dg
+  Nxv_dg = Nxr_dg
+  Nyv_dg = Nyr_dg-1
+  Ldg = Nxr_dg-1
+  Mdg = Nyr_dg-1
+  Ndg = Nzr_dg-1
+       
+  allocate( latr_dg(0:Ldg, 0:Mdg) )
+  allocate( lonr_dg(0:Ldg, 0:Mdg) )
+  allocate( latu_dg(1:Ldg, 0:Mdg) )
+  allocate( lonu_dg(1:Ldg, 0:Mdg) )
+  allocate( latv_dg(0:Ldg, 1:Mdg) )
+  allocate( lonv_dg(0:Ldg, 1:Mdg) )
+  allocate( rmask_dg(0:Ldg, 0:Mdg) )
+  allocate( umask_dg(1:Ldg, 0:Mdg) )
+  allocate( vmask_dg(0:Ldg, 1:Mdg) )
+  allocate( pmask_dg(1:Ldg, 1:Mdg) )
+  allocate( cosAu_dg(1:Ldg, 0:Mdg) )
+  allocate( sinAu_dg(1:Ldg, 0:Mdg) )
+  allocate( cosAv_dg(0:Ldg, 1:Mdg) )
+  allocate( sinAv_dg(0:Ldg, 1:Mdg) )
+  allocate( h_dg(0:Ldg, 0:Mdg) )
+  allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+!  allocate( z_w_dg(0:Ldg, 0:Mdg, 0:Ndg ) )
+  allocate( z_u_dg(1:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_v_dg(0:Ldg, 1:Mdg, 1:Ndg ) )
+
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 1, lon, lat )
+
+  do i=0,Ldg
+    do j=0,Mdg
+      latr_dg(i,j) = lat(j+1)
+      lonr_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonr_dg range : ", lonr_dg(0,0), lonr_dg(Ldg,Mdg)
+  write(*, *) " latr_dg range : ", latr_dg(0,0), latr_dg(Ldg,Mdg)
+  
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 2, lon, lat )
+
+  do i=1,Ldg
+    do j=0,Mdg
+      latu_dg(i,j) = lat(j+1)
+      lonu_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonu_dg range : ", lonu_dg(1,0), lonu_dg(Ldg,Mdg)
+  write(*, *) " latu_dg range : ", latu_dg(1,0), latu_dg(Ldg,Mdg)
+
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 3, lon, lat )
+
+  do i=0,Ldg
+    do j=1,Mdg
+      latv_dg(i,j) = lat(j+1)
+      lonv_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonv_dg range : ", lonv_dg(0,1), lonv_dg(Ldg,Mdg)
+  write(*, *) " latv_dg range : ", latv_dg(0,1), latv_dg(Ldg,Mdg)
+
+  call read_jcope_depth( JCOPE_info_dir, Nxr_dg, Nyr_dg, Nzr_dg, z, zz, dz )
+
+  do k=1,Ndg
+    z_r_dg(0:Ldg, 0:Mdg, k ) = -zz(1:Nxr_dg, 1:Nyr_dg, Nzr_dg-k )
+  enddo
+  h_dg(0:Ldg, 0:Mdg) = -z(1:Nxr_dg, 1:Nyr_dg, Nzr_dg )
+
+  do i=1,Ldg
+    do j=0,Mdg
+      do k=1,Ndg
+        z_u_dg(i,j,k)= (z_r_dg(i-1,j,k)+z_r_dg(i,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+  do i=0,Ldg
+    do j=1,Mdg
+      do k=1,Ndg
+        z_v_dg(i,j,k)= (z_r_dg(i,j-1,k)+z_r_dg(i,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+
+! Land masking
+  rmask_dg(:,:) = 1.0d0
+  do i=0,Ldg
+    do j=0,Mdg
+      if( h_dg(i,j) < 1.001d0 ) then  !! Land: Depth < 1.0 m grids
+        rmask_dg(i,j) = 0.0d0
+      endif
+    enddo
+  enddo
+
+  call uvp_masks( Nxr_dg, Nyr_dg, rmask_dg, umask_dg, vmask_dg, pmask_dg )
 
 
+  cosAu_dg(:,:) = 1.0d0
+  sinAu_dg(:,:) = 0.0d0
 
-
+  cosAv_dg(:,:) = 1.0d0
+  sinAv_dg(:,:) = 0.0d0  
 
 #else
   write(*,*) "************ Please choose a OCEAN MODEL ************"
@@ -838,14 +968,14 @@ PROGRAM iniOCN2ROMS
   allocate( zeta_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1) )
   allocate( ubar_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
   allocate( vbar_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
-  allocate( u_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
-  allocate( v_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
-  allocate( ull_dg (Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
-  allocate( ullu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
-  allocate( vllu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
-  allocate( vll_dg (Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
-  allocate( vllv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
-  allocate( ullv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
+  allocate( u_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+  allocate( v_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+  allocate( ull_dg (Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+  allocate( ullu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+  allocate( vllu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+  allocate( vll_dg (Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+  allocate( vllv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+  allocate( ullv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
   allocate( t_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Nzr_dg, 1) )
 #if defined WET_DRY
   allocate( rmask_wet_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1) )
@@ -898,7 +1028,7 @@ PROGRAM iniOCN2ROMS
         , ID_cnt2Dv, w_cnt2Dv )
 
   write(*,*) "Calculate 3D rho point weight factor"
-  call weight3D_grid3_2(                                      &
+  call weight3D_grid3_2(                                    &
           Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg    &
         , z_r_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max,1:Ndg) &
         , 0, L,   0, M,   1, N,   z_r                       &
@@ -906,7 +1036,7 @@ PROGRAM iniOCN2ROMS
         , ID_cnt3Dr, w_cnt3Dr )
 
   write(*,*) "Calculate 3D u point weight factor"
-  call weight3D_grid3_2(                                      &
+  call weight3D_grid3_2(                                    &
           Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg    &
         , z_u_dg(Iudg_min:Iudg_max,Judg_min:Judg_max,1:Ndg) &
         , 1, L,   0, M,   1, N,   z_u                       &
@@ -914,7 +1044,7 @@ PROGRAM iniOCN2ROMS
         , ID_cnt3Du, w_cnt3Du )
 
   write(*,*) "Calculate 3D v point weight factor"
-  call weight3D_grid3_2(                                      &
+  call weight3D_grid3_2(                                    &
           Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg    &
         , z_v_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max,1:Ndg) &
         , 0, L,   1, M,   1, N,   z_v                       &
@@ -946,20 +1076,46 @@ PROGRAM iniOCN2ROMS
 
 # elif defined JCOPE_MODEL
 
+  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  d_jdate_Ref = dble(jdate_Ref)
+  call jd(INIyear, INImonth, INIday, jdate_Start)
+  d_jdate_Start = dble(jdate_Start) + dble(INIhour)/24.0d0    ! day
+
+  ocean_time(1) =( d_jdate_Start - d_jdate_Ref )*86400.0d0  ! sec
+
+!---- Preparation for bin file name string --------------------------------
+
+  write (YYYY, "(I4.4)") INIyear
+  write (MM, "(I2.2)") INImonth
+  write (DD, "(I2.2)") INIday
+  write (hh, "(I2.2)") INIhour
+#  if defined JCOPE_T
+  JCOPE_sufix = YYYY//MM//DD//hh//"00.bin"
+#  else
+  JCOPE_sufix = YYYY//MM//DD
+#  endif
+! Check data file existance
+  JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix )
+  status = access( trim( JCOPE_data_file ), ' ' )
+  if ( status /= 0 ) then
+    write(*,*) status, 'File not found: ', trim( JCOPE_data_file )
+    write(*,*) '*** Please set different initial year/month/day/hour'
+    stop
+  endif
 
 # endif
+
   call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
-!  write (YYYY, "(I4.4)") INIyear
-!  write (MM, "(I2.2)") INImonth
-!  write (DD, "(I2.2)") INIday
-!  YYYYMMDDpHH = YYYY//MM//DD//".00"
 
   INI_suffix(2:12)=YYYYMMDDpHH
   INI_FILE = trim( INI_prefix )//INI_suffix
 
-  !---- Create the ROMS initial conditions netCDF file --------------------------------
+!---- Create the ROMS initial conditions netCDF file --------------------------------
           
   call createNetCDFini(  trim( INI_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
+
+
+
 #endif
 
 !-Write ROMS initial conditions netCDF file --------------------------------
@@ -1015,8 +1171,10 @@ PROGRAM iniOCN2ROMS
 !    call readNetCDF_3d_hycom( ncid, 'surf_el'      &
 !                      , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
 #elif defined JCOPE_MODEL
-
-
+    JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix )
+    write(*,*) 'Read: ', trim( JCOPE_data_file )
+    call read_jcope_data2D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+          , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg )
 #endif
 
     write(*,*) 'Linear Interporation: zeta'
@@ -1081,8 +1239,10 @@ PROGRAM iniOCN2ROMS
     call readNetCDF_4d_hycom( ncid, 'water_u'     &
           , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
 #elif defined JCOPE_MODEL
-
-
+    JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( JCOPE_sufix )
+    write(*,*) 'Read: ', trim( JCOPE_data_file )
+    call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+          , Iudg_min, Iudg_max, Judg_min, Judg_max, u_dg(:,:,:,1) )
 #endif
 
 #if defined WET_DRY
@@ -1113,8 +1273,10 @@ PROGRAM iniOCN2ROMS
     call readNetCDF_4d_hycom( ncid, 'water_v'     &
           , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
 #elif defined JCOPE_MODEL
-
-
+    JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( JCOPE_sufix )
+    write(*,*) 'Read: ', trim( JCOPE_data_file )
+    call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+          , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, v_dg(:,:,:,1) )
 #endif
 
 #if defined WET_DRY
@@ -1328,8 +1490,17 @@ PROGRAM iniOCN2ROMS
           , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 
 #elif defined JCOPE_MODEL
-
-
+    JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(i) )//trim( JCOPE_sufix )
+    write(*,*) 'Read: ', trim( JCOPE_data_file )
+    call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+          , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, t_dg(:,:,:,1) )
+# if !defined JCOPE_T
+    if( i == 6 ) then
+      t_dg(:,:,:,1) = t_dg(:,:,:,1) + 10.0d0
+    elseif( i == 7 ) then
+      t_dg(:,:,:,1) = t_dg(:,:,:,1) + 35.0d0
+    endif
+# endif
 #endif
 
     write(*,*) 'Linear Interporation: ', trim( varname )
@@ -1350,7 +1521,9 @@ PROGRAM iniOCN2ROMS
   
   enddo
 
+#if defined ROMS_MODEL
   call check( nf90_close(ncid) )
+#endif
 !  call check( nf90_close(ncid2) )
 
   write(*,*) 'FINISH!!'

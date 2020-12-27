@@ -14,21 +14,18 @@
 /
 
 &sdate
-
   Syear  = 2014   ! Starting year
   Smonth = 8      ! Starting month
   Sday   = 3      ! Starting day
 /
 
 &edate
-
   Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 8      ! Ending month
   Eday   = 4      ! Ending day
 /
 
 &refdate
-
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day

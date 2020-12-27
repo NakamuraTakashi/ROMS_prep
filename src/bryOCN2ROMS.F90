@@ -7,7 +7,10 @@ PROGRAM bryOCN2ROMS
   use mod_roms_netcdf
   use mod_calendar
   use mod_interpolation
- 
+#if defined JCOPE_MODEL
+  use mod_jcope
+#endif
+
   implicit none
       
 ! ---------------------------------------------------------------------
@@ -106,6 +109,7 @@ PROGRAM bryOCN2ROMS
   real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: umask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: vmask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: pmask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: latr_dg(:,:)
   real(8), allocatable :: lonr_dg(:,:)
   real(8), allocatable :: latu_dg(:,:)
@@ -163,7 +167,10 @@ PROGRAM bryOCN2ROMS
   character(4) :: YYYY
   character(2) :: MM
   character(2) :: DD
+  character(2) :: hh
   character(11) :: YYYYMMDDpHH
+  character(12) :: YYYYMMDDhhmm
+  character(8) :: YYYYMMDD
 
   real(8) :: d_jdate
   integer :: N_days
@@ -189,7 +196,7 @@ PROGRAM bryOCN2ROMS
   character(256) :: varname
   character(256) :: bryname
   character(2) :: varnum
-  integer :: status
+  integer :: status, access
 
   !
 #if defined HYCOM_MODEL
@@ -210,6 +217,18 @@ PROGRAM bryOCN2ROMS
   integer :: jdate_20000101
   real(8) :: d_jdate_20000101
 #endif
+#if defined JCOPE_MODEL
+  character(256) :: JCOPE_info_dir, JCOPE_data_dir
+  character(256) :: JCOPE_data_file
+  real(8), allocatable :: jcope_data(:,:,:)
+  real(8), allocatable :: z(:,:,:), zz(:,:,:), dz(:,:,:)
+  real(8), allocatable :: lat(:), lon(:)
+  character(20) :: JCOPE_sufix(10000)
+  character(20) :: JCOPE_sufix_tmp
+  integer :: iyear, imonth, iday
+  integer :: ihour, imin
+  integer :: idays,ihours,ijdate,Sjdate
+#endif
 
   namelist/grd/GRID_FILE
 #if defined ROMS_MODEL
@@ -220,6 +239,9 @@ PROGRAM bryOCN2ROMS
   namelist/roms2roms/ROMS_HISFILE, romsvar
 #else
   namelist/ocn2roms/romsvar  
+#endif
+#if defined JCOPE_MODEL
+  namelist/jcope/JCOPE_info_dir, JCOPE_data_dir
 #endif
   namelist/sdate/Syear, Smonth, Sday
   namelist/edate/Eyear, Emonth, Eday
@@ -241,6 +263,10 @@ PROGRAM bryOCN2ROMS
   rewind(5)
 #else
   read (5, nml=ocn2roms)
+  rewind(5)
+#endif
+#if defined JCOPE_MODEL
+  read (5, nml=jcope)
   rewind(5)
 #endif
   read (*, nml=sdate)
@@ -742,11 +768,171 @@ PROGRAM bryOCN2ROMS
  
 #elif defined JCOPE_MODEL
   write(*,*) "************ JCOPE MODEL ************"
+  write(*,*) "Read domain description file: "
+
+  call read_jcope_info( JCOPE_info_dir, Nxr_dg, Nyr_dg, Nzr_dg )
+
+  allocate( lon( Nxr_dg ) )
+  allocate( lat( Nyr_dg ) )
+  allocate( z( Nxr_dg, Nyr_dg, Nzr_dg ) )
+  allocate( zz( Nxr_dg, Nyr_dg, Nzr_dg ) )
+  allocate( dz( Nxr_dg, Nyr_dg, Nzr_dg ) )
+
+  Nxu_dg = Nxr_dg-1
+  Nyu_dg = Nyr_dg
+  Nxv_dg = Nxr_dg
+  Nyv_dg = Nyr_dg-1
+  Ldg = Nxr_dg-1
+  Mdg = Nyr_dg-1
+  Ndg = Nzr_dg-1
+       
+  allocate( latr_dg(0:Ldg, 0:Mdg) )
+  allocate( lonr_dg(0:Ldg, 0:Mdg) )
+  allocate( latu_dg(1:Ldg, 0:Mdg) )
+  allocate( lonu_dg(1:Ldg, 0:Mdg) )
+  allocate( latv_dg(0:Ldg, 1:Mdg) )
+  allocate( lonv_dg(0:Ldg, 1:Mdg) )
+  allocate( rmask_dg(0:Ldg, 0:Mdg) )
+  allocate( umask_dg(1:Ldg, 0:Mdg) )
+  allocate( vmask_dg(0:Ldg, 1:Mdg) )
+  allocate( pmask_dg(1:Ldg, 1:Mdg) )
+  allocate( cosAu_dg(1:Ldg, 0:Mdg) )
+  allocate( sinAu_dg(1:Ldg, 0:Mdg) )
+  allocate( cosAv_dg(0:Ldg, 1:Mdg) )
+  allocate( sinAv_dg(0:Ldg, 1:Mdg) )
+  allocate( h_dg(0:Ldg, 0:Mdg) )
+  allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+!  allocate( z_w_dg(0:Ldg, 0:Mdg, 0:Ndg ) )
+  allocate( z_u_dg(1:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_v_dg(0:Ldg, 1:Mdg, 1:Ndg ) )
+
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 1, lon, lat )
+
+  do i=0,Ldg
+    do j=0,Mdg
+      latr_dg(i,j) = lat(j+1)
+      lonr_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonr_dg range : ", lonr_dg(0,0), lonr_dg(Ldg,Mdg)
+  write(*, *) " latr_dg range : ", latr_dg(0,0), latr_dg(Ldg,Mdg)
+  
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 2, lon, lat )
+
+  do i=1,Ldg
+    do j=0,Mdg
+      latu_dg(i,j) = lat(j+1)
+      lonu_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonu_dg range : ", lonu_dg(1,0), lonu_dg(Ldg,Mdg)
+  write(*, *) " latu_dg range : ", latu_dg(1,0), latu_dg(Ldg,Mdg)
+
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 3, lon, lat )
+
+  do i=0,Ldg
+    do j=1,Mdg
+      latv_dg(i,j) = lat(j+1)
+      lonv_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonv_dg range : ", lonv_dg(0,1), lonv_dg(Ldg,Mdg)
+  write(*, *) " latv_dg range : ", latv_dg(0,1), latv_dg(Ldg,Mdg)
+
+  call read_jcope_depth( JCOPE_info_dir, Nxr_dg, Nyr_dg, Nzr_dg, z, zz, dz )
+
+  do k=1,Ndg
+    z_r_dg(0:Ldg, 0:Mdg, k ) = -zz(1:Nxr_dg, 1:Nyr_dg, Nzr_dg-k )
+  enddo
+  h_dg(0:Ldg, 0:Mdg) = -z(1:Nxr_dg, 1:Nyr_dg, Nzr_dg )
+
+  do i=1,Ldg
+    do j=0,Mdg
+      do k=1,Ndg
+        z_u_dg(i,j,k)= (z_r_dg(i-1,j,k)+z_r_dg(i,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+  do i=0,Ldg
+    do j=1,Mdg
+      do k=1,Ndg
+        z_v_dg(i,j,k)= (z_r_dg(i,j-1,k)+z_r_dg(i,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+
+! Land masking
+  rmask_dg(:,:) = 1.0d0
+  do i=0,Ldg
+    do j=0,Mdg
+      if( h_dg(i,j) < 1.001d0 ) then  !! Land: Depth < 1.0 m grids
+        rmask_dg(i,j) = 0.0d0
+      endif
+    enddo
+  enddo
+
+  call uvp_masks( Nxr_dg, Nyr_dg, rmask_dg, umask_dg, vmask_dg, pmask_dg )
 
 
+  cosAu_dg(:,:) = 1.0d0
+  sinAu_dg(:,:) = 0.0d0
 
+  cosAv_dg(:,:) = 1.0d0
+  sinAv_dg(:,:) = 0.0d0
 
+! ---------------- bry_time check ----------------------------------
 
+  allocate( bry_time(10000) ) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  Nt = 0
+  itime = 1
+  ihours = 0
+  iyear = Syear
+  imonth = Smonth
+  iday = Sday
+  call jd(iyear, imonth, iday, Sjdate)
+
+  do
+    ihour = mod(ihours,24)
+    ijdate = Sjdate + int(ihours/24)
+    call cdate( ijdate, iyear, imonth, iday )
+    ! Check end date
+    if(iyear==Eyear .and. imonth==Emonth .and. iday==Eday) then
+      write(*,*) "Total time step: ", Nt
+      write(*,*) "Start file: ", trim( JCOPE_data_dir )//trim( JCOPE_prefix(4) )//trim( JCOPE_sufix(1) )
+      write(*,*) "End file:   ", trim( JCOPE_data_dir )//trim( JCOPE_prefix(4) )//trim( JCOPE_sufix(Nt) )
+      write(*,*) bry_time(1), bry_time(Nt)
+      exit
+    endif
+
+    write (YYYY, "(I4.4)") iyear
+    write (MM, "(I2.2)") imonth
+    write (DD, "(I2.2)") iday
+    write (hh, "(I2.2)") ihour
+    call jd(iyear, imonth, iday, ijdate)
+
+#  if defined JCOPE_T
+    ihours = ihours + 1  !!! Files exist 1 hourly interval
+    JCOPE_sufix_tmp = YYYY//MM//DD//hh//"00.bin"
+#  else
+    ihours = ihours + 24  !!! Files exist daily interval
+    JCOPE_sufix_tmp = YYYY//MM//DD
+#  endif
+
+    JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix_tmp )
+    status = access( trim( JCOPE_data_file ), ' ' )
+    if ( status /= 0 ) cycle 
+    Nt = Nt + 1
+    JCOPE_sufix(Nt) = JCOPE_sufix_tmp  
+    bry_time(Nt) = ( dble( ijdate ) + dble( ihour )/24.0d0 - d_jdate_Ref ) * 86400.0d0  ! sec
+  enddo
+
+!  allocate(idt(Nt))
+  allocate(iNCt(Nt))
+  
+  do i=1, Nt
+!    idt(i) = ItS + i-1
+    iNCt(i) = 1
+  enddo
 
 #else
   write(*,*) "************ Please choose a OCEAN MODEL ************"
@@ -1029,15 +1215,15 @@ PROGRAM bryOCN2ROMS
         allocate( zeta_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1) )
         allocate( ubar_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
         allocate( vbar_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
-        allocate( u_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
-        allocate( v_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
-        allocate( t_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Nzr_dg, 1) )
-        allocate( ull_dg (Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
-        allocate( ullu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
-        allocate( vllu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Nzr_dg, 1) )
-        allocate( vll_dg (Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
-        allocate( vllv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
-        allocate( ullv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Nzr_dg, 1) )
+        allocate( u_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+        allocate( v_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+        allocate( t_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Ndg, 1) )
+        allocate( ull_dg (Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+        allocate( ullu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+        allocate( vllu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+        allocate( vll_dg (Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+        allocate( vllv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+        allocate( ullv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
 #if defined WET_DRY
         allocate( umask_wet_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
         allocate( vmask_wet_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
@@ -1128,7 +1314,7 @@ PROGRAM bryOCN2ROMS
 
       call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
       Write(*,*) 'Time = ',YYYYMMDDpHH, ',  bry = ',trim( BRY_NAME(ibry) )
-      Write(*,*) idt(itime) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!      Write(*,*) idt(itime) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
       if( romsvar(1)==1 ) then
         !- zeta --------------------------------
@@ -1145,8 +1331,10 @@ PROGRAM bryOCN2ROMS
         call readNetCDF_3d_hycom( ncid, 'surf_el'      &
               , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
 #elif defined JCOPE_MODEL
-
-
+       JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix(itime) )
+       write(*,*) 'Read: ', trim( JCOPE_data_file )
+       call read_jcope_data2D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+             , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg )
 #endif
       
         write(*,*) 'Linear Interporation: zeta'
@@ -1193,12 +1381,10 @@ PROGRAM bryOCN2ROMS
         call readNetCDF_4d_hycom( ncid, 'water_u'     &
               , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
 #elif defined JCOPE_MODEL
-
-
-
-
-
-
+        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( JCOPE_sufix(itime) )
+        write(*,*) 'Read: ', trim( JCOPE_data_file )
+        call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+              , Iudg_min, Iudg_max, Judg_min, Judg_max, u_dg(:,:,:,1) )
 #endif
     
 #if defined WET_DRY
@@ -1228,11 +1414,10 @@ PROGRAM bryOCN2ROMS
         call readNetCDF_4d_hycom( ncid, 'water_v'     &
               , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
 #elif defined JCOPE_MODEL
-
-
-
-
-
+        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( JCOPE_sufix(itime) )
+        write(*,*) 'Read: ', trim( JCOPE_data_file )
+        call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+              , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, v_dg(:,:,:,1) )
 #endif    
 #if defined WET_DRY
         start3D = (/ Ivdg_min+1, Jvdg_min, idt(itime) /)
@@ -1485,13 +1670,17 @@ PROGRAM bryOCN2ROMS
         call readNetCDF_4d_hycom( ncid, trim( HY_VAR_NAME )  &
               , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 #elif defined JCOPE_MODEL
-
-
-
-
-
-
-
+        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(i) )//trim( JCOPE_sufix(itime) )
+        write(*,*) 'Read: ', trim( JCOPE_data_file )
+        call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+              , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, t_dg(:,:,:,1) )
+# if !defined JCOPE_T
+        if( i == 6 ) then
+          t_dg(:,:,:,1) = t_dg(:,:,:,1) + 10.0d0
+        elseif( i == 7 ) then
+          t_dg(:,:,:,1) = t_dg(:,:,:,1) + 35.0d0
+        endif
+# endif
 #endif        
         write(*,*) 'Linear Interporation: ', trim( varname )
         call interp3D_grid3_2(                                &
