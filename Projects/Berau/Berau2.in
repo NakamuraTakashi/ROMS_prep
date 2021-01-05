@@ -55,7 +55,7 @@
 /
 
 &roms2roms      
-! ROMS coraes NetCDF histry file name
+! ROMS coarse NetCDF history file name
   ROMS_HISFILE  = "../../../COAWST/Projects/Berau/Berau1_his_201704_3.nc"
 
 ! switches (1/0) for activate/deactivate the variables

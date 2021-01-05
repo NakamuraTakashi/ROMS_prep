@@ -55,7 +55,7 @@
 /
 
 &roms2roms      
-! ROMS coraes NetCDF histry file name
+! ROMS coarse NetCDF history file name
 !  ROMS_HISFILE  = "FukidoAz_100m_his_3rivers_20150714.nc"
   ROMS_HISFILE  = "Fukido3_ini_Nz8_20190828.04.nc"
 

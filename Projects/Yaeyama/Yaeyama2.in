@@ -32,7 +32,7 @@
 /
 
 &roms2roms      
-! ROMS coraes NetCDF histry file name
+! ROMS coarse NetCDF history file name
   ROMS_HISFILE  = "K:/COAWST/output/Yaeyama1_loric/YY1mb1_his_190610_kkl_roms_30lyr_clmoff.nc"
 
 ! switches (1/0) for activate/deactivate the variables

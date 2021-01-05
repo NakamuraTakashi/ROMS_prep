@@ -1,6 +1,6 @@
 #!/bin/bash
 # ===== Ocean Models ========================================================================
-# Please choose one of the follwing options
+# Please choose one of the following options
 #
 export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="-DJCOPE_MODEL"
@@ -8,7 +8,7 @@ export MY_CPP_FLAGS="-DHYCOM_MODEL"
 
 # ===== HYCOM option ====================================================================
 
-# Please choose one of the follwing options
+# Please choose one of the following options
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2018-12-04 to present)
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
 

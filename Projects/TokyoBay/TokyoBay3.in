@@ -56,7 +56,7 @@
 /
 
 &roms2roms      
-! ROMS coraes NetCDF histry file name
+! ROMS coarse NetCDF history file name
   ROMS_HISFILE  = "ocean_his.nc"
 
 ! switches (1/0) for activate/deactivate the variables

@@ -55,21 +55,24 @@
 /
 
 &roms2roms      
-! ROMS coraes NetCDF histry file name
+! ROMS coarse NetCDF history file name
   ROMS_HISFILE  = "ocean_his.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
 ! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
 ! 8: mud_, 9: sand_,
-! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC, 14: POC, 
-! 15: NO3, 16: NO2, 17: NH4, 18: PO4, 19: DON, 20: PON, 21: DOP, 22: POP, 
-! 23: phytoplankton1, 24: phytoplankton2, 25: zooplankton,   
-! 26: TI13C, 27: DO13C, 28: PO13C, 
-! 29: phytoplankton1_13C, 30: phytoplankton2_13C, 31: zooplankton_13C
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC_, 14: POC_, 
+! 15: phytoplankton_, 16: zooplankton_, 17: PIC_ 
+! 18: NO3, 19: NH4, 20: PO4, 21: DON_, 22: PON_, 23: DOP_, 24: POP_, 
+! 25: TI13C, 26: DO13C_, 27: PO13C_, 
+! 28: phyt13C_, 29: zoop13C_, 30: PI13C_
+! 31: 15NO3, 32: 15NH4, 33: DO15N_, 34: PO15N_
+! 35: phyt15N_, 36: zoop15N_
 !    
-!           1       5        10        15        20        25        30
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0        
+!           1       5        10        15        20        25        30        35  
+!           |       |         |         |         |         |         |         |  
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &bry

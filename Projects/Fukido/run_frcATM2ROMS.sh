@@ -1,6 +1,6 @@
 #!/bin/sh
 # ---- Atmospheric Models --------------
-# Please choose one of the follwing options
+# Please choose one of the following options
 #
 export MY_CPP_FLAGS="-DJMA_MSM"
 #export MY_CPP_FLAGS="-DDSJRA55"

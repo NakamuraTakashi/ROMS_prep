@@ -1,6 +1,6 @@
 #!/bin/bash
 # ---- Ocean Models --------------
-# Please choose one of the follwing options
+# Please choose one of the following options
 #
 export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="-DJCOPE_MODEL"
