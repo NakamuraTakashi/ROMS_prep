@@ -3,7 +3,7 @@
   GRID_FILE = "RedSea2_grd_v0.nc"
 /
 
-&gebeco
+&gebco
 ! GEBCO bathymetry NetCDF file     
   BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
 /
@@ -25,10 +25,10 @@
 &refinement
 ! ROMS NetCDF coarse grid file     
   parent_grid = "RedSea1_grd_v0.nc"
-  parent_Imin = 10
-  parent_Imax = 48  !49
-  parent_Jmin = 56
-  parent_Jmax = 83  !84
+  parent_Imin = 41
+  parent_Imax = 64
+  parent_Jmin = 729
+  parent_Jmax = 772
   refine_factor = 5
 /
 

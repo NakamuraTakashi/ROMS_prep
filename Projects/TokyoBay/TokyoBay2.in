@@ -3,7 +3,7 @@
   GRID_FILE = "TokyoBay2_grd_v0.1.nc"
 /
 
-&gebeco
+&gebco
 ! GEBCO bathymetry NetCDF file     
   BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
 /

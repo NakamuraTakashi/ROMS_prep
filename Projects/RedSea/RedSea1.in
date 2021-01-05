@@ -10,10 +10,10 @@
 
 &grd_setting_ll
 ! Set lat, lon at specific station. 
-  s_lat = 8.895d0   !  8.89523301776748
-  e_lat = 31.027d0    ! 31.0271833744719
-  s_lon = 43.404d0  ! 43.4048446504213
-  e_lon = 34.187d0    ! 34.1865515476077
+  s_lat = 8.919d0
+  e_lat = 30.980d0
+  s_lon = 43.390d0
+  e_lon = 34.215d0
 
 ! Set ROMS grid resolution
 ! *The information is not used when GRID_REFINEMENT is activated.
