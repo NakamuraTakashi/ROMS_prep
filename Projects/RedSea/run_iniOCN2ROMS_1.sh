@@ -36,7 +36,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 # ===== Tide model =======================================================================
 #tide_model=naotide
-tide_model=naotidej
+#tide_model=naotidej
 
 # ========================================================================================
 SRC_DIR=../../src

@@ -9,7 +9,7 @@
 /
 
 &emodnet
-! GEBCO bathymetry NetCDF file     
+! EMODnet bathymetry NetCDF file     
   BATH_FILE = "D:/Documents/GIS_data/EMODnet/netcdf/G8_2018.nc"
 /
 
@@ -38,7 +38,7 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "RedSea1_grd_v0.1.nc"
+  F2C_OUT_FILE = "RedSea1_grd_v0.2.nc"
 /
 
 &sdate
@@ -110,12 +110,12 @@
   N_s_rho = 30
 
 ! Set vertical, terrain-following coordinates transformation equation and
-! stretching function (see below for details), [1:Ngrids].
+! stretching function (see wikiROMS for details).
 
   Vtransform  = 2      ! transformation equation
   Vstretching = 4      ! stretching function
 
-! Vertical S-coordinates parameters (see below for details), [1:Ngrids].
+! Vertical S-coordinates parameters (see wikiROMS for details).
 
   THETA_S = 7.0d0      ! surface stretching parameter
   THETA_B = 0.1d0      ! bottom  stretching parameter
