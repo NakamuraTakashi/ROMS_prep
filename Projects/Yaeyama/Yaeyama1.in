@@ -4,15 +4,15 @@
 /
 
 &sdate
-  Syear  = 2020   ! Starting year
-  Smonth = 1      ! Starting month
-  Sday   = 3      ! Starting day
+  Syear  = 2014   ! Starting year
+  Smonth = 5      ! Starting month
+  Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
-  Eday   = 6      ! Ending day
+  Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 6      ! Ending month
+  Eday   = 1      ! Ending day
 /
 
 &refdate

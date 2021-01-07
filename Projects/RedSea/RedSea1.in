@@ -65,13 +65,13 @@
 /
 
 &bry
-  BRY_prefix  = "RedSea1_bry_ROMS_Nz30"
+  BRY_prefix  = "RedSea1_bry_HYCOM_Nz30"
   !    south north west east
   SNWE =  0,   0,   0,   1
 /
 
 &ini
-  INI_prefix  = "RedSea1_ini_ROMS_Nz30"
+  INI_prefix  = "RedSea1_ini_HYCOM_Nz30"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)

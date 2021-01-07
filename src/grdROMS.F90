@@ -92,6 +92,7 @@ PROGRAM grdROMS
 
   real(8) :: d_lat, d_lon
   real(8) :: latr_min, latr_max, lonr_min, lonr_max
+  real(8) :: sf,off
 
   integer :: i,j
   
@@ -106,7 +107,7 @@ PROGRAM grdROMS
 #endif
      
   integer :: ncid,var_id
-
+  
 #if defined UTM_COORD
   real(8) :: conv
   integer :: izone,ispher
@@ -115,6 +116,8 @@ PROGRAM grdROMS
   namelist/grd/GRID_FILE
 #if defined GEBCO2ROMS
   namelist/gebco/BATH_FILE
+#elif defined EMODNET2ROMS
+  namelist/emodnet/BATH_FILE
 #endif
 #if defined BATH_SMOOTHING
   namelist/bath_smooth/rx0max
@@ -141,6 +144,9 @@ PROGRAM grdROMS
 #if defined GEBCO2ROMS
   rewind(5)
   read (5, nml=gebco)
+#elif defined EMODNET2ROMS
+  rewind(5)
+  read (5, nml=emodnet)
 #endif
 #if defined BATH_SMOOTHING
   rewind(5)
@@ -440,12 +446,13 @@ PROGRAM grdROMS
   dndx(:,:) = 0.0d0
   dmde(:,:) = 0.0d0
 
-#if defined GEBCO2ROMS
+#if defined GEBCO2ROMS || defined EMODNET2ROMS
 !---- Read GEBCO grid netCDF file --------------------------------
   write(*,*) "OPEN: ", trim( BATH_FILE )
   
   ! Open NetCDF grid file
   call check( nf90_open(trim( BATH_FILE ), nf90_nowrite, ncid) )
+# if defined GEBCO2ROMS
   ! Get dimension data
   call get_dimension(ncid, 'lat', N_lat_all)
   call get_dimension(ncid, 'lon', N_lon_all)
@@ -457,8 +464,21 @@ PROGRAM grdROMS
   call check( nf90_get_var(ncid, var_id, lat_all) )
   call check( nf90_inq_varid(ncid, 'lon', var_id) )
   call check( nf90_get_var(ncid, var_id, lon_all) )
-  
-  ! Trim GEBCO bathymetry
+
+# elif defined EMODNET2ROMS
+  call get_dimension(ncid, 'LINES', N_lat_all)
+  call get_dimension(ncid, 'COLUMNS', N_lon_all)
+  ! Allocate variable
+  allocate(lat_all(N_lat_all))
+  allocate(lon_all(N_lon_all))
+  ! Get variable id
+  call check( nf90_inq_varid(ncid, 'LINES', var_id) )
+  call check( nf90_get_var(ncid, var_id, lat_all) )
+  call check( nf90_inq_varid(ncid, 'COLUMNS', var_id) )
+  call check( nf90_get_var(ncid, var_id, lon_all) )
+# endif
+
+  ! Trim GEBCO/EMODnet bathymetry
 # if defined GRID_REFINEMENT
 !  s_lat = latr(1,1)
 !  e_lat = latr(Nxr,Nyr)
@@ -503,10 +523,20 @@ PROGRAM grdROMS
   count2D = (/ N_lon  , N_lat   /)
   write(*,*) 'CHECK:',id_slon,id_elon, id_slat,id_elat, N_lon  , N_lat!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   write(*,*) 'CHECK:',lon_all(id_slon),lon_all(id_elon), lat_all(id_slat),lat_all(id_elat)!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   ! Get variable id
+# if defined GEBCO2ROMS
   call check( nf90_inq_varid(ncid, 'elevation', var_id) )
   call check( nf90_get_var(ncid, var_id, depth, start=start2D, count=count2D) )
-  
+
+# elif defined EMODNET2ROMS
+  call check( nf90_inq_varid(ncid, 'DEPTH', var_id) )
+  call check( nf90_get_var(ncid, var_id, depth, start=start2D, count=count2D) )
+  call check( nf90_get_att(ncid, var_id, 'scale_factor', sf) )
+  call check( nf90_get_att(ncid, var_id, 'add_offset', off) )
+  depth = depth*sf+off
+# endif
+
   ! Close NetCDF file
   call check( nf90_close(ncid) )
   write(*,*) "CLOSE: ", trim( BATH_FILE )

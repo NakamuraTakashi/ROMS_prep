@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "RedSea2_grd_v0.nc"
+  GRID_FILE = "RedSea2_grd_v0.1.nc"
 /
 
 &gebco
@@ -8,13 +8,18 @@
   BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
 /
 
+&emodnet
+! GEBCO bathymetry NetCDF file     
+  BATH_FILE = "D:/Documents/GIS_data/EMODnet/netcdf/G8_2018.nc"
+/
+
 &bath_smooth
-  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 10.0  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
 
-  hmin = 1.0d0  ! Minimum depth
+  hmin = -5.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
@@ -76,7 +81,7 @@
 /
 
 &bry
-  BRY_prefix  = "RedSea2_bry_HYCOM_Nz30"
+  BRY_prefix  = "RedSea2_bry_ROMS_Nz30"
   !    south north west east
   SNWE =  1,   1,   0,   1
 /
