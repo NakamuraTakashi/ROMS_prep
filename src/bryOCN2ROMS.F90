@@ -1186,10 +1186,10 @@ PROGRAM bryOCN2ROMS
             , latr(LBri:UBri,LBrj:UBrj)                    &
             , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max)
       
-        Irdg_min = Irdg_min-3
-        Irdg_max = Irdg_max+3
-        Jrdg_min = Jrdg_min-3
-        Jrdg_max = Jrdg_max+3
+        Irdg_min = Irdg_min-2
+        Irdg_max = Irdg_max+2
+        Jrdg_min = Jrdg_min-2
+        Jrdg_max = Jrdg_max+2
         Iudg_min = Irdg_min
         Iudg_max = Irdg_max
         Judg_min = Jrdg_min
@@ -1378,8 +1378,13 @@ PROGRAM bryOCN2ROMS
         write(*,*) 'Read: '//HYCOM_FILE(iNC)
         start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
         count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
-        call readNetCDF_4d_hycom( ncid, 'water_u'     &
+# if defined FAST_READ
+        call readNetCDF_4d_hycom_fast( ncid, 'water_u'             &
               , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
+# else
+        call readNetCDF_4d_hycom( ncid, 'water_u'                  &
+              , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
+# endif
 #elif defined JCOPE_MODEL
         JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( JCOPE_sufix(itime) )
         write(*,*) 'Read: ', trim( JCOPE_data_file )
@@ -1411,8 +1416,13 @@ PROGRAM bryOCN2ROMS
         write(*,*) 'Read: '//HYCOM_FILE(iNC)
         start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
         count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
-        call readNetCDF_4d_hycom( ncid, 'water_v'     &
+# if defined FAST_READ
+        call readNetCDF_4d_hycom_fast( ncid, 'water_v'             &
               , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
+# else
+        call readNetCDF_4d_hycom( ncid, 'water_v'                  &
+              , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
+# endif
 #elif defined JCOPE_MODEL
         JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( JCOPE_sufix(itime) )
         write(*,*) 'Read: ', trim( JCOPE_data_file )
@@ -1667,8 +1677,13 @@ PROGRAM bryOCN2ROMS
         write(*,*) 'Read: '//HYCOM_FILE(iNC)
         start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
         count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
-        call readNetCDF_4d_hycom( ncid, trim( HY_VAR_NAME )  &
+# if defined FAST_READ
+        call readNetCDF_4d_hycom_fast( ncid, trim( HY_VAR_NAME )   &
               , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
+# else
+        call readNetCDF_4d_hycom( ncid, trim( HY_VAR_NAME )        &
+              , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
+# endif
 #elif defined JCOPE_MODEL
         JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(i) )//trim( JCOPE_sufix(itime) )
         write(*,*) 'Read: ', trim( JCOPE_data_file )

@@ -9,6 +9,13 @@ MODULE mod_roms_netcdf
   implicit none  
 
   integer, parameter :: N_var = 36
+
+  integer, parameter :: Ndom = 2     ! Number of Dissolved Organic Matter types
+  integer, parameter :: Npom  = 2    ! Number of Particulate Organic Matter types
+  integer, parameter :: Nphy  = 3    ! Number of Phytoplankton types
+  integer, parameter :: Nzoo = 1     ! Number of Zooplankton types
+  integer, parameter :: Npim   = 1   ! Number of Particulate Inorganic Matter types
+
   character(256), parameter :: VAR_NAME(N_var) = (/ &
      "zeta          " &  !  1
     ,"u             " &  !  2 
@@ -1135,26 +1142,32 @@ MODULE mod_roms_netcdf
     SUBROUTINE createNetCDFriver( &
 !        input parameters
             OUT_FILE              &
+          , GLOBAL_ATT            &  
           , TIME_ATT              &  
-          , Nriv, Nzr, Nt         &   
+          , Nriv, Nzr             &   
           , name_flag             &   
+          , NCS, NNS              &   
       )
                                
 !    input parameters
-      character(len=*),  intent( in) :: OUT_FILE
-      character(len=*),  intent( in) :: TIME_ATT
-      integer, intent( in) :: Nriv, Nzr, Nt
+      character(len=*), intent( in) :: OUT_FILE
+      character(len=*), intent( in) :: GLOBAL_ATT
+      character(len=*), intent( in) :: TIME_ATT
+      integer, intent( in) :: Nriv, Nzr
       integer, intent( in) :: name_flag( N_var )
-      character(256) :: varname_dg, varname
+      integer, intent( in) :: NCS  ! Number of cohesive (mud) sediment tracers  !!! changed for Ando-kun's simulation
+      integer, intent( in) :: NNS  ! Number of non-cohesive (sand) sediment tracers
+
+      character(256) :: varname, lvarname
       character(2) :: varnum
 
       integer :: ncid,var_id
       integer :: zr_dimid
       integer :: riv_dimid
       integer :: t_dimid
-      integer :: status
-      integer, allocatable :: dimids(:)
+      integer :: dim2Dids(2), dim3Dids(3)
       integer :: i,j
+      integer :: Ntype
 
 !---- Create the ROMS initial condition netCDF file --------------------------------
 
@@ -1189,39 +1202,53 @@ MODULE mod_roms_netcdf
       call check( nf90_put_att(ncid, var_id, 'LuvSrc_meaning', 'j point index of U or V face source/sink') )
       call check( nf90_put_att(ncid, var_id, 'LwSrc_meaning', 'j point index of RHO center source/sink') )
 
-      dimids = (/ zr_dimid, riv_dimid /)
-      call check( nf90_def_var(ncid, 'river_Vshape', NF90_DOUBLE, dimids, var_id) )
+      dim2Dids = (/ riv_dimid, zr_dimid /)
+      call check( nf90_def_var(ncid, 'river_Vshape', NF90_DOUBLE, dim2Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'river runoff mass transport vertical profile') )
       call check( nf90_put_att(ncid, var_id, 'requires', 'must sum to 1 over s_rho') )
 
-      dimids = (/ t_dimid, riv_dimid /)
-      call check( nf90_def_var(ncid, 'river_transport', NF90_DOUBLE, dimids, var_id) )
+      dim2Dids = (/ riv_dimid, t_dimid /)
+      call check( nf90_def_var(ncid, 'river_transport', NF90_DOUBLE, dim2Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'river ETA-position') )
       call check( nf90_put_att(ncid, var_id, 'LuvSrc_meaning', 'j point index of U or V face source/sink') )
-      call check( nf90_put_att(ncid, var_id, 'LwSrc_meaning', 'j point index of RHO center source/sink') )
+      call check( nf90_put_att(ncid, var_id, 'LwSrc_meaning', 'j point index of RHO center source/sink') )  
+
+      dim3Dids = (/ riv_dimid, zr_dimid, t_dimid /)
 
       do i=6, N_var
+
+        if (name_flag( i ) == 0 ) cycle
         
-        if( i == 8 .or. i ==9 ) then  ! mud_
-          do j=1,99
+        if( i==8  .or. i==9  .or. i==13 .or. i==14 .or. i==15 .or. i==16 .or.  &
+            i==17 .or. i==21 .or. i==22 .or. i==23 .or. i==24 .or. i==26 .or.  &
+            i==27 .or. i==28 .or. i==29 .or. i==30 .or. i==33 .or. i==34 .or.  &
+            i==35 .or. i==36  ) then  ! mud_, sand_, etc...
+          
+          if( i==8 ) Ntype = NCS
+          if( i==9 ) Ntype = NNS
+          if( i==13 .or. i==21 .or. i==23 .or. i==26 .or. i==33  ) Ntype = Ndom
+          if( i==14 .or. i==22 .or. i==24 .or. i==27 .or. i==34  ) Ntype = Npom
+          if( i==15 .or. i==28 .or. i==35  ) Ntype = Nphy
+          if( i==16 .or. i==29 .or. i==36  ) Ntype = Nzoo
+
+          do j=1,Ntype
             write(varnum,'(I2.2)') j
             varname = 'river_'//trim( VAR_NAME(i) )//varnum
-            status = nf90_inq_varid(ncid, trim( varname ), var_id)
-            if (status /= nf90_noerr) exit
+            lvarname = 'river runoff '//trim( VAR_NAME(i) )//varnum
+
             write(*,*) 'Add variable: ', trim( varname )
-            call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dimids, var_id) )
-            call check( nf90_copy_att(ncid, var_id, 'long_name', ncid, var_id) )
-            call check( nf90_copy_att(ncid, var_id, 'units', ncid, var_id) )
-            call check( nf90_copy_att(ncid, var_id, 'time', ncid, var_id) )
+            call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dim3Dids, var_id) )
+            call check( nf90_put_att(ncid, var_id, 'long_name', trim( lvarname ) ) )
+            call check( nf90_put_att(ncid, var_id, 'units', trim( VAR_UNIT(i) ) ) )
           enddo
         else
           varname = 'river_'//trim( VAR_NAME(i) )
-          write(*,*) 'Add variable: ', varname
-          call check( nf90_inq_varid(ncid, varname, var_id) )
-          call check( nf90_def_var(ncid, varname, NF90_DOUBLE, dimids, var_id) )
-          call check( nf90_put_att(ncid, var_id, 'long_name', 'river runoff time') )
-          call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
-              call check( nf90_copy_att(ncid, var_id, 'time', ncid, var_id) )
+          lvarname = 'river runoff '//trim( VAR_NAME(i) )
+
+          write(*,*) 'Add variable: ', trim( varname  )       
+          call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dim3Dids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', trim( lvarname ) ) )
+          call check( nf90_put_att(ncid, var_id, 'units', trim( VAR_UNIT(i) ) ) )
         endif
       enddo
 
@@ -1725,6 +1752,97 @@ MODULE mod_roms_netcdf
     write(*,*) '*** SUCCESS'
 
   END SUBROUTINE readNetCDF_4d_hycom
+
+!**** readNetCDF_4d ver 3 **********************************************
+      
+  SUBROUTINE readNetCDF_4d_hycom_fast(  &
+!    input parameters
+        ncid                 &
+      , NCNAME               &
+      , Nxr, Nyr, Nzr, Nt    &
+      , start, count         &
+!    output parameters
+      , data                 &
+    )
+                               
+!    input parameters
+    integer, intent( in) :: ncid
+    character(len=*), intent( in) :: NCNAME
+    integer, intent( in) :: Nxr, Nyr, Nzr, Nt
+    integer, intent( in) :: start(4), count(4)
+    real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
+
+    real(8) :: data_tmp(Nxr, Nyr, Nzr, Nt)
+    integer, parameter :: Num_try = 50
+    integer :: start2(4), count2(4)
+    integer :: var_id
+    integer :: err_flag, status
+    integer :: itry
+    integer :: i,j,k,l
+    real(8) :: sf, off
+    
+    start2 = start
+    count2 = count
+!    count2(3)=1
+    
+    data_tmp(:,:,:,:) = -9999.0d0
+      
+! --- Read NetCDF file ------------------------
+      
+    write(*,*) 'READ: ', NCNAME
+    ! Get variable id
+    do itry=1,Num_try
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 1: Retry!'
+    end do        
+
+    do itry=1,Num_try
+      status = nf90_get_var(ncid, var_id, data_tmp(:,:,:,:), start=start2, count=count2)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr .and. data_tmp(Nxr,Nyr,Nzr,Nt)/=-9999.0d0) exit
+!      if (status == nf90_noerr ) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** READ FAILED: Retry!'
+    end do
+      
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 2: Retry!'
+    end do          
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'add_offset', off)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 3: Retry!'
+    end do
+
+    do k=1,Nzr
+      data(:,:,k,:) = data_tmp(:,:,Nzr-k+1,:)*sf+off
+    end do      
+!    data = data*sf+off
+
+    do i=1,Nxr
+      do j=1,Nyr
+        do k=Nzr-1,1,-1
+          do l=1,Nt
+            if ( data(i,j,k,l) <-9.0d0 ) then
+              data(i,j,k,l) = data(i,j,k+1,l)
+            endif
+          end do
+        end do
+      end do
+    end do
+
+    write(*,*) '*** SUCCESS'
+
+  END SUBROUTINE readNetCDF_4d_hycom_fast
 
 !**** readNetCDF_1d **********************************************
       
