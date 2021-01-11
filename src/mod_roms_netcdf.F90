@@ -1175,6 +1175,8 @@ MODULE mod_roms_netcdf
 
       call check( nf90_create( trim( OUT_FILE ), nf90_clobber, ncid) )
 
+      call check( nf90_put_att(ncid, NF90_GLOBAL, 'rivers', trim( GLOBAL_ATT )) )
+
       call check( nf90_def_dim(ncid, 'river', Nriv, riv_dimid) )
       call check( nf90_def_dim(ncid, 's_rho', Nzr, zr_dimid) )
       call check( nf90_def_dim(ncid, 'river_time', NF90_UNLIMITED, t_dimid) )
@@ -1210,6 +1212,7 @@ MODULE mod_roms_netcdf
       dim2Dids = (/ riv_dimid, t_dimid /)
       call check( nf90_def_var(ncid, 'river_transport', NF90_DOUBLE, dim2Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'river ETA-position') )
+      call check( nf90_put_att(ncid, var_id, 'units', 'meter3 second-1' ) )
       call check( nf90_put_att(ncid, var_id, 'LuvSrc_meaning', 'j point index of U or V face source/sink') )
       call check( nf90_put_att(ncid, var_id, 'LwSrc_meaning', 'j point index of RHO center source/sink') )  
 
@@ -1230,6 +1233,7 @@ MODULE mod_roms_netcdf
           if( i==14 .or. i==22 .or. i==24 .or. i==27 .or. i==34  ) Ntype = Npom
           if( i==15 .or. i==28 .or. i==35  ) Ntype = Nphy
           if( i==16 .or. i==29 .or. i==36  ) Ntype = Nzoo
+          if( i==17  ) Ntype = Npim
 
           do j=1,Ntype
             write(varnum,'(I2.2)') j
