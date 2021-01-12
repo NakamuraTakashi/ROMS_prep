@@ -5,13 +5,13 @@
 
 &sdate
   Syear  = 2014   ! Starting year
-  Smonth = 5      ! Starting month
+  Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 6      ! Ending month
+  Eyear  = 2015   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -60,9 +60,9 @@
                   ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2020   ! Initial year
-  INImonth = 1      ! Initial month
-  INIday   = 3      ! Initial day
+  INIyear  = 2014   ! Initial year
+  INImonth = 5      ! Initial month
+  INIday   = 2      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -98,8 +98,8 @@
 /
 
 &frc_jmamsm
-  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "Yaeyama1_frc_MSMgb"
-!  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-!  FRC_prefix  = "TokyoBay3_frc_MSMnc"
+!  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+!  FRC_prefix  = "Yaeyama1_frc_MSMgb"
+  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+  FRC_prefix  = "Yaeyama1_frc_MSMnc"
 /

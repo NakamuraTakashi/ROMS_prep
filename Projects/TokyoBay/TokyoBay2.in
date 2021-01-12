@@ -37,15 +37,15 @@
 /
 
 &sdate
-  Syear  = 2017   ! Starting year
-  Smonth = 4     ! Starting month
+  Syear  = 2019   ! Starting year
+  Smonth = 1     ! Starting month
   Sday   = 1     ! Starting day
 /
 
 &edate
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 4     ! Ending month
-  Eday   = 3      ! Ending day
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1     ! Ending month
+  Eday   = 1      ! Ending day
 /
 
 &refdate
@@ -75,15 +75,45 @@
   romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
+&ocn2roms      
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+  romsvar = 1,1,1,1,1,1,1        
+/
+
+&jcope
+! JCOPE-T
+  JCOPE_info_dir  =  "P:/JCOPE-T/tokyobay/2019/"
+  JCOPE_data_dir  =  "P:/JCOPE-T/tokyobay/2019/"
+! JCOPE-2M
+!  JCOPE_info_dir  =  "E:/JCOPE_DATA/JCOPE-2M/tokyobay/"
+!  JCOPE_data_dir  =  "E:/JCOPE_DATA/JCOPE-2M/tokyobay/"
+
+/
 &bry
-  BRY_prefix  = "TokyoBay2_bry_JCOPE-T_Nz30"
+  BRY_prefix  = "F:/Data/TokyoBay/TokyoBay2/Bry/TokyoBay2_bry_JCOPE-T_Nz30"
   !    south north west east
   SNWE =  1,   0,   0,   0
 /
 
 &ini
-  INI_prefix  = "TokyoBay2_ini_JCOPET_Nz30"
-  itime = 9       ! Frame number of HYCOME/ROMS file
+  INI_prefix  = "F:/Data/TokyoBay/TokyoBay2/Ini/TokyoBay2_ini_JCOPET_Nz30"
+
+! for ROMS: please choose frame number (itime) or
+!           Specific date & time (INIyera, INImonth, INIday, INIhour)
+  itime = 0       ! Frame number of ROMS file 
+                  ! if itime <= 0, time index will be sought from 
+                  ! the following Specific date & time
+
+! for ROMS, HYCOM, or JCOPE 
+  INIyear  = 2020   ! Initial year
+  INImonth = 7      ! Initial month
+  INIday   = 2      ! Initial day
+  INIhour  = 0      ! Initial hour
+/
 /
 
 &hcoord
@@ -108,18 +138,18 @@
 /
 
 &frc_jra55
-  JRA55_dir  =  "W:/JRA-55/" 
+  JRA55_dir  =  "N:/JRA-55/" 
   FRC_prefix  = "TokyoBay2_frc_JRA55"
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "M:/Data/dsjra55/"  
+  DSJRA55_dir = "N:/dsjra55/"  
   FRC_prefix  = "TokyoBay2_frc_DSJRA55"
 /
 
 &frc_jmamsm
-  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "TokyoBay2_frc_MSMgb"
+  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  FRC_prefix  = "F:/Data/TokyoBay/TokyoBay2/Air/TokyoBay2_frc_MSMgb"
 !  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
 !  FRC_prefix  = "TokyoBay2_frc_MSMnc"
 /

@@ -10,8 +10,8 @@ export MY_CPP_FLAGS="-DJMA_MSM"
 # SWRAD: Downward short-wave radiation flag
 # Since 2017-Dec-05, short wave radiation data has been inclueded in MSM
 #
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSWRAD"
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DNETCDF_INPUT"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSWRAD"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DNETCDF_INPUT"
 
 # ---- For JRA55 or DSJRA55 option --------------
 # BULK_FLUX: Downward/Upward short-wave/long-wave radiation flag

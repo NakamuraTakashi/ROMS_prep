@@ -313,11 +313,11 @@ PROGRAM riverSWAT2ROMS
         iFlow = i
         exit
       endif
+      if(i==Ncol) then
+        write(*,*) "Could not find "//trim(Flow_Label)//" in "//trim( RIVER_FILE )
+        stop
+      endif
     enddo
-    if(i==Ncol) then
-      write(*,*) "Could not find "//trim(Flow_Label)//" in "//trim( RIVER_FILE )
-      stop
-    endif
     write(*,*) "iFlow: ", iFlow
   endif
 
@@ -840,8 +840,8 @@ PROGRAM riverSWAT2ROMS
     read(20,*,iostat=ios) jday, imonth, iday, iyear, iunit, gis_id, name, river_data
     if(ios==-1) exit  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
-    write(*,*) label
-    write(*,*) river_data
+!    write(*,*) label
+!    write(*,*) river_data
     if( trim( name ) /= trim( cha_name )) cycle !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     write(*,*) trim( name )
 
@@ -1551,7 +1551,7 @@ PROGRAM riverSWAT2ROMS
       enddo
     endif
 
-    stop !!!!!!!!!!!!!!!!! For debug
+!    stop !!!!!!!!!!!!!!!!! For debug
 
   END DO  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
