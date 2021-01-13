@@ -257,10 +257,10 @@ CONTAINS
   NYd = Jde-Jds+1
   nxr = ire-irs+1
   nyr = jre-jrs+1
-  Idmin=NXd
-  Idmax=1 
-  Jdmin=NYd
-  Jdmax=1
+  Idmin=Ide
+  Idmax=Ids 
+  Jdmin=Jde
+  Jdmax=Ids
   
   do ir=irs,ire
     do jr=jrs,jre
@@ -309,16 +309,16 @@ CONTAINS
           exit 
         else if (istep < 5 ) then
           istep = 1
-          js = max(1,Jd(1)-3)
-          is = max(1,Id(1)-3)
-          je = min(NYd,Jd(1)+3)
-          ie = min(NXd,Id(1)+3)
+          js = max(Jds,Jd(1)-3)
+          is = max(Ids,Id(1)-3)
+          je = min(Jde,Jd(1)+3)
+          ie = min(Ide,Id(1)+3)
         else
           istep = istep/2
-          js = max(1,Jd(1)-istep-2)
-          is = max(1,Id(1)-istep-2)
-          je = min(NYd,Jd(1)+istep+2)
-          ie = min(NXd,Id(1)+istep+2)
+          js = max(Jds,Jd(1)-istep-2)
+          is = max(Ids,Id(1)-istep-2)
+          je = min(Jde,Jd(1)+istep+2)
+          ie = min(Ide,Id(1)+istep+2)
         end if
        
       enddo

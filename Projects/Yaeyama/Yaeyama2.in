@@ -109,18 +109,18 @@
 /
 
 &frc_jra55
-  JRA55_dir  =  "W:/JRA-55/"  
+  JRA55_dir  =  "N:/JRA-55/"  
   FRC_prefix  = "Yaeyama2_frc_JRA55"
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "E:/Data/dsjra55/"  
+  DSJRA55_dir = "N:/Data/dsjra55/"  
   FRC_prefix  = "Yaeyama2_frc_DSJRA55"
 /
 
 &frc_jmamsm
-  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
   FRC_prefix  = "Yaeyama2_frc_MSMgb"
-!  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+!  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
 !  FRC_prefix  = "Yaeyama2_frc_MSMnc"
 /

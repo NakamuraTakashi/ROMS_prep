@@ -44,7 +44,7 @@
 
 &edate
   Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1     ! Ending month
+  Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -86,11 +86,11 @@
 
 &jcope
 ! JCOPE-T
-  JCOPE_info_dir  =  "P:/JCOPE-T/tokyobay/2019/"
-  JCOPE_data_dir  =  "P:/JCOPE-T/tokyobay/2019/"
+  JCOPE_info_dir  =  "P:/JCOPE-T/tokyobay/2018/"
+  JCOPE_data_dir  =  "P:/JCOPE-T/tokyobay/2018/"
 ! JCOPE-2M
-!  JCOPE_info_dir  =  "E:/JCOPE_DATA/JCOPE-2M/tokyobay/"
-!  JCOPE_data_dir  =  "E:/JCOPE_DATA/JCOPE-2M/tokyobay/"
+!  JCOPE_info_dir  =  "P:/JCOPE-2M/tokyobay/"
+!  JCOPE_data_dir  =  "P:/JCOPE-2M/tokyobay/"
 
 /
 &bry
@@ -109,9 +109,9 @@
                   ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2020   ! Initial year
-  INImonth = 7      ! Initial month
-  INIday   = 2      ! Initial day
+  INIyear  = 2018   ! Initial year
+  INImonth = 6      ! Initial month
+  INIday   = 5      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 /

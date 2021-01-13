@@ -1,7 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-!  GRID_FILE = "TokyoBay3_grd_v0.1.nc"
-  GRID_FILE = "TokyoBay3_grd_v0.nc"
+  GRID_FILE = "TokyoBay3_grd_v0.1.nc"
+!  GRID_FILE = "TokyoBay3_grd_v0.nc"
 /
 
 &gebco
@@ -38,14 +38,14 @@
 /
 
 &sdate
-  Syear  = 2014   ! Starting year
-  Smonth = 7      ! Starting month
+  Syear  = 2018   ! Starting year
+  Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 8      ! Ending month
+  Eyear  = 2019   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -57,7 +57,7 @@
 
 &roms2roms      
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "ocean_his.nc"
+  ROMS_HISFILE  = "../../../COAWST/Projects/TokyoBay2/TokyoBay2_his_20180605.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -87,13 +87,13 @@
 /
 
 &bry
-  BRY_prefix  = "TokyoBay3_bry_ROMS_Nz30"
+  BRY_prefix  = "F:/Data/TokyoBay/TokyoBay3/Bry/TokyoBay3_bry_ROMS_Nz30"
   !    south north west east
   SNWE =  1,   0,   0,   0
 /
 
 &ini
-  INI_prefix  = "TokyoBay3_ini_ROMS_Nz30"
+  INI_prefix  = "F:/Data/TokyoBay/TokyoBay3/Ini/TokyoBay3_ini_ROMS_Nz30"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -102,9 +102,9 @@
                   ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2014   ! Initial year
-  INImonth = 8      ! Initial month
-  INIday   = 3      ! Initial day
+  INIyear  = 2018   ! Initial year
+  INImonth = 6      ! Initial month
+  INIday   = 8      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -131,18 +131,18 @@
 /
 
 &frc_jra55
-  JRA55_dir  =  "W:/JRA-55/"
+  JRA55_dir  =  "N:/JRA-55/"
   FRC_prefix  = "TokyoBay3_frc_JRA55"
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "M:/Data/dsjra55/"  
+  DSJRA55_dir = "N:/dsjra55/"  
   FRC_prefix  = "TokyoBay3_frc_DSJRA55"
 /
 
 &frc_jmamsm
-  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
   FRC_prefix  = "TokyoBay3_frc_MSMgb"
-!  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+!  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
 !  FRC_prefix  = "TokyoBay3_frc_MSMnc"
 /

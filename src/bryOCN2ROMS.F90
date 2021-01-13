@@ -1186,10 +1186,10 @@ PROGRAM bryOCN2ROMS
             , latr(LBri:UBri,LBrj:UBrj)                    &
             , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max)
       
-        Irdg_min = Irdg_min-2
-        Irdg_max = Irdg_max+2
-        Jrdg_min = Jrdg_min-2
-        Jrdg_max = Jrdg_max+2
+        Irdg_min = max(Irdg_min-2, 0 )
+        Irdg_max = min(Irdg_max+2,Ldg)
+        Jrdg_min = max(Jrdg_min-2, 0 )
+        Jrdg_max = max(Jrdg_max+2,Mdg)
         Iudg_min = Irdg_min
         Iudg_max = Irdg_max
         Judg_min = Jrdg_min
