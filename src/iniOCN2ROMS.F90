@@ -943,7 +943,7 @@ PROGRAM iniOCN2ROMS
   Irdg_min = max(Irdg_min-2, 0 )
   Irdg_max = min(Irdg_max+2,Ldg)
   Jrdg_min = max(Jrdg_min-2, 0 )
-  Jrdg_max = max(Jrdg_max+2,Mdg)
+  Jrdg_max = min(Jrdg_max+2,Mdg)
   Iudg_min = Irdg_min
   Iudg_max = Irdg_max
   Judg_min = Jrdg_min

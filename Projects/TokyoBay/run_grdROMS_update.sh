@@ -1,6 +1,6 @@
 #!/bin/bash
 export MY_CPP_FLAGS=""
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 
 SRC_DIR=../../src
@@ -11,5 +11,5 @@ gfortran ${SRC_DIR}/mod_utility.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/gr
 rm *.mod
 
 #./grdROMS_update.exe < TokyoBay2.in
-./grdROMS_update.exe < TokyoBay2.in
-#./grdROMS_update.exe < TokyoBay3.in
+#./grdROMS_update.exe < TokyoBay2.in
+./grdROMS_update.exe < TokyoBay3.in

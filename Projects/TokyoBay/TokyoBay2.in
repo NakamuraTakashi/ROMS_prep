@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "TokyoBay2_grd_v0.1.nc"
+  GRID_FILE = "TokyoBay2_grd_v1.0.nc"
 /
 
 &gebco
@@ -26,9 +26,9 @@
 ! ROMS NetCDF coarse grid file     
   parent_grid = "TokyoBay1_grd_v0.nc"
   parent_Imin = 10
-  parent_Imax = 48  !49
+  parent_Imax = 48  !48
   parent_Jmin = 56
-  parent_Jmax = 83  !84
+  parent_Jmax = 83  !83
   refine_factor = 5
 /
 

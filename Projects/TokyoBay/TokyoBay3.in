@@ -1,7 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "TokyoBay3_grd_v0.1.nc"
-!  GRID_FILE = "TokyoBay3_grd_v0.nc"
+!  GRID_FILE = "TokyoBay3_grd_v0.2.nc"
+  GRID_FILE = "TokyoBay3_grd_v1.0.nc"
 /
 
 &gebco
@@ -10,7 +10,7 @@
 /
 
 &bath_smooth
-  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 10.0d0  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
@@ -20,21 +20,21 @@
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
   I_ocn = 50    ! rho point index i
-  J_ocn = 50    ! rho point index j
+  J_ocn = 1    ! rho point index j
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "TokyoBay2_grd_v0.1.nc"
-  parent_Imin = 97
-  parent_Imax = 191
+  parent_grid = "TokyoBay2_grd_v1.0.nc"
+  parent_Imin = 102
+  parent_Imax = 191  !191
   parent_Jmin = 38
-  parent_Jmax = 135
+  parent_Jmax = 135  !135
   refine_factor = 3
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "TokyoBay2_grd_v0.2.nc"
+  F2C_OUT_FILE = "TokyoBay2_grd_v2.0.nc"
 /
 
 &sdate

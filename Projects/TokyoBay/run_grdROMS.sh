@@ -2,7 +2,7 @@
 
 export MY_CPP_FLAGS=""
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGEBCO2ROMS"
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 
@@ -15,6 +15,6 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./grdROMS.exe < TokyoBay1.in
+#./grdROMS.exe < TokyoBay1.in
 #./grdROMS.exe < TokyoBay2.in
-#./grdROMS.exe < TokyoBay3.in
+./grdROMS.exe < TokyoBay3.in
