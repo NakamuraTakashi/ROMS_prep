@@ -19,7 +19,7 @@ PROGRAM riverSWAT2ROMS
   integer :: start3D(3), count3D(3)
   integer :: start4D(4), count4D(4)
   
-  integer :: Nzr, Nsrc
+  integer :: Nzr
 
   character(4) :: YYYY
   character(2) :: MM
@@ -52,10 +52,10 @@ PROGRAM riverSWAT2ROMS
   character(256) :: ROMS_HISFILE
   integer :: romsvar(N_var)
   character(256) :: OUT_FILE, GLOBAL_ATT
-  integer :: Isrc, Jsrc, river_dir, river_dir2, NCS, NNS, NCS2, NNS2
-
+  integer :: NCS, NNS, Nsrc, NCS2, NNS2
+  integer, allocatable :: Isrc(:), Jsrc(:), river_dir(:), river_dir2(:)
   character(256) :: RIVER_FILE
-  character(20) :: cha_name
+  character(20), allocatable :: cha_name(:)
   logical :: Yield
   integer :: LOCAL_TIME
   real(8) :: Flow0, T0, S0, TAlk0, TIC_0, Oxyg0
@@ -107,8 +107,9 @@ PROGRAM riverSWAT2ROMS
 
   namelist/refdate/Ryear, Rmonth, Rday
   namelist/roms2roms/ROMS_HISFILE, romsvar
-  namelist/river1/OUT_FILE, Isrc, Jsrc, river_dir, river_dir2, GLOBAL_ATT, NCS, NNS
+  namelist/river1/OUT_FILE, GLOBAL_ATT, NCS, NNS, Nsrc
 
+  namelist/river2/Isrc, Jsrc, river_dir, river_dir2
   namelist/river2/RIVER_FILE, cha_name
   namelist/river2/Yield
   namelist/river2/LOCAL_TIME
@@ -161,11 +162,13 @@ PROGRAM riverSWAT2ROMS
   NNS2 = NNS
   if(NCS == 0 ) NCS2 = 1
   if(NNS == 0 ) NNS2 = 1
-  allocate(  MUD0(NCS2), SAND0(NNS2) )
-  allocate(  MUD_Label(NCS2), SAND_Label(NNS2) )
-  allocate(  MUD_sf(NCS2), SAND_sf(NNS2) )
-  allocate(  MUD_off(NCS2), SAND_off(NNS2) )
-  allocate(  iMUD(NCS2), iSAND(NNS2) )
+  allocate( MUD0(NCS2), SAND0(NNS2) )
+  allocate( MUD_Label(NCS2), SAND_Label(NNS2) )
+  allocate( MUD_sf(NCS2), SAND_sf(NNS2) )
+  allocate( MUD_off(NCS2), SAND_off(NNS2) )
+  allocate( iMUD(NCS2), iSAND(NNS2) )
+  allocate( Isrc(Nsrc), Jsrc(Nsrc), river_dir(Nsrc), river_dir2(Nsrc) )
+  allocate( cha_name(Nsrc) )
 
   rewind(5)
   read (*, nml=river2)
@@ -174,7 +177,7 @@ PROGRAM riverSWAT2ROMS
 
 
   Nzr = N_s_rho
-  Nsrc = 1   !!!! 1 <- river number
+
   allocate( river_Vshape(Nsrc,Nzr) )
   allocate( data(Nsrc,Nzr,1) )
   allocate( river_flow(Nsrc,1) )
