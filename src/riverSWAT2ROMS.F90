@@ -36,9 +36,11 @@ PROGRAM riverSWAT2ROMS
   character(2000) :: headerline
   integer :: iyear, imonth, iday
   integer :: ihour, imin
+  integer :: iday2,ihour2
   integer :: jday, iunit, gis_id
-  integer :: itime
+  integer :: itime, iriv
   character(10) :: name
+  integer, allocatable :: riverID(:)
   real(8), allocatable :: river_data(:)
   real(8), allocatable :: data(:,:,:), river_Vshape(:,:)
   real(8), allocatable :: river_flow(:,:), river_flow2(:,:)
@@ -179,11 +181,15 @@ PROGRAM riverSWAT2ROMS
   Nzr = N_s_rho
 
   allocate( river_Vshape(Nsrc,Nzr) )
-  allocate( data(Nsrc,Nzr,1) )
+  allocate( data(1,Nzr,1) )
   allocate( river_flow(Nsrc,1) )
   allocate( river_flow2(Nsrc,1) )
+  allocate( riverID(Nsrc) )
 
-  river_Vshape(1,:) = 1.0d0/dble(Nzr)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  do i=1,Nsrc
+    riverID(i) = i
+  enddo
+  river_Vshape(:,:) = 1.0d0/dble(Nzr)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   data(:,:,:) = 0.0d0
 
@@ -201,17 +207,15 @@ PROGRAM riverSWAT2ROMS
 !  write(*,*) d_jdate_Ref
 
   
-!  OUT_FILE = trim( OUT_prefix ) //trim( OUT_suffix )
-
   call createNetCDFriver( trim( OUT_FILE ), trim( GLOBAL_ATT )     &
-        , TIME_ATT, 1, N_s_rho, romsvar, NCS, NNS  )
+        , TIME_ATT, Nsrc, N_s_rho, romsvar, NCS, NNS  )
 
   write(*,*) "WRITE: ", trim( OUT_FILE )
   call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid) )
 
   write(*,*)  'Write: river'
   call check( nf90_inq_varid(ncid, 'river', var_id) )
-  call check( nf90_put_var(ncid, var_id, 1 ) )  !!!! river number
+  call check( nf90_put_var(ncid, var_id, riverID ) )  !!!! river number
   write(*,*)  'Write: river_direction'
   call check( nf90_inq_varid(ncid, 'river_direction', var_id) )
   call check( nf90_put_var(ncid, var_id, river_dir) )
@@ -829,45 +833,45 @@ PROGRAM riverSWAT2ROMS
   enddo
 
 !--- Preparation for Loop ---------------------------------------
-  start1D = (/ 1 /)
-  count1D = (/ 1 /)
-  start3D = (/ 1, 1,   itime /)
-  count3D = (/ 1, Nzr, 1     /)
+!  start1D = (/ 1 /)
+!  count1D = (/ 1 /)
+!  start3D = (/ 1, 1,   itime /)
+!  count3D = (/ 1, Nzr, 1     /)
   itime = 0
+  iday = 0
+  ihour = 0
 ! === LOOP start ==================================================================
   DO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-#if defined SWAT_PLUS_REV_2019_59_3 || defined SWAT_PLUS_REV_2019_59_2
-# if defined CHANNEL_DAY
+#if defined CHANNEL_DAY
+    iday2 = iday
   !----- SWAT+ Rev 2019.59.2/3; channel_day.txt/channl_sd_day.txt output ------------
     read(20,*,iostat=ios) jday, imonth, iday, iyear, iunit, gis_id, name, river_data
     if(ios==-1) exit  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
-!    write(*,*) label
-!    write(*,*) river_data
-    if( trim( name ) /= trim( cha_name )) cycle !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    write(*,*) trim( name )
+    if(iday2 /= iday) itime = itime + 1
 
-# elif defined CHANNEL_SUBDAY
+#elif defined CHANNEL_SUBDAY
+# if defined SWAT_PLUS_REV_2019_59_3 || defined SWAT_PLUS_REV_2019_59_2
 
 
-
-# endif
-
-#elif defined SWAT_PLUS_OKMT
-# if defined CHANNEL_DAY
-
-
-# elif defined CHANNEL_SUBDAY
+# elif defined SWAT_PLUS_OKMT
+    ihour2 = ihour
   !----- SWAT+ Mr. Okamoto version; subdaily output ------------
     read(20,*,iostat=ios) name, iyear, imonth, iday, ihour, river_data
     if(ios==-1) exit
-    if( trim( name ) /= trim( cha_name )) cycle
-    write(*,*) trim( name )
+    if(ihour2 /= ihour) itime = itime + 1
+
 # endif
 #endif
+    iriv = -1
+    do i=1,Nsrc
+      if( trim( name ) == trim( cha_name(i) )) then
+        iriv = i
+      endif     
+    enddo
+    if( iriv == -1) cycle
 
-    itime = itime + 1
+    write(*,*) trim( name )
 
     call jd(iyear, imonth, iday, jdate)
     d_jdate = dble(jdate)
@@ -888,24 +892,24 @@ PROGRAM riverSWAT2ROMS
     call check( nf90_put_var(ncid, var_id, river_time, start = start1D, count = count1D) )
 
   ! river_transport
-    start2D = (/ 1, itime /)
-    count2D = (/ 1, 1     /)
+    start2D = (/ iriv, itime /)
+    count2D = (/ 1,    1     /)
     if( trim(Flow_Label) == "Null" ) then
       river_flow(1,1) = Flow0
     else
       river_flow(1,1) = river_data(iflow) * Flow_sf + Flow_off
     endif
-    river_flow2(1,1) = river_flow(1,1) * dble( river_dir2 )
+    river_flow2(1,1) = river_flow(1,1) * dble( river_dir2(iriv) )
 
     write(*,*)  'Write: river_transport', river_flow2(1,1)
     call check( nf90_inq_varid(ncid, 'river_transport', var_id) )
     call check( nf90_put_var(ncid, var_id, river_flow2, start = start2D, count = count2D) )
 
-    if(river_flow(1,1)<1.0d-20) river_flow(1,1)=1.0d-20 !!! Error handling
+    if(river_flow(iriv,1)<1.0d-20) river_flow(iriv,1)=1.0d-20 !!! Error handling
 
 
-    start3D = (/ 1, 1,   itime /)
-    count3D = (/ 1, Nzr, 1     /)
+    start3D = (/ iriv, 1,   itime /)
+    count3D = (/ 1,    Nzr, 1     /)
     
   ! temp
     i=6
