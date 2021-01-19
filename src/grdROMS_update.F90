@@ -151,11 +151,11 @@ PROGRAM grdROMS_update
 #if defined GRID_FINE2COARSE 
 !-Merge coase grid with fine grid ---------------------------------------
 
-  i0_rg = int( refine_factor/2 )
-  j0_rg = int( refine_factor/2 )
+  i0_rg = int( refine_factor/2 +1 )
+  j0_rg = int( refine_factor/2 +1 )
 
-  do i=parent_Imin, parent_Imax
-    do j=parent_Jmin, parent_Jmax
+  do i=parent_Imin, parent_Imax-1
+    do j=parent_Jmin, parent_Jmax-1
       i_rg = i0_rg + refine_factor*(i-parent_Imin)
       j_rg = j0_rg + refine_factor*(j-parent_Jmin)
 
