@@ -29,5 +29,5 @@ export OMP_NUM_THREADS=12
 rm *.mod
 
 #./frcATM2ROMS.exe < TokyoBay1.in
-./frcATM2ROMS.exe < TokyoBay2.in
-#./frcATM2ROMS.exe < TokyoBay3.in
+#./frcATM2ROMS.exe < TokyoBay2.in
+./frcATM2ROMS.exe < TokyoBay3.in

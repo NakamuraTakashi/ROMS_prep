@@ -10,4 +10,4 @@ FCFLAGS="-O2"
 gfortran ${SRC_DIR}/mod_utility.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/grdROMS_update.F90 ${MY_CPP_FLAGS} ${FCFLAGS} -I/usr/include -L/usr/lib -lnetcdff -o grdROMS_update.exe
 rm *.mod
 
-./grdROMS_update.exe < Shiraho_reef1.in
+./grdROMS_update.exe < RedSea2.in

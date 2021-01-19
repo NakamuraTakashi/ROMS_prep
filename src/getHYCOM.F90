@@ -13,11 +13,10 @@ PROGRAM getHYCOM
   integer :: Eyear, Emonth, Eday
   integer :: Ryear, Rmonth, Rday
   character(256) :: HYCOM_prefix
-  integer :: mode
 ! -------------------------------------------------------------------------
   character(31) :: TIME_ATT   = "hours since 2000-01-01 00:00:00"
   character(10) :: HYCOM_suffix = "_200001.nc"
-  character(256) :: HYCOM_FILE
+  character(256) :: HYCOM_OUT_FILE
   
   TYPE T_NC
     real(8), pointer :: time_all(:)
@@ -37,12 +36,12 @@ PROGRAM getHYCOM
   integer :: start4D(4), count4D(4)
   
   integer :: N_days
-  integer :: jdate_Start, jdate_End, jdate_Ref
+  integer :: jdate_Start, jdate_End
   integer :: jdate_20000101
   integer :: iyear, imonth, iday
   integer :: i,j,k
   integer :: idays
-!      integer :: jdate
+
   character(4) :: YYYY
   character(2) :: MM
   character(2) :: DD
@@ -64,18 +63,17 @@ PROGRAM getHYCOM
   namelist/range/Tlat, Blat, Llon, Rlon
   namelist/sdate/Syear, Smonth, Sday
   namelist/edate/Eyear, Emonth, Eday
-  namelist/refdate/Ryear, Rmonth, Rday
-  namelist/intpmode/mode
   namelist/hycom/HYCOM_prefix
       
   ! Read parameters in namelist file
   
-  read (*, nml=range)
-  read (*, nml=sdate)
-  read (*, nml=edate)
-  read (*, nml=refdate)
-  read (*, nml=intpmode)
-  read (*, nml=hycom)
+  read (5, nml=range)
+  rewind(5)
+  read (5, nml=sdate)
+  rewind(5)
+  read (5, nml=edate)
+  rewind(5)
+  read (5, nml=hycom)
   
   call jd(2000, 1, 1, jdate_20000101)
   d_jdate_20000101 = dble(jdate_20000101)
@@ -83,21 +81,10 @@ PROGRAM getHYCOM
   write(*,*) d_jdate_20000101
   call ndays(Emonth, Eday, Eyear, Smonth, Sday, Syear, N_days)
   call jd(Syear, Smonth, Sday, jdate_Start)
-  call jd(Ryear, Rmonth, Rday, jdate_Ref)
   jdate_End = jdate_Start + N_days
   
   write(*,*) jdate_Start, jdate_End, N_days
-
-!---- Modify time-unit description ---------------------------------
-  
-  write (YYYY, "(I4.4)") Ryear
-  write (MM, "(I2.2)") Rmonth
-  write (DD, "(I2.2)") Rday
-  
-  TIME_ATT(13:16)=YYYY
-  TIME_ATT(18:19)=MM
-  TIME_ATT(21:22)=DD
-  
+ 
 !---- Create the Output file --------------------------------
   write (YYYY, "(I4.4)") Syear
   write (MM, "(I2.2)") Smonth
@@ -201,17 +188,17 @@ PROGRAM getHYCOM
 
 #if defined GOFS_31
 # if defined ANALYSIS_Y
-  open(50, file='time_HYCOM_GOF_31_analysisY.dat')
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_31_analysisY.dat')
 # elif defined ANALYSIS
-  open(50, file='time_HYCOM_GOF_31_analysis.dat')
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_31_analysis.dat')
 # elif defined REANALYSIS
-  open(50, file='time_HYCOM_GOF_31_reanalysis.dat')
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_31_reanalysis.dat')
 # endif
 #elif defined GOFS_30
 # if defined ANALYSIS
-  open(50, file='time_HYCOM_GOF_30_analysis.dat')
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_30_analysis.dat')
 # elif defined REANALYSIS
-  open(50, file='time_HYCOM_GOF_30_reanalysis.dat')
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_30_reanalysis.dat')
 # endif
 #endif
 #if defined SKIP_CHECK_TIME
@@ -306,34 +293,34 @@ PROGRAM getHYCOM
     
     do itime=NC(iNC)%ItS, NC(iNC)%ItE
     
-      time(1) = NC(iNC)%time_all(itime) + dble(jdate_20000101-jdate_Ref)*24.0d0
+      time(1) = NC(iNC)%time_all(itime)
     
       write(*,*) "******************************************************************"
 
-      CALL oceantime2cdate(time(1)*3600,Ryear,Rmonth,Rday,YYYYMMDDpHH)
+      CALL oceantime2cdate(time(1)*3600,2000,1,1,YYYYMMDDpHH)
       write(*,*) 'time = ', YYYYMMDDpHH
           
 ! --- Read NetCDF file ------------------------
 
       start3D = (/ IL, JB, itime /)
       count3D = (/ Im, Jm, 1  /)
-      call readNetCDF_3d(  ncid, 'surf_el'      &
-        , Im, Jm, 1, start3D, count3D           &
+      call readNetCDF_3d_hycom(  ncid, 'surf_el'   &
+        , Im, Jm, 1, start3D, count3D              &
         , surf_el )
   
       start4D = (/ IL, JB, 1,  itime /)
       count4D = (/ Im, Jm, Nz, 1  /)
-      call readNetCDF_4d_2( ncid, 'water_temp'  &
-        , Im, Jm, Nz, 1, start4D, count4D       &
+      call readNetCDF_4d_2( ncid, 'water_temp'     &
+        , Im, Jm, Nz, 1, start4D, count4D          &
         , water_temp )
-      call readNetCDF_4d_2( ncid, 'salinity'    &
-        , Im, Jm, Nz, 1, start4D, count4D       &
+      call readNetCDF_4d_2( ncid, 'salinity'       &
+        , Im, Jm, Nz, 1, start4D, count4D          &
         , salinity )
-      call readNetCDF_4d_2( ncid, 'water_u'     &
-        , Im, Jm, Nz, 1, start4D, count4D       &
+      call readNetCDF_4d_2( ncid, 'water_u'        &
+        , Im, Jm, Nz, 1, start4D, count4D          &
         , water_u )
-      call readNetCDF_4d_2( ncid, 'water_v'     &
-        , Im, Jm, Nz, 1, start4D, count4D       &
+      call readNetCDF_4d_2( ncid, 'water_v'        &
+        , Im, Jm, Nz, 1, start4D, count4D          &
         , water_v )
      
 ! --- Write NetCDF file ------------------------

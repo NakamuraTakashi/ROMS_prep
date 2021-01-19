@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "TokyoBay1_grd_v0test.nc"
+  GRID_FILE = "TokyoBay1_grd_v0.nc"
 /
 
 &gebco
@@ -66,13 +66,13 @@
 /
 
 &bry
-  BRY_prefix  = "TokyoBay1_bry_HYCOM_Nz30"
+  BRY_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Bry/TokyoBay1_bry_HYCOM_Nz30"
   !    south north west east
   SNWE =  1,   0,   1,   1
 /
 
 &ini
-  INI_prefix  = "TokyoBay1_ini_HYCOMwNAO_Nz30"
+  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Ini/TokyoBay1_ini_HYCOMwNAO_Nz30"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -111,18 +111,18 @@
 
 &frc_jra55
   JRA55_dir  =  "N:/JRA-55/" 
-  FRC_prefix  = "TokyoBay1_frc_JRA55"
+  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Air/TokyoBay1_frc_JRA55"
 /
 
 &frc_dsjra55
   DSJRA55_dir = "N:/Data/dsjra55/"  
-  FRC_prefix  = "TokyoBay1_frc_DSJRA55"
+  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Air/TokyoBay1_frc_DSJRA55"
 /
 
 &frc_jmamsm
   MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "TokyoBay1_frc_MSMgb"
+  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Air/TokyoBay1_frc_MSMgb"
 !  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-!  FRC_prefix  = "TokyoBay1_frc_MSMnc"
+!  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Air/TokyoBay1_frc_MSMnc"
 /
 

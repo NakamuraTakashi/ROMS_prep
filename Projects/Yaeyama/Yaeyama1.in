@@ -5,13 +5,13 @@
 
 &sdate
   Syear  = 2014   ! Starting year
-  Smonth = 1      ! Starting month
+  Smonth = 11     ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2015   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
+  Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 12      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -41,17 +41,17 @@
 /
 
 &bry
-  BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
-!  BRY_prefix  = "Yaeyama1_bry_JCOPET_Nz15"
-!  BRY_prefix  = "Yaeyama1_bry_JCOPE2M_Nz15"
+  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
+!  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
+!  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPE2M_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Yaeyama1_ini_HYCOMwNAO_Nz15"
-!  INI_prefix  = "Yaeyama1_ini_JCOPET_Nz15"
-!  INI_prefix  = "Yaeyama1_ini_JCOPE2MwNAO_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15"
+!  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
+!  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPE2MwNAO_Nz15"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -94,12 +94,12 @@
 
 &frc_dsjra55
   DSJRA55_dir = "N:/Data/dsjra55/"  
-  FRC_prefix  = "Yaeyama1_frc_DSJRA55"
+  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_DSJRA55"
 /
 
 &frc_jmamsm
 !  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-!  FRC_prefix  = "Yaeyama1_frc_MSMgb"
+!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb"
   MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-  FRC_prefix  = "Yaeyama1_frc_MSMnc"
+  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc"
 /

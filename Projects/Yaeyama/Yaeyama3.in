@@ -14,15 +14,15 @@
 /
 
 &sdate
-  Syear  = 2014   ! Starting year
-  Smonth = 8      ! Starting month
-  Sday   = 3      ! Starting day
+  Syear  = 2016   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 8      ! Ending month
-  Eday   = 4      ! Ending day
+  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 1      ! Ending day
 /
 
 &refdate
@@ -63,13 +63,13 @@
 /
 
 &bry
-  BRY_prefix  = "Yaeyama3_bry_ROMS_Nz15"
+  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Bry/Yaeyama3_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Yaeyama3_ini_ROMS_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Ini/Yaeyama3_ini_ROMS_Nz15"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -114,13 +114,13 @@
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "N:/Data/dsjra55/"  
+  DSJRA55_dir = "N:/dsjra55/"  
   FRC_prefix  = "Yaeyama3_frc_DSJRA55"
 /
 
 &frc_jmamsm
-  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "Yaeyama3_frc_MSMgb"
-!  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-!  FRC_prefix  = "Yaeyama3_frc_MSMnc"
+!  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
+!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_MSMgb"
+  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_MSMnc"
 /

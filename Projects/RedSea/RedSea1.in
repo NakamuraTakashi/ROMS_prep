@@ -1,11 +1,11 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "RedSea1_grd_v0.nc"
+  GRID_FILE = "RedSea1_grd_test2.nc"
 /
 
 &gebco
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
+  BATH_FILE = "N:/GEBCO_2020/GEBCO_2020.nc"
 /
 
 &grd_setting_ll
@@ -44,8 +44,8 @@
 
 &edate
   Eyear  = 2018   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 8      ! Ending month
-  Eday   = 1      ! Ending day
+  Emonth = 7      ! Ending month
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -108,6 +108,6 @@
 /
 
 &frc_jra55
-  JRA55_dir  =  "W:/JRA-55/"
+  JRA55_dir  =  "N:/JRA-55/"
   FRC_prefix  = "RedSea1_frc_JRA55"
 /

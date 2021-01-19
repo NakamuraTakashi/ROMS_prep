@@ -10,7 +10,7 @@
 
 &emodnet
 ! EMODnet bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/EMODnet/netcdf/G8_2018.nc"
+  BATH_FILE = "N:/RedSea/olddata/oldnc/G8_2018.nc"
 /
 
 &bath_smooth
@@ -38,7 +38,7 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "RedSea1_grd_v0.2.nc"
+  F2C_OUT_FILE = "RedSea1_grd_test.nc"
 /
 
 &sdate

@@ -1,9 +1,9 @@
 #!/bin/bash
 
 export MY_CPP_FLAGS=""
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGEBCO2ROMS"
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DEMODNET2ROMS"
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGEBCO2ROMS"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DEMODNET2ROMS"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 
@@ -16,5 +16,5 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-#./grdROMS.exe < RedSea1.in
-./grdROMS.exe < RedSea2.in
+./grdROMS.exe < RedSea1.in
+#./grdROMS.exe < RedSea2.in
