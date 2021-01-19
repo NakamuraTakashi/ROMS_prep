@@ -39,9 +39,9 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
-! romsvar = 1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 ! romsvar = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-  romsvar = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
+! romsvar = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &river1
@@ -78,7 +78,7 @@
 ! river_direction; river runoff direction (-1/1)
 !  -1: flow from north to south, or flow from east to west
 !   1: flow from south to north, or flow from west to east
-  river_dir2 = 1, 1
+  river_dir2 = 1, -1
 
 
 ! If the SWAT+ output of water quarity parameters (sed, no3, etc.) are yield (not concentration),
