@@ -156,6 +156,7 @@ PROGRAM grdROMS_update
 
   do i=parent_Imin, parent_Imax-1
     do j=parent_Jmin, parent_Jmax-1
+      if( i<0 .or. i>L .or. j<0 .or. j>M ) cycle
       i_rg = i0_rg + refine_factor*(i-parent_Imin)
       j_rg = j0_rg + refine_factor*(j-parent_Jmin)
 

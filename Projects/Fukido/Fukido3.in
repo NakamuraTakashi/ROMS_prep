@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "../../../COAWST/Data/Fukido_reef/Fukido3_4m_mangrove_grd_v0.2.nc"
+  GRID_FILE = "Fukido3_4m_mangrove_grd_v2.0.nc"
 /
 
 &gebco
@@ -14,17 +14,19 @@
 
 &land_mask
 
-  hmin = -5.0d0  ! Minimum depth
+  hmin = -7.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
-  I_ocn = 200    ! rho point index i
-  J_ocn = 200    ! rho point index j
+  I_ocn = 20    ! rho point index i
+  J_ocn = 150    ! rho point index j
+!  I_ocn = 100   ! rho point index i
+!  J_ocn = 100    ! rho point index j
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "../../../COAWST/Data/Fukido_reef/Fukido2_20m_grd_v1.nc"
+  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido2/Grid/Fukido2_20m_grd_v5.0.nc"
   parent_Imin = 105  !347
   parent_Imax = 141  !376
   parent_Jmin = 62  !338
@@ -33,13 +35,19 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Fukido2_grd_v2.0.nc"
+  F2C_OUT_FILE = "Fukido2_20m_grd_v5.0.nc"
 /
 
 &sdate
   Syear  = 2015   ! Starting year
   Smonth = 7      ! Starting month
   Sday   = 13      ! Starting day
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 4   ! Zone number counted from equator
 /
 
 &edate
@@ -56,7 +64,8 @@
 
 &roms2roms      
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "../../../COAWST/Projects/Fukido_reef/FukidoAz_his_20m_river_20190828.nc"
+!  ROMS_HISFILE  = "../../../COAWST/Projects/Fukido_reef/FukidoAz_his_20m_river_20190828.nc"
+  ROMS_HISFILE  = "F:/COAWST_DATA/Yaeyama/Fukido2/ini/Fukido2_ini_Nz8_20150717.00.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -76,7 +85,7 @@
 /
 
 &bry
-  BRY_prefix  = "FukidoAz_20m_bry_Nz8"
+  BRY_prefix  = "Fukido3_bry_Nz8"
   !    south north west east
   SNWE =  1,   1,   1,   0
 /
@@ -93,7 +102,7 @@
 ! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2015   ! Initial year
   INImonth = 7      ! Initial month
-  INIday   = 20     ! Initial day
+  INIday   = 17     ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

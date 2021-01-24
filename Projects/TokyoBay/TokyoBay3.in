@@ -25,7 +25,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "TokyoBay2_grd_v1.0.nc"
+  parent_grid = "TokyoBay2_grd_v1.1.nc"
   parent_Imin = 102
   parent_Imax = 191  !191
   parent_Jmin = 38
@@ -57,7 +57,8 @@
 
 &roms2roms      
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "../../../COAWST/Projects/TokyoBay2/TokyoBay2_his_20180605.nc"
+!  ROMS_HISFILE  = "../../../COAWST/Projects/TokyoBay2/TokyoBay2_his_20180605.nc"
+  ROMS_HISFILE  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Ini/TokyoBay2_ini_JCOPET_Nz30_20180605.00.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -93,7 +94,8 @@
 /
 
 &ini
-  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Ini/TokyoBay3_ini_ROMS_Nz30"
+!  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Ini/TokyoBay3_ini_ROMS_Nz30"
+  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Ini/TokyoBay3_ini_JCOPET_Nz30"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -104,7 +106,7 @@
 ! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2018   ! Initial year
   INImonth = 6      ! Initial month
-  INIday   = 8      ! Initial day
+  INIday   = 5      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

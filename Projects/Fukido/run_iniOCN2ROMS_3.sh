@@ -29,7 +29,7 @@ export MY_CPP_FLAGS="-DROMS_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 # ===== ROMS option ======================================================================
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
 
 # ===== JCOPE option =====================================================================
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
@@ -63,4 +63,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./iniOCN2ROMS.exe < Fukido1.in
+./iniOCN2ROMS.exe < Fukido3.in

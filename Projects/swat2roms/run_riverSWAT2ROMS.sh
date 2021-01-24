@@ -15,7 +15,7 @@ SRC_DIR=../../src
 
 FCFLAGS="-O2"
 
-gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_utility.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/riverSWAT2ROMS.F90 ${MY_CPP_FLAGS} -fopenmp ${FCFLAGS} -I/usr/include -L/usr/lib -lnetcdff -o riverSWAT2ROMS.exe
+gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_utility.F90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/riverSWAT2ROMS.F90 ${MY_CPP_FLAGS} -fopenmp ${FCFLAGS} -I/usr/include -L/usr/lib -lnetcdff -o riverSWAT2ROMS.exe
 rm *.mod
 
 export OMP_NUM_THREADS=12

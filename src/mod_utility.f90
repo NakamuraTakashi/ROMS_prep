@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018-2020 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2021 Takashi NAKAMURA  =====
 
 !!!**** UTILITY MODULE ****************
 
@@ -193,6 +193,7 @@ MODULE mod_utility
     if(count==0) exit
   enddo
   
+#if !defined SKIP_ONE_GRID_BAY_REMOVAL  
   ! Remove one grid bay
   do k=1,1000
     count = 0
@@ -216,6 +217,7 @@ MODULE mod_utility
     enddo
     if(count==0) exit
   enddo
+#endif
   
   mask_rho(:,:) = rmsk(:,:)
   END SUBROUTINE isolated_water_masking

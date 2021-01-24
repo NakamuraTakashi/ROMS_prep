@@ -1,6 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Fukido2_20m_grd_v2.0.nc"
+  GRID_FILE = "Fukido2_20m_grd_v5.0.nc"
+!  GRID_FILE = "Fukido1_100m_grd_v2.1.nc"
 /
 
 &gebco
@@ -14,32 +15,39 @@
 
 &land_mask
 
-  hmin = -5.0d0  ! Minimum depth
+  hmin = -7.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
-  I_ocn = 50    ! rho point index i
-  J_ocn = 50    ! rho point index j
+  I_ocn = 3    ! rho point index i
+  J_ocn = 30    ! rho point index j
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Fukido_100mgrd_Aizawa_masked.nc"
-  parent_Imin = 349  !347
-  parent_Imax = 374  !376
-  parent_Jmin = 349  !338
-  parent_Jmax = 371  !373
+!  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v2.1.nc"
+  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v1.0.nc"
+  parent_Imin = 33  !347
+  parent_Imax = 61  !376
+  parent_Jmin = 24  !338
+  parent_Jmax = 57  !373
   refine_factor = 5
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Fukido_100mgrd_Aizawa_v2.0.nc"
+  F2C_OUT_FILE = "Fukido1_100m_grd_v2.0.nc"
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 4   ! Zone number counted from equator
 /
 
 &sdate
   Syear  = 2015   ! Starting year
   Smonth = 7      ! Starting month
-  Sday   = 13      ! Starting day
+  Sday   = 16      ! Starting day
 /
 
 &edate
@@ -56,8 +64,8 @@
 
 &roms2roms      
 ! ROMS coarse NetCDF history file name
-!  ROMS_HISFILE  = "FukidoAz_100m_his_3rivers_20150714.nc"
-  ROMS_HISFILE  = "Fukido3_ini_Nz8_20190828.04.nc"
+  ROMS_HISFILE  = "Fukido1_100m_his_3rivers_20150714.nc"
+!  ROMS_HISFILE  = "Fukido3_ini_Nz8_20190828.04.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -77,13 +85,13 @@
 /
 
 &bry
-  BRY_prefix  = "Fukido2_20m_bry_Nz8"
+  BRY_prefix  = "Fukido2_bry_Nz8"
   !    south north west east
   SNWE =  1,   1,   1,   0
 /
 
 &ini
-  INI_prefix  = "Fukido2_20m_ini_Nz8"
+  INI_prefix  = "Fukido2_ini_Nz8"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -94,7 +102,7 @@
 ! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2015   ! Initial year
   INImonth = 7      ! Initial month
-  INIday   = 20     ! Initial day
+  INIday   = 17     ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

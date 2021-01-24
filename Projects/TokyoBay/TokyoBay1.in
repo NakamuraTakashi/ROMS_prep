@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "TokyoBay1_grd_v0.nc"
+  GRID_FILE = "TokyoBay1_grd_v1.0.nc"
 /
 
 &gebco
@@ -13,7 +13,7 @@
 ! *The information is not used when GRID_REFINEMENT is activated.
   s_lat = 33.4d0
   e_lat = 35.75d0
-  s_lon = 138.8d0  ! 138.8d0
+  s_lon = 138.133333333333333d0 !138.8d0  ! 138.8d0
   e_lon = 140.8d0
 
 ! Set ROMS grid resolution

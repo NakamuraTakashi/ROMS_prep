@@ -1,11 +1,11 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "../../../COAWST/Data/Yaeyama/Yaeyama2_grd_v10.nc"
+  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v10.nc"
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "../../../COAWST/Data/Yaeyama/Yaeyama1_grd_v10.nc"
+  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
   parent_Imin = 155
   parent_Imax = 215
   parent_Jmin = 60
@@ -33,7 +33,8 @@
 
 &roms2roms      
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "K:/COAWST/output/Yaeyama1_loric/YY1mb1_his_190610_kkl_roms_30lyr_clmoff.nc"
+!  ROMS_HISFILE  = "K:/COAWST/output/Yaeyama1_loric/YY1mb1_his_190610_kkl_roms_30lyr_clmoff.nc"
+  ROMS_HISFILE  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15_20140502.00.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -69,7 +70,8 @@
 /
 
 &ini
-  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Ini/Yaeyama2_ini_ROMS_Nz15"
+!  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Ini/Yaeyama2_ini_ROMS_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Ini/Yaeyama2_ini_HYCOMwNAO_Nz15"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -78,9 +80,9 @@
                   ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2019   ! Initial year
-  INImonth = 6      ! Initial month
-  INIday   = 11     ! Initial day
+  INIyear  = 2014   ! Initial year
+  INImonth = 5      ! Initial month
+  INIday   = 2      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

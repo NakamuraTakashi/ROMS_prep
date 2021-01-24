@@ -57,6 +57,9 @@ PROGRAM iniROMS_uniform
 
   integer :: i,j,k
   integer :: idt,incdf
+
+  integer :: jdate_Start, jdate_Ref
+  real(8) :: d_jdate_Start, d_jdate_Ref
   
   character(4) :: YYYY
   character(2) :: MM
@@ -155,8 +158,15 @@ PROGRAM iniROMS_uniform
 
   write(*,*) "*********************************************"
 !-Read ROMS ocean_his netCDF file --------------------------------
+  call jd(INIyear, INImonth, INIday, jdate_Start)
+  d_jdate_Start = dble(jdate_Start) + dble(INIhour)/24.0d0
+  write(*,*) d_jdate_Start
 
-  ocean_time(1) = 620280000.0d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  d_jdate_Ref = dble(jdate_Ref)
+  write(*,*) d_jdate_Ref
+
+  ocean_time(1) = (d_jdate_Start - d_jdate_Ref)*86400.0d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !-Initial netcdf file name -------------------------------------------------
   call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
@@ -208,7 +218,7 @@ PROGRAM iniROMS_uniform
       
   if( romsvar(1)==1 ) then
   !- zeta --------------------------------
-    zeta = 0.0d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    zeta = 1.484d0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
     start3D = (/ 1,  1,  1 /)
     count3D = (/ Nxr, Nyr, 1 /)
@@ -280,9 +290,9 @@ PROGRAM iniROMS_uniform
       
     if( romsvar(i)==0 ) cycle
     if( i==6 ) then
-      t = 28.0d0 !!! temp !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      t = 29.3d0 !!! temp !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     elseif(i==7) then
-      t = 33.0d0 !!! salt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      t = 33.3d0 !!! salt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     endif
 
     start4D = (/ 1,  1,  1,  1 /)
@@ -293,7 +303,6 @@ PROGRAM iniROMS_uniform
   
   enddo
 
-  call check( nf90_close(ncid) )
   call check( nf90_close(ncid2) )
 
   write(*,*) 'FINISH!!'
