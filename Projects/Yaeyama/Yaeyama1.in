@@ -10,9 +10,9 @@
 /
 
 &edate
-  Eyear  = 1994   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 1995   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
-  Eday   = 3      ! Ending day
+  Eday   = 1      ! Ending day
 /
 
 &refdate
@@ -45,15 +45,15 @@
 
 &hycom_local2
 ! HYCOM local file name(s)
-  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19940101.nc"
-              ,"F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19941226.nc"
+  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19940101.nc",
+               "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19941226.nc"
 /
 
 &bry
-!  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
+  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPE2M_Nz15"
-  BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
+!  BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
