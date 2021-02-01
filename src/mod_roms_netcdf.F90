@@ -1509,7 +1509,8 @@ MODULE mod_roms_netcdf
       if (status == nf90_noerr) exit
       if (itry== Num_try) stop
       write(*,*) '*** READ FAILED: Retry!'
-    end do        
+    end do
+#if !defined HYCOM_LOCAL        
     do itry=1,Num_try
       status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
       write(*,*) trim(nf90_strerror(status))
@@ -1526,6 +1527,7 @@ MODULE mod_roms_netcdf
     end do          
       
     data = data*sf+off
+#endif
     write(*,*) '*** SUCCESS'
 
   END SUBROUTINE readNetCDF_2d
@@ -1575,6 +1577,7 @@ MODULE mod_roms_netcdf
       if (itry== Num_try) stop
       write(*,*) '*** READ FAILED: Retry!'
     end do        
+#if !defined HYCOM_LOCAL        
     do itry=1,Num_try
       status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
       write(*,*) trim(nf90_strerror(status))
@@ -1591,6 +1594,7 @@ MODULE mod_roms_netcdf
     end do          
       
     data = data*sf+off
+#endif
     write(*,*) '*** SUCCESS'
 
   END SUBROUTINE readNetCDF_3d_hycom
@@ -1724,6 +1728,7 @@ MODULE mod_roms_netcdf
         write(*,*) '*** READ FAILED: Retry!'
       end do
     end do        
+#if !defined HYCOM_LOCAL        
     do itry=1,Num_try
       status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
       write(*,*) trim(nf90_strerror(status))
@@ -1740,6 +1745,7 @@ MODULE mod_roms_netcdf
     end do          
       
     data = data*sf+off
+#endif
 
     do i=1,Nxr
       do j=1,Nyr
@@ -1811,7 +1817,8 @@ MODULE mod_roms_netcdf
       if (itry== Num_try) stop
       write(*,*) '*** READ FAILED: Retry!'
     end do
-      
+
+#if !defined HYCOM_LOCAL            
     do itry=1,Num_try
       status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
       write(*,*) trim(nf90_strerror(status))
@@ -1831,6 +1838,11 @@ MODULE mod_roms_netcdf
       data(:,:,k,:) = data_tmp(:,:,Nzr-k+1,:)*sf+off
     end do      
 !    data = data*sf+off
+#else
+    do k=1,Nzr
+      data(:,:,k,:) = data_tmp(:,:,Nzr-k+1,:)
+    end do      
+#endif
 
     do i=1,Nxr
       do j=1,Nyr

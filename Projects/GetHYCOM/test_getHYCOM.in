@@ -25,19 +25,19 @@
 
 &sdate
 
-  Syear  = 2014   ! Starting year
-  Smonth = 4      ! Starting month
+  Syear  = 2004   ! Starting year
+  Smonth = 1     ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
 
-  Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 4      ! Ending month
-  Eday   = 2      ! Ending day
+  Eyear  = 2005   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 1      ! Ending day
 /
 
 &hycom      
 ! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "Yaeyama_HYCOM_extracted"
+  HYCOM_prefix  = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted"
 /

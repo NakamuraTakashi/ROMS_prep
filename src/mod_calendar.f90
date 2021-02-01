@@ -153,12 +153,14 @@ SUBROUTINE oceantime2cdate(ocean_time, Ryear, Rmonth, Rday, YYYYMMDDpHH)
 
   ocean_date = ocean_time/24.0d0/60.0d0/60.0d0
   CALL jd(Ryear, Rmonth, Rday, rjd)
-  out_jd = int(ocean_date)+rjd
+  out_jd = floor(ocean_date)+rjd
   CALL cdate(out_jd, yyyy, mm, dd)
-  hh = int( ( ocean_date - dble( int(ocean_date) ) )*24.0d0 )
-  
+  hh = int( ( ocean_date - dble( floor(ocean_date) ) )*24.0d0 )
+
   write (YYYYMMDDpHH, "(I4.4, I2.2, I2.2, '.', I2.2)") yyyy, mm, dd, hh
- 
+
+  write(*,*) "DEBUG :", yyyy, mm, dd, hh, YYYYMMDDpHH
+   
  END SUBROUTINE oceantime2cdate
  
 END MODULE mod_calendar

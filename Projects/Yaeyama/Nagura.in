@@ -1,7 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.nc"
-!  GRID_FILE = "Yaeyama2_grd_v11.nc"
+!  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Nagura/Grid/Nagura_grd_v2.0.nc"
+  GRID_FILE = "Nagura_grd_v2.0.nc"
 /
 
 &bath_smooth
@@ -10,26 +10,26 @@
 
 &land_mask
 
-  hmin = 1.0d0  ! Minimum depth
+  hmin = -9.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
-  I_ocn = 50    ! rho point index i
-  J_ocn = 50    ! rho point index j
+  I_ocn = 5    ! rho point index i
+  J_ocn = 5    ! rho point index j
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
-  parent_Imin = 155
-  parent_Imax = 215
-  parent_Jmin = 60
-  parent_Jmax = 120
-  refine_factor = 5
+  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Grid/Yaeyama3_grd_v12.nc"
+  parent_Imin = 216
+  parent_Imax = 278
+  parent_Jmin = 230   !209
+  parent_Jmax = 306   !285
+  refine_factor = 3
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Yaeyama1_grd_v11.nc"
+  F2C_OUT_FILE = "Yaeyama3_grd_v12.1.nc"
 /
 
 &utm_zone
@@ -39,13 +39,13 @@
 /
 
 &sdate
-  Syear  = 2017   ! Starting year
+  Syear  = 2016   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2018   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
@@ -58,8 +58,7 @@
 
 &roms2roms      
 ! ROMS coarse NetCDF history file name
-!  ROMS_HISFILE  = "K:/COAWST/output/Yaeyama1_loric/YY1mb1_his_190610_kkl_roms_30lyr_clmoff.nc"
-  ROMS_HISFILE  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15_20140502.00.nc"
+  ROMS_HISFILE  = "../../../COAWST/Projects/Yaeyama2/Yaeyama2_his_14_3.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -75,7 +74,7 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0
 /
 
 &ocn2roms      
@@ -88,33 +87,14 @@
   romsvar = 1,1,1,1,1,1,1        
 /
 
-&jcope
-! JCOPE-T
-  JCOPE_info_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
-  JCOPE_data_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
-! JCOPE-2M
-!  JCOPE_info_dir  =  "P:/JCOPE-2M/yaeyama/"
-!  JCOPE_data_dir  =  "P:/JCOPE-2M/yaeyama/"
-/
-
-&hycom_local1
-  NCnum = 1  ! Number of HYCOM local files 
-/
-
-&hycom_local2
-! HYCOM local file name(s)
-  HYCOM_FILE = "../GetHYCOM/Yaeyama_HYCOM_extracted_199401.nc"
-/
-
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Bry/Yaeyama2_bry_ROMS_Nz15"
+  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Bry/Yaeyama3_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-!  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Ini/Yaeyama2_ini_ROMS_Nz15"
-  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Ini/Yaeyama2_ini_HYCOMwNAO_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Ini/Yaeyama3_ini_ROMS_Nz15"
 
 ! for ROMS: please choose frame number (itime) or
 !           Specific date & time (INIyera, INImonth, INIday, INIhour)
@@ -123,9 +103,9 @@
                   ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2019   ! Initial year
+  INIyear  = 2014   ! Initial year
   INImonth = 8      ! Initial month
-  INIday   = 1      ! Initial day
+  INIday   = 3      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -155,17 +135,17 @@
 
 &frc_jra55
   JRA55_dir  =  "N:/JRA-55/"  
-  FRC_prefix  = "Yaeyama2_frc_JRA55"
+  FRC_prefix  = "Yaeyama3_frc_JRA55"
 /
 
 &frc_dsjra55
   DSJRA55_dir = "N:/dsjra55/"  
-  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Air/Yaeyama2_frc_DSJRA55"
+  FRC_prefix  = "Yaeyama3_frc_DSJRA55"
 /
 
 &frc_jmamsm
 !  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Air/Yaeyama2_frc_MSMgb"
+!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_MSMgb"
   MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Air/Yaeyama2_frc_MSMnc"
+  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_MSMnc"
 /

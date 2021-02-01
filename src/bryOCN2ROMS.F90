@@ -1,6 +1,15 @@
 
 !!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  ===== 
 
+#if defined HYCOM_LOCAL
+# undef GOFS_31
+# undef GOFS_30
+# undef ANALYSIS_Y
+# undef ANALYSIS
+# undef REANALYSIS
+# undef SKIP_CHECK_TIME
+#endif 
+
 PROGRAM bryOCN2ROMS
   use netcdf
   use mod_utility
@@ -208,7 +217,8 @@ PROGRAM bryOCN2ROMS
     integer :: Nt
     integer :: ItS, ItE
   END TYPE T_NC
-  TYPE (T_NC) :: NC(NCnum)
+!  TYPE (T_NC) :: NC(NCnum)
+  TYPE (T_NC), allocatable :: NC(:)
 
   real(8), allocatable :: time2(:)
 
@@ -216,6 +226,10 @@ PROGRAM bryOCN2ROMS
   integer :: iNCs, iNCe
   integer :: jdate_20000101
   real(8) :: d_jdate_20000101
+# if defined HYCOM_LOCAL
+  integer :: NCnum
+  character(256), allocatable :: HYCOM_FILE(:)
+# endif 
 #endif
 #if defined JCOPE_MODEL
   character(256) :: JCOPE_info_dir, JCOPE_data_dir
@@ -242,6 +256,12 @@ PROGRAM bryOCN2ROMS
 #endif
 #if defined JCOPE_MODEL
   namelist/jcope/JCOPE_info_dir, JCOPE_data_dir
+#endif
+#if defined HYCOM_MODEL
+# if defined HYCOM_LOCAL
+  namelist/hycom_local1/NCnum
+  namelist/hycom_local2/HYCOM_FILE
+# endif
 #endif
   namelist/sdate/Syear, Smonth, Sday
   namelist/edate/Eyear, Emonth, Eday
@@ -280,7 +300,17 @@ PROGRAM bryOCN2ROMS
   read (*, nml=hcoord)
   rewind(5)
   read (*, nml=zcoord)
-           
+#if defined HYCOM_MODEL
+# if defined HYCOM_LOCAL
+  rewind(5)
+  read (5, nml=hycom_local1)
+  allocate( HYCOM_FILE(NCnum) )
+  rewind(5)
+  read (5, nml=hycom_local2)
+# endif
+  allocate( NC(NCnum) )
+#endif          
+
 !-Modify time-unit description ---------------------------------
   
   write (YYYY, "(I4.4)") Ryear
@@ -648,7 +678,7 @@ PROGRAM bryOCN2ROMS
   do iNC=1, NCnum
     write(*,*) 'CHECK: Time'
     ! Open NetCDF file
-    write(*,*) "OPEN: ", HYCOM_FILE(iNC)
+    write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
     call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
     call get_dimension(ncid, 'time', NC(iNC)%Nt)
     write(*,*) NC(iNC)%Nt
@@ -657,7 +687,7 @@ PROGRAM bryOCN2ROMS
     allocate( time2(NC(iNC)%Nt) )
     call readNetCDF_1d(ncid, 'time', NC(iNC)%Nt, time2)
     call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
+    write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
     NC(iNC)%time_all = time2
     write(50,*) NC(iNC)%time_all
     deallocate(time2)
@@ -741,8 +771,8 @@ PROGRAM bryOCN2ROMS
 
   !---- Read HYCOM netCDF grid cooredinate --------------------------------
   do iNC=iNCs,iNCe
-    write(*,*) "OPEN: ", HYCOM_FILE(iNC)
-    call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
+    write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
+    call try_nf_open(trim( HYCOM_FILE(iNC) ), nf90_nowrite, ncid)
     ! Get dimension data
     call get_dimension(ncid, 'lat', Nyr_dg)
     call get_dimension(ncid, 'lon', Nxr_dg)
@@ -761,7 +791,7 @@ PROGRAM bryOCN2ROMS
     call readNetCDF_1d(ncid, 'lon', Nxr_dg, NC(iNC)%lon)
     call readNetCDF_1d(ncid, 'depth', Nzr_dg, NC(iNC)%depth)
     call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
+    write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
   enddo
 
   write(*,*) "*************************************" 
@@ -1174,8 +1204,8 @@ PROGRAM bryOCN2ROMS
         cosAv_dg(:,:) = 1.0d0
         sinAv_dg(:,:) = 0.0d0
   
-        write(*,*) "OPEN: ", HYCOM_FILE(iNC)
-        call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)      
+        write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
+        call try_nf_open(trim( HYCOM_FILE(iNC) ), nf90_nowrite, ncid)      
 #endif            
   
         write(*,*) "Seek rho point donor IJ range"
@@ -1325,7 +1355,7 @@ PROGRAM bryOCN2ROMS
         call check( nf90_inq_varid(ncid, 'zeta', var_id) )
         call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
 #elif defined HYCOM_MODEL
-        write(*,*) 'Read: '//HYCOM_FILE(iNC)
+        write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
         start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
         count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
         call readNetCDF_3d_hycom( ncid, 'surf_el'      &
@@ -1375,7 +1405,7 @@ PROGRAM bryOCN2ROMS
         call check( nf90_inq_varid(ncid, 'u', var_id) )
         call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
 #elif defined HYCOM_MODEL
-        write(*,*) 'Read: '//HYCOM_FILE(iNC)
+        write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
         start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
         count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
 # if defined FAST_READ
@@ -1413,7 +1443,7 @@ PROGRAM bryOCN2ROMS
         call check( nf90_inq_varid(ncid, 'v', var_id) )
         call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
 #elif defined HYCOM_MODEL
-        write(*,*) 'Read: '//HYCOM_FILE(iNC)
+        write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
         start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
         count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
 # if defined FAST_READ
@@ -1674,7 +1704,7 @@ PROGRAM bryOCN2ROMS
         else
           cycle
         endif
-        write(*,*) 'Read: '//HYCOM_FILE(iNC)
+        write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
         start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
         count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
 # if defined FAST_READ
@@ -1764,7 +1794,7 @@ PROGRAM bryOCN2ROMS
       deallocate( z_v_dg )
     
       call check( nf90_close(ncid) )
-      write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
+      write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
 #endif
 
     enddo

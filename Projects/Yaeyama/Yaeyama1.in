@@ -1,18 +1,18 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "../../../COAWST/Data/Yaeyama/Yaeyama1_grd_v10.nc"
+  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
 /
 
 &sdate
-  Syear  = 2014   ! Starting year
-  Smonth = 11     ! Starting month
+  Syear  = 1994   ! Starting year
+  Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2014   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 12      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 1994   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -32,18 +32,28 @@
 
 &jcope
 ! JCOPE-T
-  JCOPE_info_dir  =  "E:/JCOPE_DATA/JCOPE-T/yaeyama/2020/"
-  JCOPE_data_dir  =  "E:/JCOPE_DATA/JCOPE-T/yaeyama/202001/"
+  JCOPE_info_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
+  JCOPE_data_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
 ! JCOPE-2M
-!  JCOPE_info_dir  =  "E:/JCOPE_DATA/JCOPE-2M/yaeyama/"
-!  JCOPE_data_dir  =  "E:/JCOPE_DATA/JCOPE-2M/yaeyama/"
+!  JCOPE_info_dir  =  "P:/JCOPE-2M/yaeyama/"
+!  JCOPE_data_dir  =  "P:/JCOPE-2M/yaeyama/"
+/
 
+&hycom_local1
+  NCnum = 2  ! Number of HYCOM local files 
+/
+
+&hycom_local2
+! HYCOM local file name(s)
+  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19940101.nc"
+              ,"F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19941226.nc"
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
+!  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPE2M_Nz15"
+  BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
@@ -60,9 +70,9 @@
                   ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2014   ! Initial year
-  INImonth = 5      ! Initial month
-  INIday   = 2      ! Initial day
+  INIyear  = 2019   ! Initial year
+  INImonth = 8      ! Initial month
+  INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

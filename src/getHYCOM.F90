@@ -15,7 +15,7 @@ PROGRAM getHYCOM
   character(256) :: HYCOM_prefix
 ! -------------------------------------------------------------------------
   character(31) :: TIME_ATT   = "hours since 2000-01-01 00:00:00"
-  character(10) :: HYCOM_suffix = "_200001.nc"
+  character(12) :: HYCOM_suffix = "_20000101.nc"
   character(256) :: HYCOM_OUT_FILE
   
   TYPE T_NC
@@ -88,8 +88,10 @@ PROGRAM getHYCOM
 !---- Create the Output file --------------------------------
   write (YYYY, "(I4.4)") Syear
   write (MM, "(I2.2)") Smonth
+  write (DD, "(I2.2)") Sday
   HYCOM_suffix(2:5)=YYYY
   HYCOM_suffix(6:7)=MM
+  HYCOM_suffix(8:9)=DD
   HYCOM_OUT_FILE = trim( HYCOM_prefix )//HYCOM_suffix
 
 !---- Allocate lat, lon dimension data ---------------------------------

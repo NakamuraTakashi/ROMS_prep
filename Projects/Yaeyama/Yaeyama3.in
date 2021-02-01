@@ -1,26 +1,51 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "../../../COAWST/Data/Yaeyama/Yaeyama3_grd_v11.nc"
+  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Grid/Yaeyama3_grd_v12.nc"
+!  GRID_FILE = "Yaeyama3_grd_v12c.nc"
+/
+
+&bath_smooth
+  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
+
+&land_mask
+
+  hmin = -9.0d0  ! Minimum depth
+
+! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+! and one-grid bay grids 
+  I_ocn = 5    ! rho point index i
+  J_ocn = 5    ! rho point index j
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "../../../COAWST/Data/Yaeyama/Yaeyama2_grd_v10.nc"
+  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.nc"
   parent_Imin = 91
   parent_Imax = 200
-  parent_Jmin = 80
+  parent_Jmin = 73    !80
   parent_Jmax = 179
   refine_factor = 3
 /
 
+&fine2coarse
+  F2C_OUT_FILE = "Yaeyama2_grd_v11.1.nc"
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 4   ! Zone number counted from equator
+/
+
 &sdate
-  Syear  = 2016   ! Starting year
+  Syear  = 2015   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2016   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
@@ -115,7 +140,7 @@
 
 &frc_dsjra55
   DSJRA55_dir = "N:/dsjra55/"  
-  FRC_prefix  = "Yaeyama3_frc_DSJRA55"
+  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_DSJRA55"
 /
 
 &frc_jmamsm

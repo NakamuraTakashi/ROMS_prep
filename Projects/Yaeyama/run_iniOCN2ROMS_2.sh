@@ -3,8 +3,8 @@
 # Please choose one of the following options
 #
 #export MY_CPP_FLAGS="-DHYCOM_MODEL"
-#export MY_CPP_FLAGS="-DJCOPE_MODEL"
-export MY_CPP_FLAGS="-DROMS_MODEL"
+export MY_CPP_FLAGS="-DJCOPE_MODEL"
+#export MY_CPP_FLAGS="-DROMS_MODEL"
 
 # ===== HYCOM option ====================================================================
 
@@ -29,10 +29,10 @@ export MY_CPP_FLAGS="-DROMS_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 # ===== ROMS option ======================================================================
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
 
 # ===== JCOPE option =====================================================================
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
 
 # ===== Tide model =======================================================================
 #tide_model=naotide

@@ -7,6 +7,14 @@
 #if defined ROMS_MODEL || defined JCOPE_MODEL
 # define ARAKAWA_C_GRID
 #endif
+#if defined HYCOM_LOCAL
+# undef GOFS_31
+# undef GOFS_30
+# undef ANALYSIS_Y
+# undef ANALYSIS
+# undef REANALYSIS
+# undef SKIP_CHECK_TIME
+#endif 
 
 PROGRAM iniOCN2ROMS
   use netcdf
@@ -195,7 +203,8 @@ PROGRAM iniOCN2ROMS
     integer :: ItS
     integer :: ItE
   END TYPE T_NC
-  TYPE (T_NC) :: NC(NCnum)
+!  TYPE (T_NC) :: NC(NCnum)
+  TYPE (T_NC), allocatable :: NC(:)
 
   real(8), allocatable :: lat(:), lon(:), depth(:),tau(:)
   real(8), allocatable :: time2(:)
@@ -203,6 +212,10 @@ PROGRAM iniOCN2ROMS
   integer :: iNC
   integer :: jdate_20000101
   real(8) :: d_jdate_20000101
+# if defined HYCOM_LOCAL
+  integer :: NCnum
+  character(256), allocatable :: HYCOM_FILE(:)
+# endif
 #endif
 
 #if defined JCOPE_MODEL
@@ -247,6 +260,12 @@ PROGRAM iniOCN2ROMS
 #if defined JCOPE_MODEL
   namelist/jcope/JCOPE_info_dir, JCOPE_data_dir
 #endif
+#if defined HYCOM_MODEL
+# if defined HYCOM_LOCAL
+  namelist/hycom_local1/NCnum
+  namelist/hycom_local2/HYCOM_FILE
+# endif
+#endif
   namelist/refdate/Ryear, Rmonth, Rday
   namelist/ini/INI_prefix
   namelist/ini/itime
@@ -280,7 +299,16 @@ PROGRAM iniOCN2ROMS
   read (5, nml=hcoord)
   rewind(5)
   read (5, nml=zcoord)
-           
+#if defined HYCOM_MODEL
+# if defined HYCOM_LOCAL
+  rewind(5)
+  read (5, nml=hycom_local1)
+  allocate( HYCOM_FILE(NCnum) )
+  rewind(5)
+  read (5, nml=hycom_local2)
+# endif
+  allocate( NC(NCnum) )
+#endif         
 !-Modify time-unit description ---------------------------------
   
   write (YYYY, "(I4.4)") Ryear
