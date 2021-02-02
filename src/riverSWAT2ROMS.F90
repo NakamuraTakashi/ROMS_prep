@@ -54,7 +54,7 @@ PROGRAM riverSWAT2ROMS
   character(256) :: ROMS_HISFILE
   integer :: romsvar(N_var)
   character(256) :: OUT_FILE, GLOBAL_ATT
-  integer :: NCS, NNS, Nsrc, NCS2, NNS2
+  integer :: NCS, NNS, Nsrc, NCS2, NNS2, Ini_riverID
   integer, allocatable :: Isrc(:), Jsrc(:), river_dir(:), river_dir2(:)
   character(256) :: RIVER_FILE
   character(20), allocatable :: cha_name(:)
@@ -109,7 +109,7 @@ PROGRAM riverSWAT2ROMS
 
   namelist/refdate/Ryear, Rmonth, Rday
   namelist/roms2roms/ROMS_HISFILE, romsvar
-  namelist/river1/OUT_FILE, GLOBAL_ATT, NCS, NNS, Nsrc
+  namelist/river1/OUT_FILE, GLOBAL_ATT, NCS, NNS, Nsrc, Ini_riverID
 
   namelist/river2/Isrc, Jsrc, river_dir, river_dir2
   namelist/river2/RIVER_FILE, cha_name
@@ -187,7 +187,7 @@ PROGRAM riverSWAT2ROMS
   allocate( riverID(Nsrc) )
 
   do i=1,Nsrc
-    riverID(i) = i
+    riverID(i) = i + Ini_riverID - 1
   enddo
   river_Vshape(:,:) = 1.0d0/dble(Nzr)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

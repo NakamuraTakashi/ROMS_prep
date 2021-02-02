@@ -53,6 +53,8 @@
   NNS = 1  ! Number of non-cohesive (sand) sediment tracers
 
   Nsrc = 2 ! Number of river-runoff point sources
+
+  Ini_riverID = 1 ! Initial river ID number for NetCDF 'river'.
 /
 
 &river2
