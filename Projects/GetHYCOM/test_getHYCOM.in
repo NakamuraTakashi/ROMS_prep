@@ -25,14 +25,14 @@
 
 &sdate
 
-  Syear  = 2004   ! Starting year
-  Smonth = 1     ! Starting month
-  Sday   = 1      ! Starting day
+  Syear  = 2019   ! Starting year
+  Smonth = 9      ! Starting month
+  Sday   = 12      ! Starting day
 /
 
 &edate
 
-  Eyear  = 2005   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /

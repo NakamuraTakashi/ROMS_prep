@@ -45,8 +45,9 @@
 
 &hycom_local2
 ! HYCOM local file name(s)
-  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19940101.nc",
-               "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19941226.nc"
+  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20200101.nc",
+               "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20200912.nc"
+!  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20140101.nc"
 /
 
 &bry
@@ -59,8 +60,8 @@
 /
 
 &ini
-  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15"
-!  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
+!  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
 !  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPE2MwNAO_Nz15"
 
 ! for ROMS: please choose frame number (itime) or
@@ -71,9 +72,9 @@
 
 ! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2019   ! Initial year
-  INImonth = 8      ! Initial month
-  INIday   = 1      ! Initial day
-  INIhour  = 0      ! Initial hour
+  INImonth = 12     ! Initial month
+  INIday   = 31     ! Initial day
+  INIhour  = 21      ! Initial hour
 /
 
 &hcoord
@@ -103,8 +104,9 @@
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "N:/Data/dsjra55/"  
-  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_DSJRA55"
+  DSJRA55_dir = "N:/dsjra55/"  
+!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_DSJRA55"
+  FRC_prefix  = "Yaeyama1_frc_DSJRA55"
 /
 
 &frc_jmamsm

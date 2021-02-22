@@ -835,10 +835,10 @@ PROGRAM frcATM2ROMS
         do i=1,Im
           ! Dewpoint (oC)
           dpT = in_data(4,i,j)-in_data(5,i,j) ! (oC)
-          ! Saturation vapor pressure (hPa) !!! Check equations !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-          sat_VP=6.1078d0*10.0d0**(7.5d0*in_data2(4,i,j)/in_data(4,i,j))
+          ! Saturation vapor pressure (hPa)
+          sat_VP=6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/in_data(4,i,j)))
           ! Vapor pressure (hPa)
-          VP    =6.1078d0*10.0d0**(7.5d0*dpT/(237.3d0+dpT))
+          VP=6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/dpT))
           ! Relative humidity (%)
           in_data2(5,i,j) = VP/sat_VP*100.0d0 ! (%)
         end do
