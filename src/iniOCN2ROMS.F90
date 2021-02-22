@@ -679,14 +679,18 @@ PROGRAM iniOCN2ROMS
     call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
     call get_dimension(ncid, 'time', NC(iNC)%Nt)
     write(*,*) NC(iNC)%Nt
+#  if !defined HYCOM_LOCAL
     write(50,*) NC(iNC)%Nt
+#  endif
     allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
     allocate( time2(NC(iNC)%Nt) )
     call readNetCDF_1d(ncid, 'time', NC(iNC)%Nt, time2)
     call check( nf90_close(ncid) )
     write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
     NC(iNC)%time_all = time2
+#  if !defined HYCOM_LOCAL
     write(50,*) NC(iNC)%time_all
+#  endif
     deallocate(time2)
   end do
 #endif
