@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Fukido2_20m_grd_v5.0.nc"
+  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Fukido2/Grid/Fukido2_20m_grd_v6.6.nc"
 !  GRID_FILE = "Fukido1_100m_grd_v2.1.nc"
 /
 
@@ -25,8 +25,8 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-!  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v2.1.nc"
-  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v1.0.nc"
+  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v3.2.nc"
+!  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v1.0.nc"
   parent_Imin = 33  !347
   parent_Imax = 61  !376
   parent_Jmin = 24  !338
@@ -35,7 +35,7 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Fukido1_100m_grd_v2.0.nc"
+  F2C_OUT_FILE = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v3.3.nc"
 /
 
 &utm_zone
@@ -45,15 +45,15 @@
 /
 
 &sdate
-  Syear  = 2015   ! Starting year
-  Smonth = 7      ! Starting month
-  Sday   = 16      ! Starting day
+  Syear  = 2019   ! Starting year
+  Smonth = 8      ! Starting month
+  Sday   = 3      ! Starting day
 /
 
 &edate
-  Eyear  = 2015   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 8      ! Ending month
-  Eday   = 3      ! Ending day
+  Eyear  = 2019   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 9      ! Ending month
+  Eday   = 30      ! Ending day
 /
 
 &refdate
@@ -64,7 +64,7 @@
 
 &roms2roms      
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "Fukido1_100m_his_3rivers_20150714.nc"
+  ROMS_HISFILE  = "K:/COAWST/output/Fukido_reef/Fukido1_his_20190803.nc"
 !  ROMS_HISFILE  = "Fukido3_ini_Nz8_20190828.04.nc"
 
 ! switches (1/0) for activate/deactivate the variables
@@ -100,9 +100,9 @@
                   ! the following Specific date & time
 
 ! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2015   ! Initial year
-  INImonth = 7      ! Initial month
-  INIday   = 17     ! Initial day
+  INIyear  = 2019   ! Initial year
+  INImonth = 8      ! Initial month
+  INIday   = 5      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

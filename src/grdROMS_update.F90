@@ -34,6 +34,7 @@ PROGRAM grdROMS_update
 
 #if defined GRID_FINE2COARSE
   real(8), allocatable :: h_rg(:,:)        ! depth (meter)
+  real(8), allocatable :: rmask_rg(:,:)
   character(256) :: parent_grid
   integer :: parent_Imin, parent_Imax
   integer :: parent_Jmin, parent_Jmax
@@ -42,6 +43,9 @@ PROGRAM grdROMS_update
   integer :: Nxr_rg, Nyr_rg
   integer :: L_rg, M_rg
   integer :: i_rg, j_rg, i0_rg, j0_rg
+  integer :: mask_count, tot_mask, iadd
+  real(8) :: avg_h_rg
+  integer :: ir,jr
 #endif
 
   namelist/grd/GRID_FILE
@@ -88,12 +92,15 @@ PROGRAM grdROMS_update
   M_rg = Nyr_rg-1
   
   allocate( h_rg(0:L_rg, 0:M_rg) )
+  allocate( rmask_rg(0:L_rg, 0:M_rg) )
   
   ! Get variables
   start2D = (/ 1,  1 /)
   count2D = (/ Nxr_rg, Nyr_rg /)
   call check( nf90_inq_varid(ncid, 'h', var_id) ) 
   call check( nf90_get_var(ncid, var_id, h_rg) )
+  call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, rmask_rg) )
   ! Close NetCDF file
   call check( nf90_close(ncid) )
 
@@ -153,6 +160,8 @@ PROGRAM grdROMS_update
 
   i0_rg = int( refine_factor/2 +1 )
   j0_rg = int( refine_factor/2 +1 )
+  tot_mask = refine_factor*refine_factor
+  iadd = int( refine_factor/2 )
 
   do i=parent_Imin, parent_Imax-1
     do j=parent_Jmin, parent_Jmax-1
@@ -160,8 +169,22 @@ PROGRAM grdROMS_update
       i_rg = i0_rg + refine_factor*(i-parent_Imin)
       j_rg = j0_rg + refine_factor*(j-parent_Jmin)
 
-      h(i,j) = h_rg(i_rg,j_rg)
-      
+      avg_h_rg = 0.0d0
+      mask_count = 0 
+
+      do ir=i_rg-iadd, i_rg+iadd
+        do jr=j_rg-iadd, j_rg+iadd
+          avg_h_rg = avg_h_rg + h_rg(ir,jr)*rmask_rg(ir,jr)
+          if( rmask_rg(ir,jr)==1 ) mask_count = mask_count + 1
+        enddo
+      enddo
+
+      h(i,j) = avg_h_rg/mask_count
+
+      if(mask_count <= int( tot_mask/2 ) ) then
+        h(i,j) = hmin - 1
+      endif
+
     enddo
   enddo  
 
