@@ -24,6 +24,9 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
 # --  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Reanalysis (since 1992-10-02 to 2012-12-31)
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_30 -DREANALYSIS"
 
+# --  Local HYCOM extracted data by getHYCOM code 
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
+
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"

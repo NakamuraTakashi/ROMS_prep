@@ -2,9 +2,10 @@
 
 export MY_CPP_FLAGS=""
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGEBCO2ROMS"
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_ONE_GRID_BAY_REMOVAL"
 
 SRC_DIR=../../src
 #FCFLAGS="-Wall -pedantic -std=f95 -fbounds-check -O -Wuninitialized -ffpe-trap=invalid,zero,overflow -fbacktrace"
@@ -16,4 +17,5 @@ rm *.mod
 export OMP_NUM_THREADS=12
 
 #./grdROMS.exe < Busuanga1.in
-./grdROMS.exe < Busuanga2.in
+#./grdROMS.exe < Busuanga2.in
+./grdROMS.exe < Busuanga3.in

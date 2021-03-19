@@ -18,5 +18,5 @@ export OMP_NUM_THREADS=12
 
 #./grdROMS.exe < Yaeyama1.in
 #./grdROMS.exe < Yaeyama2.in
-#./grdROMS.exe < Yaeyama3.in
-./grdROMS.exe < Nagura.in
+./grdROMS.exe < Yaeyama3.in
+#./grdROMS.exe < Nagura.in

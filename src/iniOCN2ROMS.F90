@@ -34,16 +34,6 @@ PROGRAM iniOCN2ROMS
   integer :: itime
   integer :: mode
   character(256) :: GRID_FILE
-#if defined ROMS_MODEL
-  character(256) :: parent_grid
-  integer :: parent_Imin, parent_Imax
-  integer :: parent_Jmin, parent_Jmax
-  integer :: refine_factor
-  character(256) :: ROMS_HISFILE
-  integer :: romsvar(N_var)
-#else
-  integer :: romsvar(7)
-#endif
 
   character(256) :: INI_prefix
   integer :: N_s_rho
@@ -195,13 +185,34 @@ PROGRAM iniOCN2ROMS
   character(2) :: varnum
   integer :: status, access
 
+#if defined ROMS_MODEL
+  TYPE T_NC
+    real(8), pointer :: time_all(:)
+    integer :: Nt
+    integer :: ItS, ItE
+  END TYPE T_NC
+  TYPE (T_NC), allocatable :: NC(:)
+
+  real(8), allocatable :: time2(:)
+
+  character(256) :: parent_grid
+  integer :: parent_Imin, parent_Imax
+  integer :: parent_Jmin, parent_Jmax
+  integer :: refine_factor
+  integer :: NCnum
+  integer :: iNC
+  character(256), allocatable :: ROMS_HISFILE(:)
+  integer :: romsvar(N_var)
+#else
+  integer :: romsvar(7)
+#endif 
+
 #if defined HYCOM_MODEL
 
   TYPE T_NC
     real(8), pointer :: time_all(:)
     integer :: Nt
-    integer :: ItS
-    integer :: ItE
+    integer :: ItS, ItE
   END TYPE T_NC
 !  TYPE (T_NC) :: NC(NCnum)
   TYPE (T_NC), allocatable :: NC(:)
@@ -253,7 +264,8 @@ PROGRAM iniOCN2ROMS
   namelist/refinement/parent_Imin, parent_Imax
   namelist/refinement/parent_Jmin, parent_Jmax
   namelist/refinement/refine_factor
-  namelist/roms2roms/ROMS_HISFILE, romsvar
+  namelist/roms2roms1/NCnum
+  namelist/roms2roms2/ROMS_HISFILE, romsvar
 #else
   namelist/ocn2roms/romsvar
 #endif
@@ -268,7 +280,6 @@ PROGRAM iniOCN2ROMS
 #endif
   namelist/refdate/Ryear, Rmonth, Rday
   namelist/ini/INI_prefix
-  namelist/ini/itime
   namelist/ini/INIyear, INImonth, INIday, INIhour
   namelist/hcoord/spherical
   namelist/zcoord/N_s_rho
@@ -282,7 +293,11 @@ PROGRAM iniOCN2ROMS
 #if defined ROMS_MODEL
   read (5, nml=refinement)
   rewind(5)
-  read (5, nml=roms2roms)
+  read (5, nml=roms2roms1)
+  allocate( ROMS_HISFILE(NCnum) )
+  allocate( NC(NCnum) )
+  rewind(5)
+  read (5, nml=roms2roms2)
   rewind(5)
 #else
   read (5, nml=ocn2roms)
@@ -535,13 +550,63 @@ PROGRAM iniOCN2ROMS
 
 !-Read ROMS ocean_his netCDF file --------------------------------
 
-  ! Open NetCDF file
-  write(*,*) "OPEN: ", trim( ROMS_HISFILE )
-  call check( nf90_open(trim( ROMS_HISFILE ), nf90_nowrite, ncid) )
-  call get_dimension(ncid, 'ocean_time', Nt)
+  ! Check time
+  do iNC=1, NCnum
+    write(*,*) 'CHECK: Time'
+    ! Open NetCDF file
+    write(*,*) "OPEN: ", trim( ROMS_HISFILE(iNC) )
+    call check( nf90_open(trim( ROMS_HISFILE(iNC) ), nf90_nowrite, ncid) )
+    call get_dimension(ncid, 'ocean_time', NC(iNC)%Nt)
+    write(*,*) NC(iNC)%Nt
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+    allocate( time2(NC(iNC)%Nt) )
+    call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
+    call check( nf90_get_var(ncid, var_id, time2) )
+    call check( nf90_close(ncid) )
+    NC(iNC)%time_all = time2
+
+    deallocate(time2)
+  end do
+
+  write(*,*) NC(:)%Nt
+
+  do iNC=1, NCnum-1
+    do i=2,NC(iNC)%Nt
+      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
+        NC(iNC)%Nt = i-1
+        exit
+      end if
+    end do
+  end do
+  
+  write(*,*) NC(:)%Nt
+
+  write(*,*) "******************************************************************"
+
+  NC(:)%ItE = -1
+  NC(:)%ItS = -1
+   
+  LOOP1 : do iNC=1,NCnum
+    do i=2,NC(iNC)%Nt
+      d_jdate = d_jdate_Ref + NC(iNC)%time_all(i)/86400.0d0
+      if(d_jdate>d_jdate_Start) then
+        write(*,*) '*** FOUND: Starting point @ ROMS_HISFILE',iNC
+        NC(iNC)%ItS=i-1
+        itime = NC(iNC)%ItS
+        exit LOOP1
+      endif
+    end do
+  end do LOOP1
+
+  write(*,*) NC(:)%ItS 
+  write(*,*) 'ROMS NetCDF #: ', iNC
+  write(*,*) 'ROMS NetCDF time index: ', itime
+
+  write(*,*) "OPEN: ", trim( ROMS_HISFILE(iNC) )
+  call check( nf90_open(trim( ROMS_HISFILE(iNC) ), nf90_nowrite, ncid) )
+
   call get_dimension(ncid, 's_rho', Nzr_dg)
 
-  allocate(time_all(Nt))
   Ndg = Nzr_dg
   allocate( sc_w_dg(0:Ndg ) )
   allocate( sc_r_dg(1:Ndg ) )
@@ -552,8 +617,6 @@ PROGRAM iniOCN2ROMS
   allocate( z_u_dg(1:Ldg, 0:Mdg, 1:Ndg ) )
   allocate( z_v_dg(0:Ldg, 1:Mdg, 1:Ndg ) )
 
-  call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
-  call check( nf90_get_var(ncid, var_id, time_all) )
   call check( nf90_inq_varid(ncid, 's_rho', var_id) )
   call check( nf90_get_var(ncid, var_id, sc_r_dg ) )
   call check( nf90_inq_varid(ncid, 's_w', var_id) )
@@ -566,20 +629,7 @@ PROGRAM iniOCN2ROMS
   call check( nf90_get_var(ncid, var_id, Vtransform_dg ) )
   call check( nf90_inq_varid(ncid, 'hc', var_id) )
   call check( nf90_get_var(ncid, var_id, hc_dg ) )
-  
-  if (itime <= 0 ) then
-  
-    itime = 1
-    do i=2,Nt
-      d_jdate = d_jdate_Ref + time_all(i)/86400.0d0
-      if( d_jdate > dble(jdate_Start) ) then
-        itime = i-1
-        exit
-      endif
-    enddo
-  endif
-  write(*,*) 'NetCDF time index: ', itime
-  
+
 # if defined WET_DRY
   start3D = (/ 1,      1,      itime /)
   count3D = (/ Nxr_dg, Nyr_dg, 1     /)
@@ -679,7 +729,7 @@ PROGRAM iniOCN2ROMS
     call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
     call get_dimension(ncid, 'time', NC(iNC)%Nt)
     write(*,*) NC(iNC)%Nt
-#  if !defined HYCOM_LOCAL
+#  ifndef HYCOM_LOCAL
     write(50,*) NC(iNC)%Nt
 #  endif
     allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
@@ -688,12 +738,12 @@ PROGRAM iniOCN2ROMS
     call check( nf90_close(ncid) )
     write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
     NC(iNC)%time_all = time2
-#  if !defined HYCOM_LOCAL
+#  ifndef HYCOM_LOCAL
     write(50,*) NC(iNC)%time_all
 #  endif
     deallocate(time2)
   end do
-#endif
+# endif
   close(50)   
 
   write(*,*) NC(:)%Nt
@@ -714,19 +764,7 @@ PROGRAM iniOCN2ROMS
   
   NC(:)%ItE = -1
   NC(:)%ItS = -1
-  
-!  do iNC=NCnum,1,-1
-!    do i=NC(iNC)%Nt-1,1,-1
-!      d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24.0d0
-!      if(d_jdate < dble(jdate_End)) then
-!        write(*,*) '*** FOUND: Ending point @ HYCOM_FILE',iNC
-!        NC(iNC)%ItE=i+1
-!        exit
-!      endif
-!    end do
-!  end do
-!  write(*,*) NC(:)%ItE 
-  
+   
   LOOP1 : do iNC=1,NCnum
     do i=2,NC(iNC)%Nt
       d_jdate = d_jdate_20000101 + NC(iNC)%time_all(i)/24.0d0
@@ -1088,7 +1126,7 @@ PROGRAM iniOCN2ROMS
 #if defined ROMS_MODEL
 !-Read ROMS ocean_his netCDF file --------------------------------
 
-  ocean_time(1) = time_all(itime)
+  ocean_time(1) = NC(iNC)%time_all( itime )
 !-Initial netcdf file name -------------------------------------------------
   call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
   
@@ -1097,13 +1135,13 @@ PROGRAM iniOCN2ROMS
 
   !---- Create the ROMS initial conditions netCDF file --------------------------------
         
-  call createNetCDFini2(  trim( ROMS_HISFILE ),  trim( INI_FILE )   &
+  call createNetCDFini2(  trim( ROMS_HISFILE(iNC) ),  trim( INI_FILE )   &
         , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar  )
 #else
 # if defined HYCOM_MODEL
   call jd(Ryear, Rmonth, Rday, jdate_Ref)
   d_jdate_Ref = dble(jdate_Ref)
-  ocean_time(1) =(  NC(iNC)%time_all( NC(iNC)%ItS )           &
+  ocean_time(1) =(  NC(iNC)%time_all( itime )           &
                   + ( d_jdate_Ref - d_jdate_20000101 )*24.0d0 )*3600.0d0
 
 # elif defined JCOPE_MODEL
@@ -1556,7 +1594,6 @@ PROGRAM iniOCN2ROMS
 #if defined ROMS_MODEL
   call check( nf90_close(ncid) )
 #endif
-!  call check( nf90_close(ncid2) )
 
   write(*,*) 'FINISH!!'
       

@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Busuanga2_grd_v1.0.nc"
+  GRID_FILE = "Busuanga2_grd_v3.0.nc"
 /
 
 &gebco
@@ -9,12 +9,12 @@
 /
 
 &bath_smooth
-  rx0max = 10.0  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 0.3  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
 
-  hmin = -5.0d0  ! Minimum depth
+  hmin = -1.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
@@ -25,10 +25,10 @@
 &refinement
 ! ROMS NetCDF coarse grid file     
   parent_grid = "Busuanga1_grd_v1.0.nc"
-  parent_Imin = 42
-  parent_Imax = 84
-  parent_Jmin = 35
-  parent_Jmax = 83
+  parent_Imin = 42 !42
+  parent_Imax = 84 !84
+  parent_Jmin = 35 !35
+  parent_Jmax = 83 !83
   refine_factor = 5
 /
 
@@ -54,7 +54,11 @@
   Rday   = 1      ! Reference day
 /
 
-&roms2roms      
+&roms2roms1
+  NCnum = 1  ! Number of ROMS his files 
+/
+
+&roms2roms2
 ! ROMS coarse NetCDF history file name
   ROMS_HISFILE  = "ocean_his.nc"
 
@@ -94,13 +98,6 @@
 &ini
   INI_prefix  = "Busuanga2_ini_ROMS_Nz15"
 
-! for ROMS: please choose frame number (itime) or
-!           Specific date & time (INIyera, INImonth, INIday, INIhour)
-  itime = 0       ! Frame number of ROMS file 
-                  ! if itime <= 0, time index will be sought from 
-                  ! the following Specific date & time
-
-! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2017   ! Initial year
   INImonth = 4      ! Initial month
   INIday   = 2      ! Initial day

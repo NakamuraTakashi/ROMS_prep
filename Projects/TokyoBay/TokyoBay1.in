@@ -74,13 +74,6 @@
 &ini
   INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Ini/TokyoBay1_ini_HYCOMwNAO_Nz30"
 
-! for ROMS: please choose frame number (itime) or
-!           Specific date & time (INIyera, INImonth, INIday, INIhour)
-  itime = 0       ! Frame number of ROMS file 
-                  ! if itime <= 0, time index will be sought from 
-                  ! the following Specific date & time
-
-! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2020   ! Initial year
   INImonth = 7      ! Initial month
   INIday   = 2      ! Initial day

@@ -54,7 +54,11 @@
   Rday   = 1      ! Reference day
 /
 
-&roms2roms      
+&roms2roms1
+  NCnum = 1  ! Number of ROMS his files 
+/
+
+&roms2roms2
 ! ROMS coarse NetCDF history file name
   ROMS_HISFILE  = "ocean_his.nc"
 
@@ -102,13 +106,6 @@
 &ini
   INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Ini/TokyoBay2_ini_JCOPET_Nz30"
 
-! for ROMS: please choose frame number (itime) or
-!           Specific date & time (INIyera, INImonth, INIday, INIhour)
-  itime = 0       ! Frame number of ROMS file 
-                  ! if itime <= 0, time index will be sought from 
-                  ! the following Specific date & time
-
-! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2018   ! Initial year
   INImonth = 6      ! Initial month
   INIday   = 5      ! Initial day

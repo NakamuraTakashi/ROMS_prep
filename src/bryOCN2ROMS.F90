@@ -1,6 +1,12 @@
 
 !!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  ===== 
 
+#if defined HYCOM_MODEL || defined JCOPE_MODEL
+# undef WET_DRY
+#endif
+#if defined ROMS_MODEL || defined JCOPE_MODEL
+# define ARAKAWA_C_GRID
+#endif
 #if defined HYCOM_LOCAL
 # undef GOFS_31
 # undef GOFS_30
@@ -29,16 +35,7 @@ PROGRAM bryOCN2ROMS
   integer :: itime,ibry
   integer :: mode
   character(256) :: GRID_FILE
-  character(256) :: parent_grid
-  integer :: parent_Imin, parent_Imax
-  integer :: parent_Jmin, parent_Jmax
-  integer :: refine_factor
-  character(256) :: ROMS_HISFILE
-#if defined ROMS_MODEL
-  integer :: romsvar(N_var)
-#else
-  integer :: romsvar(7)
-#endif 
+
   character(256) :: BRY_prefix
   integer :: SNWE(4)
   integer :: N_s_rho
@@ -201,13 +198,35 @@ PROGRAM bryOCN2ROMS
   integer :: ncid,var_id
   integer :: ncid2,var_id2
   integer :: iNC, iNCm
-  integer :: ItS, ItE
+!  integer :: ItS, ItE
   character(256) :: varname
   character(256) :: bryname
   character(2) :: varnum
   integer :: status, access
 
-  !
+
+#if defined ROMS_MODEL
+  TYPE T_NC
+    real(8), pointer :: time_all(:)
+    integer :: Nt
+    integer :: ItS, ItE
+  END TYPE T_NC
+  TYPE (T_NC), allocatable :: NC(:)
+
+  real(8), allocatable :: time2(:)
+
+  character(256) :: parent_grid
+  integer :: parent_Imin, parent_Imax
+  integer :: parent_Jmin, parent_Jmax
+  integer :: refine_factor
+  integer :: NCnum
+  integer :: iNCs, iNCe
+  character(256), allocatable :: ROMS_HISFILE(:)
+  integer :: romsvar(N_var)
+#else
+  integer :: romsvar(7)
+#endif 
+
 #if defined HYCOM_MODEL
 
   TYPE T_NC
@@ -250,7 +269,8 @@ PROGRAM bryOCN2ROMS
   namelist/refinement/parent_Imin, parent_Imax
   namelist/refinement/parent_Jmin, parent_Jmax
   namelist/refinement/refine_factor
-  namelist/roms2roms/ROMS_HISFILE, romsvar
+  namelist/roms2roms1/NCnum
+  namelist/roms2roms2/ROMS_HISFILE, romsvar
 #else
   namelist/ocn2roms/romsvar  
 #endif
@@ -279,7 +299,11 @@ PROGRAM bryOCN2ROMS
 #if defined ROMS_MODEL
   read (5, nml=refinement)
   rewind(5)
-  read (5, nml=roms2roms)
+  read (5, nml=roms2roms1)
+  allocate( ROMS_HISFILE(NCnum) )
+  allocate( NC(NCnum) )
+  rewind(5)
+  read (5, nml=roms2roms2)
   rewind(5)
 #else
   read (5, nml=ocn2roms)
@@ -533,12 +557,12 @@ PROGRAM bryOCN2ROMS
 !-Read ROMS ocean_his netCDF file --------------------------------
 
   ! Open NetCDF file
-  write(*,*) "OPEN: ", trim( ROMS_HISFILE )
-  call check( nf90_open(trim( ROMS_HISFILE ), nf90_nowrite, ncid) )
-  call get_dimension(ncid, 'ocean_time', Nt)
+  write(*,*) "OPEN: ", trim( ROMS_HISFILE(1) )
+  call check( nf90_open(trim( ROMS_HISFILE(1) ), nf90_nowrite, ncid) )
+!  call get_dimension(ncid, 'ocean_time', Nt)
   call get_dimension(ncid, 's_rho', Nzr_dg)
 
-  allocate(time_all(Nt))
+!  allocate(time_all(Nt))
 
   Ndg = Nzr_dg
   allocate( sc_w_dg(0:Ndg ) )
@@ -550,8 +574,8 @@ PROGRAM bryOCN2ROMS
   allocate( z_u_dg(1:Ldg, 0:Mdg, 1:Ndg ) )
   allocate( z_v_dg(0:Ldg, 1:Mdg, 1:Ndg ) )
 
-  call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
-  call check( nf90_get_var(ncid, var_id, time_all) )
+!  call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
+!  call check( nf90_get_var(ncid, var_id, time_all) )
   call check( nf90_inq_varid(ncid, 's_rho', var_id) )
   call check( nf90_get_var(ncid, var_id, sc_r_dg ) )
   call check( nf90_inq_varid(ncid, 's_w', var_id) )
@@ -564,38 +588,7 @@ PROGRAM bryOCN2ROMS
   call check( nf90_get_var(ncid, var_id, Vtransform_dg ) )
   call check( nf90_inq_varid(ncid, 'hc', var_id) )
   call check( nf90_get_var(ncid, var_id, hc_dg ) )
-
-! Check time
-
-  ItS = 1
-  ItE = Nt
-  do i=2,Nt
-    d_jdate = d_jdate_Ref + time_all(i)/86400.0d0
-    if( d_jdate > dble(jdate_Start) ) then
-      ItS = i-1
-      exit
-    endif
-  enddo
-  do i=ItS,Nt
-    d_jdate = d_jdate_Ref + time_all(i)/86400.0d0
-    if( d_jdate >= dble(jdate_End) ) then
-      ItE = i-1
-      exit
-    endif
-  enddo
-
-  Nt = ItE - ItS + 1
-  
-  allocate(bry_time(Nt))
-  allocate(idt(Nt))
-  allocate(iNCt(Nt))
-
-  bry_time(:) = time_all(ItS:ItE)
-  
-  do i=1, Nt
-    idt(i) = ItS + i-1
-    iNCt(i) = 1
-  enddo
+  call check( nf90_close(ncid) )
 
 ! Extract grid data
 
@@ -641,6 +634,94 @@ PROGRAM bryOCN2ROMS
     enddo         
   enddo
 
+! Check time
+  do iNC=1, NCnum
+    write(*,*) 'CHECK: Time'
+    ! Open NetCDF file
+    write(*,*) "OPEN: ", trim( ROMS_HISFILE(iNC) )
+    call check( nf90_open(trim( ROMS_HISFILE(iNC) ), nf90_nowrite, ncid) )
+    call get_dimension(ncid, 'ocean_time', NC(iNC)%Nt)
+    write(*,*) NC(iNC)%Nt
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+    allocate( time2(NC(iNC)%Nt) )
+    call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
+    call check( nf90_get_var(ncid, var_id, time2) )
+    call check( nf90_close(ncid) )
+    NC(iNC)%time_all = time2
+
+    deallocate(time2)
+  end do
+
+  write(*,*) NC(:)%Nt
+
+  do iNC=1, NCnum-1
+    do i=2,NC(iNC)%Nt
+      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
+        NC(iNC)%Nt = i-1
+        exit
+      end if
+    end do
+  end do
+  
+  write(*,*) NC(:)%Nt
+
+  write(*,*) "******************************************************************"
+
+  NC(:)%ItE = -1
+  NC(:)%ItS = -1
+  
+  do iNC=NCnum,1,-1
+    do i=NC(iNC)%Nt,1,-1
+      d_jdate = d_jdate_Ref + NC(iNC)%time_all(i)/86400.0d0
+      if(d_jdate < dble(jdate_End)) then
+        write(*,*) '*** FOUND: Ending point @ ROMS_HISFILE',iNC
+        NC(iNC)%ItE=i
+        exit
+      endif
+    end do
+  end do
+  write(*,*) NC(:)%ItE 
+  
+  do iNC=1,NCnum
+    do i=2,NC(iNC)%ItE
+      d_jdate = d_jdate_Ref + NC(iNC)%time_all(i)/86400.0d0
+      if(d_jdate>dble(jdate_Start)) then
+        write(*,*) '*** FOUND: Starting point @ ROMS_HISFILE',iNC
+        NC(iNC)%ItS=i-1
+        exit
+      endif
+    end do
+  end do
+  write(*,*) NC(:)%ItS 
+
+  Nt = 0
+  iNCs = NCnum
+  iNCe = 1
+
+  do iNC=1,NCnum
+    if(NC(iNC)%ItS==-1) then
+      cycle
+    end if
+    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
+    iNCs = min(iNCs,iNC)
+    iNCe = max(iNCe,iNC)
+  enddo
+
+  allocate(bry_time(Nt))
+  allocate(idt(Nt))
+  allocate(iNCt(Nt))
+
+  i=1
+  do iNC=iNCs,iNCe
+    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
+      iNCt(i+k) = iNC
+      idt(i+k)  = NC(iNC)%ItS + k
+    enddo
+    j=i+NC(iNC)%ItE-NC(iNC)%ItS
+    bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
+    i=i+j
+  enddo
+
   write(*,*) "*************************************" 
 
 #elif defined HYCOM_MODEL
@@ -682,7 +763,7 @@ PROGRAM bryOCN2ROMS
     call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
     call get_dimension(ncid, 'time', NC(iNC)%Nt)
     write(*,*) NC(iNC)%Nt
-#  if !defined HYCOM_LOCAL
+#  ifndef HYCOM_LOCAL
     write(50,*) NC(iNC)%Nt
 #  endif
     allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
@@ -691,7 +772,7 @@ PROGRAM bryOCN2ROMS
     call check( nf90_close(ncid) )
     write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
     NC(iNC)%time_all = time2
-#  if !defined HYCOM_LOCAL
+#  ifndef HYCOM_LOCAL
     write(50,*) NC(iNC)%time_all
 #  endif
     deallocate(time2)
@@ -981,9 +1062,9 @@ PROGRAM bryOCN2ROMS
   BRY_suffix(2:12)=YYYYMMDDpHH
   BRY_FILE = trim( BRY_prefix )//BRY_suffix
 
-!-Create the ROMS initial conditions netCDF file --------------------------------
+!-Create the ROMS boundary conditions netCDF file --------------------------------
 #if defined ROMS_MODEL     
-  call createNetCDFbry2(   trim( ROMS_HISFILE ), trim( BRY_FILE )   &
+  call createNetCDFbry2(   trim( ROMS_HISFILE(1) ), trim( BRY_FILE )   &
         , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar ,SNWE   )
 #else
   call createNetCDFbry(  trim( BRY_FILE ), TIME_ATT       &
@@ -1147,7 +1228,11 @@ PROGRAM bryOCN2ROMS
       iNC  = iNCt(itime)
 
       if(iNCm < iNC) then
-#if defined HYCOM_MODEL
+#if defined ROMS_MODEL
+        write(*,*) "OPEN: ", trim( ROMS_HISFILE(iNC) )
+        call check( nf90_open(trim( ROMS_HISFILE(iNC) ), nf90_nowrite, ncid) )    
+
+#elif defined HYCOM_MODEL
   !---- Load HYCOM netCDF grid cooredinate --------------------------------
 
         Nyr_dg = NC(iNC)%Nyr_dg
@@ -1353,6 +1438,7 @@ PROGRAM bryOCN2ROMS
       if( romsvar(1)==1 ) then
         !- zeta --------------------------------
 #if defined ROMS_MODEL
+        write(*,*) 'Read: '//trim( ROMS_HISFILE(iNC) )
         write(*,*) 'Read: zeta'
         start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
         count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
@@ -1778,6 +1864,11 @@ PROGRAM bryOCN2ROMS
       deallocate( vmask_wet_dg )
 #endif
 
+#if defined ROMS_MODEL
+      call check( nf90_close(ncid) )
+      write(*,*) "CLOSE: ", trim( ROMS_HISFILE(iNC) )
+#endif
+
 #if defined HYCOM_MODEL
       deallocate( latr_dg )
       deallocate( lonr_dg )
@@ -1837,10 +1928,6 @@ PROGRAM bryOCN2ROMS
 
     write(*,*) '***************** '//trim(BRY_NAME(ibry))//' boundary complete! *****************'
   enddo
-
-#if defined ROMS_MODEL
-  call check( nf90_close(ncid) )
-#endif
 
   write(*,*) 'FINISH!!'
       

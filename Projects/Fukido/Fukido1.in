@@ -60,7 +60,11 @@
   Rday   = 1      ! Reference day
 /
 
-&roms2roms      
+&roms2roms1
+  NCnum = 1  ! Number of ROMS his files 
+/
+
+&roms2roms2
 ! ROMS coarse NetCDF history file name
   ROMS_HISFILE  = "K:/COAWST/output/Yaeyama1_2/Y2_his_nst_190801.nc"
 !  ROMS_HISFILE  = "Fukido3_ini_Nz8_20190828.04.nc"
@@ -91,13 +95,6 @@
 &ini
   INI_prefix  = "Fukido1_ini_Nz8"
 
-! for ROMS: please choose frame number (itime) or
-!           Specific date & time (INIyera, INImonth, INIday, INIhour)
-  itime = 0       ! Frame number of ROMS file 
-                  ! if itime <= 0, time index will be sought from 
-                  ! the following Specific date & time
-
-! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2019   ! Initial year
   INImonth = 8      ! Initial month
   INIday   = 3      ! Initial day

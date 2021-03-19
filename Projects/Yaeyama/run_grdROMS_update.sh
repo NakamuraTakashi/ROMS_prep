@@ -1,6 +1,6 @@
 #!/bin/bash
 export MY_CPP_FLAGS=""
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_ONE_GRID_BAY_REMOVAL"
 
@@ -13,5 +13,5 @@ rm *.mod
 
 #./grdROMS_update.exe < Yaeyama1.in
 #./grdROMS_update.exe < Yaeyama2.in
-#./grdROMS_update.exe < Yaeyama3.in
-./grdROMS_update.exe < Nagura.in
+./grdROMS_update.exe < Yaeyama3.in
+#./grdROMS_update.exe < Nagura.in

@@ -31,4 +31,4 @@ rm *.mod
 #./frcATM2ROMS_2017.exe < Yaeyama1.in
 #./frcATM2ROMS.exe < Yaeyama2.in
 #./frcATM2ROMS.exe < Yaeyama3.in
-OMP_NUM_THREADS=12 ./frcATM2ROMS.exe < Yaeyama1.in
+OMP_NUM_THREADS=12 ./frcATM2ROMS.exe < Yaeyama2.in

@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Busuanga1_grd_v1.0.nc"
+  GRID_FILE = "Busuanga3_grd_v3.0.nc"
 /
 
 &gebco
@@ -9,12 +9,12 @@
 /
 
 &bath_smooth
-  rx0max = 0.3  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 5.0  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
 
-  hmin = -5.0d0  ! Minimum depth
+  hmin = -1.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
@@ -24,12 +24,16 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "D:/cygwin64/home/Takashi/COAWST/Data/Coral_Triangle/CT_0.08_grd_v2.nc"
-  parent_Imin = 349  !347
-  parent_Imax = 374  !376
-  parent_Jmin = 349  !338
-  parent_Jmax = 371  !373
+  parent_grid = "Busuanga2_grd_v3.0.nc"
+  parent_Imin = 55
+  parent_Imax = 89
+  parent_Jmin = 116
+  parent_Jmax = 153 !157
   refine_factor = 5
+/
+
+&fine2coarse
+  F2C_OUT_FILE = "Busuanga1_grd_v1.1.nc"
 /
 
 &sdate
@@ -86,13 +90,13 @@
 /
 
 &bry
-  BRY_prefix  = "Busuanga1_bry_Nz30"
+  BRY_prefix  = "Busuanga2_bry_Nz30"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Busuanga1_ini_ROMS_Nz15"
+  INI_prefix  = "Busuanga2_ini_ROMS_Nz15"
 
   INIyear  = 2017   ! Initial year
   INImonth = 4      ! Initial month
@@ -124,5 +128,5 @@
 
 &frc_jra55
   JRA55_dir  =  "W:/JRA-55/"
-  FRC_prefix  = "Busuanga1_frc_JRA55"
+  FRC_prefix  = "Busuanga2_frc_JRA55"
 /

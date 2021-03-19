@@ -50,7 +50,11 @@
   Rday   = 1      ! Reference day
 /
 
-&roms2roms      
+&roms2roms1
+  NCnum = 1  ! Number of ROMS his files 
+/
+
+&roms2roms2
 ! ROMS coarse NetCDF history file name
 !  ROMS_HISFILE  = "D:/ROMS/output/Coral_Triangle/test01/CT_0.08_his_201704.nc"
   ROMS_HISFILE  = "O:/Data/Coral_Triangle/CT_0.08_his_201704.nc"
@@ -81,13 +85,6 @@
 &ini
   INI_prefix  = "Berau1_ini_ROMS_Nz30"
 
-! for ROMS: please choose frame number (itime) or
-!           Specific date & time (INIyera, INImonth, INIday, INIhour)
-  itime = 0       ! Frame number of ROMS file 
-                  ! if itime <= 0, time index will be sought from 
-                  ! the following Specific date & time
-
-! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2017   ! Initial year
   INImonth = 4      ! Initial month
   INIday   = 2      ! Initial day

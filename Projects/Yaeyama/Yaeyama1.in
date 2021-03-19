@@ -40,14 +40,15 @@
 /
 
 &hycom_local1
-  NCnum = 2  ! Number of HYCOM local files 
+!  NCnum = 2  ! Number of HYCOM local files 
+  NCnum = 1  ! Number of HYCOM local files 
 /
 
 &hycom_local2
 ! HYCOM local file name(s)
-  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20200101.nc",
-               "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20200912.nc"
-!  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20140101.nc"
+!  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20200101.nc",
+!               "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20200912.nc"
+  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19940101.nc"
 /
 
 &bry
@@ -60,21 +61,14 @@
 /
 
 &ini
-!  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15"
-  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15"
+!  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
 !  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPE2MwNAO_Nz15"
 
-! for ROMS: please choose frame number (itime) or
-!           Specific date & time (INIyera, INImonth, INIday, INIhour)
-  itime = 0       ! Frame number of ROMS file 
-                  ! if itime <= 0, time index will be sought from 
-                  ! the following Specific date & time
-
-! for ROMS, HYCOM, or JCOPE 
-  INIyear  = 2019   ! Initial year
-  INImonth = 12     ! Initial month
-  INIday   = 31     ! Initial day
-  INIhour  = 21      ! Initial hour
+  INIyear  = 2014   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 2      ! Initial day
+  INIhour  = 0      ! Initial hour
 /
 
 &hcoord

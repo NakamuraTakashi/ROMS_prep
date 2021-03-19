@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Grid/Yaeyama3_grd_v12.nc"
+  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Grid/Yaeyama3_grd_v12.2.nc"
 !  GRID_FILE = "Yaeyama3_grd_v12c.nc"
 /
 
@@ -20,7 +20,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.nc"
+  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.1.nc"
   parent_Imin = 91
   parent_Imax = 200
   parent_Jmin = 73    !80
@@ -29,7 +29,7 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Yaeyama2_grd_v11.1.nc"
+  F2C_OUT_FILE = "Yaeyama2_grd_v11.2.nc"
 /
 
 &utm_zone
@@ -56,7 +56,11 @@
   Rday   = 1      ! Reference day
 /
 
-&roms2roms      
+&roms2roms1
+  NCnum = 1  ! Number of ROMS his files 
+/
+
+&roms2roms2
 ! ROMS coarse NetCDF history file name
   ROMS_HISFILE  = "../../../COAWST/Projects/Yaeyama2/Yaeyama2_his_14_3.nc"
 
@@ -96,13 +100,6 @@
 &ini
   INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Ini/Yaeyama3_ini_ROMS_Nz15"
 
-! for ROMS: please choose frame number (itime) or
-!           Specific date & time (INIyera, INImonth, INIday, INIhour)
-  itime = 0       ! Frame number of ROMS file 
-                  ! if itime <= 0, time index will be sought from 
-                  ! the following Specific date & time
-
-! for ROMS, HYCOM, or JCOPE 
   INIyear  = 2014   ! Initial year
   INImonth = 8      ! Initial month
   INIday   = 3      ! Initial day
