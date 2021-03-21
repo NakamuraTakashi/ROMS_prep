@@ -306,22 +306,22 @@ PROGRAM getHYCOM
 
       start3D = (/ IL, JB, itime /)
       count3D = (/ Im, Jm, 1  /)
-      call readNetCDF_3d_hycom(  ncid, 'surf_el'   &
+      call readNetCDF_3d_hycom2( HYCOM_FILE(iNC),  ncid, 'surf_el'   &
         , Im, Jm, 1, start3D, count3D              &
         , surf_el )
   
       start4D = (/ IL, JB, 1,  itime /)
       count4D = (/ Im, Jm, Nz, 1  /)
-      call readNetCDF_4d_2( ncid, 'water_temp'     &
+      call readNetCDF_4d_hycom2( HYCOM_FILE(iNC),  ncid, 'water_temp'     &
         , Im, Jm, Nz, 1, start4D, count4D          &
         , water_temp )
-      call readNetCDF_4d_2( ncid, 'salinity'       &
+      call readNetCDF_4d_hycom2( HYCOM_FILE(iNC),  ncid, 'salinity'       &
         , Im, Jm, Nz, 1, start4D, count4D          &
         , salinity )
-      call readNetCDF_4d_2( ncid, 'water_u'        &
+      call readNetCDF_4d_hycom2( HYCOM_FILE(iNC),  ncid, 'water_u'        &
         , Im, Jm, Nz, 1, start4D, count4D          &
         , water_u )
-      call readNetCDF_4d_2( ncid, 'water_v'        &
+      call readNetCDF_4d_hycom2( HYCOM_FILE(iNC),  ncid, 'water_v'        &
         , Im, Jm, Nz, 1, start4D, count4D          &
         , water_v )
      

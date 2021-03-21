@@ -1532,6 +1532,81 @@ MODULE mod_roms_netcdf
 
   END SUBROUTINE readNetCDF_2d
 
+!**** readNetCDF_3d ver 2 **********************************************
+      
+  SUBROUTINE readNetCDF_3d_hycom2(    &
+!    input parameters
+        NCFILE                        &
+      , ncid                          &
+      , NCNAME                        &
+      , Im, Jm, Nt                    &
+      , start, count                  &
+!    output parameters       
+      , data                          &
+    )
+                           
+!    input parameters
+    character(len=*), intent( in) :: NCFILE
+    integer, intent(inout) :: ncid
+    character(len=*), intent( in) :: NCNAME
+    integer, intent( in) :: Im, Jm, Nt
+    integer, intent( in) :: start(3), count(3)
+    real(8), intent(out) :: data(Im, Jm, Nt)
+    
+    integer, parameter :: Num_try = 30
+    integer :: var_id
+    integer :: err_flag, status
+    integer :: itry
+    real(8) :: sf, off
+    
+    data(:,:,:)=-9999.0d0
+      
+! --- Read NetCDF file ------------------------
+      
+    write(*,*) 'READ: ', NCNAME
+    ! Get variable id
+    do itry=1,Num_try
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 1: Retry!'
+    end do        
+    do itry=1,Num_try
+      status = nf90_get_var(ncid, var_id, data, start=start, count=count)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr .and. data(Im,Jm,Nt)/=-9999.0d0) then
+!      if (status == nf90_noerr ) then
+        exit
+      else
+        call check( nf90_close(ncid) )
+        call try_nf_open( NCFILE, nf90_nowrite, ncid )
+      endif
+      if (itry== Num_try) stop
+      write(*,*) '*** READ FAILED: Retry!', data(Im,Jm,Nt)
+    end do        
+#ifndef HYCOM_LOCAL        
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'scale_factor', sf)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 2: Retry!'
+    end do          
+    do itry=1,Num_try
+      status = nf90_get_att(ncid, var_id, 'add_offset', off)
+      write(*,*) trim(nf90_strerror(status))
+      if (status == nf90_noerr) exit
+      if (itry== Num_try) stop
+      write(*,*) '*** FAILED 3: Retry!'
+    end do          
+      
+    data = data*sf+off
+#endif
+    write(*,*) '*** SUCCESS'
+
+  END SUBROUTINE readNetCDF_3d_hycom2
+
 !**** readNetCDF_3d **********************************************
       
   SUBROUTINE readNetCDF_3d_hycom(    &
@@ -1602,28 +1677,31 @@ MODULE mod_roms_netcdf
 !
 !**** readNetCDF_4d ver 2 **********************************************
       
-  SUBROUTINE readNetCDF_4d_2(  &
+  SUBROUTINE readNetCDF_4d_hycom2(    &
 !    input parameters
-        ncid                 &
-      , NCNAME               &
-      , Nxr, Nyr, Nzr, Nt    &
-      , start, count         &
-!    output parameters
-      , data                 &
+        NCFILE                        &
+      , ncid                          &
+      , NCNAME                        &
+      , Nxr, Nyr, Nzr, Nt             &
+      , start, count                  &
+!    output parameters         
+      , data                          &
     )
                                
 !    input parameters
-    integer, intent( in) :: ncid
+    character(len=*), intent( in) :: NCFILE
+    integer, intent(inout) :: ncid
     character(len=*), intent( in) :: NCNAME
     integer, intent( in) :: Nxr, Nyr, Nzr, Nt
     integer, intent( in) :: start(4), count(4)
     real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
     
     integer, parameter :: Num_try = 50
+    integer, parameter :: Num_try2 = 3
     integer :: start2(4), count2(4)
     integer :: var_id
     integer :: err_flag, status
-    integer :: itry
+    integer :: itry, itry2
     integer :: k
     real(8) :: sf, off
     
@@ -1646,11 +1724,18 @@ MODULE mod_roms_netcdf
     end do        
     do k=1,Nzr
       start2(3)=k
+      itry2=1
       do itry=1,Num_try
         status = nf90_get_var(ncid, var_id, data(:,:,k,:), start=start2, count=count2)
         write(*,*) trim(nf90_strerror(status)), k
-        if (status == nf90_noerr .and. data(Nxr,Nyr,k,Nt)/=-9999.0d0) exit
-!        if (itry== Num_try) stop
+        if (status == nf90_noerr .and. data(Nxr,Nyr,k,Nt)/=-9999.0d0) then
+!        if (status == nf90_noerr ) then
+          exit
+        else
+          call check( nf90_close(ncid) )
+          call try_nf_open( NCFILE, nf90_nowrite, ncid )
+        endif
+        if (itry == Num_try) stop
         write(*,*) '*** READ FAILED: Retry!',  data(Nxr,Nyr,k,Nt)
       end do
     end do        
@@ -1672,7 +1757,7 @@ MODULE mod_roms_netcdf
     data = data*sf+off
     write(*,*) '*** SUCCESS'
 
-  END SUBROUTINE readNetCDF_4d_2
+  END SUBROUTINE readNetCDF_4d_hycom2
 
 !**** readNetCDF_4d ver 3 **********************************************
       

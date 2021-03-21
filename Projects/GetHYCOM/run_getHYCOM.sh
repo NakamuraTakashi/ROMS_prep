@@ -26,6 +26,6 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_TIME_DIR='${SRC_DIR}'"
 gfortran ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/getHYCOM.F90 ${MY_CPP_FLAGS} -O2 -I/usr/include -L/usr/lib -lnetcdff -o getHYCOM.exe
 rm *.mod
 
-cp getHYCOM.exe getHYCOM_1994-2015_2.exe
+cp getHYCOM.exe getHYCOM_1994-2015_3.exe
 
-#./getHYCOM_1994-2015_2.exe < getHYCOM_TokyoBay1.in
+#./getHYCOM_1994-2015_3.exe < getHYCOM_TokyoBay1.in
