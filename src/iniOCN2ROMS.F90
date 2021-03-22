@@ -1057,7 +1057,7 @@ PROGRAM iniOCN2ROMS
   write(*,*) 'Read surf_el and create land mask'
   start3D = (/ Irdg_min+1, Jrdg_min+1, itime /)
   count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
-  call readNetCDF_3d_hycom( ncid, 'surf_el'      &
+  call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
                     , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
   do i=Irdg_min,Irdg_max
     do j=Jrdg_min,Jrdg_max
@@ -1238,7 +1238,7 @@ PROGRAM iniOCN2ROMS
 #elif defined HYCOM_MODEL
 !    start3D = (/ Irdg_min+1, Jrdg_min+1, itime /)
 !    count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
-!    call readNetCDF_3d_hycom( ncid, 'surf_el'      &
+!    call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
 !                      , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
 #elif defined JCOPE_MODEL
     JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix )
@@ -1306,7 +1306,7 @@ PROGRAM iniOCN2ROMS
 #elif defined HYCOM_MODEL
     start4D = (/ Iudg_min+1, Judg_min+1,   1,      itime /)
     count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1     /)
-    call readNetCDF_4d_hycom( ncid, 'water_u'     &
+    call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_u'     &
           , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
 #elif defined JCOPE_MODEL
     JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( JCOPE_sufix )
@@ -1340,7 +1340,7 @@ PROGRAM iniOCN2ROMS
     write(*,*) 'Read: water_v'
     start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,      itime /)
     count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1     /)
-    call readNetCDF_4d_hycom( ncid, 'water_v'     &
+    call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_v'     &
           , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
 #elif defined JCOPE_MODEL
     JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( JCOPE_sufix )
@@ -1556,7 +1556,7 @@ PROGRAM iniOCN2ROMS
     endif
     start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      itime /)
     count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1     /)
-    call readNetCDF_4d_hycom( ncid, trim( HY_VAR_NAME )  &
+    call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, trim( HY_VAR_NAME )  &
           , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 
 #elif defined JCOPE_MODEL

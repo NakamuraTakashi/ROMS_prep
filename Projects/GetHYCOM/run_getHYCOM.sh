@@ -28,4 +28,4 @@ rm *.mod
 
 cp getHYCOM.exe getHYCOM_1994-2015_3.exe
 
-#./getHYCOM_1994-2015_3.exe < getHYCOM_TokyoBay1.in
+./getHYCOM_1994-2015_3.exe < getHYCOM_TokyoBay1.in

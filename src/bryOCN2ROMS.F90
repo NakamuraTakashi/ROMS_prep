@@ -1352,7 +1352,7 @@ PROGRAM bryOCN2ROMS
         write(*,*) 'Read surf_el, and create land mask'
         start3D = (/ Irdg_min+1, Jrdg_min+1, NC(iNC)%ItS /)
         count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
-        call readNetCDF_3d_hycom( ncid, 'surf_el'      &
+        call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
               , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
         do i=Irdg_min,Irdg_max
           do j=Jrdg_min,Jrdg_max
@@ -1448,7 +1448,7 @@ PROGRAM bryOCN2ROMS
         write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
         start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
         count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
-        call readNetCDF_3d_hycom( ncid, 'surf_el'      &
+        call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
               , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
 #elif defined JCOPE_MODEL
        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix(itime) )
@@ -1499,10 +1499,10 @@ PROGRAM bryOCN2ROMS
         start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
         count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
 # if defined FAST_READ
-        call readNetCDF_4d_hycom_fast( ncid, 'water_u'             &
+        call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, 'water_u'   &
               , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
 # else
-        call readNetCDF_4d_hycom( ncid, 'water_u'                  &
+        call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_u'        &
               , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
 # endif
 #elif defined JCOPE_MODEL
@@ -1537,10 +1537,10 @@ PROGRAM bryOCN2ROMS
         start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
         count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
 # if defined FAST_READ
-        call readNetCDF_4d_hycom_fast( ncid, 'water_v'             &
+        call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, 'water_v'    &
               , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
 # else
-        call readNetCDF_4d_hycom( ncid, 'water_v'                  &
+        call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_v'         &
               , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
 # endif
 #elif defined JCOPE_MODEL
@@ -1798,10 +1798,10 @@ PROGRAM bryOCN2ROMS
         start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
         count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
 # if defined FAST_READ
-        call readNetCDF_4d_hycom_fast( ncid, trim( HY_VAR_NAME )   &
+        call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, trim( HY_VAR_NAME )   &
               , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 # else
-        call readNetCDF_4d_hycom( ncid, trim( HY_VAR_NAME )        &
+        call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, trim( HY_VAR_NAME )        &
               , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 # endif
 #elif defined JCOPE_MODEL

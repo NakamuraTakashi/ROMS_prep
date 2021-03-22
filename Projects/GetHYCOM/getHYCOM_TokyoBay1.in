@@ -25,14 +25,14 @@
 
 &sdate
 
-  Syear  = 2006   ! Starting year
+  Syear  = 2009   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1     ! Starting day
 /
 
 &edate
 
-  Eyear  = 2007   ! Ending year
+  Eyear  = 2010   ! Ending year
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
