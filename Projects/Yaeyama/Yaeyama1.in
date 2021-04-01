@@ -4,13 +4,13 @@
 /
 
 &sdate
-  Syear  = 1994   ! Starting year
+  Syear  = 2003   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 1995   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2004   ! Ending year
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
@@ -48,14 +48,14 @@
 ! HYCOM local file name(s)
 !  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20200101.nc",
 !               "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20200912.nc"
-  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_19940101.nc"
+  HYCOM_FILE = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted_20030101.nc"
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
+!  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPE2M_Nz15"
-!  BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
+  BRY_prefix  = "Yaeyama1_bry_HYCOM_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
@@ -98,7 +98,7 @@
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "N:/dsjra55/"  
+  DSJRA55_dir = "D:/cygwin64/home/Takashi/tmp/dsjra55/"  
 !  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_DSJRA55"
   FRC_prefix  = "Yaeyama1_frc_DSJRA55"
 /
@@ -106,6 +106,6 @@
 &frc_jmamsm
 !  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
 !  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb"
-  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+  MSM_dir  =  "P:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
   FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc"
 /

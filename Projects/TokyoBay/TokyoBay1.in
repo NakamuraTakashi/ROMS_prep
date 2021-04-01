@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "TokyoBay1_grd_v1.0.nc"
+  GRID_FILE = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Grid/TokyoBay1_grd_v1.0.nc"
 /
 
 &gebco
@@ -38,14 +38,14 @@
 
 
 &sdate
-  Syear  = 2017   ! Starting year
-  Smonth = 7      ! Starting month
+  Syear  = 2000   ! Starting year
+  Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 8      ! Ending month
+  Eyear  = 2001   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -65,6 +65,16 @@
   romsvar = 1,1,1,1,1,1,1        
 /
 
+&hycom_local1
+!  NCnum = 2  ! Number of HYCOM local files 
+  NCnum = 1  ! Number of HYCOM local files 
+/
+
+&hycom_local2
+! HYCOM local file name(s)
+  HYCOM_FILE = "F:/HYCOM_DATA/TokyoBay/TokyoBay_HYCOM_extracted_20000101.nc"
+/
+
 &bry
   BRY_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Bry/TokyoBay1_bry_HYCOM_Nz30"
   !    south north west east
@@ -74,8 +84,8 @@
 &ini
   INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Ini/TokyoBay1_ini_HYCOMwNAO_Nz30"
 
-  INIyear  = 2020   ! Initial year
-  INImonth = 7      ! Initial month
+  INIyear  = 1994   ! Initial year
+  INImonth = 1      ! Initial month
   INIday   = 2      ! Initial day
   INIhour  = 0      ! Initial hour
 /

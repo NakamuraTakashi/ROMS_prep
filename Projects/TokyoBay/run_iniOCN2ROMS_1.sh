@@ -10,7 +10,7 @@ export MY_CPP_FLAGS="-DHYCOM_MODEL"
 
 # Please choose one of the following options
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2018-12-04 to present)
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
 
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-07-01 to 2020-02-18)
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
@@ -25,7 +25,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_30 -DREANALYSIS"
 
 # --  Local HYCOM extracted data by getHYCOM code 
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
 
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
@@ -33,7 +33,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 # Fast read option for HYCOM 4D data (u, v, temp, salt).
 # *If failure frequently occurs, please deactivate this option. 
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
 
 # ===== ROMS option ======================================================================
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"

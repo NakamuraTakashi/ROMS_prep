@@ -683,13 +683,13 @@ PROGRAM bryOCN2ROMS
   write(*,*) NC(:)%ItE 
   
   do iNC=1,NCnum
-    do i=2,NC(iNC)%ItE
+    do i=NC(iNC)%ItE,1,-1
       d_jdate = d_jdate_Ref + NC(iNC)%time_all(i)/86400.0d0
-      if(d_jdate>dble(jdate_Start)) then
-        write(*,*) '*** FOUND: Starting point @ ROMS_HISFILE',iNC
-        NC(iNC)%ItS=i-1
+      if(d_jdate < dble(jdate_Start)) then
+!        write(*,*) '*** FOUND: Starting point @ ROMS_HISFILE',iNC
         exit
       endif
+      NC(iNC)%ItS=i
     end do
   end do
   write(*,*) NC(:)%ItS 
@@ -719,7 +719,7 @@ PROGRAM bryOCN2ROMS
     enddo
     j=i+NC(iNC)%ItE-NC(iNC)%ItS
     bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
-    i=i+j
+    i=j+1
   enddo
 
   write(*,*) "*************************************" 
@@ -812,13 +812,13 @@ PROGRAM bryOCN2ROMS
   write(*,*) NC(:)%ItE 
   
   do iNC=1,NCnum
-    do i=2,NC(iNC)%ItE
+    do i=NC(iNC)%ItE,1,-1
       d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24.0d0
-      if(d_jdate>dble(jdate_Start)) then
-        write(*,*) '*** FOUND: Starting point @ HYCOM_FILE',iNC
-        NC(iNC)%ItS=i-1
+      if(d_jdate < dble(jdate_Start)) then
+!        write(*,*) '*** FOUND: Starting point @ HYCOM_FILE',iNC
         exit
       endif
+      NC(iNC)%ItS=i
     end do
   end do
   write(*,*) NC(:)%ItS 
@@ -848,7 +848,7 @@ PROGRAM bryOCN2ROMS
     enddo
     j=i+NC(iNC)%ItE-NC(iNC)%ItS
     bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
-    i=i+j
+    i=j+1
   enddo
 
   bry_time(:) = ( bry_time(:) + ( d_jdate_Ref - d_jdate_20000101 )*24.0d0)*3600.0d0 ! hour -> sec

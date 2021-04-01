@@ -39,13 +39,13 @@
 /
 
 &sdate
-  Syear  = 1998   ! Starting year
+  Syear  = 2005   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 1999   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2006   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
@@ -64,8 +64,8 @@
 ! ROMS coarse NetCDF history file name
 !  ROMS_HISFILE  = "K:/COAWST/output/Yaeyama1_loric/YY1mb1_his_190610_kkl_roms_30lyr_clmoff.nc"
 !  ROMS_HISFILE  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15_20140502.00.nc"
-  ROMS_HISFILE  = "T:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_19970102_00001.nc",
-                  "T:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_19970102_00002.nc"
+  ROMS_HISFILE  = "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20040104.nc",
+                  "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20050104.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -115,6 +115,7 @@
 &bry
   BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Bry/Yaeyama2_bry_ROMS_Nz15"
 !  BRY_prefix  = "Yaeyama2_bry_ROMS_Nz15"
+
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
