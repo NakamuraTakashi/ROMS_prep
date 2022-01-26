@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2022 Takashi NAKAMURA  =====
 
 #if defined JMA_MSM
 # undef BULK_FLUX
@@ -851,12 +851,12 @@ PROGRAM frcATM2ROMS
     ! for rain (Total precipitation rate)
       in_data2(10,:,:) = in_data(10,:,:)  ! kg m-2 s-1 -> kg m-2 s-1     
 # if defined BULK_FLUX
-    ! for bulk flux parameters, heating -> positive?, cooling -> negattive?
+    ! for bulk flux parameters, heating -> positive, cooling -> negattive
       in_data2(11,:,:) = -in_data(11,:,:)  ! W m-2 -> W m-2
       in_data2(12,:,:) = -in_data(12,:,:)  ! W m-2 -> W m-2
-      in_data2(13,:,:) = in_data(13,:,:) !-in_data(14,:,:) ! solar radiation = downward (?)!!!!!!!!!!!!!!!!
-      in_data2(14,:,:) = in_data(15,:,:) ! downward long-wave (?)!!!!!!!!!!!!!!!!
-      in_data2(15,:,:) = in_data(15,:,:)-in_data(16,:,:) ! net long-wave  = downward - upward (?)!!!!!!!!!!!!!!!!
+      in_data2(13,:,:) = in_data(13,:,:) !-in_data(14,:,:) ! solar radiation = downward
+      in_data2(14,:,:) = in_data(15,:,:) ! downward long-wave
+      in_data2(15,:,:) = in_data(15,:,:)-in_data(16,:,:) ! net long-wave  = downward - upward
 # endif
 ! --------------------------------------------
 #elif defined JRA55
@@ -877,12 +877,12 @@ PROGRAM frcATM2ROMS
     ! for rain (Total precipitation rate)
       in_data2(10,:,:) = in_data(10,:,:)*1.0d0/86400.0d0  ! mm day-1 -> kg m-2 s-1  
 # if defined BULK_FLUX
-    ! for bulk flux parameters, heating -> positive?, cooling -> negattive?
+    ! for bulk flux parameters, heating -> positive, cooling -> negattive
       in_data2(11,:,:) = -in_data(11,:,:)  ! W m-2 -> W m-2
       in_data2(12,:,:) = -in_data(12,:,:)  ! W m-2 -> W m-2
-      in_data2(13,:,:) = in_data(13,:,:) !-in_data(14,:,:) ! solar radiation = downward (?)!!!!!!!!!!!!!!!!
-      in_data2(14,:,:) = in_data(15,:,:) ! downward long-wave (?)!!!!!!!!!!!!!!!!
-      in_data2(15,:,:) = in_data(16,:,:)-in_data(15,:,:) ! net long-wave  = upward - downward (?)!!!!!!!!!!!!!!!!
+      in_data2(13,:,:) = in_data(13,:,:) !-in_data(14,:,:) ! solar radiation = downward
+      in_data2(14,:,:) = in_data(15,:,:) ! downward long-wave
+      in_data2(15,:,:) = in_data(15,:,:)-in_data(16,:,:) ! net long-wave  = downward - upward
 # endif
 #endif         
 !  ---- LOOP3.2 START --------------------------------
