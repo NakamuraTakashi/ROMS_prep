@@ -129,3 +129,7 @@
 !  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/Air/TokyoBay1_frc_MSMnc"
 /
 
+&tide
+  TIDE_prefix  = "TokyoBay1_tide_nao99Jb"
+/
+

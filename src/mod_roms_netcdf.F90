@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2022 Takashi NAKAMURA  =====
 
 !!!**** ROMS netCDF MODULE ************************************
 
@@ -1262,6 +1262,87 @@ MODULE mod_roms_netcdf
       write(*,*) '*** SUCCESS'
 
     END SUBROUTINE createNetCDFriver
+
+!**** Create tidal forcing NetCDF file **********************************************
+
+    SUBROUTINE createNetCDFtide( &
+!        input parameters
+            OUT_FILE              &
+          , SOURCE_NAME           &
+          , Nxr, Nyr              &   
+          , NTC                   &   
+      )
+                               
+!    input parameters
+      character(len=*), intent( in) :: OUT_FILE
+      character(len=*), intent( in) :: SOURCE_NAME
+      integer, intent( in) :: Nxr, Nyr
+      integer, intent( in) :: NTC  ! Number of tidal components
+
+      integer :: ncid, var_id
+      integer :: three_dimid, xr_dimid, yr_dimid, tp_dimid
+      integer :: dim1Dids(1), dim2Dids(2), dim3Dids(3)
+
+!---- Create the ROMS initial condition netCDF file --------------------------------
+
+      write(*,*) "CREATE: ", trim( OUT_FILE )
+
+      call check( nf90_create( trim( OUT_FILE ), nf90_clobber, ncid) )
+
+      call check( nf90_put_att(ncid, NF90_GLOBAL, 'type', 'ROMS tidal forcing file') )
+      call check( nf90_put_att(ncid, NF90_GLOBAL, 'base_date', 'days since 2000-01-01 00:00:00') )
+      call check( nf90_put_att(ncid, NF90_GLOBAL, 'source', trim( SOURCE_NAME )) )
+
+      call check( nf90_def_dim(ncid, 'three', 3, three_dimid) )
+      call check( nf90_def_dim(ncid, 'xi_rho', Nxr, xr_dimid) )
+      call check( nf90_def_dim(ncid, 'eta_rho', Nyr, yr_dimid) )
+      call check( nf90_def_dim(ncid, 'tide_period', NTC, tp_dimid) )
+
+      dim1Dids = (/ tp_dimid /)
+
+      call check( nf90_def_var(ncid, 'tide_period', NF90_DOUBLE, dim1Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'tide angular period') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'hours') )
+
+      dim3Dids = (/ xr_dimid, yr_dimid, tp_dimid /)
+
+      call check( nf90_def_var(ncid, 'tide_Ephase', NF90_DOUBLE, dim3Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'tidal elevation phase angle') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'degrees, time of maximum elevation with respect chosen time origin') )
+
+      call check( nf90_def_var(ncid, 'tide_Eamp', NF90_DOUBLE, dim3Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'tidal elevation amplitude') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
+
+      call check( nf90_def_var(ncid, 'tide_Cphase', NF90_DOUBLE, dim3Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'tidal current phase angle') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'degrees, time of maximum velocity with respect chosen time origin') )
+
+      call check( nf90_def_var(ncid, 'tide_Cangle', NF90_DOUBLE, dim3Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'tidal current inclination angle') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'degrees between semi-major axis and East') )
+
+      call check( nf90_def_var(ncid, 'tide_Cmin', NF90_DOUBLE, dim3Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'minimum tidal current, ellipse semi-minor axis') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+
+      call check( nf90_def_var(ncid, 'tide_Cmax', NF90_DOUBLE, dim3Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'maximum tidal current, ellipse semi-major axis') )
+      call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
+
+      dim2Dids = (/ three_dimid, tp_dimid /)
+!      dim1Dids = (/ tp_dimid /)
+
+      call check( nf90_def_var(ncid, 'tidal_constituents', NF90_CHAR, dim2Dids, var_id) )
+!      call check( nf90_def_var(ncid, 'tidal_constituents', NF90_CHAR, dim1Dids, var_id) )
+      call check( nf90_put_att(ncid, var_id, 'long_name', 'Tidal Constituent Names') )
+
+  ! End define mode.
+      call check( nf90_enddef(ncid) )
+      call check( nf90_close(ncid) )
+      write(*,*) '*** SUCCESS'
+
+    END SUBROUTINE createNetCDFtide
                    
 !**** create HYCOM NetCDF **********************************************
 

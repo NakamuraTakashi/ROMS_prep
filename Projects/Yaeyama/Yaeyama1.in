@@ -1,6 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
+!  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
+  GRID_FILE = "Yaeyama1_grd_v10.nc"
 /
 
 &sdate
@@ -108,4 +109,8 @@
 !  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb"
   MSM_dir  =  "P:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
   FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc"
+/
+
+&tide
+  TIDE_prefix  = "Yaeyama1_tide_nao99Jb"
 /
