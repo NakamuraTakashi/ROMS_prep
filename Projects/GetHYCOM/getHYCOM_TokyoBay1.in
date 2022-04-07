@@ -25,14 +25,14 @@
 
 &sdate
 
-  Syear  = 1998   ! Starting year
+  Syear  = 2018   ! Starting year
   Smonth = 8      ! Starting month
-  Sday   = 9      ! Starting day
+  Sday   = 29     ! Starting day
 /
 
 &edate
 
-  Eyear  = 1999   ! Ending year
+  Eyear  = 2019   ! Ending year
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /

@@ -1,50 +1,76 @@
 &grd
 ! ROMS NetCDF grid file     
-!  GRID_FILE = "TokyoBay3_grd_v0.2.nc"
-  GRID_FILE = "TokyoBay3_grd_v1.9.nc"
+  GRID_FILE = "Shizugawa3_grd_v0.0.nc"
 /
 
-&gebco
+&mybath
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
+  BATH_FILE = "Bathy_data/Shizugawa3_10m_final.nc"
+  x_ncname = 'x'
+  y_ncname = 'y'
+  bathy_ncname = 'Band1'
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 54  ! Negative zones are for the Southern hemisphere.
+  ispher = 6   ! Spheroid for projection (1-19)
+! ispher -- SPHEROID SELECTION: 1=CLARKE 1866; 2=CLARKE 1880;       
+!               3=BESSEL 1967; 4=NEW INTERNATIONAL 1967;
+!               5=INTERNATIONAL 1909 (1924) (HAYFORD);
+!               6=WORLD GEODETIC SYSTEM 1972; 7=EVEREST;
+!               8=WORLD GEODETIC SYSTEM 1966;
+!               9=GEODETIC REFERENCE SYSTEM 1980;
+!               10=AIRY; 11=MODIFIED EVEREST; 12=MODIFIED AIRY;         
+!               13=WALBECK; 14=SOUTH ASIA 1960 (FISCHER);
+!               15=AUSTRALIAN NATIONAL-SOUTH AMERICAN 1969;
+!               16=KRASSOVSKY; 17=HOUGH; 18=MERCURY 1960 (FISCHER);     
+!               19=MODIFIED MERCURY 1968 (FISCHER)
+!        NOTES:
+!               IF ISPHER.EQ.0: COMPUTE IN LAMBERT OR TRANSVERSE MERCATOR  
+!               IF ISPHER.NE.0: COMPUTE IN UNIVERSAL TRANSVERSE MERCATOR   
+!               IZONE IS UTM ZONE NUMBER OR STATE PLANE ZONE DEPENDING ON  
+!               SELECTION OF ISPHER.  IF UTM AND SOUTHERN HEMISPHERE, IZONE
+!               IS NEGATIVE.
+!    
 /
 
 &bath_smooth
-  rx0max = 10.0d0  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 10.0  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
 
-  hmin = -5.0d0  ! Minimum depth
+  hmin = -0.2d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
-  I_ocn = 50    ! rho point index i
-  J_ocn = 1    ! rho point index j
+  I_ocn = 100    ! rho point index i
+  J_ocn = 50    ! rho point index j
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "TokyoBay2_grd_v2.0.nc"
-  parent_Imin = 102
-  parent_Imax = 191  !191
-  parent_Jmin = 38
-  parent_Jmax = 135  !135
-  refine_factor = 3
+  parent_grid = "Shizugawa2_grd_v0.0.nc"
+  parent_Imin = 3
+  parent_Imax = 32
+  parent_Jmin = 105
+  parent_Jmax = 139
+  refine_factor = 5
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "TokyoBay2_grd_v2.1b.nc"
+  F2C_OUT_FILE = "Shizugawa2_grd_v0.1.nc"
 /
 
 &sdate
-  Syear  = 2020   ! Starting year
+  Syear  = 2021   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2021   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
@@ -59,11 +85,9 @@
   NCnum = 1  ! Number of ROMS his files 
 /
 
-
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-!  ROMS_HISFILE  = "../../../COAWST/Projects/TokyoBay2/TokyoBay2_his_20180605.nc"
-  ROMS_HISFILE  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Ini/TokyoBay2_ini_JCOPET_Nz30_20180605.00.nc"
+  ROMS_HISFILE  = "ocean_his.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -93,18 +117,17 @@
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Bry/TokyoBay3_bry_ROMS_Nz30"
+  BRY_prefix  = "Shizugawa3_bry_ROMS_Nz15"
   !    south north west east
-  SNWE =  1,   0,   0,   0
+  SNWE =  0,   0,   0,   1
 /
 
 &ini
-!  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Ini/TokyoBay3_ini_ROMS_Nz30"
-  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Ini/TokyoBay3_ini_JCOPET_Nz30"
+  INI_prefix  = "Shizugawa3_ini_ROMS_Nz15"
 
-  INIyear  = 2018   ! Initial year
-  INImonth = 6      ! Initial month
-  INIday   = 5      ! Initial day
+  INIyear  = 2021   ! Initial year
+  INImonth = 3      ! Initial month
+  INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -113,7 +136,8 @@
 /
 
 &zcoord
-  N_s_rho = 30
+
+  N_s_rho = 15
 
 ! Set vertical, terrain-following coordinates transformation equation and
 ! stretching function (see wikiROMS for details).
@@ -127,22 +151,16 @@
   THETA_B = 0.1d0      ! bottom  stretching parameter
   TCLINE  = 200.0d0    ! critical depth (m)
   DCRIT   = 0.10d0     ! critical depth (m)
-
-/
-
-&frc_jra55
-  JRA55_dir  =  "N:/JRA-55/"
-  FRC_prefix  = "TokyoBay3_frc_JRA55"
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "N:/dsjra55/"  
-  FRC_prefix  = "TokyoBay3_frc_DSJRA55"
+  DSJRA55_dir = "N:/Data/dsjra55/"  
+  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Air/Shizugawa3_frc_DSJRA55"
 /
 
 &frc_jmamsm
   MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Air/TokyoBay3_frc_MSMgb"
+  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Air/Shizugawa3_frc_MSMgb"
 !  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-!  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Air/TokyoBay3_frc_MSMnc"
+!  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Air/Shizugawa3_frc_MSMnc"
 /

@@ -2,9 +2,9 @@
 # ===== Ocean Models ========================================================================
 # Please choose one of the following options
 #
-export MY_CPP_FLAGS="-DHYCOM_MODEL"
+#export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="-DJCOPE_MODEL"
-#export MY_CPP_FLAGS="-DROMS_MODEL"
+export MY_CPP_FLAGS="-DROMS_MODEL"
 
 # ===== HYCOM option ====================================================================
 
@@ -16,7 +16,7 @@ export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
 
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (since 1994-01-01 to 2015-12-31)
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DREANALYSIS"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DREANALYSIS"
 
 # --  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to 2018-11-20)
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_30 -DANALYSIS"
@@ -29,21 +29,21 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DREANALYSIS"
 
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 # Fast read option for HYCOM 4D data (u, v, temp, salt).
 # *If failure frequently occurs, please deactivate this option. 
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
 
 # ===== ROMS option ======================================================================
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
 
 # ===== JCOPE option =====================================================================
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
 
 # ===== Tide model =======================================================================
 #tide_model=naotide
-tide_model=naotidej
+#tide_model=naotidej
 
 # ========================================================================================
 SRC_DIR=../../src

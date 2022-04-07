@@ -1,51 +1,53 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Palau2_grd_v2.0.nc"
-/
-
-&gebco
-! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
+  GRID_FILE = "/gs/hs1/tga-NakamuLab/COAWST/Data/Yaeyama/Yaeyama3/Grid/Yaeyama3_grd_v12.2.nc"
+!  GRID_FILE = "Yaeyama3_grd_v12c.nc"
 /
 
 &bath_smooth
-  rx0max = 10.0  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
 
-  hmin = -5.0d0  ! Minimum depth
+  hmin = -9.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
-  I_ocn = 50    ! rho point index i
-  J_ocn = 50    ! rho point index j
+  I_ocn = 5    ! rho point index i
+  J_ocn = 5    ! rho point index j
 /
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Palau1_grd_v2.0.nc"
-  parent_Imin = 49
-  parent_Imax = 95
-  parent_Jmin = 52
-  parent_Jmax = 91
-  refine_factor = 5
+  parent_grid = "/gs/hs1/tga-NakamuLab/COAWST/Data/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.1.nc"
+  parent_Imin = 91
+  parent_Imax = 200
+  parent_Jmin = 73    !80
+  parent_Jmax = 179
+  refine_factor = 3
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Palau1_grd_v2.1.nc"
+  F2C_OUT_FILE = "Yaeyama2_grd_v11.2.nc"
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 4   ! Zone number counted from equator
 /
 
 &sdate
-  Syear  = 2017   ! Starting year
-  Smonth = 4      ! Starting month
-  Sday   = 1      ! Starting day
+  Syear  = 1994   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 10      ! Starting day
 /
 
 &edate
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 5      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 1994   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 11      ! Ending day
 /
 
 &refdate
@@ -60,7 +62,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "ocean_his.nc"
+  ROMS_HISFILE  = "/gs/hs1/tga-NakamuLab/nakamura/Yaeyama_LongTerm/Yaeyama2/Yaeyama2_his_19940110.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -76,6 +78,7 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
+!  romsvar = 1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0
   romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
@@ -90,21 +93,22 @@
 /
 
 &bry
-  BRY_prefix  = "Palau2_bry_ROMS_Nz15"
+  BRY_prefix  = "Yaeyama3_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Palau2_ini_ROMS_Nz15"
+  INI_prefix  = "Yaeyama3_ini_ROMS_Nz15"
 
-  INIyear  = 2017   ! Initial year
-  INImonth = 4      ! Initial month
-  INIday   = 2      ! Initial day
+  INIyear  = 1994   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 12     ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
 &hcoord
+
   spherical  = 1   
 /
 
@@ -124,9 +128,22 @@
   THETA_B = 0.1d0      ! bottom  stretching parameter
   TCLINE  = 200.0d0    ! critical depth (m)
   DCRIT   = 0.10d0     ! critical depth (m)
+
 /
 
 &frc_jra55
-  JRA55_dir  =  "W:/JRA-55/"
-  FRC_prefix  = "Palau2_frc_JRA55"
+  JRA55_dir  =  "N:/JRA-55/"  
+  FRC_prefix  = "Yaeyama3_frc_JRA55"
+/
+
+&frc_dsjra55
+  DSJRA55_dir = "N:/dsjra55/"  
+  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_DSJRA55"
+/
+
+&frc_jmamsm
+!  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
+!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_MSMgb"
+  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_MSMnc"
 /

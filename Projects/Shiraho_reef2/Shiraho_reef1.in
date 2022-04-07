@@ -67,8 +67,8 @@
 ! 1: Pressure, 2: Wind, 3: Air temperature, 4: Humidity, 5: Cloud fraction
 ! 6: Precipitation, 7: Short-wave radiation, 8: Down-ward long-wave radiation
 !           1       5      
-  airvar =  1,1,1,1,1,1,1,1
-! airvar =  0,0,0,0,0,0,0,1
+  airvar =  1,1,1,1,0,1,1,1
+!  airvar =  0,0,0,0,0,0,1,0
 
   Pair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Pair2020.csv'   ! JMA Pressure data CSV file
   wind_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/wind2020.csv'   ! JMA Wind data CSV file

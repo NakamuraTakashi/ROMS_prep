@@ -12,4 +12,4 @@ gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/f
 
 rm *.mod
 
-./frcJMAobs2ROMS.exe < Shiraho_reef1.in
+./frcJMAobs2ROMS.exe < Yaeyama2.in

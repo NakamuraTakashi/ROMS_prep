@@ -70,4 +70,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./iniOCN2ROMS.exe < TokyoBay3.in
+./iniOCN2ROMS.exe < Shizugawa3.in

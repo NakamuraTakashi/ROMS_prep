@@ -17,27 +17,27 @@
 !
 ! Geographical and Grid parameters --------
 !
-  Llon = 120.0d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-  Rlon = 128.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
-  Blat = 21.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
-  Tlat = 27.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+  Llon = 140.5d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+  Rlon = 144.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+  Blat = 37.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+  Tlat = 40.5d0    ! Latitude  (degrees) of the top-right corner of the grid.
 /
 
 &sdate
 
-  Syear  = 2017   ! Starting year
-  Smonth = 2      ! Starting month
-  Sday   = 9      ! Starting day
+  Syear  = 2021   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
 /
 
 &edate
 
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 11     ! Ending month
-  Eday   = 20      ! Ending day
+  Eyear  = 2022   ! Ending year
+  Emonth = 1      ! Ending month
+  Eday   = 1      ! Ending day
 /
 
 &hycom      
 ! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "F:/HYCOM_DATA/Yaeyama/Yaeyama_HYCOM_extracted"
+  HYCOM_prefix  = "F:/HYCOM_DATA/Shizugawa/Shizugawa_HYCOM_extracted"
 /

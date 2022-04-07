@@ -302,6 +302,8 @@ PROGRAM frcJMAobs2ROMS
             rdata(2,Nt) = rwspd*sin(angle/180.0d0*PI)
 
 !            write(*,*) iyear(Nt),imonth(Nt),iday(Nt),ihour(Nt),rwspd,cwdir,rdata(1,Nt),rdata(2,Nt)
+          else
+            write(*,*) iparam, iyear(Nt), imonth(Nt), iday(Nt), ihour(Nt), iqt1, iqt2
           endif
 
         elseif(iparam == 5) then ! for cloud
@@ -322,6 +324,8 @@ PROGRAM frcJMAobs2ROMS
               rdata(1,Nt) = rdata(1,Nt)/10.0d0
             endif
 !            write(*,*) iyear(Nt),imonth(Nt),iday(Nt),ihour(Nt),rdata(1,Nt)
+          else
+            write(*,*) iparam, iyear(Nt), imonth(Nt), iday(Nt), ihour(Nt), iqt1
           endif
         
         elseif(iparam == 6) then ! for rain
@@ -335,6 +339,30 @@ PROGRAM frcJMAobs2ROMS
             read( cdata(5),*) rdata(1,Nt)
             rdata(1,Nt) = rdata(1,Nt)/3600.0d0    ! mm h-1 -> kg m-2 s-1
 !            write(*,*) iyear(Nt),imonth(Nt),iday(Nt),ihour(Nt),rdata(1,Nt)
+          else
+            write(*,*) iparam, iyear(Nt), imonth(Nt), iday(Nt), ihour(Nt), iqt1
+          endif
+
+        elseif(iparam == 7) then  ! for swrad
+          read( cdata(6),*) iqt1
+          if( iqt1 >= 2 ) then
+            Nt = Nt + 1
+            read( cdata(1),*) iyear(Nt)
+            read( cdata(2),*) imonth(Nt)
+            read( cdata(3),*) iday(Nt)
+            read( cdata(4),*) ihour(Nt)  
+            read( cdata(5),*) rdata(1,Nt)       
+            rdata(1,Nt) = rdata(1,Nt)*1.0d6/3600.0d0  ! MJ m-2 h-1 -> W m-2
+          else if(iqt1 == 0) then
+            Nt = Nt + 1
+            read( cdata(6),*) iqt1
+            read( cdata(1),*) iyear(Nt)
+            read( cdata(2),*) imonth(Nt)
+            read( cdata(3),*) iday(Nt)
+            read( cdata(4),*) ihour(Nt) 
+            rdata(1,Nt) = 0.0d0  ! W m-2
+          else
+            write(*,*) iparam, iyear(Nt), imonth(Nt), iday(Nt), ihour(Nt), iqt1
           endif
 
         else
@@ -346,11 +374,9 @@ PROGRAM frcJMAobs2ROMS
             read( cdata(3),*) iday(Nt)
             read( cdata(4),*) ihour(Nt)
             read( cdata(5),*) rdata(1,Nt)
-            if(iparam == 7) then  ! for swrad
-              rdata(1,Nt) = rdata(1,Nt)*1.0d6/3600.0d0  ! MJ m-2 h-1 -> W m-2
-            endif 
-!            write(*,*) iyear(Nt),imonth(Nt),iday(Nt),ihour(Nt),rdata(1,Nt)
-          endif         
+          else
+            write(*,*) iparam, iyear(Nt), imonth(Nt), iday(Nt), ihour(Nt), iqt1
+          endif
         endif
   
       end do

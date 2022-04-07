@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018-2021 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2022 Takashi NAKAMURA  =====
 
 PROGRAM grdROMS
   use netcdf
@@ -13,6 +13,10 @@ PROGRAM grdROMS
   character(256) :: BATH_FILE
   character(256) :: GRID_FILE
   real(8) :: s_lat, e_lat, s_lon, e_lon
+  real(8) :: s_x, e_x, s_y, e_y
+  character(256) :: x_ncname
+  character(256) :: y_ncname
+  character(256) :: bathy_ncname
   real(8) :: RESOLUTION, angle
   real(8) :: hmin
   real(8) :: rx0max
@@ -27,6 +31,8 @@ PROGRAM grdROMS
   real(8), parameter :: fmerge(Nmerge) = (/ 1.0d0, 1.0d0, 1.0d0, 1.0d0  &
        , 1.0d0, 1.0d0, 0.9d0, 0.8d0, 0.7d0, 0.6d0, 0.5d0, 0.4d0, 0.3d0  &
        , 0.2d0, 0.1d0 /)
+  character(256) :: BRY_prefix
+  integer :: SNWE(4)
 #endif
 ! ---------------------------------------------------------------------
 
@@ -118,6 +124,11 @@ PROGRAM grdROMS
   namelist/gebco/BATH_FILE
 #elif defined EMODNET2ROMS
   namelist/emodnet/BATH_FILE
+#elif defined MYBATH2ROMS
+  namelist/mybath/BATH_FILE
+  namelist/mybath/x_ncname
+  namelist/mybath/y_ncname
+  namelist/mybath/bathy_ncname
 #endif
 #if defined BATH_SMOOTHING
   namelist/bath_smooth/rx0max
@@ -129,9 +140,15 @@ PROGRAM grdROMS
   namelist/refinement/parent_Imin, parent_Imax
   namelist/refinement/parent_Jmin, parent_Jmax
   namelist/refinement/refine_factor
+  namelist/bry/BRY_prefix, SNWE
 #else
+# if defined UTM_COORD
+  namelist/grd_setting_utm/s_x, e_x, s_y, e_y
+  namelist/grd_setting_utm/RESOLUTION, angle
+# else
   namelist/grd_setting_ll/s_lat, e_lat, s_lon, e_lon
   namelist/grd_setting_ll/RESOLUTION, angle
+# endif
 #endif
 #if defined UTM_COORD
   namelist/utm_zone/izone,ispher
@@ -147,6 +164,9 @@ PROGRAM grdROMS
 #elif defined EMODNET2ROMS
   rewind(5)
   read (5, nml=emodnet)
+#elif defined MYBATH2ROMS
+  rewind(5)
+  read (5, nml=mybath)
 #endif
 #if defined BATH_SMOOTHING
   rewind(5)
@@ -157,9 +177,16 @@ PROGRAM grdROMS
 #if defined GRID_REFINEMENT
   rewind(5)
   read (5, nml=refinement)
+  rewind(5)
+  read (*, nml=bry)
 #else
+# if defined UTM_COORD
+  rewind(5)
+  read (5, nml=grd_setting_utm)
+# else
   rewind(5)
   read (5, nml=grd_setting_ll)
+# endif
 #endif
 #if defined UTM_COORD
   rewind(5)
@@ -173,8 +200,13 @@ PROGRAM grdROMS
   Nxr = (parent_Imax-parent_Imin)*refine_factor+2
   Nyr = (parent_Jmax-parent_Jmin)*refine_factor+2 
 #else      
-!  Nxr = int( (e_lon - s_lon)*RESOLUTION ) + 1
-!  Nyr = int( (e_lat - s_lat)*RESOLUTION ) + 1
+# if defined UTM_COORD
+  s_lon = s_x
+  s_lat = s_y
+  e_lon = e_x
+  e_lat = e_y
+  RESOLUTION = 1.0d0/RESOLUTION
+# endif
   call grid_size_rectangular(s_lon, s_lat, e_lon, e_lat, RESOLUTION, angle, Nxr, Nyr)
 #endif
   Nxp = Nxr-1
@@ -337,18 +369,21 @@ PROGRAM grdROMS
 
 #else      
 
-!  d_lat = 1.0d0/RESOLUTION
-!  d_lon = 1.0d0/RESOLUTION
-!
-!  do i=1, Nxr
-!    lonr(i,:)=s_lon + d_lon*dble(i-1)
-!  enddo
-!  do j=1, Nyr
-!    latr(:,j)=s_lat + d_lat*dble(j-1)
-!  enddo
+# if defined UTM_COORD
+  call grid_gen_rectangular( s_lon, s_lat, RESOLUTION, angle &
+                           , Nxr, Nyr, xr, yr )
+  ! UTM -> lat lon
+  do i=1,Nxr
+    do j=1,Nyr
+      call utm2ll( xr(i,j), yr(i,j), izone, ispher         &
+                 , latr(i,j), lonr(i,j), conv)
+    enddo
+  enddo
+
+# else
   call grid_gen_rectangular( s_lon, s_lat, RESOLUTION, angle &
                            , Nxr, Nyr, lonr, latr )
-  
+# endif  
   angler(:,:) = angle
 
 #endif
@@ -382,7 +417,8 @@ PROGRAM grdROMS
   ! compute pm, pn
   do i=2, Nxr-1
     do j=1, Nyr
-      pm(i,j) = 1.0d0/(xu(i,j)-xu(i-1,j))
+      pm(i,j) = 1.0d0/sqrt(                                   &
+                (xu(i,j)-xu(i-1,j))**2+(yu(i,j)-yu(i-1,j))**2)
     enddo
   enddo
   pm(1,:) = pm(2,:) 
@@ -390,7 +426,8 @@ PROGRAM grdROMS
 
   do i=1, Nxr
     do j=2, Nyr-1
-      pn(i,j) = 1.0d0/(yv(i,j)-yv(i,j-1))
+      pn(i,j) = 1.0d0/sqrt(                                   &
+                (xv(i,j)-xv(i,j-1))**2+(yv(i,j)-yv(i,j-1))**2)
     enddo
   enddo
   pn(:,1) = pn(:,2) 
@@ -446,7 +483,7 @@ PROGRAM grdROMS
   dndx(:,:) = 0.0d0
   dmde(:,:) = 0.0d0
 
-#if defined GEBCO2ROMS || defined EMODNET2ROMS
+#if defined GEBCO2ROMS || defined EMODNET2ROMS || defined MYBATH2ROMS
 !---- Read GEBCO grid netCDF file --------------------------------
   write(*,*) "OPEN: ", trim( BATH_FILE )
   
@@ -476,43 +513,27 @@ PROGRAM grdROMS
   call check( nf90_get_var(ncid, var_id, lat_all) )
   call check( nf90_inq_varid(ncid, 'COLUMNS', var_id) )
   call check( nf90_get_var(ncid, var_id, lon_all) )
+# elif defined MYBATH2ROMS
+  call get_dimension(ncid, trim(y_ncname), N_lat_all)
+  call get_dimension(ncid, trim(x_ncname), N_lon_all)
+  ! Allocate variable
+  allocate(lat_all(N_lat_all))
+  allocate(lon_all(N_lon_all))
+  ! Get variable id
+  call check( nf90_inq_varid(ncid, trim(y_ncname), var_id) )
+  call check( nf90_get_var(ncid, var_id, lat_all) )
+  call check( nf90_inq_varid(ncid, trim(x_ncname), var_id) )
+  call check( nf90_get_var(ncid, var_id, lon_all) )
 # endif
 
-  ! Trim GEBCO/EMODnet bathymetry
-# if defined GRID_REFINEMENT
-!  s_lat = latr(1,1)
-!  e_lat = latr(Nxr,Nyr)
-!  s_lon = lonr(1,1)
-!  e_lon = lonr(Nxr,Nyr)
-# endif
-!
-!  do i=2, N_lat_all
-!    if(s_lat < lat_all(i)) then
-!      id_slat = i-1
-!      exit
-!    endif
-!  enddo
-!  do i=1, N_lat_all
-!    if(e_lat < lat_all(i)) then
-!      id_elat = i
-!      exit
-!    endif
-!  enddo
-!  do i=2, N_lon_all
-!    if(s_lon < lon_all(i)) then
-!      id_slon = i-1
-!      exit
-!    endif
-!  enddo
-!  do i=1, N_lon_all
-!    if(e_lon < lon_all(i)) then
-!      id_elon = i
-!      exit
-!    endif
-!  enddo
-
+  ! Trim bathymetry
+# if defined UTM_COORD
+  call min_max_2D( Nxr, Nyr, yr, latr_min, latr_max)
+  call min_max_2D( Nxr, Nyr, xr, lonr_min, lonr_max)
+# else
   call min_max_2D( Nxr, Nyr, latr, latr_min, latr_max)
   call min_max_2D( Nxr, Nyr, lonr, lonr_min, lonr_max)
+# endif
   call seek_id_range( N_lat_all, lat_all, latr_min, latr_max, id_slat, id_elat)
   call seek_id_range( N_lon_all, lon_all, lonr_min, lonr_max, id_slon, id_elon)
   
@@ -528,6 +549,7 @@ PROGRAM grdROMS
 # if defined GEBCO2ROMS
   call check( nf90_inq_varid(ncid, 'elevation', var_id) )
   call check( nf90_get_var(ncid, var_id, depth, start=start2D, count=count2D) )
+  depth(:,:) = -1.0d0*depth(:,:)
 
 # elif defined EMODNET2ROMS
   call check( nf90_inq_varid(ncid, 'DEPTH', var_id) )
@@ -535,13 +557,17 @@ PROGRAM grdROMS
   call check( nf90_get_att(ncid, var_id, 'scale_factor', sf) )
   call check( nf90_get_att(ncid, var_id, 'add_offset', off) )
   depth = depth*sf+off
+  depth(:,:) = -1.0d0*depth(:,:)
+
+# elif defined MYBATH2ROMS
+  call check( nf90_inq_varid(ncid, trim(bathy_ncname), var_id) )
+  call check( nf90_get_var(ncid, var_id, depth, start=start2D, count=count2D) )
+
 # endif
 
   ! Close NetCDF file
   call check( nf90_close(ncid) )
   write(*,*) "CLOSE: ", trim( BATH_FILE )
-  
-  depth(:,:) = -1.0d0*depth(:,:)
   
   allocate(lon(N_lon))
   allocate(lat(N_lat))
@@ -557,10 +583,15 @@ PROGRAM grdROMS
 ! --- Linear interporation --------------------------------
 
   write(*,*) 'Linear Interporation: h'
+# if defined UTM_COORD
+  call LinearInterpolation2D_grid2(N_lon, N_lat, lon, lat      &
+                  , depth , -10000.0d0, 10000.0d0              &
+                  , Nxr, Nyr, xr, yr, h )
+# else
   call LinearInterpolation2D_grid2(N_lon, N_lat, lon, lat      &
                   , depth , -10000.0d0, 10000.0d0              &
                   , Nxr, Nyr, lonr, latr, h )
-
+# endif
   write(*,*) '*** SUCCESS Linear Interporation'
   
 #else
@@ -586,26 +617,54 @@ PROGRAM grdROMS
 
 #if defined GRID_REFINEMENT
   ! Merge GEBCO grid with refined ROMS grid
-  do j=1, Nmerge
-    do i=1+j-1, Nxr-j+1
-      h(i,j) = fmerge(j)*hr(i,j) + (1.0d0-fmerge(j))*h(i,j)
-      h(i,Nyr-j+1) = fmerge(j)*hr(i,Nyr-j+1) + (1.0d0-fmerge(j))*h(i,Nyr-j+1)
+  if( SNWE(1)==1 ) then
+    do j=1, Nmerge
+      do i=1+j-1, Nxr-j+1
+        h(i,j) = fmerge(j)*hr(i,j) + (1.0d0-fmerge(j))*h(i,j)
+      enddo
     enddo
-  enddo
-  do i=1, Nmerge
-    do j=1+i-1, Nyr-i+1
-      h(i,j) = fmerge(i)*hr(i,j) + (1.0d0-fmerge(i))*h(i,j)
-      h(Nxr-i+1,j) = fmerge(i)*hr(Nxr-i+1,j) + (1.0d0-fmerge(i))*h(Nxr-i+1,j)
+  endif
+  if( SNWE(2)==1 ) then
+    do j=1, Nmerge
+      do i=1+j-1, Nxr-j+1
+        h(i,Nyr-j+1) = fmerge(j)*hr(i,Nyr-j+1) + (1.0d0-fmerge(j))*h(i,Nyr-j+1)
+      enddo
     enddo
-  enddo
-  do j=1, refine_factor/2+1
-    rmask(:,j) = rmask_r(:,j)
-    rmask(:,Nyr-j+1) = rmask_r(:,Nyr-j+1)
-  enddo
-  do i=1, refine_factor/2+1
-    rmask(i,:) = rmask_r(i,:)
-    rmask(Nxr-i+1,:) = rmask_r(Nxr-i+1,:)
-  enddo
+  endif
+  if( SNWE(3)==1 ) then
+    do i=1, Nmerge
+      do j=1+i-1, Nyr-i+1
+        h(i,j) = fmerge(i)*hr(i,j) + (1.0d0-fmerge(i))*h(i,j)
+      enddo
+    enddo
+  endif
+  if( SNWE(4)==1 ) then
+    do i=1, Nmerge
+      do j=1+i-1, Nyr-i+1
+        h(Nxr-i+1,j) = fmerge(i)*hr(Nxr-i+1,j) + (1.0d0-fmerge(i))*h(Nxr-i+1,j)
+      enddo
+    enddo
+  endif
+  if( SNWE(1)==1 ) then
+    do j=1, refine_factor/2+1
+      rmask(:,j) = rmask_r(:,j)
+    enddo
+  endif
+  if( SNWE(2)==1 ) then
+    do j=1, refine_factor/2+1
+      rmask(:,Nyr-j+1) = rmask_r(:,Nyr-j+1)
+    enddo
+  endif
+  if( SNWE(3)==1 ) then
+    do i=1, refine_factor/2+1
+      rmask(i,:) = rmask_r(i,:)
+    enddo
+  endif
+  if( SNWE(4)==1 ) then
+    do i=1, refine_factor/2+1
+      rmask(Nxr-i+1,:) = rmask_r(Nxr-i+1,:)
+    enddo
+  endif
   
 #endif
 

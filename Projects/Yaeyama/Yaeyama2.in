@@ -39,15 +39,15 @@
 /
 
 &sdate
-  Syear  = 2005   ! Starting year
-  Smonth = 1      ! Starting month
-  Sday   = 1      ! Starting day
+  Syear  = 2008   ! Starting year
+  Smonth = 4      ! Starting month
+  Sday   = 16      ! Starting day
 /
 
 &edate
-  Eyear  = 2006   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2008   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 5      ! Ending month
+  Eday   = 2      ! Ending day
 /
 
 &refdate
@@ -57,15 +57,16 @@
 /
 
 &roms2roms1
-  NCnum = 2  ! Number of ROMS his files 
+  NCnum = 3  ! Number of ROMS his files 
 /
 
 &roms2roms2     
 ! ROMS coarse NetCDF history file name
 !  ROMS_HISFILE  = "K:/COAWST/output/Yaeyama1_loric/YY1mb1_his_190610_kkl_roms_30lyr_clmoff.nc"
 !  ROMS_HISFILE  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15_20140502.00.nc"
-  ROMS_HISFILE  = "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20040104.nc",
-                  "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20050104.nc"
+  ROMS_HISFILE  = "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20070106.nc",
+                  "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20080107.nc",
+                  "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20080222.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -155,14 +156,40 @@
 
 /
 
+&frc_jmaobs
+
+! switches (1/0) for activate/deactivate the variables
+! 1: Pressure, 2: Wind, 3: Air temperature, 4: Humidity, 5: Cloud fraction
+! 6: Precipitation, 7: Short-wave radiation, 8: Down-ward long-wave radiation
+!           1       5      
+  airvar =  1,1,1,1,0,1,1,1
+!  airvar =  0,0,0,0,0,0,1,0
+
+  Pair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Pair2020.csv'   ! JMA Pressure data CSV file
+  wind_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/wind2020.csv'   ! JMA Wind data CSV file
+  Tair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Tair2020.csv'   ! JMA Air temperature data CSV file
+  Qair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Qair2020.csv'   ! JMA Humidity data CSV file
+  cloud_NAME = 'o:/JMA_DATA/Weather_Station/Ishigaki/cloud2020.csv'  ! JMA Cloud fraction data CSV file
+  rain_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/rain2020.csv'   ! JMA Precipitation data CSV file
+  swrad_NAME = 'o:/JMA_DATA/Weather_Station/Ishigaki/swrad2020.csv'  ! JMA Short-wave radiation data CSV file
+
+  LW_prefix  = 'o:/JMA_DATA/Weather_Station/Ishigaki/lwrad_data/DL2020'   ! JMA long-wave radiation data TXT file
+  LW_suffix  = '_ish.txt'          ! JMA long-wave radiation data TXT file
+
+  FRC_prefix  = "Ishigaki_frc_JMAobs_2020"
+!  FRC_prefix  = "Ishigaki_frc_JMAobs_2019_UTCp9"
+/
+
 &frc_jra55
   JRA55_dir  =  "N:/JRA-55/"  
   FRC_prefix  = "Yaeyama2_frc_JRA55"
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "N:/dsjra55/"  
-  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Air/Yaeyama2_frc_DSJRA55"
+!  DSJRA55_dir = "N:/dsjra55/"  
+  DSJRA55_dir = "C:/Users/Takashi/Downloads/dias/data/dsjra55/"  
+!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Air/Yaeyama2_frc_DSJRA55"
+  FRC_prefix  = "Yaeyama2_frc_DSJRA55"
 /
 
 &frc_jmamsm
