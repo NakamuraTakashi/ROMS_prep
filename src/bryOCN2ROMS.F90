@@ -1575,8 +1575,8 @@ PROGRAM bryOCN2ROMS
           enddo
         enddo
 #if defined ARAKAWA_C_GRID
-        do j=Judg_min,Judg_max-1
-          do i=Iudg_min,Iudg_max
+        do i=Iudg_min,Iudg_max
+          do j=Judg_min,Judg_max-1
             ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
           enddo
           ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
@@ -1631,8 +1631,8 @@ PROGRAM bryOCN2ROMS
             vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
           enddo
         enddo
-        do j=LBuj,UBuj-1
-          do i=LBui,UBui
+        do i=LBui,UBui
+          do j=LBuj,UBuj-1
             u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
           enddo
 !          write(*,*) 'DEBUG 1', i,j, UBuj
