@@ -82,12 +82,14 @@
 /
 
 &roms2roms1
-  NCnum = 1  ! Number of ROMS his files 
+  NCnum = 3  ! Number of ROMS his files 
 /
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "ocean_his.nc"
+  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Shizugawa1/Shizugawa1_his_20210102.nc",
+                  "E:/COAWTS_OUTPUT/Shizugawa1/Shizugawa1_his_20210131.nc",
+                  "E:/COAWTS_OUTPUT/Shizugawa1/Shizugawa1_his_20211231.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -117,17 +119,17 @@
 /
 
 &bry
-  BRY_prefix  = "Shizugawa2_bry_ROMS_Nz15"
+  BRY_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa2/Bry/Shizugawa2_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  0,   0,   0,   1
 /
 
 &ini
-  INI_prefix  = "Shizugawa2_ini_ROMS_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa2/Ini/Shizugawa2_ini_ROMS_Nz15"
 
   INIyear  = 2021   ! Initial year
-  INImonth = 2      ! Initial month
-  INIday   = 1      ! Initial day
+  INImonth = 1      ! Initial month
+  INIday   = 3      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

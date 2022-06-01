@@ -64,15 +64,15 @@
 /
 
 &sdate
-  Syear  = 2021   ! Starting year
+  Syear  = 2022   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
   Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Emonth = 4      ! Ending month
+  Eday   = 2      ! Ending day
 /
 
 &refdate
@@ -91,17 +91,37 @@
   romsvar = 1,1,1,1,1,1,1        
 /
 
+&jcope
+! JCOPE-T
+  JCOPE_info_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
+  JCOPE_data_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
+! JCOPE-2M
+!  JCOPE_info_dir  =  "P:/JCOPE-2M/yaeyama/"
+!  JCOPE_data_dir  =  "P:/JCOPE-2M/yaeyama/"
+/
+
+&hycom_local1
+!  NCnum = 2  ! Number of HYCOM local files 
+  NCnum = 2  ! Number of HYCOM local files 
+/
+
+&hycom_local2
+! HYCOM local file name(s)
+  HYCOM_FILE = "F:/HYCOM_DATA/Shizugawa/Shizugawa_HYCOM_extracted_20210226.nc",
+               "F:/HYCOM_DATA/Shizugawa/Shizugawa_HYCOM_extracted_20220101.nc"               
+/
+
 &bry
-  BRY_prefix  = "Shizugawa1_bry_HYCOM_Nz15"
+  BRY_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Bry/Shizugawa1_bry_HYCOM_Nz15"
   !    south north west east
   SNWE =  1,   1,   0,   1
 /
 
 &ini
-  INI_prefix  = "Shizugawa1_ini_HYCOM_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Ini/Shizugawa1_ini_HYCOM_Nz15"
 
-  INIyear  = 2018   ! Initial year
-  INImonth = 7      ! Initial month
+  INIyear  = 2021   ! Initial year
+  INImonth = 1      ! Initial month
   INIday   = 2      ! Initial day
   INIhour  = 0      ! Initial hour
 /

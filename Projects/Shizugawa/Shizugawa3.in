@@ -64,15 +64,15 @@
 /
 
 &sdate
-  Syear  = 2021   ! Starting year
+  Syear  = 2022   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
   Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Emonth = 4      ! Ending month
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -82,12 +82,13 @@
 /
 
 &roms2roms1
-  NCnum = 1  ! Number of ROMS his files 
+  NCnum = 2  ! Number of ROMS his files 
 /
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "ocean_his.nc"
+  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Shizugawa2/Shizugawa2_his_20210103.nc",
+                  "E:/COAWTS_OUTPUT/Shizugawa2/Shizugawa2_his_20220102.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -117,17 +118,17 @@
 /
 
 &bry
-  BRY_prefix  = "Shizugawa3_bry_ROMS_Nz15"
+  BRY_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Bry/Shizugawa3_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  0,   0,   0,   1
 /
 
 &ini
-  INI_prefix  = "Shizugawa3_ini_ROMS_Nz15"
+  INI_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Ini/Shizugawa3_ini_ROMS_Nz15"
 
   INIyear  = 2021   ! Initial year
-  INImonth = 3      ! Initial month
-  INIday   = 1      ! Initial day
+  INImonth = 1      ! Initial month
+  INIday   = 4      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

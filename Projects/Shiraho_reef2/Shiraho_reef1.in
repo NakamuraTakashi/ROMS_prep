@@ -43,13 +43,13 @@
 /
 
 &sdate
-  Syear  = 2019   ! Starting year
-  Smonth = 1     ! Starting month
-  Sday   = 1     ! Starting day
+  Syear  = 2018   ! Starting year
+  Smonth = 6     ! Starting month
+  Sday   = 23    ! Starting day
 /
 
 &edate
-  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2019   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1     ! Ending month
   Eday   = 1      ! Ending day
 /
@@ -86,7 +86,7 @@
 /
 
 &wave_cwm
-  CWM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  CWM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
   SWAN_prefix  = "Shiraho_wave2"
 
 /
