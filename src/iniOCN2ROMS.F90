@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  ===== 
+!!!=== Copyright (c) 2014-2022 Takashi NAKAMURA  ===== 
 
 #if defined HYCOM_MODEL || defined JCOPE_MODEL
 # undef WET_DRY
@@ -435,25 +435,25 @@ PROGRAM iniOCN2ROMS
   z_r = -z_r
   z_w = -z_w
   
-  do i=1,L
+  do k=1,N
     do j=0,M
-      do k=1,N
+      do i=1,L
         z_u(i,j,k) = (z_r(i-1,j,k)+z_r(i,j,k))*0.5d0
         dz_u(i,j,k) = ((z_w(i-1,j,k-1)+z_w(i,j,k-1))-(z_w(i-1,j,k)+z_w(i,j,k)))*0.5d0
       enddo
     enddo
   enddo
-  do i=0,L
+  do k=1,N
     do j=1,M
-      do k=1,N
+      do i=0,L
         z_v(i,j,k) = (z_r(i,j-1,k)+z_r(i,j,k))*0.5d0
         dz_v(i,j,k) = ((z_w(i,j-1,k-1)+z_w(i,j,k-1))-(z_w(i,j-1,k)+z_w(i,j,k)))*0.5d0
       enddo
     enddo
   enddo
 
-  do i=1,L
-    do j=0,M
+  do j=0,M
+    do i=1,L
       d_lat=latr(i,j)-latr(i-1,j)
       d_lon=lonr(i,j)-lonr(i-1,j)
       d_lon=d_lon*cos(latu(i,j)/180.0d0*PI)
@@ -464,8 +464,8 @@ PROGRAM iniOCN2ROMS
       if(abs( hu(i,j) ) < 1.0d-2) hu(i,j) = 0.01d0
     enddo
   enddo
-  do i=0,L
-    do j=1,M
+  do j=1,M
+    do i=0,L
       d_lat=latr(i,j)-latr(i,j-1)
       d_lon=lonr(i,j-1)-lonr(i,j)
       d_lon=d_lon*cos(latv(i,j)/180.0d0*PI)
@@ -653,23 +653,23 @@ PROGRAM iniOCN2ROMS
   z_r_dg = -z_r_dg
   z_w_dg = -z_w_dg
   
-  do i=1,Ldg
+  do k=1,Ndg
     do j=0,Mdg
-      do k=1,Ndg
+      do i=1,Ldg
         z_u_dg(i,j,k)= (z_r_dg(i-1,j,k)+z_r_dg(i,j,k))*0.5d0
       enddo
     enddo
   enddo
-  do i=0,Ldg
+  do k=1,Ndg
     do j=1,Mdg
-      do k=1,Ndg
+      do i=0,Ldg
         z_v_dg(i,j,k)= (z_r_dg(i,j-1,k)+z_r_dg(i,j,k))*0.5d0
       enddo
     enddo
   enddo
 
-  do i=1,Ldg
-    do j=0,Mdg
+  do j=0,Mdg
+    do i=1,Ldg
       d_lat=latr_dg(i,j)-latr_dg(i-1,j)
       d_lon=lonr_dg(i,j)-lonr_dg(i-1,j)
       d_lon=d_lon*cos(latu_dg(i,j)/180.0d0*PI)
@@ -677,8 +677,8 @@ PROGRAM iniOCN2ROMS
       sinAu_dg(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
     enddo
   enddo
-  do i=0,Ldg
-    do j=1,Mdg
+  do j=1,Mdg
+    do i=0,Ldg
       d_lat=latr_dg(i,j)-latr_dg(i,j-1)
       d_lon=lonr_dg(i,j-1)-lonr_dg(i,j)
       d_lon=d_lon*cos(latv_dg(i,j)/180.0d0*PI)
@@ -836,8 +836,8 @@ PROGRAM iniOCN2ROMS
 !  call check( nf90_close(ncid) )
 !  write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
 
-  do i=0,Ldg
-    do j=0,Mdg
+  do j=0,Mdg
+    do i=0,Ldg
       latr_dg(i,j) = lat(j+1)
       lonr_dg(i,j) = lon(i+1)
     enddo
@@ -846,9 +846,9 @@ PROGRAM iniOCN2ROMS
   lonu_dg(:,:) = lonr_dg(:,:)
   latv_dg(:,:) = latr_dg(:,:)
   lonv_dg(:,:) = lonr_dg(:,:)
-  do i=1,Ldg
+  do k=1,Ndg
     do j=0,Mdg
-      do k=1,Ndg
+      do i=1,Ldg
         z_r_dg(i,j,k)= depth(Ndg-k+1)
 !        z_r_dg(i,j,k)= depth(k)
       enddo
@@ -910,8 +910,8 @@ PROGRAM iniOCN2ROMS
 
   call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 1, lon, lat )
 
-  do i=0,Ldg
-    do j=0,Mdg
+  do j=0,Mdg
+    do i=0,Ldg
       latr_dg(i,j) = lat(j+1)
       lonr_dg(i,j) = lon(i+1)
     enddo
@@ -921,8 +921,8 @@ PROGRAM iniOCN2ROMS
   
   call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 2, lon, lat )
 
-  do i=1,Ldg
-    do j=0,Mdg
+  do j=0,Mdg
+    do i=1,Ldg
       latu_dg(i,j) = lat(j+1)
       lonu_dg(i,j) = lon(i+1)
     enddo
@@ -932,8 +932,8 @@ PROGRAM iniOCN2ROMS
 
   call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 3, lon, lat )
 
-  do i=0,Ldg
-    do j=1,Mdg
+  do j=1,Mdg
+    do i=0,Ldg
       latv_dg(i,j) = lat(j+1)
       lonv_dg(i,j) = lon(i+1)
     enddo
@@ -948,16 +948,16 @@ PROGRAM iniOCN2ROMS
   enddo
   h_dg(0:Ldg, 0:Mdg) = -z(1:Nxr_dg, 1:Nyr_dg, Nzr_dg )
 
-  do i=1,Ldg
+  do k=1,Ndg
     do j=0,Mdg
-      do k=1,Ndg
+      do i=1,Ldg
         z_u_dg(i,j,k)= (z_r_dg(i-1,j,k)+z_r_dg(i,j,k))*0.5d0
       enddo
     enddo
   enddo
-  do i=0,Ldg
+  do k=1,Ndg
     do j=1,Mdg
-      do k=1,Ndg
+      do i=0,Ldg
         z_v_dg(i,j,k)= (z_r_dg(i,j-1,k)+z_r_dg(i,j,k))*0.5d0
       enddo
     enddo
@@ -965,8 +965,8 @@ PROGRAM iniOCN2ROMS
 
 ! Land masking
   rmask_dg(:,:) = 1.0d0
-  do i=0,Ldg
-    do j=0,Mdg
+  do j=0,Mdg
+    do i=0,Ldg
       if( h_dg(i,j) < 1.001d0 ) then  !! Land: Depth < 1.0 m grids
         rmask_dg(i,j) = 0.0d0
       endif
@@ -1059,8 +1059,8 @@ PROGRAM iniOCN2ROMS
   count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
   call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
                     , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
-  do i=Irdg_min,Irdg_max
-    do j=Jrdg_min,Jrdg_max
+  do j=Jrdg_min,Jrdg_max
+    do i=Irdg_min,Irdg_max
       if (zeta_dg(i,j,1)<-10.0d0) then
         rmask_dg(i,j) = 0.0d0
       endif
@@ -1262,8 +1262,8 @@ PROGRAM iniOCN2ROMS
     jtime = dble(Smjd) + ocean_time(1)/86400.0d0
 !    write(*,*) jtime, Smjd
 
-    do i=0,L
-      do j=0,M
+    do j=0,M
+      do i=0,L
 # if defined NAOTIDE
         call naotide ( lonr(i,j), latr(i,j), jtime  , itmode, lpmode       &
                      , zeta_tide(i,j), hsp   , hlp   , Ldata          )
@@ -1364,21 +1364,21 @@ PROGRAM iniOCN2ROMS
 
   !- convert ROMS donor coordinate to lat lon coordinate --------------------------------
   
-    do i=Iudg_min,Iudg_max
-      do j=Judg_min,Judg_max
+    do j=Judg_min,Judg_max
+      do i=Iudg_min,Iudg_max
         ullu_dg(i,j,:,1) = u_dg(i,j,:,1)*cosAu_dg(i,j)
         vllu_dg(i,j,:,1) = u_dg(i,j,:,1)*sinAu_dg(i,j)
       enddo
     enddo
-    do i=Ivdg_min,Ivdg_max
-      do j=Jvdg_min,Jvdg_max
+    do j=Jvdg_min,Jvdg_max
+      do i=Ivdg_min,Ivdg_max
         ullv_dg(i,j,:,1) = -v_dg(i,j,:,1)*sinAv_dg(i,j)
         vllv_dg(i,j,:,1) =  v_dg(i,j,:,1)*cosAv_dg(i,j)
       enddo
     enddo
 #if defined ARAKAWA_C_GRID
-    do i=Iudg_min,Iudg_max
-      do j=Judg_min,Judg_max-1
+    do j=Judg_min,Judg_max-1
+      do i=Iudg_min,Iudg_max
         ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
       enddo
       ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
@@ -1390,8 +1390,8 @@ PROGRAM iniOCN2ROMS
       vll_dg(Ivdg_max,j,:,1) = vllv_dg(Ivdg_max,j,:,1)+vllu_dg(Ivdg_max,j-1,:,1)
     enddo
 #else
-  do i=Iudg_min,Iudg_max
-    do j=Judg_min,Judg_max
+  do j=Judg_min,Judg_max
+    do i=Iudg_min,Iudg_max
       ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i,j,:,1)
     enddo
   enddo
@@ -1421,20 +1421,20 @@ PROGRAM iniOCN2ROMS
     
   !- convert lat lon coordinate to ROMS refine coordinate --------------------------------
   
-    do i=1,L
-      do j=0,M
+    do j=0,M
+      do i=1,L
         uu(i,j,:,1) =  ull(i,j,:,1)*cosAu(i,j)
         vu(i,j,:,1) = -ull(i,j,:,1)*sinAu(i,j)
       enddo
     enddo
-    do i=0,L
-      do j=1,M
+    do j=1,M
+      do i=0,L
         uv(i,j,:,1) = vll(i,j,:,1)*sinAv(i,j)
         vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
       enddo
     enddo
-    do i=1,L
-      do j=0,M-1
+    do j=0,M-1
+      do i=1,L
         u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
       enddo
       u(i,M,:,1) = uu(i,M,:,1)+uv(i-1,M,:,1)
@@ -1470,8 +1470,8 @@ PROGRAM iniOCN2ROMS
   
     if( romsvar(4)==1 ) then
       ubar(:,:,1)=0.0d0
-      do i=1,L
-        do j=0,M
+      do j=0,M
+        do i=1,L
           do k=1,N
             ubar(i,j,1) = ubar(i,j,1)+u(i,j,k,1)*dz_u(i,j,k)/hu(i,j)*umask(i,j)
           enddo
@@ -1488,8 +1488,8 @@ PROGRAM iniOCN2ROMS
 
     if( romsvar(5)==1 ) then   
       vbar(:,:,1)=0.0d0
-      do i=0,L
-        do j=1,M
+      do j=1,M
+        do i=0,L
           do k=1,N
             vbar(i,j,1) = vbar(i,j,1)+v(i,j,k,1)*dz_v(i,j,k)/hv(i,j)*vmask(i,j)
           enddo

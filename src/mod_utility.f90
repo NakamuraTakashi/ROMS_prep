@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018-2021 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2022 Takashi NAKAMURA  =====
 
 !!!**** UTILITY MODULE ****************
 
@@ -68,8 +68,8 @@ MODULE mod_utility
 
   data_max = data(1,1)
   data_min = data(1,1)
-  do i=1, Im
-    do j=1, Jm
+  do j=1, Jm
+    do i=1, Im
       if(data_max < data(i,j)) data_max = data(i,j)
       if(data_min > data(i,j)) data_min = data(i,j)
     enddo
@@ -123,8 +123,8 @@ MODULE mod_utility
   integer :: i,j
   
   mask_rho(:,:) = 1.0d0
-  do i=1, N_xi_rho
-    do j=1, N_eta_rho
+  do j=1, N_eta_rho
+    do i=1, N_xi_rho
       if(h(i,j) < hmin) then
         mask_rho(i,j) = 0.0d0
       endif
@@ -171,8 +171,8 @@ MODULE mod_utility
   ! Expand water area
   do !k=1,1000
     count = 0
-    do i=1, N_xi_rho
-      do j=1, N_eta_rho
+    do j=1, N_eta_rho
+      do i=1, N_xi_rho
         if(mask_rho(i,j)==1.0d0 .and. rmsk(i,j)==0.0d0)then 
           ip=i+1
           im=i-1
@@ -197,8 +197,8 @@ MODULE mod_utility
   ! Remove one grid bay
   do k=1,1000
     count = 0
-    do i=1, N_xi_rho
-      do j=1, N_eta_rho
+    do j=1, N_eta_rho
+      do i=1, N_xi_rho
         if(rmsk(i,j)==1.0d0)then 
           ip=i+1
           im=i-1
@@ -234,20 +234,20 @@ MODULE mod_utility
   integer :: i,j
   real(8) :: tm
   
-  do i=1, N_xi_rho-1
-    do j=1, N_eta_rho
+  do j=1, N_eta_rho
+    do i=1, N_xi_rho-1
       mask_u(i,j) = mask_rho(i+1,j)*mask_rho(i,j)
     enddo
   enddo
   
-  do i=1, N_xi_rho
-    do j=1, N_eta_rho-1
+  do j=1, N_eta_rho-1
+    do i=1, N_xi_rho
       mask_v(i,j) = mask_rho(i,j+1)*mask_rho(i,j)
     enddo
   enddo
   
-  do i=1, N_xi_rho-1
-    do j=1, N_eta_rho-1
+  do j=1, N_eta_rho-1
+    do i=1, N_xi_rho-1
       tm = (mask_rho(i+1,j+1)+mask_rho(i,j))   &
           *(mask_rho(i+1,j)+mask_rho(i,j+1))
       if(tm>1.5d0) then
@@ -277,8 +277,8 @@ MODULE mod_utility
 
   do k=1,1000
     MAX_rx0 = 0.0d0
-    do i=1, N_xi_rho-1
-      do j=1, N_eta_rho-1
+    do j=1, N_eta_rho-1
+      do i=1, N_xi_rho-1
         if(mask_rho(i,j)*mask_rho(i,j+1)==1.0d0) then
           rx0 = abs(h(i,j)-h(i,j+1))/(h(i,j)+h(i,j+1))
           if(rx0>rx0max) then

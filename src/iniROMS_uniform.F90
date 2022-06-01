@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2020-2021 Takashi NAKAMURA  ===== 
+!!!=== Copyright (c) 2020-2022 Takashi NAKAMURA  ===== 
 
 PROGRAM iniROMS_uniform
   use netcdf
@@ -252,8 +252,8 @@ PROGRAM iniROMS_uniform
   
     if( romsvar(4)==1 ) then
       ubar(:,:,1)=0.0d0
-      do i=1,L
-        do j=0,M
+      do j=0,M
+        do i=1,L
           do k=1,N
             ubar(i,j,1)= ubar(i,j,1)+u(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
           enddo
@@ -268,8 +268,8 @@ PROGRAM iniROMS_uniform
 
     if( romsvar(5)==1 ) then   
       vbar(:,:,1)=0.0d0
-      do i=0,L
-        do j=1,M
+      do j=1,M
+        do i=0,L
           do k=1,N
             vbar(i,j,1)= vbar(i,j,1)+v(i,j,k,1)*abs(Cs_w(k-1)-Cs_w(k))
           enddo

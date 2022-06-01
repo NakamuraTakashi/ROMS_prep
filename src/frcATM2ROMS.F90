@@ -354,8 +354,8 @@ PROGRAM frcATM2ROMS
   ! Close NetCDF file
   call check( nf90_close(ncid) )
   
-  do i=0,L-1
-    do j=0,M
+  do j=0,M
+    do i=0,L-1
       d_lat=latr(i+1,j)-latr(i,j)
       d_lon=lonr(i+1,j)-lonr(i,j)
       d_lon=d_lon*cos(latr(i,j)/180.0d0*PI)
@@ -366,8 +366,8 @@ PROGRAM frcATM2ROMS
   cosAu(L,:) = cosAu(L-1,:)
   sinAu(L,:) = sinAu(L-1,:)
 
-  do i=0,L
-    do j=0,M-1
+  do j=0,M-1
+    do i=0,L
       d_lat=latr(i,j+1)-latr(i,j)
       d_lon=lonr(i,j)-lonr(i,j+1)
       d_lon=d_lon*cos(latr(i,j)/180.0d0*PI)
@@ -902,8 +902,8 @@ PROGRAM frcATM2ROMS
 !  ---- LOOP3.2 END --------------------------------
 
   !!! for U V: change regular Lat Lon to ROMS grid coordinat vectors 
-      do i=0,L
-        do j=0,M
+      do j=0,M
+        do i=0,L
           u = out_data(2,i,j)*cosAu(i,j)+out_data(3,i,j)*sinAu(i,j)
           v =-out_data(2,i,j)*sinAv(i,j)+out_data(3,i,j)*cosAv(i,j)
           out_data(2,i,j) = u

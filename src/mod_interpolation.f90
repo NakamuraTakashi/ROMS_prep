@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2022 Takashi NAKAMURA  =====
 
 !!!**** Interpolation MODULE ************************************
 
@@ -142,8 +142,8 @@ CONTAINS
         do
           dmin = sqrt((Xd(NXd,NYd)-Xd(1,1))**2.0d0 + (Yd(NXd,NYd)-Yd(1,1))**2.0d0 )
 
-          do Idn=is,ie, istep
-            do Jdn=js,je, istep
+          do Jdn=js,je, istep
+            do Idn=is,ie, istep
               ! Check nearest points.
               d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
               if( d < dmin ) then
@@ -274,8 +274,8 @@ CONTAINS
       do
         dmin = sqrt((Xd(Ide,Jde)-Xd(Ids,Jds))**2.0d0 + (Yd(Ide,Jde)-Yd(Ids,Jds))**2.0d0 )
   
-        do Idn=is,ie, istep
-          do Jdn=js,je, istep
+        do Jdn=js,je, istep
+          do Idn=is,ie, istep
             ! Check nearest points.
             d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
                   
@@ -409,8 +409,8 @@ CONTAINS
           dmin = sqrt((Xd(Ide,Jde)-Xd(Ids,Jds))**2.0d0 + (Yd(Ide,Jde)-Yd(Ids,Jds))**2.0d0 )
 !          write(*,*) "DEBUG2",ir,jr,xr(ir,jr),dmin
 
-          do Idn=is,ie!, istep
-            do Jdn=js,je!, istep
+          do Jdn=js,je!, istep
+            do Idn=is,ie!, istep
               if( Maskd(Idn,Jdn)==0.0d0 ) cycle
               ! Check nearest points.
               d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
@@ -555,8 +555,8 @@ CONTAINS
 
         dmin = sqrt((Xd(Ide,Jde)-Xd(Ids,Jds))**2.0d0 + (Yd(Ide,Jde)-Yd(Ids,Jds))**2.0d0 )
 
-        do Idn=is,ie!, istep
-          do Jdn=js,je!, istep
+        do Jdn=js,je!, istep
+          do Idn=is,ie!, istep
             if( Maskd(Idn,Jdn)==0.0d0 ) cycle
             ! Check nearest points.
             d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
@@ -809,8 +809,8 @@ CONTAINS
 !             Xd(Id,Jd)       Xd(Id+1,Jd)
 !
     d = 1.0d0/refine_factor
-    do i=1, refine_factor
-      do j=1, refine_factor
+    do j=1, refine_factor
+      do i=1, refine_factor
         p = 1.0d0/refine_factor*dble(i-1)
         q = 1.0d0/refine_factor*dble(j-1)
         wmtrx(1,i,j) = (1.0d0-p)*(1.0d0-q)

@@ -327,8 +327,8 @@ PROGRAM grdROMS
                     , P_yr , 0.0d0, 1.0d9                  &
                     , Nxr, Nyr, xr0, yr0, yr )
   ! UTM -> lat lon
-  do i=1,Nxr
-    do j=1,Nyr
+  do j=1,Nyr
+    do i=1,Nxr
       call utm2ll( xr(i,j), yr(i,j), izone, ispher         &
                  , latr(i,j), lonr(i,j), conv)
     enddo
@@ -351,12 +351,12 @@ PROGRAM grdROMS
                     , P_angler , -10.0d0, 10.0d0           &
                     , Nxr, Nyr, xr0, yr0, angler )
 
-  do ip=parent_Imin+1, parent_Imax
-    do jp=parent_Jmin+1, parent_Jmax
+  do jp=parent_Jmin+1, parent_Jmax
+    do ip=parent_Imin+1, parent_Imax
       is = (ip-parent_Imin-1)*refine_factor+2
       js = (jp-parent_Jmin-1)*refine_factor+2
-      do i=is, is+refine_factor
-        do j=js, js+refine_factor
+      do j=js, js+refine_factor
+        do i=is, is+refine_factor
           rmask_r(i,j) = P_rmask(ip,jp)
         enddo
       enddo
@@ -373,8 +373,8 @@ PROGRAM grdROMS
   call grid_gen_rectangular( s_lon, s_lat, RESOLUTION, angle &
                            , Nxr, Nyr, xr, yr )
   ! UTM -> lat lon
-  do i=1,Nxr
-    do j=1,Nyr
+  do j=1,Nyr
+    do i=1,Nxr
       call utm2ll( xr(i,j), yr(i,j), izone, ispher         &
                  , latr(i,j), lonr(i,j), conv)
     enddo
@@ -389,24 +389,24 @@ PROGRAM grdROMS
 #endif
 
 #if defined UTM_COORD
-  do i=1, Nxu
-    do j=1, Nyu
+  do j=1, Nyu
+    do i=1, Nxu
       xu(i,j)=0.5d0*(xr(i,j)+xr(i+1,j))
       yu(i,j)=0.5d0*(yr(i,j)+yr(i+1,j))
       call utm2ll( xu(i,j), yu(i,j), izone, ispher           &
                  , latu(i,j), lonu(i,j), conv )
     enddo      
   enddo
-  do i=1, Nxv
-    do j=1, Nyv
+  do j=1, Nyv
+    do i=1, Nxv
       xv(i,j)=0.5d0*(xr(i,j)+xr(i,j+1))
       yv(i,j)=0.5d0*(yr(i,j)+yr(i,j+1))
       call utm2ll( xv(i,j), yv(i,j), izone, ispher           &
                  , latv(i,j), lonv(i,j), conv )
     enddo      
   enddo
-  do i=1, Nxp
-    do j=1, Nyp
+  do j=1, Nyp
+    do i=1, Nxp
       xp(i,j)=0.5d0*(xu(i,j)+xu(i,j+1))
       yp(i,j)=0.5d0*(yv(i,j)+yv(i+1,j))
       call utm2ll( xp(i,j), yp(i,j), izone, ispher           &
@@ -415,8 +415,8 @@ PROGRAM grdROMS
   enddo
 
   ! compute pm, pn
-  do i=2, Nxr-1
-    do j=1, Nyr
+  do j=1, Nyr
+    do i=2, Nxr-1
       pm(i,j) = 1.0d0/sqrt(                                   &
                 (xu(i,j)-xu(i-1,j))**2+(yu(i,j)-yu(i-1,j))**2)
     enddo
@@ -424,8 +424,8 @@ PROGRAM grdROMS
   pm(1,:) = pm(2,:) 
   pm(Nxr,:) = pm(Nxr-1,:) 
 
-  do i=1, Nxr
-    do j=2, Nyr-1
+  do j=2, Nyr-1
+    do i=1, Nxr
       pn(i,j) = 1.0d0/sqrt(                                   &
                 (xv(i,j)-xv(i,j-1))**2+(yv(i,j)-yv(i,j-1))**2)
     enddo
@@ -434,28 +434,28 @@ PROGRAM grdROMS
   pn(:,Nyr) = pn(:,Nyr-1)
 
 #else
-  do i=1, Nxu
-    do j=1, Nyu
+  do j=1, Nyu
+    do i=1, Nxu
       lonu(i,j)=0.5d0*(lonr(i,j)+lonr(i+1,j))
       latu(i,j)=0.5d0*(latr(i,j)+latr(i+1,j))
     enddo      
   enddo
-  do i=1, Nxv
-    do j=1, Nyv
+  do j=1, Nyv
+    do i=1, Nxv
       lonv(i,j)=0.5d0*(lonr(i,j)+lonr(i,j+1))
       latv(i,j)=0.5d0*(latr(i,j)+latr(i,j+1))
     enddo      
   enddo
-  do i=1, Nxp
-    do j=1, Nyp
+  do j=1, Nyp
+    do i=1, Nxp
       lonp(i,j)=0.5d0*(lonu(i,j)+lonu(i,j+1))
       latp(i,j)=0.5d0*(latv(i,j)+latv(i+1,j))
     enddo      
   enddo
 
   ! compute pm, pn
-  do i=2, Nxr-1
-    do j=1, Nyr
+  do j=1, Nyr
+    do i=2, Nxr-1
       pm(i,j) = 1.0d0/distance( latr(i,j), lonu(i-1,j)   &
                               , latr(i,j), lonu(i,j))
     enddo
@@ -463,8 +463,8 @@ PROGRAM grdROMS
   pm(1,:) = pm(2,:) 
   pm(Nxr,:) = pm(Nxr-1,:) 
 
-  do i=1, Nxr
-    do j=2, Nyr-1
+  do j=2, Nyr-1
+    do i=1, Nxr
       pn(i,j) = 1.0d0/distance( latv(i,j-1), lonr(i,j)   &
                               , latv(i,j), lonr(i,j))
     enddo
@@ -475,8 +475,8 @@ PROGRAM grdROMS
 #endif
 
   ! Coriolis parameter
-  do i=1, Nxr
-    do j=1, Nyr
+  do j=1, Nyr
+    do i=1, Nxr
       f(i,j) = Coriolis(latr(i,j))
     enddo
   enddo
@@ -674,8 +674,8 @@ PROGRAM grdROMS
 
   CALL uvp_masks(Nxr, Nyr, rmask, umask, vmask, pmask)
 
-  do i=1, Nxr
-    do j=1, Nyr
+  do j=1, Nyr
+    do i=1, Nxr
       if(rmask(i,j) == 0.0d0) then
         h(i,j) = -10.0d0
       endif

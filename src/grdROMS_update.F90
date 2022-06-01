@@ -163,8 +163,8 @@ PROGRAM grdROMS_update
   tot_mask = refine_factor*refine_factor
   iadd = int( refine_factor/2 )
 
-  do i=parent_Imin, parent_Imax-1
-    do j=parent_Jmin, parent_Jmax-1
+  do j=parent_Jmin, parent_Jmax-1
+    do i=parent_Imin, parent_Imax-1
       if( i<0 .or. i>L .or. j<0 .or. j>M ) cycle
       i_rg = i0_rg + refine_factor*(i-parent_Imin)
       j_rg = j0_rg + refine_factor*(j-parent_Jmin)
@@ -172,8 +172,8 @@ PROGRAM grdROMS_update
       avg_h_rg = 0.0d0
       mask_count = 0 
 
-      do ir=i_rg-iadd, i_rg+iadd
-        do jr=j_rg-iadd, j_rg+iadd
+      do jr=j_rg-iadd, j_rg+iadd
+        do ir=i_rg-iadd, i_rg+iadd
           avg_h_rg = avg_h_rg + h_rg(ir,jr)*rmask_rg(ir,jr)
           if( rmask_rg(ir,jr)==1 ) mask_count = mask_count + 1
         enddo
@@ -207,8 +207,8 @@ PROGRAM grdROMS_update
 
   CALL uvp_masks(Nxr, Nyr, rmask, umask, vmask, pmask)
 
-  do i=0, L
-    do j=0, M
+  do j=0, M
+    do i=0, L
       if(rmask(i,j) == 0.0d0) then
         h(i,j) = -10.0d0
       endif
