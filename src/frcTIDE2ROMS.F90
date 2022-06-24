@@ -246,7 +246,12 @@ PROGRAM frcTIDE2ROMS
 !---- Read NAO99/NAO99J grid --------------------------------
 #if defined NAOTIDE || defined NAOTIDEJ
 
+# if defined NAOTIDE 
+  TDATA_FILE = trim(SRC_DIR)//'/omap/'//trim(Tconsti(1))//'.nao'
+# elif defined NAOTIDEJ
   TDATA_FILE = trim(SRC_DIR)//'/omapj/'//trim(Tconsti(1))//'_j.nao'
+# endif
+
   write(*,*) "OPEN: "//trim(TDATA_FILE)
 
   open(50, file=trim(TDATA_FILE), status='old')
@@ -417,8 +422,13 @@ PROGRAM frcTIDE2ROMS
   allocate( SSH_Tamp_dg  (Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, NTC) )
 
   DO iTC=1,NTC
-
+    
+# if defined NAOTIDE 
+    TDATA_FILE = trim(SRC_DIR)//'/omap/'//trim(Tconsti(iTC))//'.nao'
+# elif defined NAOTIDEJ
     TDATA_FILE = trim(SRC_DIR)//'/omapj/'//trim(Tconsti(iTC))//'_j.nao'
+# endif
+
     write(*,*) "OPEN: "//trim(TDATA_FILE)
   
     open(50, file=trim(TDATA_FILE), status='old')
