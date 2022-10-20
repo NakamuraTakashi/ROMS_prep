@@ -1,7 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-!  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
-  GRID_FILE = "Yaeyama1_grd_v10.nc"
+  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
+!  GRID_FILE = "Yaeyama1_grd_v10.nc"
 /
 
 &sdate
