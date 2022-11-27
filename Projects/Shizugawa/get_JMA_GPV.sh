@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR_NAME="2021"
+DIR_NAME="2022"
 LOCAL_DIR="/cygdrive/o/JMA_DATA/JMA_GPV"
 
 REMOTE_DIR="/arch/jmadata/data/gpv/original"

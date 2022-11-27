@@ -262,8 +262,8 @@ CONTAINS
   Jdmin=Jde
   Jdmax=Ids
   
-  do ir=irs,ire
-    do jr=jrs,jre
+  do jr=jrs,jre
+    do ir=irs,ire
     
       istep = min(NXd/2,NYd/2)
       js = Jds
@@ -278,7 +278,6 @@ CONTAINS
           do Idn=is,ie, istep
             ! Check nearest points.
             d = sqrt((Xd(Idn,Jdn)-xr(ir,jr))**2.0d0 + (Yd(Idn,Jdn)-yr(ir,jr))**2.0d0 )
-                  
             if( d < dmin(1) ) then
               dmin(3) = dmin(2)
               dmin(2) = dmin(1)
@@ -320,7 +319,7 @@ CONTAINS
           je = min(Jde,Jd(1)+istep+2)
           ie = min(Ide,Id(1)+istep+2)
         end if
-       
+      
       enddo
   
       Idmin = min(Idmin,Id(1))

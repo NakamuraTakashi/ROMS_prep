@@ -1010,10 +1010,10 @@ PROGRAM iniOCN2ROMS
         , 0, L,   0, M,   lonr,    latr                &
         , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max)
 
-  Irdg_min = max(Irdg_min-2, 0 )
-  Irdg_max = min(Irdg_max+2,Ldg)
-  Jrdg_min = max(Jrdg_min-2, 0 )
-  Jrdg_max = min(Jrdg_max+2,Mdg)
+  Irdg_min = max(Irdg_min-2, 1 )
+  Irdg_max = min(Irdg_max+2,Ldg-1)
+  Jrdg_min = max(Jrdg_min-2, 1 )
+  Jrdg_max = min(Jrdg_max+2,Mdg-1)
   Iudg_min = Irdg_min
   Iudg_max = Irdg_max
   Judg_min = Jrdg_min
