@@ -683,8 +683,13 @@ PROGRAM frcTIDE2ROMS
 !=== Read Tide data ================================================
 
   DO iTC=1,NTC
-
-    TDATA_FILE = trim(SRC_DIR)//'/omapj/'//trim(Tconsti(iTC))//'_j.nao'
+!---- Read NAO99/NAO99Jb data --------------------------------
+#if defined NAOTIDE || defined NAOTIDEJ
+# if defined NAOTIDEJ
+    TDATA_FILE = trim(TIDE_DATA_dir)//'omapj/'//trim(Tconsti(iTC))//'_j.nao'
+# else
+    TDATA_FILE = trim(TIDE_DATA_dir)//'omap/'//trim(Tconsti(iTC))//'.nao'
+# endif
     write(*,*) "OPEN: "//trim(TDATA_FILE)
   
     open(50, file=trim(TDATA_FILE), status='old')

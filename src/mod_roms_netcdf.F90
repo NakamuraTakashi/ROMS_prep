@@ -1313,7 +1313,7 @@ MODULE mod_roms_netcdf
       call check( nf90_def_var(ncid, 'tide_Eamp', NF90_DOUBLE, dim3Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'tidal elevation amplitude') )
       call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
-#if defined UV_TIDES
+
       call check( nf90_def_var(ncid, 'tide_Cphase', NF90_DOUBLE, dim3Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'tidal current phase angle') )
       call check( nf90_put_att(ncid, var_id, 'units',     'degrees, time of maximum velocity with respect chosen time origin') )
@@ -1329,7 +1329,7 @@ MODULE mod_roms_netcdf
       call check( nf90_def_var(ncid, 'tide_Cmax', NF90_DOUBLE, dim3Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'maximum tidal current, ellipse semi-major axis') )
       call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-#endif
+
       dim2Dids = (/ four_dimid, tp_dimid /)
 !      dim1Dids = (/ tp_dimid /)
 

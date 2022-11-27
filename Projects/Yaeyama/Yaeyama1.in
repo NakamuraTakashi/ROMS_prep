@@ -1,7 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
-!  GRID_FILE = "Yaeyama1_grd_v10.nc"
+!  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
+  GRID_FILE = "Yaeyama1_grd_v10.nc"
 /
 
 &sdate
@@ -112,8 +112,8 @@
 /
 
 &tide
-!  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/ROMS_prep/src/"   ! For NAO99/NAO99J
-!  TIDE_prefix   = "Yaeyama1_tide_nao99Jb"
-  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
-  TIDE_prefix  = "Yaeyama1_tide_fes2014"
+  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/ROMS_prep/src/"   ! For NAO99/NAO99J
+  TIDE_prefix   = "Yaeyama1_tide_nao99Jb_test"
+!  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
+!  TIDE_prefix  = "Yaeyama1_tide_fes2014"
 /
