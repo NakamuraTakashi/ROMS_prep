@@ -112,5 +112,8 @@
 /
 
 &tide
-  TIDE_prefix  = "Yaeyama1_tide_nao99Jb"
+!  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/ROMS_prep/src/"   ! For NAO99/NAO99J
+!  TIDE_prefix   = "Yaeyama1_tide_nao99Jb"
+  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
+  TIDE_prefix  = "Yaeyama1_tide_fes2014"
 /

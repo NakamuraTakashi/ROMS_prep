@@ -155,6 +155,6 @@
 /
 
 &tide
-  TIDE_prefix  = "Boracay1_tide_nao99b"
+  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
+  TIDE_prefix  = "Boracay1_tide_fes2014"
 /
-

@@ -104,3 +104,7 @@
   JRA55_dir  =  "N:/JRA-55/"
   FRC_prefix  = "Palau1_frc_JRA55"
 /
+&tide
+  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
+  TIDE_prefix  = "Palau1_tide_fes2014"
+/
