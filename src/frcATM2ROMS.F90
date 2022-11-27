@@ -834,7 +834,7 @@ PROGRAM frcATM2ROMS
       do j=1, Jm
         do i=1,Im
           ! Dewpoint (oC)
-          dpT = in_data(4,i,j)-in_data(5,i,j) ! (oC)
+          dpT = in_data(4,i,j)-in_data(5,i,j) ! (K)
           ! Saturation vapor pressure (hPa)
           sat_VP=6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/in_data(4,i,j)))
           ! Vapor pressure (hPa)

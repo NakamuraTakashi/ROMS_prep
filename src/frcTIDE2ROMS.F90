@@ -5,6 +5,10 @@
 # undef  UV_TIDES
 #elif defined NAOTIDEJ
 # define UV_TIDES
+#elif defined FES2014
+# define UV_TIDES
+#elif defined TPXO9_ATLAS_NC
+# define UV_TIDES
 #endif
 
 PROGRAM frcTIDE2ROMS
@@ -21,6 +25,7 @@ PROGRAM frcTIDE2ROMS
 
   character(256) :: GRID_FILE
 
+  character(256) :: TIDE_DATA_dir
   character(256) :: TIDE_prefix
   character(15) :: TIDE_suffix   = "_20000101.00.nc"
   character(256) :: TIDE_FILE
@@ -48,6 +53,7 @@ PROGRAM frcTIDE2ROMS
   real(8), allocatable :: SSH_Tphase_dg(:,:,:)
   real(8), allocatable :: SSH_Tcos_dg(:,:,:)
   real(8), allocatable :: SSH_Tsin_dg(:,:,:)
+  real(8), allocatable :: amp(:,:), phs(:,:)
 
   integer, allocatable :: ID_cnt2Dr(:,:)
   real(8), allocatable :: w_cnt2Dr(:,:)
@@ -69,6 +75,26 @@ PROGRAM frcTIDE2ROMS
   real(8), allocatable :: w_cnt2Du(:,:)
   integer, allocatable :: ID_cnt2Dv(:,:)
   real(8), allocatable :: w_cnt2Dv(:,:)
+
+  real(8), allocatable :: Ua_dg(:,:), Up_dg(:,:), Va_dg(:,:), Vp_dg(:,:)
+
+  real(8), allocatable :: Uamp  (:,:)
+  real(8), allocatable :: Uphase(:,:)
+  real(8), allocatable :: Upcos(:,:)
+  real(8), allocatable :: Upsin(:,:)
+  real(8), allocatable :: Vamp  (:,:)
+  real(8), allocatable :: Vphase(:,:)
+  real(8), allocatable :: Vpcos(:,:)
+  real(8), allocatable :: Vpsin(:,:)
+
+  real(8), allocatable :: Uamp_dg  (:,:,:)
+  real(8), allocatable :: Uphase_dg(:,:,:)
+  real(8), allocatable :: Upcos_dg(:,:,:)
+  real(8), allocatable :: Upsin_dg(:,:,:)
+  real(8), allocatable :: Vamp_dg  (:,:,:)
+  real(8), allocatable :: Vphase_dg(:,:,:)
+  real(8), allocatable :: Vpcos_dg(:,:,:)
+  real(8), allocatable :: Vpsin_dg(:,:,:)
 #endif
 
   integer :: ncid,var_id
@@ -88,24 +114,31 @@ PROGRAM frcTIDE2ROMS
   real(8) :: cff
 
 #if defined NAOTIDE || defined NAOTIDEJ
+
+# if defined NAOTIDE
+  character(6) :: SOURCE_NAME = "NAO99b"
+# elif defined NAOTIDEJ
+  character(7) :: SOURCE_NAME = "NAO99Jb"
+# endif
+
   integer, parameter :: NTC = 16
   character(3), parameter :: Tconsti(NTC) = (/    &
-      'k2 '          &
-    , 's2 '          &
-    , 't2 '          &
-    , 'l2 '          &
-    , 'm2 '          &
-    , 'nu2'          &
-    , 'n2 '          &
-    , 'mu2'          &
-    , '2n2'          &
-    , 'oo1'          &
-    , 'j1 '          &
-    , 'k1 '          &
-    , 'p1 '          &
-    , 'm1 '          &
-    , 'o1 '          &
-    , 'q1 '          &
+      'k2  '          &
+    , 's2  '          &
+    , 't2  '          &
+    , 'l2  '          &
+    , 'm2  '          &
+    , 'nu2 '          &
+    , 'n2  '          &
+    , 'mu2 '          &
+    , '2n2 '          &
+    , 'oo1 '          &
+    , 'j1  '          &
+    , 'k1  '          &
+    , 'p1  '          &
+    , 'm1  '          &
+    , 'o1  '          &
+    , 'q1  '          &
     /)
   real(8), parameter :: Tperiod(NTC) = (/     &           
       11.96723479d0  &  ! k2 
@@ -152,38 +185,126 @@ PROGRAM frcTIDE2ROMS
   character(6) :: fmt      !
   real(8) :: aunit         ! 
   real(8) :: punit         ! 
-  real(8), allocatable :: amp(:,:), phs(:,:)
+ 
+#elif defined FES2014
+  character(7) :: SOURCE_NAME = "FES2014"
+  integer, parameter :: NTC = 34
+  character(4), parameter :: Tconsti(NTC) = (/    &
+      '2n2 '          &
+    , 'k2  '          &
+    , 'm3  '          &
+    , 'mf  '          &
+    , 'ms4 '          &
+    , 'mu2 '          &
+    , 'o1  '          &
+    , 's1  '          &
+    , 'ssa '          &
+    , 'eps2'          &
+    , 'l2  '          &
+    , 'm4  '          &
+    , 'mks2'          &
+    , 'msf '          &
+    , 'n2  '          &
+    , 'p1  '          &
+    , 's2  '          &
+    , 't2  '          &
+    , 'j1  '          &
+    , 'la2 '          &
+    , 'm6  '          &
+    , 'mm  '          &
+    , 'msqm'          &
+    , 'n4  '          &
+    , 'q1  '          &
+    , 's4  '          &
+    , 'k1  '          &
+    , 'm2  '          &
+    , 'm8  '          &
+    , 'mn4 '          &
+    , 'mtm '          &
+    , 'nu2 '          &
+    , 'r2  '          &
+    , 'sa  '          &
+    /)
+  real(8), parameter :: Tperiod(NTC) = (/     &           
+      11.96723479d0  &  ! 2n2 
+    , 12.00000000d0  &  ! k2  
+    , 12.01644920d0  &  ! m3  
+    , 12.19162016d0  &  ! mf  
+    , 12.42060122d0  &  ! ms4 
+    , 12.62600437d0  &  ! mu2 
+    , 12.65834824d0  &  ! o1  
+    , 12.87175759d0  &  ! s1  
+    , 12.90537448d0  &  ! ssa 
+    , 22.30607420d0  &  ! eps2
+    , 23.09847677d0  &  ! l2  
+    , 23.93446966d0  &  ! m4  
+    , 24.06589016d0  &  ! mks2
+    , 24.83324836d0  &  ! msf 
+    , 25.81934166d0  &  ! n2  
+    , 26.86835667d0  &  ! p1  
+    , 12.00000000d0  &  ! s2  
+    , 12.01644920d0  &  ! t2  
+    , 12.19162016d0  &  ! j1  
+    , 12.42060122d0  &  ! la2 
+    , 12.62600437d0  &  ! m6  
+    , 12.65834824d0  &  ! mm  
+    , 12.87175759d0  &  ! msqm
+    , 12.90537448d0  &  ! n4  
+    , 22.30607420d0  &  ! q1  
+    , 23.09847677d0  &  ! s4  
+    , 23.93446966d0  &  ! k1  
+    , 24.06589016d0  &  ! m2  
+    , 24.83324836d0  &  ! m8  
+    , 25.81934166d0  &  ! mn4 
+    , 26.86835667d0  &  ! mtm 
+    , 12.00000000d0  &  ! nu2 
+    , 12.01644920d0  &  ! r2  
+    , 12.19162016d0  &  ! sa  
+    /)
+  real(8), parameter :: Tphsini(NTC) = (/     &           
+      199.9355894d0  &  ! 2n2 
+    , 359.9902258d0  &  ! k2  
+    ,   2.9548684d0  &  ! m3  
+    ,  84.8961568d0  &  ! mf  
+    , 136.4519732d0  &  ! ms4 
+    ,  41.3579043d0  &  ! mu2 
+    ,   8.0077897d0  &  ! o1  
+    , 272.9137207d0  &  ! s1  
+    , 239.5636061d0  &  ! ssa 
+    ,  73.4514109d0  &  ! eps2
+    , 138.4119783d0  &  ! l2  
+    ,   9.9677947d0  &  ! m4  
+    , 350.0224311d0  &  ! mks2
+    , 241.5236112d0  &  ! msf 
+    , 126.4841785d0  &  ! n2  
+    , 358.0399950d0  &  ! p1  
+    , 359.9902258d0  &  ! s2  
+    ,   2.9548684d0  &  ! t2  
+    ,  84.8961568d0  &  ! j1  
+    , 136.4519732d0  &  ! la2 
+    ,  41.3579043d0  &  ! m6  
+    ,   8.0077897d0  &  ! mm  
+    , 272.9137207d0  &  ! msqm
+    , 239.5636061d0  &  ! n4  
+    ,  73.4514109d0  &  ! q1  
+    , 138.4119783d0  &  ! s4  
+    ,   9.9677947d0  &  ! k1  
+    , 136.4519732d0  &  ! m2  
+    , 241.5236112d0  &  ! m8  
+    , 126.4841785d0  &  ! mn4 
+    , 358.0399950d0  &  ! mtm 
+    , 359.9902258d0  &  ! nu2 
+    ,   2.9548684d0  &  ! r2  
+    ,  84.8961568d0  &  ! sa  
+    /)
+
+  real(8), allocatable :: lat_dg(:), lon_dg(:)
     
-# if defined NAOTIDE
-  character(6) :: SOURCE_NAME = "NAO99b"
-# elif defined NAOTIDEJ
-  character(7) :: SOURCE_NAME = "NAO99Jb"
-# endif
-# if defined UV_TIDES
-  real(8), allocatable :: Ua_dg(:,:), Up_dg(:,:), Va_dg(:,:), Vp_dg(:,:)
-
-  real(8), allocatable :: Uamp  (:,:)
-  real(8), allocatable :: Uphase(:,:)
-  real(8), allocatable :: Upcos(:,:)
-  real(8), allocatable :: Upsin(:,:)
-  real(8), allocatable :: Vamp  (:,:)
-  real(8), allocatable :: Vphase(:,:)
-  real(8), allocatable :: Vpcos(:,:)
-  real(8), allocatable :: Vpsin(:,:)
-
-  real(8), allocatable :: Uamp_dg  (:,:,:)
-  real(8), allocatable :: Uphase_dg(:,:,:)
-  real(8), allocatable :: Upcos_dg(:,:,:)
-  real(8), allocatable :: Upsin_dg(:,:,:)
-  real(8), allocatable :: Vamp_dg  (:,:,:)
-  real(8), allocatable :: Vphase_dg(:,:,:)
-  real(8), allocatable :: Vpcos_dg(:,:,:)
-  real(8), allocatable :: Vpsin_dg(:,:,:)
-# endif
 #endif
 
 !-------------------------------------------------------------------------------
   namelist/grd/GRID_FILE
+  namelist/tide/TIDE_DATA_dir
   namelist/tide/TIDE_prefix
 
   read (5, nml=grd)
@@ -212,7 +333,6 @@ PROGRAM frcTIDE2ROMS
   allocate ( UV_Tmajor(0:L, 0:M, NTC) )
   allocate ( UV_Tminor(0:L, 0:M, NTC) )
   allocate ( UV_Tphase(0:L, 0:M, NTC) )
-# if defined NAOTIDEJ
   allocate ( Uamp(0:L, 0:M) )
   allocate ( Uphase(0:L, 0:M) )
   allocate ( Upcos(0:L, 0:M) )
@@ -221,7 +341,6 @@ PROGRAM frcTIDE2ROMS
   allocate ( Vphase(0:L, 0:M) )
   allocate ( Vpcos(0:L, 0:M) )
   allocate ( Vpsin(0:L, 0:M) )
-# endif
 #endif
 
 
@@ -245,8 +364,11 @@ PROGRAM frcTIDE2ROMS
   
 !---- Read NAO99/NAO99J grid --------------------------------
 #if defined NAOTIDE || defined NAOTIDEJ
-
-  TDATA_FILE = trim(SRC_DIR)//'/omapj/'//trim(Tconsti(1))//'_j.nao'
+# if defined NAOTIDEJ
+  TDATA_FILE = trim(TIDE_DATA_dir)//'omapj/'//trim(Tconsti(1))//'_j.nao'
+# else
+  TDATA_FILE = trim(TIDE_DATA_dir)//'omap/'//trim(Tconsti(1))//'.nao'
+# endif
   write(*,*) "OPEN: "//trim(TDATA_FILE)
 
   open(50, file=trim(TDATA_FILE), status='old')
@@ -300,7 +422,7 @@ PROGRAM frcTIDE2ROMS
 
 !---- Read NAO99J velocity grid --------------------------------
 !! ----- Read velocity from nao99Jb original data ----------------------------
-!  TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/vfield.'//trim(Tconsti(1))
+!  TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/vfield.'//trim(Tconsti(1))
 !  write(*,*) "OPEN: "//trim(TDATA_FILE)
 !
 !  open(50, file=trim(TDATA_FILE), status='old')
@@ -309,7 +431,7 @@ PROGRAM frcTIDE2ROMS
 !  close(50)
 
 ! ----- Read velocity of gridded nao99Jb data --------------------------------
-  TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Au_'//trim(Tconsti(1))//'.dat'
+  TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Au_'//trim(Tconsti(1))//'.dat'
   write(*,*) "OPEN: "//trim(TDATA_FILE)
   open(50, file=trim(TDATA_FILE), status='old')
   do j=0,Mdg
@@ -317,7 +439,7 @@ PROGRAM frcTIDE2ROMS
   enddo
   close(50)
 
-  TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Av_'//trim(Tconsti(1))//'.dat'
+  TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Av_'//trim(Tconsti(1))//'.dat'
   write(*,*) "OPEN: "//trim(TDATA_FILE)
   open(50, file=trim(TDATA_FILE), status='old')
   do j=0,Mdg
@@ -343,6 +465,151 @@ PROGRAM frcTIDE2ROMS
       if (Va_dg(i, j)>=9999.0d0) vmask_dg(i,j) = 0.0d0
     enddo
   enddo
+
+# endif
+
+!---- FES2014 data grid preparation --------------------------------
+#elif defined FES2014
+
+  TDATA_FILE = trim(TIDE_DATA_dir)//'ocean_tide/'//trim(Tconsti(1))//'.nc'
+  write(*,*) "OPEN: "//trim(TDATA_FILE)
+
+  ! Open NetCDF FES2014 onean tide file
+  call check( nf90_open(trim( TDATA_FILE ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lon', Nxr_dg)
+  call get_dimension(ncid, 'lat', Nyr_dg)
+
+  Ldg = Nxr_dg-1
+  Mdg = Nyr_dg-1
+
+  allocate( lat_dg(0:Mdg) )
+  allocate( lon_dg(0:Ldg) )
+  allocate( amp(0:Ldg, 0:Mdg) )
+  allocate( phs(0:Ldg, 0:Mdg) )
+  allocate( latr_dg(0:Ldg, 0:Mdg) )
+  allocate( lonr_dg(0:Ldg, 0:Mdg) )
+  allocate( rmask_dg(0:Ldg, 0:Mdg) )
+
+  ! Get variable id
+  call check( nf90_inq_varid(ncid, 'lat', var_id) ) ! latitude (degrees_north)
+  call check( nf90_get_var(ncid, var_id, lat_dg) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) ) ! longitude (degrees_east)
+  call check( nf90_get_var(ncid, var_id, lon_dg) )
+  call check( nf90_inq_varid(ncid, 'amplitude', var_id) ) ! Sea surface height amplitude (cm)
+  call check( nf90_get_var(ncid, var_id, amp) )
+  call check( nf90_inq_varid(ncid, 'phase', var_id) ) ! Sea surface height phaselag (degree)
+  call check( nf90_get_var(ncid, var_id, phs) )
+  
+  ! Close NetCDF file
+  call check( nf90_close(ncid) )
+!---------------------------------------
+
+  do i=0,Ldg
+      lonr_dg(i,:) = lon_dg(i)
+  enddo
+  do j=0,Mdg
+      latr_dg(:,j) = lat_dg(j)
+  enddo
+  rmask_dg(:,:) = 1.0d0
+  do j=0,Mdg
+    do i=0,Ldg
+      if (amp(i, j)>=99999.0d0) rmask_dg(i,j) = 0.0d0 
+    enddo
+  enddo
+  deallocate( lat_dg, lon_dg )
+
+# if defined UV_TIDES
+
+! ----- Read velocity of gridded FES2014 data --------------------------------
+  TDATA_FILE = trim(TIDE_DATA_dir)//'eastward_velocity/'//trim(Tconsti(1))//'.nc'
+  write(*,*) "OPEN: "//trim(TDATA_FILE)
+  open(50, file=trim(TDATA_FILE), status='old')
+  ! Open NetCDF FES2014 onean tide file
+  call check( nf90_open(trim( TDATA_FILE ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lon', Nxu_dg)
+  call get_dimension(ncid, 'lat', Nyu_dg)
+
+  Ldg = Nxu_dg-1
+  Mdg = Nyu_dg-1
+
+  allocate( lat_dg(0:Mdg) )
+  allocate( lon_dg(0:Ldg) )
+  allocate( Ua_dg(0:Ldg, 0:Mdg) )
+  allocate( Up_dg(0:Ldg, 0:Mdg) )
+  allocate( latu_dg(0:Ldg, 0:Mdg) )
+  allocate( lonu_dg(0:Ldg, 0:Mdg) )
+  allocate( umask_dg(0:Ldg, 0:Mdg) )
+  ! Get variable id
+  call check( nf90_inq_varid(ncid, 'lat', var_id) ) ! latitude (degrees_north)
+  call check( nf90_get_var(ncid, var_id, lat_dg) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) ) ! longitude (degrees_east)
+  call check( nf90_get_var(ncid, var_id, lon_dg) )
+  call check( nf90_inq_varid(ncid, 'Ua', var_id) ) ! Eastward sea water velocity amplitude (cm/s)
+  call check( nf90_get_var(ncid, var_id, Ua_dg) )
+  call check( nf90_inq_varid(ncid, 'Ug', var_id) ) ! Eastward sea water velocity phaselag (degree)
+  call check( nf90_get_var(ncid, var_id, Up_dg) )
+  ! Close NetCDF file
+  call check( nf90_close(ncid) )
+!---------------------------------------
+
+  do i=0,Ldg
+      lonu_dg(i,:) = lon_dg(i)
+  enddo
+  do j=0,Mdg
+      latu_dg(:,j) = lat_dg(j)
+  enddo
+  umask_dg(:,:) = 1.0d0
+  do j=0,Mdg
+    do i=0,Ldg
+      if (Ua_dg(i, j)>=99999.0d0) umask_dg(i,j) = 0.0d0 
+    enddo
+  enddo
+  deallocate( lat_dg, lon_dg )
+
+! ----------------------------------------------------------------------------- 
+ 
+  TDATA_FILE = trim(TIDE_DATA_dir)//'northward_velocity/'//trim(Tconsti(1))//'.nc'
+  write(*,*) "OPEN: "//trim(TDATA_FILE)
+  ! Open NetCDF FES2014 onean tide file
+  call check( nf90_open(trim( TDATA_FILE ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lon', Nxr_dg)
+  call get_dimension(ncid, 'lat', Nyr_dg)
+
+  allocate( lat_dg(0:Mdg) )
+  allocate( lon_dg(0:Ldg) )
+  allocate( Va_dg(0:Ldg, 0:Mdg) )
+  allocate( Vp_dg(0:Ldg, 0:Mdg) )
+  allocate( latv_dg(0:Ldg, 0:Mdg) )
+  allocate( lonv_dg(0:Ldg, 0:Mdg) )
+  allocate( vmask_dg(0:Ldg, 0:Mdg) )
+  ! Get variable id
+  call check( nf90_inq_varid(ncid, 'lat', var_id) ) ! latitude (degrees_north)
+  call check( nf90_get_var(ncid, var_id, lat_dg) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) ) ! longitude (degrees_east)
+  call check( nf90_get_var(ncid, var_id, lon_dg) )
+  call check( nf90_inq_varid(ncid, 'Va', var_id) ) ! Northward sea water velocity amplitude (cm/s)
+  call check( nf90_get_var(ncid, var_id, Va_dg) )
+  call check( nf90_inq_varid(ncid, 'Vg', var_id) ) ! Northward sea water velocity phaselag (degree)
+  call check( nf90_get_var(ncid, var_id, Vp_dg) )
+  ! Close NetCDF file
+  call check( nf90_close(ncid) )
+
+  do i=0,Ldg
+      lonv_dg(i,:) = lon_dg(i)
+  enddo
+  do j=0,Mdg
+      latv_dg(:,j) = lat_dg(j)
+  enddo
+  vmask_dg(:,:) = 1.0d0
+  do j=0,Mdg
+    do i=0,Ldg
+      if (Va_dg(i, j)>=99999.0d0) vmask_dg(i,j) = 0.0d0 
+    enddo
+  enddo
+  deallocate( lat_dg, lon_dg )
 
 # endif
 #endif
@@ -408,17 +675,22 @@ PROGRAM frcTIDE2ROMS
         , ID_cnt2Dv, w_cnt2Dv )
 #endif
 
-
-!---- Read NAO99/NAO99J data --------------------------------
-#if defined NAOTIDE || defined NAOTIDEJ
-
   allocate( SSH_Tcos_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, NTC) )
   allocate( SSH_Tsin_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, NTC) )
   allocate( SSH_Tamp_dg  (Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, NTC) )
 
+
+!=== Read Tide data ================================================
+
   DO iTC=1,NTC
 
-    TDATA_FILE = trim(SRC_DIR)//'/omapj/'//trim(Tconsti(iTC))//'_j.nao'
+!---- Read NAO99/NAO99J data --------------------------------
+#if defined NAOTIDE || defined NAOTIDEJ
+# if defined NAOTIDEJ
+    TDATA_FILE = trim(TIDE_DATA_dir)//'omapj/'//trim(Tconsti(iTC))//'_j.nao'
+# else
+    TDATA_FILE = trim(TIDE_DATA_dir)//'omap/'//trim(Tconsti(iTC))//'.nao'
+# endif
     write(*,*) "OPEN: "//trim(TDATA_FILE)
   
     open(50, file=trim(TDATA_FILE), status='old')
@@ -427,6 +699,27 @@ PROGRAM frcTIDE2ROMS
     call readNAO99_data( 50, Nxr_dg, Nyr_dg, fmt, aunit, punit  &
                              , amp, phs  )
     close(50)
+
+!---- Read FES2014 data --------------------------------
+#elif defined FES2014
+    TDATA_FILE = trim(TIDE_DATA_dir)//'ocean_tide/'//trim(Tconsti(iTC))//'.nc'
+    write(*,*) "OPEN: "//trim(TDATA_FILE)
+  
+    ! Open NetCDF FES2014 onean tide file
+    call check( nf90_open(trim( TDATA_FILE ), nf90_nowrite, ncid) )
+    
+!    start2D = (/ Irdg_min+1, Jrdg_min+1 /)
+!    count2D = (/ Nxr_dg,     Nyr_dg     /)
+    call check( nf90_inq_varid(ncid, 'amplitude', var_id) ) ! Sea surface height amplitude (cm)
+    call check( nf90_get_var(ncid, var_id, amp ) )
+    call check( nf90_inq_varid(ncid, 'phase', var_id) ) ! Sea surface height phaselag (degree)
+    call check( nf90_get_var(ncid, var_id, phs ) )   
+    ! Close NetCDF file
+    call check( nf90_close(ncid) )
+
+    amp(:,:)=amp(:,:)*0.01d0  ! cm -> m
+  
+#endif
   
     do j=Jrdg_min,Jrdg_max
       do i=Irdg_min,Irdg_max
@@ -439,8 +732,8 @@ PROGRAM frcTIDE2ROMS
 
   END DO
 
-# if defined UV_TIDES
-!---- Read NAO99J velocity data --------------------------------
+!---- Read velocity data --------------------------------
+#if defined UV_TIDES
   allocate( Uamp_dg  (Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, NTC) )
   allocate( Uphase_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, NTC) )
   allocate( Upcos_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, NTC) )
@@ -450,10 +743,13 @@ PROGRAM frcTIDE2ROMS
   allocate( Vpcos_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, NTC) )
   allocate( Vpsin_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, NTC) )
 
+
   DO iTC=1,NTC
+!---- Read NAO99/NAO99J data --------------------------------
+# if defined NAOTIDEJ
 !! ----- Read velocity from nao99Jb original data ----------------------------
 !    
-!    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/vfield.'//trim(Tconsti(iTC))
+!    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/vfield.'//trim(Tconsti(iTC))
 !    write(*,*) "OPEN: "//trim(TDATA_FILE)
 !  
 !    open(50, file=trim(TDATA_FILE), status='old')
@@ -463,28 +759,28 @@ PROGRAM frcTIDE2ROMS
 !
 !! ----- Write velocity of gridded nao99Jb data ------------------------------
 !
-!    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Au_'//trim(Tconsti(iTC))//'.dat'
+!    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Au_'//trim(Tconsti(iTC))//'.dat'
 !    open(50, file=trim(TDATA_FILE), status='replace')
 !    do j=0,Mdg
 !      write(50,*) (Ua_dg(i,j), i=0,Ldg)
 !    enddo
 !    close(50)
 !
-!    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Av_'//trim(Tconsti(iTC))//'.dat'
+!    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Av_'//trim(Tconsti(iTC))//'.dat'
 !    open(50, file=trim(TDATA_FILE), status='replace')
 !    do j=0,Mdg
 !      write(50,*) (Va_dg(i,j), i=0,Ldg)
 !    enddo
 !    close(50)
 !
-!    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Pu_'//trim(Tconsti(iTC))//'.dat'
+!    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Pu_'//trim(Tconsti(iTC))//'.dat'
 !    open(50, file=trim(TDATA_FILE), status='replace')
 !    do j=0,Mdg
 !      write(50,*) (Up_dg(i,j), i=0,Ldg)
 !    enddo
 !    close(50)
 !
-!    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Pv_'//trim(Tconsti(iTC))//'.dat'
+!    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Pv_'//trim(Tconsti(iTC))//'.dat'
 !    open(50, file=trim(TDATA_FILE), status='replace')
 !    do j=0,Mdg
 !      write(50,*) (Vp_dg(i,j), i=0,Ldg)
@@ -494,7 +790,7 @@ PROGRAM frcTIDE2ROMS
 
 ! ----- Read velocity of gridded nao99Jb data --------------------------------
 
-    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Au_'//trim(Tconsti(iTC))//'.dat'
+    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Au_'//trim(Tconsti(iTC))//'.dat'
     write(*,*) "OPEN: "//trim(TDATA_FILE)
     open(50, file=trim(TDATA_FILE), status='old')
     do j=0,Mdg
@@ -502,7 +798,7 @@ PROGRAM frcTIDE2ROMS
     enddo
     close(50)
 
-    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Av_'//trim(Tconsti(iTC))//'.dat'
+    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Av_'//trim(Tconsti(iTC))//'.dat'
     write(*,*) "OPEN: "//trim(TDATA_FILE)
     open(50, file=trim(TDATA_FILE), status='old')
     do j=0,Mdg
@@ -510,7 +806,7 @@ PROGRAM frcTIDE2ROMS
     enddo
     close(50)
 
-    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Pu_'//trim(Tconsti(iTC))//'.dat'
+    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Pu_'//trim(Tconsti(iTC))//'.dat'
     write(*,*) "OPEN: "//trim(TDATA_FILE)
     open(50, file=trim(TDATA_FILE), status='old')
     do j=0,Mdg
@@ -518,13 +814,44 @@ PROGRAM frcTIDE2ROMS
     enddo
     close(50)
 
-    TDATA_FILE = trim(SRC_DIR)//'/nao99Jb_vel/Pv_'//trim(Tconsti(iTC))//'.dat'
+    TDATA_FILE = trim(TIDE_DATA_dir)//'nao99Jb_vel/Pv_'//trim(Tconsti(iTC))//'.dat'
     write(*,*) "OPEN: "//trim(TDATA_FILE)
     open(50, file=trim(TDATA_FILE), status='old')
     do j=0,Mdg
       read(50,*) (Vp_dg(i,j), i=0,Ldg)
     enddo
     close(50)
+
+!---- Read FES2014 data --------------------------------
+# elif defined FES2014
+! ----- Read velocity of gridded FES2014 data --------------------------------
+    TDATA_FILE = trim(TIDE_DATA_dir)//'eastward_velocity/'//trim(Tconsti(iTC))//'.nc'
+    write(*,*) "OPEN: "//trim(TDATA_FILE)
+    open(50, file=trim(TDATA_FILE), status='old')
+    ! Open NetCDF FES2014 onean tide file
+    call check( nf90_open(trim( TDATA_FILE ), nf90_nowrite, ncid) )
+    ! Read data
+    call check( nf90_inq_varid(ncid, 'Ua', var_id) ) ! Eastward sea water velocity amplitude (cm/s)
+    call check( nf90_get_var(ncid, var_id, Ua_dg) )
+    call check( nf90_inq_varid(ncid, 'Ug', var_id) ) ! Eastward sea water velocity phaselag (degree)
+    call check( nf90_get_var(ncid, var_id, Up_dg) )
+  ! Close NetCDF file
+    call check( nf90_close(ncid) )
+
+! ----- Read velocity of gridded FES2014 data --------------------------------
+    TDATA_FILE = trim(TIDE_DATA_dir)//'northward_velocity/'//trim(Tconsti(iTC))//'.nc'
+    write(*,*) "OPEN: "//trim(TDATA_FILE)
+    ! Open NetCDF FES2014 onean tide file
+    call check( nf90_open(trim( TDATA_FILE ), nf90_nowrite, ncid) )
+    ! Read data
+    call check( nf90_inq_varid(ncid, 'Va', var_id) ) ! Northward sea water velocity amplitude (cm/s)
+    call check( nf90_get_var(ncid, var_id, Va_dg) )
+    call check( nf90_inq_varid(ncid, 'Vg', var_id) ) ! Northward sea water velocity phaselag (degree)
+    call check( nf90_get_var(ncid, var_id, Vp_dg) )
+    ! Close NetCDF file
+    call check( nf90_close(ncid) )
+
+# endif
 ! ----------------------------------------------------------------------------- 
     
     do j=Judg_min,Judg_max
@@ -548,12 +875,11 @@ PROGRAM frcTIDE2ROMS
 
   END DO
 
-# endif
-
-
 #endif
 
-!---- Create the ROMS initial conditions netCDF file --------------------------------
+
+
+!---- Create the ROMS tidal forcing netCDF file --------------------------------
   
   TIDE_FILE = trim( TIDE_prefix )//TIDE_suffix
 

@@ -1280,7 +1280,7 @@ MODULE mod_roms_netcdf
       integer, intent( in) :: NTC  ! Number of tidal components
 
       integer :: ncid, var_id
-      integer :: three_dimid, xr_dimid, yr_dimid, tp_dimid
+      integer :: four_dimid, xr_dimid, yr_dimid, tp_dimid
       integer :: dim1Dids(1), dim2Dids(2), dim3Dids(3)
 
 !---- Create the ROMS initial condition netCDF file --------------------------------
@@ -1293,7 +1293,7 @@ MODULE mod_roms_netcdf
       call check( nf90_put_att(ncid, NF90_GLOBAL, 'base_date', 'days since 2000-01-01 00:00:00') )
       call check( nf90_put_att(ncid, NF90_GLOBAL, 'source', trim( SOURCE_NAME )) )
 
-      call check( nf90_def_dim(ncid, 'three', 3, three_dimid) )
+      call check( nf90_def_dim(ncid, 'four', 4, four_dimid) )
       call check( nf90_def_dim(ncid, 'xi_rho', Nxr, xr_dimid) )
       call check( nf90_def_dim(ncid, 'eta_rho', Nyr, yr_dimid) )
       call check( nf90_def_dim(ncid, 'tide_period', NTC, tp_dimid) )
@@ -1313,7 +1313,7 @@ MODULE mod_roms_netcdf
       call check( nf90_def_var(ncid, 'tide_Eamp', NF90_DOUBLE, dim3Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'tidal elevation amplitude') )
       call check( nf90_put_att(ncid, var_id, 'units',     'meter') )
-
+#if defined UV_TIDES
       call check( nf90_def_var(ncid, 'tide_Cphase', NF90_DOUBLE, dim3Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'tidal current phase angle') )
       call check( nf90_put_att(ncid, var_id, 'units',     'degrees, time of maximum velocity with respect chosen time origin') )
@@ -1329,8 +1329,8 @@ MODULE mod_roms_netcdf
       call check( nf90_def_var(ncid, 'tide_Cmax', NF90_DOUBLE, dim3Dids, var_id) )
       call check( nf90_put_att(ncid, var_id, 'long_name', 'maximum tidal current, ellipse semi-major axis') )
       call check( nf90_put_att(ncid, var_id, 'units',     'meter second-1') )
-
-      dim2Dids = (/ three_dimid, tp_dimid /)
+#endif
+      dim2Dids = (/ four_dimid, tp_dimid /)
 !      dim1Dids = (/ tp_dimid /)
 
       call check( nf90_def_var(ncid, 'tidal_constituents', NF90_CHAR, dim2Dids, var_id) )

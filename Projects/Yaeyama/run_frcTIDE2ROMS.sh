@@ -1,7 +1,8 @@
 #!/bin/bash
 
-export MY_CPP_FLAGS="-DNAOTIDEJ"
+#export MY_CPP_FLAGS="-DNAOTIDEJ"
 #export MY_CPP_FLAGS="-DNAOTIDE"
+export MY_CPP_FLAGS="-DFES2014"
 
 # ========================================================================================
 
@@ -13,6 +14,6 @@ gfortran -fbounds-check -fno-align-commons ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR
 
 rm *.mod
 
-export OMP_NUM_THREADS=12
+export OMP_NUM_THREADS=7
 
-./frcTIDE2ROMS.exe < Yaeyama1.in
+#./frcTIDE2ROMS.exe < Yaeyama1.in
