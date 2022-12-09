@@ -54,6 +54,44 @@ MODULE mod_roms_netcdf
     ,"phyt15N_      " &  ! 35
     ,"zoop15N_      " &  ! 36
      /)
+  character(256), parameter :: VAR_NAME2(N_var) = (/ &
+     "zeta          " &  !  1
+    ,"u             " &  !  2 
+    ,"v             " &  !  3
+    ,"ubar          " &  !  4 
+    ,"vbar          " &  !  5 
+    ,"temp          " &  !  6 
+    ,"salt          " &  !  7 
+    ,"mud_          " &  !  8 
+    ,"sand_         " &  !  9
+    ,"TIC           " &  ! 10
+    ,"alkalinity    " &  ! 11
+    ,"Oxyg          " &  ! 12
+    ,"DOC_          " &  ! 13
+    ,"POC_          " &  ! 14
+    ,"Phyt_         " &  ! 15
+    ,"Zoop_         " &  ! 16
+    ,"PIC_          " &  ! 17
+    ,"NO3           " &  ! 18
+    ,"NH4           " &  ! 19
+    ,"PO4           " &  ! 20
+    ,"DON_          " &  ! 21
+    ,"PON_          " &  ! 22
+    ,"DOP_          " &  ! 23
+    ,"POP_          " &  ! 24
+    ,"d13C_TIC      " &  ! 25
+    ,"d13C_DOC_     " &  ! 26
+    ,"d13C_POC_     " &  ! 27
+    ,"d13C_Phyt_    " &  ! 28
+    ,"d13C_Zoop_    " &  ! 29
+    ,"PI13C_        " &  ! 30
+    ,"d15N_NO3      " &  ! 31
+    ,"d15N_NH4      " &  ! 32
+    ,"d15N_DON_     " &  ! 33
+    ,"d15N_PON_     " &  ! 34
+    ,"d15N_Phyt_    " &  ! 35
+    ,"d15N_Zoop_    " &  ! 36
+     /)
   character(256), parameter :: VAR_LONG_NAME(N_var) = (/ &
      "free-surface                                " &
     ,"u-momentum component                        " &
@@ -1237,8 +1275,8 @@ MODULE mod_roms_netcdf
 
           do j=1,Ntype
             write(varnum,'(I2.2)') j
-            varname = 'river_'//trim( VAR_NAME(i) )//varnum
-            lvarname = 'river runoff '//trim( VAR_NAME(i) )//varnum
+            varname = 'river_'//trim( VAR_NAME2(i) )//varnum
+            lvarname = 'river runoff '//trim( VAR_NAME2(i) )//varnum
 
             write(*,*) 'Add variable: ', trim( varname )
             call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dim3Dids, var_id) )
@@ -1246,8 +1284,8 @@ MODULE mod_roms_netcdf
             call check( nf90_put_att(ncid, var_id, 'units', trim( VAR_UNIT(i) ) ) )
           enddo
         else
-          varname = 'river_'//trim( VAR_NAME(i) )
-          lvarname = 'river runoff '//trim( VAR_NAME(i) )
+          varname = 'river_'//trim( VAR_NAME2(i) )
+          lvarname = 'river runoff '//trim( VAR_NAME2(i) )
 
           write(*,*) 'Add variable: ', trim( varname  )       
           call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dim3Dids, var_id) )

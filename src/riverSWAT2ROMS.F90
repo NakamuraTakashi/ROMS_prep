@@ -921,7 +921,7 @@ PROGRAM riverSWAT2ROMS
         data(1,:,:) = river_data(iT) * T_sf + T_off
       endif
   
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1)        
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -940,7 +940,7 @@ PROGRAM riverSWAT2ROMS
         endif
       endif
   
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1)       
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -961,7 +961,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -983,7 +983,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1003,7 +1003,7 @@ PROGRAM riverSWAT2ROMS
         endif
       endif
   
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1022,7 +1022,7 @@ PROGRAM riverSWAT2ROMS
         endif
       endif
 
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1041,7 +1041,7 @@ PROGRAM riverSWAT2ROMS
         endif
       endif
 
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1062,7 +1062,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1084,7 +1084,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1106,7 +1106,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1128,7 +1128,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1150,7 +1150,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1170,7 +1170,7 @@ PROGRAM riverSWAT2ROMS
         endif  
       endif
 
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1189,7 +1189,7 @@ PROGRAM riverSWAT2ROMS
         endif  
       endif
 
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1208,7 +1208,7 @@ PROGRAM riverSWAT2ROMS
         endif  
       endif
 
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1229,7 +1229,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1251,7 +1251,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1273,7 +1273,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1295,7 +1295,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1316,7 +1316,7 @@ PROGRAM riverSWAT2ROMS
         endif  
       endif
   
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1337,7 +1337,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1359,7 +1359,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1381,7 +1381,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1403,7 +1403,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1425,7 +1425,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1445,7 +1445,7 @@ PROGRAM riverSWAT2ROMS
         endif  
       endif
 
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ) , data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1464,7 +1464,7 @@ PROGRAM riverSWAT2ROMS
         endif  
       endif
 
-      varname = 'river_'//trim( VAR_NAME(i) )
+      varname = 'river_'//trim( VAR_NAME2(i) )
       write(*,*) 'Write: ', trim( varname  ), data(1,1,1) 
       call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
       call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1485,7 +1485,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1507,7 +1507,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1529,7 +1529,7 @@ PROGRAM riverSWAT2ROMS
         endif
     
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
@@ -1551,7 +1551,7 @@ PROGRAM riverSWAT2ROMS
         endif
 
         write(varnum,'(I2.2)') j
-        varname = 'river_'//trim( VAR_NAME(i) )//varnum
+        varname = 'river_'//trim( VAR_NAME2(i) )//varnum
         write(*,*) 'Write: ', trim( varname ), data(1,1,1) 
         call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
         call check( nf90_put_var(ncid, var_id, data, start = start3D, count = count3D) )
