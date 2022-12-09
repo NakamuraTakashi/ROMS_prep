@@ -18,7 +18,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
 
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 SRC_DIR=../../src
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_TIME_DIR='${SRC_DIR}'"
@@ -29,5 +29,5 @@ rm *.mod
 #cp getHYCOM.exe getHYCOM_2018.exe
 
 #./getHYCOM_2018.exe < getHYCOM_Palau1.in
-#./getHYCOM.exe < getHYCOM_Shizugawa1.in
-./getHYCOM.exe < getHYCOM_Boracay1.in
+./getHYCOM.exe < getHYCOM_Shizugawa1.in
+#./getHYCOM.exe < getHYCOM_Boracay1.in

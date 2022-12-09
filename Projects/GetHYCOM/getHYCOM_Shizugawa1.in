@@ -26,15 +26,15 @@
 &sdate
 
   Syear  = 2022   ! Starting year
-  Smonth = 1      ! Starting month
-  Sday   = 1      ! Starting day
+  Smonth = 4      ! Starting month
+  Sday   = 2      ! Starting day
 /
 
 &edate
 
   Eyear  = 2022   ! Ending year
-  Emonth = 4      ! Ending month
-  Eday   = 2      ! Ending day
+  Emonth = 10      ! Ending month
+  Eday   = 18      ! Ending day
 /
 
 &hycom      

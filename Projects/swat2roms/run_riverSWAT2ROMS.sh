@@ -20,5 +20,6 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./riverSWAT2ROMS.exe < test_swat2roms.in
+#./riverSWAT2ROMS.exe < test_swat2roms.in
+./riverSWAT2ROMS.exe < swat2roms_batanbay.in
 

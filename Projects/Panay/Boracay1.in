@@ -1,0 +1,160 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "Boracay1_grd_v1.0.nc"
+/
+
+&mybath
+! GEBCO bathymetry NetCDF file     
+  BATH_FILE = "C:/cygwin64/home/Takashi/ROMS_prep/Data/Panay/bath/gebco_2021_Boracay_utm_v2.nc"
+  x_ncname = 'lon'
+  y_ncname = 'lat'
+  bathy_ncname = 'Band1'
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 6   ! Spheroid for projection (1-19)
+! ispher -- SPHEROID SELECTION: 1=CLARKE 1866; 2=CLARKE 1880;       
+!               3=BESSEL 1967; 4=NEW INTERNATIONAL 1967;
+!               5=INTERNATIONAL 1909 (1924) (HAYFORD);
+!               6=WORLD GEODETIC SYSTEM 1972; 7=EVEREST;
+!               8=WORLD GEODETIC SYSTEM 1966;
+!               9=GEODETIC REFERENCE SYSTEM 1980;
+!               10=AIRY; 11=MODIFIED EVEREST; 12=MODIFIED AIRY;         
+!               13=WALBECK; 14=SOUTH ASIA 1960 (FISCHER);
+!               15=AUSTRALIAN NATIONAL-SOUTH AMERICAN 1969;
+!               16=KRASSOVSKY; 17=HOUGH; 18=MERCURY 1960 (FISCHER);     
+!               19=MODIFIED MERCURY 1968 (FISCHER)
+!        NOTES:
+!               IF ISPHER.EQ.0: COMPUTE IN LAMBERT OR TRANSVERSE MERCATOR  
+!               IF ISPHER.NE.0: COMPUTE IN UNIVERSAL TRANSVERSE MERCATOR   
+!               IZONE IS UTM ZONE NUMBER OR STATE PLANE ZONE DEPENDING ON  
+!               SELECTION OF ISPHER.  IF UTM AND SOUTHERN HEMISPHERE, IZONE
+!               IS NEGATIVE.
+!    
+/
+
+&grd_setting_utm
+! Set utm x y coordinate at corner points. 
+  s_x = 255000
+  s_y = 1347000
+  e_x = 510000
+  e_y = 1277000
+
+! Set ROMS grid resolution
+! *The information is not used when GRID_REFINEMENT is activated.
+  RESOLUTION = 1500.0d0 ! meter resolution
+
+  angle = -0.75d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+/
+
+&bath_smooth
+  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
+
+&land_mask
+
+  hmin = 3.0d0  ! Minimum depth
+
+ ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+ ! and one-grid bay grids 
+  I_ocn = 50    ! rho point index i
+  J_ocn = 1    ! rho point index j
+/
+
+&sdate
+  Syear  = 2022   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
+/
+
+&edate
+  Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 2      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&refdate
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&ocn2roms      
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+!           |       |   |
+  romsvar = 1,1,1,1,1,1,1        
+/
+
+&jcope
+! JCOPE-T
+  JCOPE_info_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
+  JCOPE_data_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
+! JCOPE-2M
+!  JCOPE_info_dir  =  "P:/JCOPE-2M/yaeyama/"
+!  JCOPE_data_dir  =  "P:/JCOPE-2M/yaeyama/"
+/
+
+&hycom_local1
+!  NCnum = 2  ! Number of HYCOM local files 
+  NCnum = 1  ! Number of HYCOM local files 
+/
+
+&hycom_local2
+! HYCOM local file name(s)
+  HYCOM_FILE = "C:/cygwin64/home/Takashi/ROMS_prep/Data/Panay/HYCOM_DATA/Boracay_HYCOM_extracted_20220101.nc"              
+
+!  HYCOM_FILE = "F:/HYCOM_DATA/Boracay/Boracay_HYCOM_extracted_20210101.nc",
+!               "F:/HYCOM_DATA/Boracay/Boracay_HYCOM_extracted_20210110.nc"               
+/
+
+&bry
+  BRY_prefix  = "Boracay1_bry_HYCOM_Nz15"
+  !    south north west east
+  SNWE =  1,   1,   1,   0
+/
+
+&ini
+  INI_prefix  = "Boracay1_ini_HYCOM_Nz15"
+
+  INIyear  = 2022   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 2      ! Initial day
+  INIhour  = 0      ! Initial hour
+/
+
+&hcoord
+  spherical  = 1   
+/
+
+&zcoord
+  N_s_rho = 15
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see wikiROMS for details).
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see wikiROMS for details).
+
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+/
+
+&frc_jra55
+  JRA55_dir  =  "C:/cygwin64/home/Takashi/ROMS_prep/Data/Panay/JRA-55/"
+  FRC_prefix  = "Boracay1_frc_JRA55"
+/
+
+&tide
+  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
+  TIDE_prefix  = "Boracay1_tide_fes2014"
+/

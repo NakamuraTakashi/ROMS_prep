@@ -5,20 +5,21 @@
 /
 
 &zcoord
-  N_s_rho = 8
+
+  N_s_rho = 15
 
 ! Set vertical, terrain-following coordinates transformation equation and
-! stretching function (see below for details), [1:Ngrids].
+! stretching function (see wikiROMS for details).
 
   Vtransform  = 2      ! transformation equation
-  Vstretching = 3      ! stretching function
+  Vstretching = 4      ! stretching function
 
-! Vertical S-coordinates parameters (see below for details), [1:Ngrids].
-
-  THETA_S = 1.0d0      ! surface stretching parameter
-  THETA_B = 1.0d0      ! bottom  stretching parameter
-  TCLINE  = 30.0d0    ! critical depth (m)
-  DCRIT   = 0.10d0     ! critical depth (m) for wetting and trying
+! Vertical S-coordinates parameters (see wikiROMS for details).
+  
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
 /
 
 &roms2roms      
@@ -40,54 +41,54 @@
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
 !  romsvar = 1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
- romsvar = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+  romsvar = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
 ! romsvar = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &river1
-  OUT_FILE  = "river_Nz8_daily.nc"
+  OUT_FILE  = "BatanBay_river_Nz15_daily.nc"
 
-  GLOBAL_ATT = "(1) Todoroki river, (2) XXXX river, (2) XXXX river"
+  GLOBAL_ATT = "(1) Todoroki river, (2) XXXX river"
 
   NCS = 4  ! Number of cohesive (mud) sediment tracers
   NNS = 1  ! Number of non-cohesive (sand) sediment tracers
 
-  Nsrc = 3 ! Number of river-runoff point sources
+  Nsrc = 6 ! Number of river-runoff point sources
 
   Ini_riverID = 1 ! Initial river ID number for NetCDF 'river'.
 /
 
 &river2
 
-!  RIVER_FILE  = "../../Data/Jom/channel_sd_day.txt"
   RIVER_FILE  = "channel_sd_day_dummy.txt"
+!  RIVER_FILE  = "../../Data/Dominika/channel_sd_day20172019_ch2.txt"
 !  RIVER_FILE  = "../../Data/Ayin/SWAT+_hourly_Busuanga/channel_day.txt"
 !  RIVER_FILE  = "channel_subday.txt"   ! Busuanga
 !  RIVER_FILE  = "../../Data/todoroki/channel_subday.txt"   ! Todoroki river
 !  RIVER_FILE  = "../../Data/todoroki/channel_day.txt"   ! Todoroki river
   
-  cha_name = "cha002", "cha010", "cha050" ! channel name of the river mouth.
-!  cha_name = "cha02", "cha05" ! channel name of the river mouth.
+!  cha_name = "cha002" ! channel name of the river mouth.
+  cha_name = "cha002", "cha005", "cha010", "cha100", "cha200", "cha300" ! channel name of the river mouth.
 !  cha_name = "1" ! channel name of the river mouth.
 
-  Isrc = 9 , 100, 111       ! river_Xposition; i point index of U or V face source/sink
-  Jsrc = 58, 200, 123       ! river_Eposition; j point index of U or V face source/sink
+  Isrc = 263, 222, 161, 109, 41, 22     ! river_Xposition; i point index of U or V face source/sink
+  Jsrc =  72,  23,  64,  37, 77, 82     ! river_Eposition; j point index of U or V face source/sink
 
 ! river_direction; river runoff direction (0/1)
 !  0: flow across u-face, 1: flow across v-face
-  river_dir = 0, 0, 0
+  river_dir = 0, 0, 0, 0, 0, 0
 
 ! river_direction; river runoff direction (-1/1)
 !  -1: flow from north to south, or flow from east to west
 !   1: flow from south to north, or flow from west to east
-  river_dir2 = 1, 1, 1
+  river_dir2 = 1, 1, 1, 1, 1, 1
 
 
 ! If the SWAT+ output of water quarity parameters (sed, no3, etc.) are yield (not concentration),
 ! Turn on the flag. (.TRUE. / .FALSE.)
   Yield = .TRUE. 
 
-  LOCAL_TIME = 9 ! UTC+9; Set time-zone difference between local time and GMT in the input data.
+  LOCAL_TIME = 0 ! UTC+9; Set time-zone difference between local time and GMT in the input data.
 
 ! --- Input data setting --------------------
 !
@@ -101,7 +102,8 @@
   Flow0 = 1.0d0 ! m3/s
   Flow_Label = "flo_out"
 !  Flow_Label = "flow_m^3/s" 
-  Flow_sf  = 1.0d0   ! m3/s -> m3/s
+!  Flow_sf  = 1.0d0   ! m3/s -> m3/s
+  Flow_sf  = 0.01d0   ! m3/s -> m3/s
   Flow_off = 0.0d0
 
 ! temp

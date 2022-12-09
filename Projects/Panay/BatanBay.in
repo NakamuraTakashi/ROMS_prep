@@ -1,0 +1,163 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "BatanBay_grd_v3.1.nc"
+/
+
+&mybath
+! GEBCO bathymetry NetCDF file     
+!  BATH_FILE = "C:/cygwin64/home/Takashi/ROMS_prep/Data/Panay/bath/v2_BatanBathy_netCDF.nc"
+  BATH_FILE = "C:/cygwin64/home/Takashi/ROMS_prep/Data/Panay/bath/BatanBathyv4_mrg.nc"
+  x_ncname = 'x'
+  y_ncname = 'y'
+!  bathy_ncname = 'Band1'
+  bathy_ncname = 'Batan_mrg_IDW'
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 6   ! Spheroid for projection (1-19)
+! ispher -- SPHEROID SELECTION: 1=CLARKE 1866; 2=CLARKE 1880;       
+!               3=BESSEL 1967; 4=NEW INTERNATIONAL 1967;
+!               5=INTERNATIONAL 1909 (1924) (HAYFORD);
+!               6=WORLD GEODETIC SYSTEM 1972; 7=EVEREST;
+!               8=WORLD GEODETIC SYSTEM 1966;
+!               9=GEODETIC REFERENCE SYSTEM 1980;
+!               10=AIRY; 11=MODIFIED EVEREST; 12=MODIFIED AIRY;         
+!               13=WALBECK; 14=SOUTH ASIA 1960 (FISCHER);
+!               15=AUSTRALIAN NATIONAL-SOUTH AMERICAN 1969;
+!               16=KRASSOVSKY; 17=HOUGH; 18=MERCURY 1960 (FISCHER);     
+!               19=MODIFIED MERCURY 1968 (FISCHER)
+!        NOTES:
+!               IF ISPHER.EQ.0: COMPUTE IN LAMBERT OR TRANSVERSE MERCATOR  
+!               IF ISPHER.NE.0: COMPUTE IN UNIVERSAL TRANSVERSE MERCATOR   
+!               IZONE IS UTM ZONE NUMBER OR STATE PLANE ZONE DEPENDING ON  
+!               SELECTION OF ISPHER.  IF UTM AND SOUTHERN HEMISPHERE, IZONE
+!               IS NEGATIVE.
+!    
+/
+
+&bath_smooth
+  rx0max = 10.0  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
+
+&land_mask
+
+  hmin = -1.0d0  ! Minimum depth
+
+! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+! and one-grid bay grids 
+!  I_ocn = 205    ! rho point index i
+!  J_ocn = 95   ! rho point index j
+  I_ocn = 1    ! rho point index i
+  J_ocn = 100   ! rho point index j
+/
+
+&refinement
+! ROMS NetCDF coarse grid file     
+  parent_grid = "Panay_grd_v1.0.nc"
+  parent_Imin = 159
+  parent_Imax = 214
+  parent_Jmin = 15
+  parent_Jmax = 41
+  refine_factor = 5
+/
+
+&fine2coarse
+  F2C_OUT_FILE = "Panay_grd_v1.1.nc"
+/
+
+&sdate
+  Syear  = 2022   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
+/
+
+&edate
+  Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 2      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&refdate
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&roms2roms1
+  NCnum = 1  ! Number of ROMS his files 
+/
+
+&roms2roms2
+! ROMS coarse NetCDF history file name
+  ROMS_HISFILE  = "C:/cygwin64/home/Takashi/COAWST/Projects/Panay/Panay_his_20220105.nc"
+
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
+! 8: mud_, 9: sand_,
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC_, 14: POC_, 
+! 15: phytoplankton_, 16: zooplankton_, 17: PIC_ 
+! 18: NO3, 19: NH4, 20: PO4, 21: DON_, 22: PON_, 23: DOP_, 24: POP_, 
+! 25: TI13C, 26: DO13C_, 27: PO13C_, 
+! 28: phyt13C_, 29: zoop13C_, 30: PI13C_
+! 31: 15NO3, 32: 15NH4, 33: DO15N_, 34: PO15N_
+! 35: phyt15N_, 36: zoop15N_
+!    
+!           1       5        10        15        20        25        30        35  
+!           |       |         |         |         |         |         |         |  
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+/
+
+&ocn2roms      
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+!           |       |   |
+  romsvar = 1,1,1,1,1,1,1        
+/
+
+&bry
+  BRY_prefix  = "BatanBay_bry_ROMS_Nz15"
+  !    south north west east
+  SNWE =  0,   1,   0,   0
+/
+
+&ini
+  INI_prefix  = "BatanBay_ini_ROMS_Nz15"
+
+  INIyear  = 2022   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 7      ! Initial day
+  INIhour  = 0      ! Initial hour
+/
+
+&hcoord
+  spherical  = 1   
+/
+
+&zcoord
+
+  N_s_rho = 15
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see wikiROMS for details).
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see wikiROMS for details).
+  
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+/
+
+&frc_jra55
+  JRA55_dir  =  "C:/cygwin64/home/Takashi/ROMS_prep/Data/Panay/JRA-55/"
+  FRC_prefix  = "BatanBay_frc_JRA55"
+/
