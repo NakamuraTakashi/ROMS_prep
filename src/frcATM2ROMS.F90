@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2022 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2023 Takashi NAKAMURA  =====
 
 #if defined JMA_MSM
 # undef BULK_FLUX
@@ -8,6 +8,8 @@
 # endif
 #elif defined DSJRA55 || defined JRA55
 # undef SWRAD
+#elif defined ERA5
+# define NETCDF_INPUT
 #endif
 
 PROGRAM frcATM2ROMS
@@ -38,6 +40,7 @@ PROGRAM frcATM2ROMS
   integer, parameter :: N_InPar  = 10
   integer, parameter :: N_OutPar = 10
 # endif
+  integer, parameter :: N_OutPar1 = 9
 
 # if defined NETCDF_INPUT
 
@@ -53,7 +56,9 @@ PROGRAM frcATM2ROMS
     ,"ncld      "                             &
     ,"r1h       "                             &
     /)
-
+    character(len=*), parameter :: NC_LAT_NAME  = 'lat'
+    character(len=*), parameter :: NC_LON_NAME  = 'lon'
+    character(len=*), parameter :: NC_TIME_NAME = 'time'
     integer :: d_ref_days
     real(8) :: sf, off
 # else
@@ -93,6 +98,8 @@ PROGRAM frcATM2ROMS
   integer, parameter :: N_InPar  = 10
   integer, parameter :: N_OutPar = 10
 # endif
+  integer, parameter :: N_OutPar1 = 9
+
   integer, parameter :: GRIB_NUM(3,N_InPar) = reshape ((/   &
 ! parameter  parameter  Type of First
 ! Category   Number     Fixed Surface           
@@ -128,6 +135,8 @@ PROGRAM frcATM2ROMS
   integer, parameter :: N_InPar  = 10
   integer, parameter :: N_OutPar = 10
 # endif
+  integer, parameter :: N_OutPar1 = 9
+
   integer, parameter :: GRIB_NUM(N_InPar) = (/   &
 ! Indicator Of 
 ! Parameter              
@@ -150,7 +159,56 @@ PROGRAM frcATM2ROMS
     ,212     &  ! Upward long-wave radiation flux  (W m-2)
 # endif
     /)
+#elif defined ERA5
+!--- REA5 parameter setting -----------------
+  character(256) :: FRC_prefix
+  integer :: jd_msmnew
+
+  integer, parameter :: N_InPar  = 8
+  integer, parameter :: N_OutPar = 8
+  integer, parameter :: N_OutPar1 = 5
+
+  character(256) :: NCIN_NAME(N_InPar) = (/   &
+     "msl  "  &  ! Mean sea level pressure (Pa)
+    ,"u10  "  &  ! 10 metre U wind component (m s-1)
+    ,"v10  "  &  ! 10 metre V wind component (m s-1)
+    ,"t2m  "  &  ! 2 metre temperature (K)
+    ,"d2m  "  &  ! 2 metre dewpoint temperature (K)
+    ,"tp   "  &  ! Total precipitation (m h-1)
+    ,"ssrd "  &  ! Surface solar radiation downward (J h-1 m-2)
+    ,"strd "  &  ! Surface thermal radiation downward (J h-1 m-2)
+    /)
+  character(len=*), parameter :: NC_LAT_NAME  = 'latitude'
+  character(len=*), parameter :: NC_LON_NAME  = 'longitude'
+  character(len=*), parameter :: NC_TIME_NAME = 'time'
+  integer :: d_ref_days
+  real(8) :: sf, off
+
 #endif
+
+#if defined ERA5
+  TYPE T_NC
+    real(8), pointer :: time_all(:)
+    integer :: Nt
+    integer :: ItS, ItE
+  END TYPE T_NC
+  TYPE (T_NC), allocatable :: NC(:)
+  real(8), allocatable :: atm_time(:)
+  real(8), allocatable :: time2(:)
+  integer, allocatable :: iNCt(:)
+  integer, allocatable :: idt(:)
+  integer :: NCnum
+  integer :: iNCs, iNCe
+  character(256), allocatable :: ATM_FILE(:)
+  real(8) :: d_jdate
+  real(8) :: d_jdate_Start, d_jdate_Ref, d_jdate_Ref_atm
+  integer :: jdate_Start, jdate_End, jdate_Ref, jdate_Ref_atm
+  integer :: N_days
+  integer :: iNC, iNCm
+  integer :: Nt
+
+#endif
+
   character(10) :: GRIB_yyyymmddhh = "2002070100"
 
   integer :: ifile,idx,iret,igrib
@@ -170,19 +228,25 @@ PROGRAM frcATM2ROMS
     ,"Vwind     "                             &
     ,"Tair      "                             &
     ,"Qair      "                             &
+#if defined JMA_MSM || defined DSJRA55 || defined JRA55
     ,"lcloud    "                             &
     ,"mcloud    "                             &
     ,"hcloud    "                             &
     ,"cloud     "                             &
     ,"rain      "                             &
-#if defined SWRAD
+# if defined SWRAD
     ,"swrad     "                             &
-#elif defined BULK_FLUX
+# elif defined BULK_FLUX
     ,"latent    "                             &
     ,"sensible  "                             &
     ,"swrad     "                             &
     ,"lwrad_down"                             &
     ,"lwrad     "                             &
+# endif
+#elif defined ERA5
+    ,"rain      "                             &
+    ,"swrad     "                             &
+    ,"lwrad_down"                             &
 #endif
     /)
   character(256) :: NC_LNAME(N_OutPar) = (/   &
@@ -191,19 +255,25 @@ PROGRAM frcATM2ROMS
     ,"surface v-wind component           "    &
     ,"surface air temperature            "    &
     ,"surface air relative humidity      "    &
+#if defined JMA_MSM || defined DSJRA55 || defined JRA55
     ,"low cloud fraction                 "    &
     ,"medium cloud fraction              "    &
     ,"high cloud fraction                "    &
     ,"cloud fraction                     "    &
     ,"rain fall rate                     "    &
-#if defined SWRAD
+# if defined SWRAD
     ,"solar shortwave radiation flux     "    &
-#elif defined BULK_FLUX
+# elif defined BULK_FLUX
     ,"net latent heat flux               "    &
     ,"net sensible heat flux             "    &
     ,"solar shortwave radiation flux     "    &
     ,"downwelling longwave radiation flux"    &
     ,"net longwave radiation flux        "    &
+# endif
+#elif defined ERA5
+    ,"rain fall rate                     "    &
+    ,"solar shortwave radiation flux     "    &
+    ,"downwelling longwave radiation flux"    &
 #endif
     /)
   character(256) :: NC_UNIT(N_OutPar) = (/    &
@@ -212,17 +282,23 @@ PROGRAM frcATM2ROMS
     ,"meter second-1           "              &
     ,"Celsius                  "              &
     ,"percentage               "              &
+#if defined JMA_MSM || defined DSJRA55 || defined JRA55
     ,"0 to 1                   "              &
     ,"0 to 1                   "              &
     ,"0 to 1                   "              &
     ,"0 to 1                   "              &
     ,"kilogram meter-2 second-1"              &
-#if defined SWRAD
+# if defined SWRAD
     ,"watt meter-2             "              &
-#elif defined BULK_FLUX
+# elif defined BULK_FLUX
     ,"watt meter-2             "              &
     ,"watt meter-2             "              &
     ,"watt meter-2             "              &
+    ,"watt meter-2             "              &
+    ,"watt meter-2             "              &
+# endif
+#elif defined ERA5
+    ,"kilogram meter-2 second-1"              &
     ,"watt meter-2             "              &
     ,"watt meter-2             "              &
 #endif
@@ -240,6 +316,7 @@ PROGRAM frcATM2ROMS
   real(8), allocatable :: out_data(:,:,:) ! output forcing data
        
   integer :: Im, Jm
+
 #if defined DSJRA55
   real(8), allocatable :: lat(:, :), lon(:, :)
   real(8), allocatable :: cosAx(:, :), sinAx(:, :)
@@ -247,6 +324,7 @@ PROGRAM frcATM2ROMS
 #else
   real(8), allocatable :: lat(:), lon(:)
 #endif
+
   real(8) :: t
   real(8) :: time(1)
   integer, allocatable :: ID_cont(:,:)
@@ -271,7 +349,7 @@ PROGRAM frcATM2ROMS
   integer :: dimids(3)
   integer :: xi_rho_dimid, eta_rho_dimid, time_dimid
   
-  integer :: iparam,ifc,inc,isp
+  integer :: iparam,ifc,iin,isp
   real(8) :: d_lat, d_lon
   real(8) :: u, v
   real(8) :: dpT, sat_VP, VP
@@ -291,6 +369,10 @@ PROGRAM frcATM2ROMS
 #elif defined JRA55
   namelist/frc_jra55/JRA55_dir
   namelist/frc_jra55/FRC_prefix
+#elif defined ERA5
+  namelist/frc_era5_1/NCnum
+  namelist/frc_era5_2/ATM_FILE
+  namelist/frc_era5_2/FRC_prefix
 #endif
   ! Read parameters in namelist file
   
@@ -310,6 +392,13 @@ PROGRAM frcATM2ROMS
 #elif defined JRA55
   rewind(5)
   read (5, nml=frc_jra55)
+#elif defined ERA5
+  rewind(5)
+  read (5, nml=frc_era5_1)
+  allocate( ATM_FILE(NCnum) )
+  allocate( NC(NCnum) )
+  rewind(5)
+  read (5, nml=frc_era5_2)
 #endif
 !---- Modify time-unit description ---------------------------------
       
@@ -337,14 +426,10 @@ PROGRAM frcATM2ROMS
   allocate( sinAu(0:L, 0:M) )
   allocate( cosAv(0:L, 0:M) )
   allocate( sinAv(0:L, 0:M) )
-  allocate(out_data(N_OutPar, 0:L, 0:M))
-!#if defined DSJRA55
-!  allocate(ID_cont(8, Nxr*Nyr))
-!  allocate(w_cont(3, Nxr*Nyr))
-!#else
+  allocate(out_data(0:L, 0:M, N_OutPar))
   allocate(ID_cont(4, Nxr*Nyr))
   allocate(w_cont(4, Nxr*Nyr))
-!#endif
+
   ! Get variable id
   call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
   call check( nf90_get_var(ncid, var_id, latr) )
@@ -378,36 +463,46 @@ PROGRAM frcATM2ROMS
   cosAv(:,M) = cosAv(:,M-1)
   sinAv(:,M) = sinAv(:,M-1)
 
-!---- Read JMA-MSM file --------------------------------
   write (YYYY, "(I4.4)") Syear
   write (MM, "(I2.2)") Smonth
   write (DD, "(I2.2)") Sday
 
+!==== Read ATM file coordinates ==================================
+
 #if defined NETCDF_INPUT
+!---- NetCDF input file -------------------------------------------
+# if defined JMA_MSM
 !---- Read JMA-MSM NetCDF file --------------------------------
   IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//DD//".nc"
   IN_FILE(2) = trim(MSM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
+
+# elif defined ERA5
+!---- Read ERA5 NetCDF file --------------------------------
+  IN_FILE(1) = trim(ATM_FILE(1))
+# endif
 
   write(*,*) "OPEN: ", trim( IN_FILE(1) )
   !Open NetCDF file
   call check( nf90_open(trim( IN_FILE(1) ), nf90_nowrite, ncid) )
 
   ! Get dimension data
-  call get_dimension(ncid, 'lat', Jm)
-  call get_dimension(ncid, 'lon', Im)
+  call get_dimension(ncid, NC_LAT_NAME, Jm)
+  call get_dimension(ncid, NC_LON_NAME, Im)
   write(*,*) Im,Jm
   
   ! Allocate variable
   allocate(lat(Jm))
   allocate(lon(Im))
   
-  call check( nf90_inq_varid(ncid, 'lat', var_id) )
+  call check( nf90_inq_varid(ncid, NC_LAT_NAME, var_id) )
   call check( nf90_get_var(ncid, var_id, lat) )
-  call check( nf90_inq_varid(ncid, 'lon', var_id) )
+  call check( nf90_inq_varid(ncid, NC_LON_NAME, var_id) )
   call check( nf90_get_var(ncid, var_id, lon) )
   call check( nf90_close(ncid) )
 
 #else
+
+!---- GRIB2 input file -------------------------------------------
   GRIB_yyyymmddhh = YYYY//MM//DD//"00"
 # if defined JMA_MSM
 !---- Set JMA-MSM GRIB2 file --------------------------------
@@ -443,6 +538,7 @@ PROGRAM frcATM2ROMS
 !
 ! Allocate variable
   allocate(values(Im*Jm))
+
 # if defined DSJRA55
   allocate(lat(Im,Jm))
   allocate(lon(Im,Jm))
@@ -450,21 +546,7 @@ PROGRAM frcATM2ROMS
   allocate(sinAx(Im,Jm))
   allocate(cosAy(Im,Jm))
   allocate(sinAy(Im,Jm))
-# else
-  call codes_get(igrib,'distinctLatitudes',lat)
-  call codes_get(igrib,'distinctLongitudes',lon)
-# endif      
-  call codes_release(igrib)
-  call codes_close_file(ifile)
-#endif
-
-  allocate(in_data(N_InPar, Im, Jm))
-  allocate(in_data2(N_OutPar, Im, Jm))
-
-!---- Calculate weight parameters for interpolation --------------------------------
-#if defined DSJRA55
 !  ---- Get Lat Lon coordinates from Binary file --------------
-!
   LL_FILE = trim(DSJRA55_dir)//"Consts/Lambert5km_latlon.dat"
   open(unit=20, file=LL_FILE, action='read',               &
        form='unformatted', access='direct', recl=4,        &
@@ -513,6 +595,22 @@ PROGRAM frcATM2ROMS
   cosAy(:,Jm) = cosAy(:,Jm-1)
   sinAy(:,Jm) = sinAy(:,Jm-1)
 
+# else
+
+  call codes_get(igrib,'distinctLatitudes',lat)
+  call codes_get(igrib,'distinctLongitudes',lon)
+
+# endif 
+
+  call codes_release(igrib)
+  call codes_close_file(ifile)
+#endif
+
+  allocate(in_data(Im, Jm, N_InPar))
+  allocate(in_data2(Im, Jm, N_OutPar))
+
+!==== Calculate weight parameters for interpolation ====================
+#if defined DSJRA55
 !  ---- Calc. weight parameters for interpolation --------------  
   write(*,*) "CALC.: weight parameters for interpolation"
   call weight2D_grid2(Im,Jm,lon,lat,Nxr,Nyr,lonr,latr,ID_cont,w_cont)
@@ -520,12 +618,13 @@ PROGRAM frcATM2ROMS
 !  ---- Calc. weight parameters for interpolation --------------  
   write(*,*) "CALC.: weight parameters for interpolation"
   call weight2D_grid(Im,Jm,lon,lat,Nxr,Nyr,lonr,latr,ID_cont,w_cont)  
-#endif      
-!---- Create the forcing netCDF file --------------------------------
+#endif
+
+!==== Create the forcing netCDF file ===================================
 
   FRC_yyyymmdd(2:5)=YYYY
   FRC_yyyymmdd(6:7)=MM
-  FRC_yyyymmdd(8:9)=DD  
+  FRC_yyyymmdd(8:9)=DD
 
   FRC_FILE(1) = trim(FRC_prefix)//FRC_yyyymmdd//'_1.nc'
   
@@ -539,7 +638,7 @@ PROGRAM frcATM2ROMS
   call check( nf90_put_att(ncid, var_id, 'long_name', 'atmospheric forcing time') )
   call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
 
-  DO iparam=1,9
+  DO iparam=1,N_OutPar1
     call check( nf90_def_var(ncid, trim( NC_NAME(iparam) ), NF90_REAL, dimids, var_id) )
     call check( nf90_put_att(ncid, var_id, 'long_name', trim( NC_LNAME(iparam) )) )
     call check( nf90_put_att(ncid, var_id, 'units',     trim( NC_UNIT(iparam) ) ) )
@@ -562,7 +661,7 @@ PROGRAM frcATM2ROMS
   call check( nf90_put_att(ncid, var_id, 'long_name', 'atmospheric forcing time') )
   call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
 
-  DO iparam=10,N_OutPar
+  DO iparam=N_OutPar1+1,N_OutPar
     call check( nf90_def_var(ncid, trim( NC_NAME(iparam) ), NF90_REAL, dimids, var_id) )
     call check( nf90_put_att(ncid, var_id, 'long_name', trim( NC_LNAME(iparam) )) )
     call check( nf90_put_att(ncid, var_id, 'units',     trim( NC_UNIT(iparam) ) ) )
@@ -572,8 +671,7 @@ PROGRAM frcATM2ROMS
   call check( nf90_enddef(ncid) )
   call check( nf90_close(ncid) )
 
-      
-!---- LOOP set up --------------------------------
+!==== LOOP set up ==========================================
   itime = 1
   ihours = 0
   iyear = Syear
@@ -583,9 +681,129 @@ PROGRAM frcATM2ROMS
 #if defined JMA_MSM
   call jd(2006, 3, 1, jd_msmnew)
 #endif
-!---- LOOP1 START --------------------------------
-  DO
 
+#if defined ERA5
+!======= Set starting time and Ending time ========================
+
+  call ndays(Emonth, Eday, Eyear, Smonth, Sday, Syear, N_days)
+  call jd(Syear, Smonth, Sday, jdate_Start)
+
+  jdate_End = jdate_Start + N_days
+  
+  write(*,*) jdate_Start, jdate_End, N_days
+
+  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  d_jdate_Ref = dble(jdate_Ref)
+  write(*,*) d_jdate_Ref
+
+  call jd(1900, 1, 1, jdate_Ref_atm)! ERA5 time: hours since 1900-01-01 00:00:00
+  d_jdate_Ref_atm = dble(jdate_Ref_atm)
+  write(*,*) d_jdate_Ref_atm
+
+! Check time
+  do iNC=1, NCnum
+    write(*,*) 'CHECK: Time'
+    ! Open NetCDF file
+    write(*,*) "OPEN: ", trim( ATM_FILE(iNC) )
+    call check( nf90_open(trim( ATM_FILE(iNC) ), nf90_nowrite, ncid) )
+    call get_dimension(ncid, NC_TIME_NAME, NC(iNC)%Nt)
+    write(*,*) NC(iNC)%Nt
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+    allocate( time2(NC(iNC)%Nt) )
+    call check( nf90_inq_varid(ncid, NC_TIME_NAME, var_id) )
+    call check( nf90_get_var(ncid, var_id, time2) )
+    call check( nf90_close(ncid) )
+
+    NC(iNC)%time_all = time2/24.0d0 + d_jdate_Ref_atm ! hour -> day
+
+    deallocate(time2)
+  end do
+
+  write(*,*) NC(:)%Nt
+
+  do iNC=1, NCnum-1
+    do i=2,NC(iNC)%Nt
+      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
+        NC(iNC)%Nt = i-1
+        exit
+      end if
+    end do
+  end do
+  
+  write(*,*) NC(:)%Nt
+
+  write(*,*) "******************************************************************"
+
+  NC(:)%ItE = -1
+  NC(:)%ItS = -1
+  
+  do iNC=NCnum,1,-1
+    do i=NC(iNC)%Nt,1,-1
+      d_jdate = NC(iNC)%time_all(i)
+      if(d_jdate < dble(jdate_End)) then
+        write(*,*) '*** FOUND: Ending point @ ATM_FILE',iNC
+        NC(iNC)%ItE=i
+        exit
+      endif
+    end do
+  end do
+  write(*,*) NC(:)%ItE 
+  
+  do iNC=1,NCnum
+    do i=NC(iNC)%ItE,1,-1
+      d_jdate = NC(iNC)%time_all(i)
+      if(d_jdate < dble(jdate_Start)) then
+!        write(*,*) '*** FOUND: Starting point @ ATM_FILE',iNC
+        exit
+      endif
+      NC(iNC)%ItS=i
+    end do
+  end do
+  write(*,*) NC(:)%ItS 
+
+  Nt = 0
+  iNCs = NCnum
+  iNCe = 1
+
+  do iNC=1,NCnum
+    if(NC(iNC)%ItS==-1) then
+      cycle
+    end if
+    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
+    iNCs = min(iNCs,iNC)
+    iNCe = max(iNCe,iNC)
+  enddo
+
+  allocate(atm_time(Nt))
+  allocate(idt(Nt))
+  allocate(iNCt(Nt))
+
+  i=1
+  do iNC=iNCs,iNCe
+    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
+      iNCt(i+k) = iNC
+      idt(i+k)  = NC(iNC)%ItS + k
+    enddo
+    j=i+NC(iNC)%ItE-NC(iNC)%ItS
+    atm_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE ) &
+                    - d_jdate_Ref
+    i=j+1
+  enddo
+
+  write(*,*) "*************************************"
+  
+  iNC = 0
+#endif
+
+!===== LOOP1 START ================================================
+  DO
+#if defined ERA5
+    ! Check end date
+    if(itime>Nt) then
+      write(*,*) "Completed!!!"
+      STOP
+    endif
+#else
     ihour = mod(ihours,24)
     ijdate = Sjdate + int(ihours/24)
     call cdate( ijdate, iyear, imonth, iday )
@@ -599,14 +817,26 @@ PROGRAM frcATM2ROMS
     write (MM, "(I2.2)") imonth
     write (DD, "(I2.2)") iday ! 1+int((itime-1)*1/24)
     write (hh, "(I2.2)") ihour ! mod((itime-1)*1,24)
+#endif
 
 #if defined NETCDF_INPUT
+# if defined JMA_MSM
     ihours = ihours + 24  !!! Files exist daily interval
 
     IN_FILE2(1) = IN_FILE(1)  
     IN_FILE2(2) = IN_FILE(2)  
     IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//DD//".nc"
     IN_FILE(2) = trim(MSM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
+
+# elif defined ERA5
+ 
+    iNCm = iNC
+    iNC  = iNCt(itime)
+    if(iNCm < iNC) then
+      IN_FILE(1) = trim(ATM_FILE(iNC))
+    endif
+
+# endif
 #else 
     GRIB_yyyymmddhh = YYYY//MM//DD//hh
 
@@ -666,52 +896,66 @@ PROGRAM frcATM2ROMS
 # else
     DO ifc=isp,isp+2
 # endif
+#elif defined ERA5
+    DO ifc=NC(iNC)%ItS,NC(iNC)%ItE
 #else
     DO ifc=1,1
 #endif
 !  ---- LOOP3.1 START --------------------------------
       DO iparam=1,N_InPar
 #if defined JMA_MSM
-        if(iparam==9 .and. ijdate<jd_msmnew) cycle
+        if(iparam==N_OutPar1 .and. ijdate<jd_msmnew) cycle
 #endif
 #if defined NETCDF_INPUT
-        if(iparam>=10) then !!! for rain (rain fall rate)
-          inc=2
+# if defined JMA_MSM
+        if(iparam>N_OutPar1) then !!! for rain (rain fall rate)
+          iin=2
         else
-          inc=1
+          iin=1
         end if
-        write(*,*) "OPEN: ", trim( IN_FILE(inc) )
+# elif defined ERA5
+        iin=1
+# endif
+
+        write(*,*) "OPEN: ", trim( IN_FILE(iin) )
         !Open NetCDF file
-        call check( nf90_open(trim( IN_FILE(inc) ), nf90_nowrite, ncid) )
+        call check( nf90_open(trim( IN_FILE(iin) ), nf90_nowrite, ncid) )
 
         start3D = (/ 1,  1,  ifc /)
         count3D = (/ Im, Jm, 1   /)
         ! Get variable id
         write(*,*) "READ: ", trim( NCIN_NAME(iparam) )
         call check( nf90_inq_varid(ncid, trim( NCIN_NAME(iparam) ), var_id) ) 
+# if defined JMA_MSM
         if(ijdate>=jd_msmnew .or.iparam<=5 .or.iparam==10 ) then
-          call check( nf90_get_var(ncid, var_id, in_data(iparam,:,:), start=start3D, count=count3D) )
+          call check( nf90_get_var(ncid, var_id, in_data(:,:,iparam), start=start3D, count=count3D) )
           call check( nf90_get_att(ncid, var_id, 'scale_factor', sf) )
           call check( nf90_get_att(ncid, var_id, 'add_offset', off) )
-          in_data(iparam,:,:)=in_data(iparam,:,:)*sf+off
+          in_data(:,:,iparam)=in_data(:,:,iparam)*sf+off
         else
-          call check( nf90_get_var(ncid, var_id, in_data(iparam,:,:), start=start3D, count=count3D) )
+          call check( nf90_get_var(ncid, var_id, in_data(:,:,iparam), start=start3D, count=count3D) )
         endif
+# elif defined ERA5
+        call check( nf90_get_var(ncid, var_id, in_data(:,:,iparam), start=start3D, count=count3D) )
+        call check( nf90_get_att(ncid, var_id, 'scale_factor', sf) )
+        call check( nf90_get_att(ncid, var_id, 'add_offset', off) )
+        in_data(:,:,iparam)=in_data(:,:,iparam)*sf+off
+# endif
         call check( nf90_close(ncid) )     
    
 #else
 !      ---- Seek message --------------------------------
-#if defined JMA_MSM
-        inc=1
-#else
+# if defined JMA_MSM
+        iin=1
+# else
         if(iparam>=10) then !!! for rain (rain fall rate)
-          inc=2
+          iin=2
         else
-          inc=1
+          iin=1
         end if
-#endif
-        write(*,*) "OPEN: ", trim( IN_FILE(inc) )
-        call codes_open_file(ifile, trim( IN_FILE(inc) ),'r', iret)
+# endif
+        write(*,*) "OPEN: ", trim( IN_FILE(iin) )
+        call codes_open_file(ifile, trim( IN_FILE(iin) ),'r', iret)
         call codes_grib_new_from_file(ifile,igrib, iret)
 
         DO WHILE (iret /= GRIB_END_OF_FILE)
@@ -750,20 +994,29 @@ PROGRAM frcATM2ROMS
         do i=1, Jm
           istart = 1 + Im*(i-1)
           iend   = Im*i
-          in_data(iparam,:,i) = values(istart:iend)
+          in_data(:,i,iparam) = values(istart:iend)
         end do
 #endif
       END DO
+
 #if defined NETCDF_INPUT
     ! Set date & time
       call check( nf90_open(trim( IN_FILE(1) ), nf90_nowrite, ncid) )
       start1D = (/ ifc /)
       count1D = (/ 1 /)
-      call check( nf90_inq_varid(ncid, 'time', var_id) )  !!!  not Japan time (00:00:00+09:00)
+      call check( nf90_inq_varid(ncid, NC_TIME_NAME, var_id) )  !!!  not Japan time (00:00:00+09:00)
       call check( nf90_get_var(ncid, var_id, time, start=start1D, count=count1D) )
       call check( nf90_close(ncid) )
+# if defined JMA_MSM
+    ! JMA_MSM time: hours since 2000-01-01 00:00:00
       call ndays(imonth, iday, iyear, 1, 1, 2000, d_ref_days)
-     t = time(1)/24.0d0 + dble(d_ref_days)
+      t = time(1)/24.0d0 + dble(d_ref_days)
+
+# elif defined ERA5
+    ! ERA5 time:    hours since 1900-01-01 00:00:00
+      t = atm_time(itime)
+# endif
+
 #else
     ! Set date & time
       iyear  = YYYYMMDD(1)/10000
@@ -782,132 +1035,151 @@ PROGRAM frcATM2ROMS
 #if defined JMA_MSM
     ! for Pair (Pressure)
       if(ijdate<jd_msmnew) then
-        in_data2(1,:,:) = in_data(1,:,:)  ! jPa -> millibar (= hPa) 
+        in_data2(:,:,1) = in_data(:,:,1)  ! hPa -> millibar (= hPa) 
       else   
-        in_data2(1,:,:) = in_data(1,:,:)*0.01  ! Pa -> millibar (= hPa) 
+        in_data2(:,:,1) = in_data(:,:,1)*0.01  ! Pa -> millibar (= hPa) 
       endif
     ! for U V
-      in_data2(2,:,:) = in_data(2,:,:)
-      in_data2(3,:,:) = in_data(3,:,:)
+      in_data2(:,:,2) = in_data(:,:,2)
+      in_data2(:,:,3) = in_data(:,:,3)
     ! for Tair
       if(ijdate<jd_msmnew) then
-        in_data2(4,:,:) = in_data(4,:,:)   ! degC -> degC 
+        in_data2(:,:,4) = in_data(:,:,4)   ! degC -> degC 
       else   
-        in_data2(4,:,:) = in_data(4,:,:) - 273.15d0  ! K -> degC
+        in_data2(:,:,4) = in_data(:,:,4) - 273.15d0  ! K -> degC
       endif
     ! for Qait (Relative humidity)
-      in_data2(5,:,:) = in_data(5,:,:)
+      in_data2(:,:,5) = in_data(:,:,5)
     ! for cloud (cloud fraction) 
       if(ijdate<jd_msmnew) then
       ! no total cloud cover data
-        in_data2(6,:,:) = in_data(6,:,:)/9.0d0  ! 0-9 level -> ratio(0 to 1)
-        in_data2(7,:,:) = in_data(7,:,:)/9.0d0  ! 0-9 level -> ratio(0 to 1)
-        in_data2(8,:,:) = in_data(8,:,:)/9.0d0  ! 0-9 level -> ratio(0 to 1)
-        in_data2(9,:,:) = 1.0d0 - (1.0-in_data2(6,:,:))*(1.0-in_data2(7,:,:)) &
-                                 *(1.0-in_data2(8,:,:)) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        in_data2(:,:,6) = in_data(:,:,6)/9.0d0  ! 0-9 level -> ratio(0 to 1)
+        in_data2(:,:,7) = in_data(:,:,7)/9.0d0  ! 0-9 level -> ratio(0 to 1)
+        in_data2(:,:,8) = in_data(:,:,8)/9.0d0  ! 0-9 level -> ratio(0 to 1)
+        in_data2(:,:,9) = 1.0d0 - (1.0-in_data2(:,:,6))*(1.0-in_data2(:,:,7)) &
+                                 *(1.0-in_data2(:,:,8)) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       else   
-        in_data2(6,:,:) = in_data(6,:,:)*0.01  ! percent -> ratio(0 to 1)
-        in_data2(7,:,:) = in_data(7,:,:)*0.01  ! percent -> ratio(0 to 1)
-        in_data2(8,:,:) = in_data(8,:,:)*0.01  ! percent -> ratio(0 to 1)
-        in_data2(9,:,:) = in_data(9,:,:)*0.01  ! percent -> ratio(0 to 1)
+        in_data2(:,:,6) = in_data(:,:,6)*0.01  ! percent -> ratio(0 to 1)
+        in_data2(:,:,7) = in_data(:,:,7)*0.01  ! percent -> ratio(0 to 1)
+        in_data2(:,:,8) = in_data(:,:,8)*0.01  ! percent -> ratio(0 to 1)
+        in_data2(:,:,9) = in_data(:,:,9)*0.01  ! percent -> ratio(0 to 1)
       endif
     ! for rain (Total precipitation rate)
-      in_data2(10,:,:) = in_data(10,:,:)/3600.0d0  ! kg m-2 h-1 -> kg m-2 s-1 
+      in_data2(:,:,10) = in_data(:,:,10)/3600.0d0  ! kg m-2 h-1 -> kg m-2 s-1 
 # if defined SWRAD
     ! for short-wave radiation
-      in_data2(11,:,:) = in_data(11,:,:)  ! W m-2 -> W m-2
+      in_data2(:,:,11) = in_data(:,:,11)  ! W m-2 -> W m-2
 # endif 
 ! --------------------------------------------
 #elif defined DSJRA55
     ! for Pair (Pressure)
-      in_data2(1,:,:) = in_data(1,:,:)*0.01  ! Pa -> millibar (= hPa) 
+      in_data2(:,:,1) = in_data(:,:,1)*0.01  ! Pa -> millibar (= hPa) 
     ! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors 
       do j=1, Jm
         do i=1,Im
-          in_data2(2,i,j) = in_data(2,i,j)*cosAx(i,j)-in_data(3,i,j)*sinAy(i,j)
-          in_data2(3,i,j) = in_data(2,i,j)*sinAx(i,j)+in_data(3,i,j)*cosAy(i,j)
+          in_data2(i,j,2) = in_data(i,j,2)*cosAx(i,j)-in_data(i,j,3)*sinAy(i,j)
+          in_data2(i,j,3) = in_data(i,j,2)*sinAx(i,j)+in_data(i,j,3)*cosAy(i,j)
         end do
       end do
     ! for Tair
-      in_data2(4,:,:) = in_data(4,:,:) - 273.15d0  ! K -> degC
+      in_data2(:,:,4) = in_data(:,:,4) - 273.15d0  ! K -> degC
     ! for Qair: convert Dewpoint depression (K) to Relative humidity (%)
       do j=1, Jm
         do i=1,Im
-          ! Dewpoint (oC)
-          dpT = in_data(4,i,j)-in_data(5,i,j) ! (K)
+          ! Dewpoint (K)
+          dpT = in_data(i,j,4)-in_data(i,j,5) ! (K)
           ! Saturation vapor pressure (hPa)
-          sat_VP=6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/in_data(4,i,j)))
+          sat_VP=6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/in_data(i,j,4)))
           ! Vapor pressure (hPa)
-          VP=6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/dpT))
+          VP    =6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/dpT))
           ! Relative humidity (%)
-          in_data2(5,i,j) = VP/sat_VP*100.0d0 ! (%)
+          in_data2(i,j,5) = VP/sat_VP*100.0d0 ! (%)
         end do
       end do
     ! for cloud (cloud fraction)
-      in_data2(6,:,:) = in_data(6,:,:)*0.01  ! percent -> ratio(0 to 1)
-      in_data2(7,:,:) = in_data(7,:,:)*0.01  ! percent -> ratio(0 to 1)
-      in_data2(8,:,:) = in_data(8,:,:)*0.01  ! percent -> ratio(0 to 1)
-      in_data2(9,:,:) = in_data(9,:,:)*0.01  ! percent -> ratio(0 to 1)
+      in_data2(:,:,6) = in_data(:,:,6)*0.01  ! percent -> ratio(0 to 1)
+      in_data2(:,:,7) = in_data(:,:,7)*0.01  ! percent -> ratio(0 to 1)
+      in_data2(:,:,8) = in_data(:,:,8)*0.01  ! percent -> ratio(0 to 1)
+      in_data2(:,:,9) = in_data(:,:,9)*0.01  ! percent -> ratio(0 to 1)
     ! for rain (Total precipitation rate)
-      in_data2(10,:,:) = in_data(10,:,:)  ! kg m-2 s-1 -> kg m-2 s-1     
+      in_data2(:,:,10) = in_data(:,:,10)  ! kg m-2 s-1 -> kg m-2 s-1     
 # if defined BULK_FLUX
     ! for bulk flux parameters, heating -> positive, cooling -> negattive
-      in_data2(11,:,:) = -in_data(11,:,:)  ! W m-2 -> W m-2
-      in_data2(12,:,:) = -in_data(12,:,:)  ! W m-2 -> W m-2
-      in_data2(13,:,:) = in_data(13,:,:) !-in_data(14,:,:) ! solar radiation = downward
-      in_data2(14,:,:) = in_data(15,:,:) ! downward long-wave
-      in_data2(15,:,:) = in_data(15,:,:)-in_data(16,:,:) ! net long-wave  = downward - upward
+      in_data2(:,:,11) = -in_data(:,:,11)  ! W m-2 -> W m-2
+      in_data2(:,:,12) = -in_data(:,:,12)  ! W m-2 -> W m-2
+      in_data2(:,:,13) =  in_data(:,:,13) !-in_data(14,:,:) ! solar radiation = downward
+      in_data2(:,:,14) =  in_data(:,:,14) ! downward long-wave
+      in_data2(:,:,15) =  in_data(:,:,15)-in_data(:,:,16) ! net long-wave  = downward - upward
 # endif
 ! --------------------------------------------
 #elif defined JRA55
     ! for Pair (Pressure)
-      in_data2(1,:,:) = in_data(1,:,:)*0.01  ! Pa -> millibar (= hPa) 
+      in_data2(:,:,1) = in_data(:,:,1)*0.01  ! Pa -> millibar (= hPa) 
     ! for U V
-      in_data2(2,:,:) = in_data(2,:,:)
-      in_data2(3,:,:) = in_data(3,:,:)
+      in_data2(:,:,2) = in_data(:,:,2)
+      in_data2(:,:,3) = in_data(:,:,3)
     ! for Tair
-      in_data2(4,:,:) = in_data(4,:,:) - 273.15d0  ! K -> degC
+      in_data2(:,:,4) = in_data(:,:,4) - 273.15d0  ! K -> degC
     ! for Qait (Relative humidity)
-      in_data2(5,:,:) = in_data(5,:,:)
+      in_data2(:,:,5) = in_data(:,:,5)
     ! for cloud (cloud fraction)
-      in_data2(6,:,:) = in_data(6,:,:)*0.01  ! percent -> ratio(0 to 1)
-      in_data2(7,:,:) = in_data(7,:,:)*0.01  ! percent -> ratio(0 to 1)
-      in_data2(8,:,:) = in_data(8,:,:)*0.01  ! percent -> ratio(0 to 1)
-      in_data2(9,:,:) = in_data(9,:,:)*0.01  ! percent -> ratio(0 to 1)
+      in_data2(:,:,6) = in_data(:,:,6)*0.01  ! percent -> ratio(0 to 1)
+      in_data2(:,:,7) = in_data(:,:,7)*0.01  ! percent -> ratio(0 to 1)
+      in_data2(:,:,8) = in_data(:,:,8)*0.01  ! percent -> ratio(0 to 1)
+      in_data2(:,:,9) = in_data(:,:,9)*0.01  ! percent -> ratio(0 to 1)
     ! for rain (Total precipitation rate)
-      in_data2(10,:,:) = in_data(10,:,:)*1.0d0/86400.0d0  ! mm day-1 -> kg m-2 s-1  
+      in_data2(:,:,10) = in_data(:,:,10)*1.0d0/86400.0d0  ! mm day-1 -> kg m-2 s-1  
 # if defined BULK_FLUX
     ! for bulk flux parameters, heating -> positive, cooling -> negattive
-      in_data2(11,:,:) = -in_data(11,:,:)  ! W m-2 -> W m-2
-      in_data2(12,:,:) = -in_data(12,:,:)  ! W m-2 -> W m-2
-      in_data2(13,:,:) = in_data(13,:,:) !-in_data(14,:,:) ! solar radiation = downward
-      in_data2(14,:,:) = in_data(15,:,:) ! downward long-wave
-      in_data2(15,:,:) = in_data(15,:,:)-in_data(16,:,:) ! net long-wave  = downward - upward
+      in_data2(:,:,11) = -in_data(:,:,11)  ! W m-2 -> W m-2
+      in_data2(:,:,12) = -in_data(:,:,12)  ! W m-2 -> W m-2
+      in_data2(:,:,13) =  in_data(:,:,13) !-in_data(14,:,:) ! solar radiation = downward
+      in_data2(:,:,14) =  in_data(:,:,14) ! downward long-wave
+      in_data2(:,:,15) =  in_data(:,:,15)-in_data(:,:,16) ! net long-wave  = downward - upward
 # endif
+! --------------------------------------------
+#elif defined ERA5
+    ! for Pair (Pressure)
+      in_data2(:,:,1) = in_data(:,:,1)*0.01  ! Pa -> millibar (= hPa) 
+    ! for U V
+      in_data2(:,:,2) = in_data(:,:,2)
+      in_data2(:,:,3) = in_data(:,:,3)
+    ! for Tair
+      in_data2(:,:,4) = in_data(:,:,4) - 273.15d0  ! K -> degC
+    ! for Qair: convert Dewpoint temperature (K) to Relative humidity (%)
+      do j=1, Jm
+        do i=1,Im
+          ! Saturation vapor pressure (hPa)
+          sat_VP=6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/in_data(i,j,4)))
+          ! Vapor pressure (hPa)
+          VP    =6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/in_data(i,j,5)))
+          ! Relative humidity (%)
+          in_data2(i,j,5) = VP/sat_VP*100.0d0 ! (%)
+        end do
+      end do
+    ! for rain (Total precipitation rate)
+      in_data2(:,:,6) = in_data(:,:,6)*1000.0d0/3600.0d0  ! m h-1 -> kg m-2 s-1  
+    ! for bulk flux parameters, heating -> positive, cooling -> negattive
+      in_data2(:,:,7) = in_data(:,:,7)/3600.0d0  ! J h-1 m-2 -> W m-2
+      in_data2(:,:,8) = in_data(:,:,8)/3600.0d0  ! J h-1 m-2 -> W m-2
 #endif         
 !  ---- LOOP3.2 START --------------------------------
       DO iparam=1,N_OutPar
         write(*,*) 'Linear Interporation: ',trim( NC_NAME(iparam) )
 
-!#if defined DSJRA55
-!        call interp2D_grid2(Im, Jm, in_data2(iparam,:,:)       &   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!                          , Nxr, Nyr, out_data(iparam,:,:)     &
-!                          , Id_cont, w_cont)
-!#else      
-        call interp2D_grid (Im, Jm, in_data2(iparam,:,:)       &  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                          , Nxr, Nyr, out_data(iparam,:,:)     &
+        call interp2D_grid (Im, Jm, in_data2(:,:,iparam)       &  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                          , Nxr, Nyr, out_data(:,:,iparam)     &
                           , Id_cont, w_cont)
-!#endif
       END DO
 !  ---- LOOP3.2 END --------------------------------
 
   !!! for U V: change regular Lat Lon to ROMS grid coordinat vectors 
       do j=0,M
         do i=0,L
-          u = out_data(2,i,j)*cosAu(i,j)+out_data(3,i,j)*sinAu(i,j)
-          v =-out_data(2,i,j)*sinAv(i,j)+out_data(3,i,j)*cosAv(i,j)
-          out_data(2,i,j) = u
-          out_data(3,i,j) = v
+          u = out_data(i,j,2)*cosAu(i,j)+out_data(i,j,3)*sinAu(i,j)
+          v =-out_data(i,j,2)*sinAv(i,j)+out_data(i,j,3)*cosAv(i,j)
+          out_data(i,j,2) = u
+          out_data(i,j,3) = v
         enddo
       enddo
 
@@ -920,6 +1192,8 @@ PROGRAM frcATM2ROMS
             , 1, time, start1D, count1D )
 #if defined JRA55
       time(1) = t+1.5d0/24.0d0
+#elif defined ERA5
+      time(1) = t-0.5d0/24.0d0
 #else
       time(1) = t+0.5d0/24.0d0
 #endif
@@ -929,16 +1203,16 @@ PROGRAM frcATM2ROMS
             , 1, time, start1D, count1D )
 
       DO iparam=1,N_OutPar
-        if(iparam>=10) then !!! for rain (rain fall rate)
-          inc=2
+        if(iparam>N_OutPar1) then !!! for rain (rain fall rate)
+          iin=2
         else
-          inc=1
+          iin=1
         end if
   
         start3D = (/ 1,  1,  itime /)
         count3D = (/ Nxr, Nyr, 1 /)     
-        call writeNetCDF_3d(trim( NC_NAME(iparam) ), trim( FRC_FILE(inc))   &
-            , Nxr, Nyr, 1, out_data(iparam,:,:), start3D, count3D )
+        call writeNetCDF_3d(trim( NC_NAME(iparam) ), trim( FRC_FILE(iin))   &
+            , Nxr, Nyr, 1, out_data(:,:,iparam), start3D, count3D )
         
       END DO
 !  ---- LOOP3.3 END --------------------------------         

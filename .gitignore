@@ -43,6 +43,9 @@ CDL/*
 ROMS_grid_Yaeyama/*
 OTPS/DATA/*
 !OTPS/DATA/get_tpxo9_atlas30.sh
+
+Projects/GetERA5/my_setup.sh
+
 # Backup Files
 backup/*
 OTPS/OTPS_back/*

@@ -1109,7 +1109,7 @@ PROGRAM bryOCN2ROMS
 
 !===== LOOP START ==========================================================
 
-!-Write ROMS initial conditions netCDF file --------------------------------
+!-Write ROMS boundary conditions netCDF file --------------------------------
   do ibry=1,4
     if( SNWE(ibry)==0 ) cycle
 

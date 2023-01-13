@@ -5,6 +5,7 @@
 export MY_CPP_FLAGS="-DJMA_MSM"
 #export MY_CPP_FLAGS="-DDSJRA55"
 #export MY_CPP_FLAGS="-DJRA55"
+#export MY_CPP_FLAGS="-DERA5"
 
 # ---- For JMA_MSM option --------------
 # SWRAD: Downward short-wave radiation flag

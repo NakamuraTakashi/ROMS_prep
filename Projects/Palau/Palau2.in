@@ -130,3 +130,15 @@
   JRA55_dir  =  "W:/JRA-55/"
   FRC_prefix  = "Palau2_frc_JRA55"
 /
+
+&frc_era5_1
+  NCnum = 1  ! Number of ERA5 files 
+!  NCnum = 2  ! Number of ERA5 files 
+/
+&frc_era5_2
+  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
+!  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2020.nc",
+!               "../../Data/era5/Panay/era5_atm_2021.nc"
+  FRC_prefix  = "Boracay1_frc_ERA5"
+/
+

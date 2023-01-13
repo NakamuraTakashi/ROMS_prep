@@ -4,7 +4,8 @@
 #
 #export MY_CPP_FLAGS="-DJMA_MSM"
 #export MY_CPP_FLAGS="-DDSJRA55"
-export MY_CPP_FLAGS="-DJRA55"
+#export MY_CPP_FLAGS="-DJRA55"
+export MY_CPP_FLAGS="-DERA5"
 
 # ---- For JMA_MSM option --------------
 # SWRAD: Downward short-wave radiation flag
@@ -29,6 +30,6 @@ export OMP_NUM_THREADS=7
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-#./frcATM2ROMS.exe < Boracay1.in
+./frcATM2ROMS.exe < Boracay1.in
 #./frcATM2ROMS.exe < Panay.in
-./frcATM2ROMS.exe < BatanBay.in
+#./frcATM2ROMS.exe < BatanBay.in
