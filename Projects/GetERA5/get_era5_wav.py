@@ -7,7 +7,7 @@
 # * check "pythonX.X" written in "Location: /usr/lib/pythonX.X/site-packages"
 #
 # Executable command (if pythonX.X = python3.7)
-#> python3.7 get_era5_atm.py
+#> python3.7 get_era5_wav.py
 #---------------------------------------------------------------------------
 import os
 import cdsapi
@@ -25,7 +25,7 @@ Rlon = 127    # Longitude (degrees) of the top-right corner of the grid.
 Blat = 9      # Latitude  (degrees) of the bottom-left corner of the grid.
 Tlat = 15     # Latitude  (degrees) of the top-right corner of the grid.
 
-Year='2019'
+Year='2022'
 
 OUTPUT_DIR = '../../Data/era5/Panay'
 

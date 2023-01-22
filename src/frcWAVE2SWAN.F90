@@ -244,8 +244,10 @@ PROGRAM frcWAVE2SWAN
 
       hhmmss = hhmm*100
       
-      write(* , "(I8.8 '.' I6.6 f9.3 f9.3 f9.3 f9.3)") YYYYMMDD, hhmmss, Hs, Tp, Dp,30.0
-      write(20, "(I8.8 '.' I6.6 f9.3 f9.3 f9.3 f9.3)") YYYYMMDD, hhmmss, Hs, Tp, Dp,30.0
+!      write(* , "(I8.8 '.' I6.6 f9.3 f9.3 f9.3 f9.3)") YYYYMMDD, hhmmss, Hs, Tp, Dp,30.0
+!      write(20, "(I8.8 '.' I6.6 f9.3 f9.3 f9.3 f9.3)") YYYYMMDD, hhmmss, Hs, Tp, Dp,30.0
+      write(* , "(I8.8 '.' I4.4 f9.3 f9.3 f9.3 f9.3)") YYYYMMDD, hhmm, Hs, Tp, Dp,30.0
+      write(20, "(I8.8 '.' I4.4 f9.3 f9.3 f9.3 f9.3)") YYYYMMDD, hhmm, Hs, Tp, Dp,30.0
       
     END DO
 !-LOOP2 END --------------------------------

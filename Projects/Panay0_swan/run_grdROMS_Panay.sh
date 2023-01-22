@@ -19,4 +19,7 @@ rm *.mod
 export OMP_NUM_THREADS=7
 export HDF5_DISABLE_VERSION_CHECK=1
 
+#./grdROMS.exe < Boracay1.in
+#./grdROMS.exe < Panay.in
+#./grdROMS.exe < BatanBay.in
 ./grdROMS.exe < Panay0_swan.in

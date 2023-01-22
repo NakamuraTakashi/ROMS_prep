@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Panay_grd_v1.0.nc"
+  GRID_FILE = "Panay_grd_v1.1.nc"
 /
 
 &mybath
@@ -64,14 +64,14 @@
 /
 
 &sdate
-  Syear  = 2022   ! Starting year
+  Syear  = 2021   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
   Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 2      ! Ending month
+  Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -87,7 +87,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "C:/cygwin64/home/Takashi/COAWST/Projects/Boracay1/Boracay1_his_20220102.nc"
+  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Boracay1/Boracay1_his_20210102.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -125,7 +125,7 @@
 &ini
   INI_prefix  = "Panay_ini_ROMS_Nz15"
 
-  INIyear  = 2022   ! Initial year
+  INIyear  = 2021   ! Initial year
   INImonth = 1      ! Initial month
   INIday   = 5      ! Initial day
   INIhour  = 0      ! Initial hour
@@ -166,5 +166,25 @@
   ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
 !  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2020.nc",
 !               "../../Data/era5/Panay/era5_atm_2021.nc"
-  FRC_prefix  = "Boracay1_frc_ERA5"
+  FRC_prefix  = "Panay_frc_ERA5"
+/
+
+&roms2swan_1
+  NCnum = 1  ! Number of ERA5 files 
+!  NCnum = 2  ! Number of ERA5 files 
+/
+
+&roms2swan_2
+  ATM_FILE  =  "Panay_frc_ERA5_20210101_1.nc"
+!  ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc",
+!               "Panay0_swan_frc_ERA5_20220101_1.nc"
+
+  OUTPUT_Dir  = "F:/COAWST_DATA/Panay/Panay/wind_2021"
+
+  grid_size = 300.0d0    ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = -0.75d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+
 /

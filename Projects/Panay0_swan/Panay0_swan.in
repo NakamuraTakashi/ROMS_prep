@@ -1,0 +1,112 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "Panay0_swan_grd_v1.0.nc"
+/
+
+&mybath
+! GEBCO bathymetry NetCDF file     
+  BATH_FILE = "E:/Documents/Dropbox/BlueCARES/GIS/GEBCO_13_Jan_2023_8a100061c068/gebco_2022_utm51_v2.nc"
+  x_ncname = 'x'
+  y_ncname = 'y'
+  bathy_ncname = 'Band1'
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 6   ! Spheroid for projection (1-19)
+! ispher -- SPHEROID SELECTION: 1=CLARKE 1866; 2=CLARKE 1880;       
+!               3=BESSEL 1967; 4=NEW INTERNATIONAL 1967;
+!               5=INTERNATIONAL 1909 (1924) (HAYFORD);
+!               6=WORLD GEODETIC SYSTEM 1972; 7=EVEREST;
+!               8=WORLD GEODETIC SYSTEM 1966;
+!               9=GEODETIC REFERENCE SYSTEM 1980;
+!               10=AIRY; 11=MODIFIED EVEREST; 12=MODIFIED AIRY;         
+!               13=WALBECK; 14=SOUTH ASIA 1960 (FISCHER);
+!               15=AUSTRALIAN NATIONAL-SOUTH AMERICAN 1969;
+!               16=KRASSOVSKY; 17=HOUGH; 18=MERCURY 1960 (FISCHER);     
+!               19=MODIFIED MERCURY 1968 (FISCHER)
+!        NOTES:
+!               IF ISPHER.EQ.0: COMPUTE IN LAMBERT OR TRANSVERSE MERCATOR  
+!               IF ISPHER.NE.0: COMPUTE IN UNIVERSAL TRANSVERSE MERCATOR   
+!               IZONE IS UTM ZONE NUMBER OR STATE PLANE ZONE DEPENDING ON  
+!               SELECTION OF ISPHER.  IF UTM AND SOUTHERN HEMISPHERE, IZONE
+!               IS NEGATIVE.
+!    
+/
+
+&grd_setting_utm
+! Set utm x y coordinate at corner points. 
+  s_x = 228180.1556
+  s_y = 1415036.358
+  e_x = 736196
+  e_y = 1299300
+
+! Set ROMS grid resolution
+! *The information is not used when GRID_REFINEMENT is activated.
+  RESOLUTION = 1500.0d0 ! meter resolution
+
+  angle = -0.75d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+/
+
+&bath_smooth
+  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
+
+&land_mask
+
+  hmin = 3.0d0  ! Minimum depth
+
+ ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+ ! and one-grid bay grids 
+  I_ocn = 100    ! rho point index i
+  J_ocn = 1    ! rho point index j
+/
+
+&sdate
+  Syear  = 2021   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
+/
+
+&edate
+  Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&refdate
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&frc_era5_1
+  NCnum = 1  ! Number of ERA5 files 
+!  NCnum = 2  ! Number of ERA5 files 
+/
+&frc_era5_2
+  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
+!  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2020.nc",
+!               "../../Data/era5/Panay/era5_atm_2021.nc"
+  FRC_prefix  = "Panay0_swan_frc_ERA5"
+/
+
+&roms2swan_1
+  NCnum = 1  ! Number of ERA5 files 
+!  NCnum = 2  ! Number of ERA5 files 
+/
+&roms2swan_2
+  ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc"
+!  ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc",
+!               "Panay0_swan_frc_ERA5_20220101_1.nc"
+
+  OUTPUT_Dir  = "F:/COAWST_DATA/Panay/Panay0/wind_2021"
+
+  grid_size = 1500.0d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = -0.75d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+
+/

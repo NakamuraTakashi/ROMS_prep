@@ -32,6 +32,11 @@
 
 # Output Files
 *.nc
+*swan_Bottom.bot
+*swan_grid.grd
+*swan_in_bottom.txt
+*swan_in_wind.txt
+*.xlsx
 
 # Data Files
 Data/*
