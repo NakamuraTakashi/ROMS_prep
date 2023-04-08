@@ -1,6 +1,6 @@
 #!/bin/bash
 export MY_CPP_FLAGS=""
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_ONE_GRID_BAY_REMOVAL"
 
@@ -12,4 +12,6 @@ gfortran ${SRC_DIR}/mod_utility.F90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/gr
 rm *.mod
 
 #./grdROMS_update.exe < Boracay3.in
-./grdROMS_update.exe < BatanBay.in
+#./grdROMS_update.exe < BatanBay.in
+#./grdROMS_update.exe < Aklan1.in
+./grdROMS_update.exe < Panay1.in

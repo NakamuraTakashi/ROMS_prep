@@ -53,4 +53,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./bryOCN2ROMS_3.exe < BatanBay.in
+./bryOCN2ROMS_3.exe < Tangalan.in

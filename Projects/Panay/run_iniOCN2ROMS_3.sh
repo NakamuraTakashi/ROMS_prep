@@ -70,4 +70,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=7
 
-./iniOCN2ROMS_3.exe < BatanBay.in
+./iniOCN2ROMS_3.exe < Tangalan.in

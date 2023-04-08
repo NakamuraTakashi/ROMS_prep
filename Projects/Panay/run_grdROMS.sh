@@ -4,9 +4,9 @@ export MY_CPP_FLAGS=""
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGEBCO2ROMS"
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DMYBATH2ROMS"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DEMODNET2ROMS"
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_ONE_GRID_BAY_REMOVAL"
 
 SRC_DIR=../../src
@@ -19,6 +19,7 @@ rm *.mod
 export OMP_NUM_THREADS=7
 export HDF5_DISABLE_VERSION_CHECK=1
 
-./grdROMS.exe < Boracay1.in
+#./grdROMS.exe < Boracay1.in
 #./grdROMS.exe < Boracay2.in
 #./grdROMS.exe < Boracay3.in
+./grdROMS.exe < Tangalan.in

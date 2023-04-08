@@ -3,8 +3,9 @@
 # Please choose one of the following options
 #
 #export MY_CPP_FLAGS="-DSWAT_PLUS_REV_2019_59_2"
-export MY_CPP_FLAGS="-DSWAT_PLUS_REV_2019_59_3"
+#export MY_CPP_FLAGS="-DSWAT_PLUS_REV_2019_59_3"
 #export MY_CPP_FLAGS="-DSWAT_PLUS_OKMT"
+export MY_CPP_FLAGS="-DSWAT_PLUS_REV_2020_60_5_4"
 
 # Please choose one of the following input file type
 #
@@ -21,5 +22,5 @@ rm *.mod
 export OMP_NUM_THREADS=12
 
 #./riverSWAT2ROMS.exe < test_swat2roms.in
-./riverSWAT2ROMS.exe < swat2roms_batanbay.in
+./riverSWAT2ROMS.exe < swat2roms_panay1.in
 

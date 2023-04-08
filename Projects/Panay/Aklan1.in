@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Panay1_grd_v1.3.nc"
+  GRID_FILE = "Aklan1_grd_v1.2.nc"
 /
 
 &mybath
@@ -41,7 +41,7 @@
 
 &land_mask
 
-  hmin = -0.5d0  ! Minimum depth
+  hmin = -1.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
@@ -51,16 +51,16 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Boracay1_grd_v1.0.nc"
-  parent_Imin = 82
-  parent_Imax = 139
-  parent_Jmin = 47
-  parent_Jmax = 72
-  refine_factor = 5
+  parent_grid = "Panay1_grd_v1.1.nc"
+  parent_Imin = 132
+  parent_Imax = 152
+  parent_Jmin = 38
+  parent_Jmax = 55
+  refine_factor = 9
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Boracay1_grd_v1.1.nc"
+  F2C_OUT_FILE = "Panay1_grd_v1.2.nc"
 /
 
 &sdate
@@ -166,7 +166,7 @@
   ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
 !  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2020.nc",
 !               "../../Data/era5/Panay/era5_atm_2021.nc"
-  FRC_prefix  = "Panay1_frc_ERA5"
+  FRC_prefix  = "Aklan1_frc_ERA5"
 /
 
 &roms2swan_1
@@ -175,14 +175,13 @@
 /
 
 &roms2swan_2
-  ATM_FILE  =  "Panay1_frc_ERA5_20210101_1.nc"
+  ATM_FILE  =  "Aklan1_frc_ERA5_20210101_1.nc"
 !  ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc",
 !               "Panay0_swan_frc_ERA5_20220101_1.nc"
 
-!  OUTPUT_Dir  = "F:/COAWST_DATA/Panay/Panay1/wind_2021"
   OUTPUT_Dir  = "swan_wind"
 
-  grid_size = 300.0d0    ! Grid resolution
+  grid_size = 33.33333333333d0    ! Grid resolution
                          !  Cartesian coordinate => (m)
                          !  Spherical coordinate => (degree)
 

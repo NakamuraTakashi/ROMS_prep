@@ -24,13 +24,10 @@ INCLUDE="-I/usr/include -I/usr/local/include"
 
 SRC_DIR=../../src
 
-gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/frcATM2ROMS.F90 ${MY_CPP_FLAGS} -fopenmp -O2 ${INCLUDE} ${LIB} -o frcATM2ROMS.exe
+gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/frcATM2SWAT.F90 ${MY_CPP_FLAGS} -fopenmp -O2 ${INCLUDE} ${LIB} -o frcATM2SWAT.exe
 
-export OMP_NUM_THREADS=7
+export OMP_NUM_THREADS=11
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-#./frcATM2ROMS.exe < Boracay1.in
-#./frcATM2ROMS.exe < Panay1.in
-./frcATM2ROMS.exe < Tangalan.in
-#./frcATM2ROMS.exe < BatanBay.in
+./frcATM2SWAT.exe < atm2swat.in

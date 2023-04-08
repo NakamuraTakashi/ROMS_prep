@@ -17,4 +17,4 @@ export OMP_NUM_THREADS=11
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-./windROMS2SWAN.exe < Panay.in
+./windROMS2SWAN.exe < Panay1.in

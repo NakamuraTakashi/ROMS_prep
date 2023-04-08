@@ -1,13 +1,13 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Panay1_grd_v1.3.nc"
+  GRID_FILE = "Tangalan_grd_v1.0.nc"
 /
 
 &mybath
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "C:/cygwin64/home/Takashi/ROMS_prep/Data/Panay/bath/gebco_2021_Boracay_utm_v2.nc"
-  x_ncname = 'lon'
-  y_ncname = 'lat'
+  BATH_FILE = "E:/Documents/Dropbox/CORAL_NET/GIS/merged/Tangalan_bath_merged_v1.1.nc"
+  x_ncname = 'x'
+  y_ncname = 'y'
   bathy_ncname = 'Band1'
 /
 
@@ -41,7 +41,7 @@
 
 &land_mask
 
-  hmin = -0.5d0  ! Minimum depth
+  hmin = -1.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
@@ -51,16 +51,16 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Boracay1_grd_v1.0.nc"
-  parent_Imin = 82
-  parent_Imax = 139
-  parent_Jmin = 47
-  parent_Jmax = 72
+  parent_grid = "Panay1_grd_v1.2.nc"
+  parent_Imin = 63
+  parent_Imax = 101
+  parent_Jmin = 23
+  parent_Jmax = 60
   refine_factor = 5
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Boracay1_grd_v1.1.nc"
+  F2C_OUT_FILE = "Panay1_grd_v1.3.nc"
 /
 
 &sdate
@@ -87,7 +87,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Boracay1/Boracay1_his_20210102.nc"
+  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Panay/Panay1/Panay1_his_20210105_4.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -103,7 +103,7 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &ocn2roms      
@@ -117,13 +117,13 @@
 /
 
 &bry
-  BRY_prefix  = "Panay1_bry_ROMS_Nz15"
+  BRY_prefix  = "Tangalan_bry_ROMS_Nz15"
   !    south north west east
-  SNWE =  0,   1,   1,   0
+  SNWE =  0,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Panay1_ini_ROMS_Nz15"
+  INI_prefix  = "Tangalan_ini_ROMS_Nz15"
 
   INIyear  = 2021   ! Initial year
   INImonth = 1      ! Initial month
@@ -155,7 +155,7 @@
 
 &frc_jra55
   JRA55_dir  =  "C:/cygwin64/home/Takashi/ROMS_prep/Data/Panay/JRA-55/"
-  FRC_prefix  = "Panay1_frc_JRA55"
+  FRC_prefix  = "Tangalan_frc_JRA55"
 /
 
 &frc_era5_1
@@ -166,7 +166,7 @@
   ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
 !  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2020.nc",
 !               "../../Data/era5/Panay/era5_atm_2021.nc"
-  FRC_prefix  = "Panay1_frc_ERA5"
+  FRC_prefix  = "Tangalan_frc_ERA5"
 /
 
 &roms2swan_1
@@ -175,14 +175,13 @@
 /
 
 &roms2swan_2
-  ATM_FILE  =  "Panay1_frc_ERA5_20210101_1.nc"
+  ATM_FILE  =  "Tangalan_frc_ERA5_20210101_1.nc"
 !  ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc",
 !               "Panay0_swan_frc_ERA5_20220101_1.nc"
 
-!  OUTPUT_Dir  = "F:/COAWST_DATA/Panay/Panay1/wind_2021"
   OUTPUT_Dir  = "swan_wind"
 
-  grid_size = 300.0d0    ! Grid resolution
+  grid_size = 60.0d0    ! Grid resolution
                          !  Cartesian coordinate => (m)
                          !  Spherical coordinate => (degree)
 

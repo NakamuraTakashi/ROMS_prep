@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2021 Takashi NAKAMURA  ===== 
+!!!=== Copyright (c) 2021-2023 Takashi NAKAMURA  ===== 
 
 PROGRAM riverSWAT2ROMS
   use netcdf
@@ -45,7 +45,7 @@ PROGRAM riverSWAT2ROMS
   real(8), allocatable :: data(:,:,:), river_Vshape(:,:)
   real(8), allocatable :: river_flow(:,:), river_flow2(:,:)
   real(8) :: river_time(1)
-  character(20), allocatable :: label(:), label2(:)
+  character(10), allocatable :: label(:), label2(:)
   integer :: ios
   integer :: Ncol,Ntype
   integer :: i,j,k
@@ -154,11 +154,11 @@ PROGRAM riverSWAT2ROMS
 
   ! Read parameters in namelist file
   
-  read (*, nml=refdate)
+  read (5, nml=refdate)
   rewind(5)
-  read (*, nml=roms2roms)
+  read (5, nml=roms2roms)
   rewind(5)
-  read (*, nml=river1)
+  read (5, nml=river1)
 
   NCS2 = NCS
   NNS2 = NNS
@@ -173,9 +173,9 @@ PROGRAM riverSWAT2ROMS
   allocate( cha_name(Nsrc) )
 
   rewind(5)
-  read (*, nml=river2)
+  read (5, nml=river2)
   rewind(5)
-  read (*, nml=zcoord)
+  read (5, nml=zcoord)
 
 
   Nzr = N_s_rho
@@ -251,7 +251,8 @@ PROGRAM riverSWAT2ROMS
   read(headerline,*) label 
 !  write(*,*) label
 
-# if defined SWAT_PLUS_REV_2019_59_2 || defined SWAT_PLUS_OKMT
+# if defined SWAT_PLUS_REV_2019_59_2 || defined SWAT_PLUS_OKMT || \
+     defined SWAT_PLUS_REV_2020_60_5_4
 
   Ncol = 59  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   allocate( label(Ncol) )
