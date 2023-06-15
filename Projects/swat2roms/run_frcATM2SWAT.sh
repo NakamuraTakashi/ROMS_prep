@@ -1,4 +1,5 @@
 #!/bin/sh
+rm frcATM2SWAT.exe
 # ---- Atmospheric Models --------------
 # Please choose one of the following options
 #

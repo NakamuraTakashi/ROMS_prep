@@ -16,12 +16,14 @@ PROGRAM frcATM2SWAT
   use netcdf
   use eccodes
   use mod_roms_netcdf
-!  use mod_interpolation
+  use mod_interpolation
   use mod_calendar
  
   implicit none
   
 !-------------------------------------------------------------------------------
+  real(8) :: Tlat, Blat, Llon, Rlon
+  character(256) :: BATH_FILE
   integer :: Syear, Smonth, Sday
   integer :: Eyear, Emonth, Eday
 !----------------------------------------------------------------------
@@ -217,7 +219,7 @@ PROGRAM frcATM2SWAT
   character(256) :: p4
 
   character(9) :: FRC_yyyymmdd = "_20020701" 
-  character(30) :: TIME_ATT  = "days since 2000-01-01 00:00:00"
+!  character(30) :: TIME_ATT  = "days since 2000-01-01 00:00:00"
   character(256) :: FRC_FILE(2)
 
   character(256) :: NC_NAME(N_OutPar) = (/    &
@@ -312,6 +314,7 @@ PROGRAM frcATM2SWAT
   
   real(8), allocatable :: in_data(:,:, :), in_data2(:,:, :)
   real(8), allocatable :: out_data(:,:,:) ! output forcing data
+  logical, allocatable :: in_range(:,:)
        
   integer :: Im, Jm
 
@@ -325,13 +328,11 @@ PROGRAM frcATM2SWAT
 
   real(8) :: t
   real(8) :: time(1)
-  integer, allocatable :: ID_cont(:,:)
-  real(8), allocatable :: w_cont(:,:)
   integer :: start1D(1), count1D(1)
   integer :: start3D(3), count3D(3)
   
   character(256) :: IN_FILE(2), IN_FILE2(2)
-  integer :: iyear, imonth, iday
+  integer :: iyear, imonth, iday, iyear2
   integer :: ihour, imin
   integer :: i,j,k
   integer :: idays,ihours,ijdate,Sjdate
@@ -352,8 +353,25 @@ PROGRAM frcATM2SWAT
   real(8) :: u, v
   real(8) :: dpT, sat_VP, VP
   logical :: file_exists
+
+  integer :: Nout
+  integer :: iout
+  character(256), allocatable :: OUT_FILE(:,:)
+  character(4) :: CNUM
+  real(8) :: pcp, tmp, hmd, slr, wnd
+  real(8) :: tot_pcp, max_tmp, min_tmp, ave_hmd, tot_slr, ave_wnd
+  integer :: nbyr
+  integer :: count_subday, count_day 
+  integer :: iost 
+
+  real(8), allocatable :: lat_all(:), lon_all(:)
+  real(8), allocatable :: elev(:,:)
+  integer :: N_lat_all, N_lon_all
+  real(8) :: plat, plon, pelev
 !
 !-------------------------------------------------------------------------------
+  namelist/range/Tlat, Blat, Llon, Rlon
+  namelist/gebco/BATH_FILE
   namelist/sdate/Syear, Smonth, Sday
   namelist/edate/Eyear, Emonth, Eday
 #if defined JMA_MSM
@@ -371,7 +389,11 @@ PROGRAM frcATM2SWAT
   namelist/frc_era5_2/FRC_prefix
 #endif
   ! Read parameters in namelist file
-  
+
+  read (5, nml=range)
+  rewind(5)
+  read (5, nml=gebco)
+  rewind(5) 
   read (5, nml=sdate)
   rewind(5)
   read (5, nml=edate)
@@ -392,69 +414,13 @@ PROGRAM frcATM2SWAT
   rewind(5)
   read (5, nml=frc_era5_2)
 #endif
+
 !---- Modify time-unit description ---------------------------------
+
+!  TIME_ATT(12:15)=YYYY
+!  TIME_ATT(17:18)=MM
+!  TIME_ATT(20:21)=DD
       
-  write (YYYY, "(I4.4)") Ryear
-  write (MM, "(I2.2)") Rmonth
-  write (DD, "(I2.2)") Rday
-  
-  TIME_ATT(12:15)=YYYY
-  TIME_ATT(17:18)=MM
-  TIME_ATT(20:21)=DD
-      
-!---- Read ROMS grid netCDF file --------------------------------
-  write(*,*) "OPEN: ", trim( GRID_FILE )
-  
-  ! Open NetCDF grid file
-  call check( nf90_open(trim( GRID_FILE ), nf90_nowrite, ncid) )
-  ! Get dimension data
-  call get_dimension(ncid, 'xi_rho',  Nxr)
-  call get_dimension(ncid, 'eta_rho', Nyr)
-  L = Nxr-1
-  M = Nyr-1
-  allocate( latr(0:L, 0:M) )
-  allocate( lonr(0:L, 0:M) )
-  allocate( cosAu(0:L, 0:M) )
-  allocate( sinAu(0:L, 0:M) )
-  allocate( cosAv(0:L, 0:M) )
-  allocate( sinAv(0:L, 0:M) )
-  allocate(out_data(0:L, 0:M, N_OutPar))
-  allocate(ID_cont(4, Nxr*Nyr))
-  allocate(w_cont(4, Nxr*Nyr))
-
-  ! Get variable id
-  call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
-  call check( nf90_get_var(ncid, var_id, latr) )
-  call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
-  call check( nf90_get_var(ncid, var_id, lonr) )
-  
-  ! Close NetCDF file
-  call check( nf90_close(ncid) )
-  
-  do j=0,M
-    do i=0,L-1
-      d_lat=latr(i+1,j)-latr(i,j)
-      d_lon=lonr(i+1,j)-lonr(i,j)
-      d_lon=d_lon*cos(latr(i,j)/180.0d0*PI)
-      cosAu(i,j) = d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAu(i,j) = d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-    enddo
-  enddo
-  cosAu(L,:) = cosAu(L-1,:)
-  sinAu(L,:) = sinAu(L-1,:)
-
-  do j=0,M-1
-    do i=0,L
-      d_lat=latr(i,j+1)-latr(i,j)
-      d_lon=lonr(i,j)-lonr(i,j+1)
-      d_lon=d_lon*cos(latr(i,j)/180.0d0*PI)
-      cosAv(i,j) = d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAv(i,j) = d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-    enddo         
-  enddo
-  cosAv(:,M) = cosAv(:,M-1)
-  sinAv(:,M) = sinAv(:,M-1)
-
   write (YYYY, "(I4.4)") Syear
   write (MM, "(I2.2)") Smonth
   write (DD, "(I2.2)") Sday
@@ -598,33 +564,97 @@ PROGRAM frcATM2SWAT
   call codes_close_file(ifile)
 #endif
 
+  allocate(in_range(Im, Jm))
   allocate(in_data(Im, Jm, N_InPar))
   allocate(in_data2(Im, Jm, N_OutPar))
 
+!---- Read GEBCO grid netCDF file --------------------------------
+  write(*,*) "OPEN: ", trim( BATH_FILE )
+  
+  ! Open NetCDF grid file
+  call check( nf90_open(trim( BATH_FILE ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lat', N_lat_all)
+  call get_dimension(ncid, 'lon', N_lon_all)
+  ! Allocate variable
+  allocate(lat_all(N_lat_all))
+  allocate(lon_all(N_lon_all))
+  allocate(elev(N_lon_all,N_lat_all))
+  ! Get variable id
+  call check( nf90_inq_varid(ncid, 'lat', var_id) )
+  call check( nf90_get_var(ncid, var_id, lat_all) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) )
+  call check( nf90_get_var(ncid, var_id, lon_all) )
+  call check( nf90_inq_varid(ncid, 'elevation', var_id) )
+  call check( nf90_get_var(ncid, var_id, elev) )
 
-!==== Create the forcing netCDF file ===================================
+!==== Pickup indices inside the range. ===============================================
+  Nout = 0
+  do j=1, Jm
+    do i=1,Im
+#if defined DSJRA55
+      if( Blat<=lat(i,j) .and. lat(i,j)<=Tlat .and.   &
+          Llon<=lon(i,j) .and. lon(i,j)<=Rlon ) then
+#else
+      if( Blat<=lat(j) .and. lat(j)<=Tlat .and.   &
+          Llon<=lon(i) .and. lon(i)<=Rlon ) then
+#endif
+        in_range(i,j) = .true.
+        Nout = Nout + 1
+      else
+        in_range(i,j) = .false.
+      endif  
+    end do
+  end do
+
+!==== Create output files ===================================
+
+  allocate(OUT_FILE(Nout, N_OutPar))
 
   FRC_yyyymmdd(2:5)=YYYY
   FRC_yyyymmdd(6:7)=MM
   FRC_yyyymmdd(8:9)=DD
 
-  FRC_FILE(1) = trim(FRC_prefix)//FRC_yyyymmdd//'_1.nc'
-  
-  write(*,*) "CREATE: ", trim( FRC_FILE(1) )
+  iout = 0
+  do j=1, Jm
+    do i=1,Im
+      if(in_range(i,j)) then
+!#if defined DSJRA55
+!        write (CLAT, "(I2.2)") lat(i,j)
+!        write (CLON, "(I2.2)") lon(i,j)
+!#else
+!        write (CLAT, "(I2.2)") lat(j)
+!        write (CLON, "(I2.2)") lon(i)
+!#endif
+        iout = iout + 1
+        write (CNUM, "(I4.4)") iout
+        OUT_FILE(iout,1) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'_tmp.txt'
+!        OUT_FILE(iout,2) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.wnd.tmp'
+!        OUT_FILE(iout,3) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.tmp.tmp'
+!        OUT_FILE(iout,4) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.hmd.tmp'
+!        OUT_FILE(iout,5) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.slr.tmp'
+    
+        write(*,*) "CREATE: ", trim( OUT_FILE(iout,1) )
+        open(10, file=OUT_FILE(iout,1), status='replace')
+#if defined DSJRA55
+        plat = lat(i,j)
+        plon = lon(i,j)
+#else
+        plat = lat(j)
+        plon = lon(i)
+#endif
+        call LinearInterpolation2D_point(                     &
+                N_lon_all, N_lat_all, lon_all, lat_all, elev  & 
+              , plon, plat, pelev )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+        pelev = max(pelev, 0.0d0)      
+        write(10,*) "LAT     LONG     ELEV"
+        write(10,*) plat, plon, pelev
+        write(10,*) "t     pcp     tmp     hmd     slr     wnd"
+        close(10)
+      endif
+    end do
+  end do
 
 !==== LOOP set up ==========================================
   itime = 1
@@ -647,7 +677,8 @@ PROGRAM frcATM2SWAT
   
   write(*,*) jdate_Start, jdate_End, N_days
 
-  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+!  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  call jd(2000, 1, 1, jdate_Ref)
   d_jdate_Ref = dble(jdate_Ref)
   write(*,*) d_jdate_Ref
 
@@ -756,7 +787,7 @@ PROGRAM frcATM2SWAT
     ! Check end date
     if(itime>Nt) then
       write(*,*) "Completed!!!"
-      STOP
+      EXIT
     endif
 #else
     ihour = mod(ihours,24)
@@ -765,7 +796,7 @@ PROGRAM frcATM2SWAT
     ! Check end date
     if(iyear==Eyear .and. imonth==Emonth .and. iday==Eday) then
       write(*,*) "Completed!!!"
-      STOP
+      EXIT
     endif
 
     write (YYYY, "(I4.4)") iyear
@@ -1119,35 +1150,209 @@ PROGRAM frcATM2SWAT
       in_data2(:,:,8) = in_data(:,:,8)/3600.0d0  ! J h-1 m-2 -> W m-2
 #endif
     
-      time(1) = t
-      write(*,*) time(1),TIME_ATT
-
-#if defined JRA55
-      time(1) = t+1.5d0/24.0d0
+!  ---- Write data to temporary files --------------------------------  
+      
+      iout = 0
+      do j=1, Jm
+        do i=1,Im
+          if(in_range(i,j)) then
+            iout = iout + 1
+!            write(*,*) "WRITE: ", trim( OUT_FILE(iout,1) )
+            open(10, file=OUT_FILE(iout,1), status='old', position='append')
+#if defined JMA_MSM
+            pcp = in_data2(i,j,10)*3600.0d0 ! kg m-2 s-1  -> mm h-1 
+            tmp = in_data2(i,j,4)  ! degC
+            hmd = in_data2(i,j,5)  ! %
+            wnd = sqrt( in_data2(i,j,2)*in_data(i,j,2)     &
+                       +in_data2(i,j,3)*in_data2(i,j,3) )  ! m s-1
+# if defined SWRAD
+            slr = in_data2(i,j,11)*3.6d-3  ! W m-2 -> MJ m-2 h-1
+# else
+            slr = To be developed  *3.6d-3  ! W m-2 -> MJ m-2 h-1
+# endif
+#elif defined DSJRA55 || defined JRA55
+            pcp = in_data2(i,j,10)*3600.0d0 ! kg m-2 s-1  -> mm h-1 
+            tmp = in_data2(i,j,4)  ! degC
+            hmd = in_data2(i,j,5)  ! %
+            wnd = sqrt( in_data2(i,j,2)*in_data(i,j,2)     &
+                       +in_data2(i,j,3)*in_data2(i,j,3) )  ! m s-1
+# if defined BULK_FLUX
+            slr = in_data2(i,j,11)*3.6d-3  ! W m-2 -> MJ m-2 h-1 ! W m-2
+# else
+            slr = To be developed  *3.6d-3  ! W m-2 -> MJ m-2 h-1! W m-2
+# endif
 #elif defined ERA5
-      time(1) = t-0.5d0/24.0d0
-#else
-      time(1) = t+0.5d0/24.0d0
+            pcp = in_data2(i,j,6)*3600.0d0  ! kg m-2 s-1  -> mm h-1 
+            tmp = in_data2(i,j,4)  ! degC
+            hmd = in_data2(i,j,5)  ! %
+            wnd = sqrt( in_data2(i,j,2)*in_data(i,j,2)     &
+                       +in_data2(i,j,3)*in_data2(i,j,3) )  ! m s-1
+            slr = in_data2(i,j,7)*3.6d-3  ! W m-2 -> MJ m-2 h-1
 #endif
-
-      DO iparam=1,N_OutPar
-
-
-
-  
-!        start3D = (/ 1,  1,  itime /)
-!        count3D = (/ Nxr, Nyr, 1 /)     
-!        call writeNetCDF_3d(trim( NC_NAME(iparam) ), trim( FRC_FILE(iin))   &
-!            , Nxr, Nyr, 1, out_data(:,:,iparam), start3D, count3D )
-        
-      END DO
+            write(10,*) t, pcp, tmp, hmd, slr, wnd
+            close(10)
+          endif
+        end do
+      end do
 !  ---- LOOP3.3 END --------------------------------         
       itime = itime + 1
     END DO
 ! ---- LOOP2 END --------------------------------
   END DO
 !---- LOOP1 END --------------------------------
+
+!==== CREATE SWAT+ weather input files ===========================
+
+  open ( 9, file='pcp_sd.cli', status='replace')
+  write( 9,'("Hourly precipitation file names")') 
+  write( 9,'("FILENAME")') 
+
+  open (10, file='pcp.cli', status='replace')
+  write(10,'("Daily precipitation file names")') 
+  write(10,'("FILENAME")') 
+
+  open (11, file='tmp.cli', status='replace')
+  write(11,'("Daily temperature file names")') 
+  write(11,'("FILENAME")') 
+
+  open (12, file='hmd.cli', status='replace')
+  write(12,'("Daily humidity file names")') 
+  write(12,'("FILENAME")') 
+
+  open (13, file='slr.cli', status='replace')
+  write(13,'("Daily solar radiation file names")') 
+  write(13,'("FILENAME")') 
+
+  open (14, file='wnd.cli', status='replace')
+  write(14,'("Daily wind speed file names")') 
+  write(14,'("FILENAME")') 
+
+  nbyr = Eyear - Syear
+
+  DO iout=1,Nout
+    open(15, file=OUT_FILE(iout,1), status='old')
+!   Read header information
+    read (15,*)
+    read (15,*) plat, plon, pelev
+    read (15,*)
+
+!   Create SWAT+ input files
+    write (CNUM, "(I4.4)") iout
+    OUT_FILE(iout,2) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'_sd.pcp'
+    OUT_FILE(iout,3) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.pcp'
+    OUT_FILE(iout,4) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.tmp'
+    OUT_FILE(iout,5) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.hmd'
+    OUT_FILE(iout,6) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.slr'
+    OUT_FILE(iout,7) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.wnd'
+
+    open (16, file=OUT_FILE(iout,2), status='replace')
+    write(16,'("Hourly precipitation (mm h-1)")') 
+    write(16,'("NBYR  TSTEP        LAT       LONG     ELEV")') 
+    write(16,'(i4,i7,f11.5,f11.5,f9.2)') nbyr, 24, plat, plon, pelev
+
+    open (17, file=OUT_FILE(iout,3), status='replace')
+    write(17,'("Daily precipitation (mm day-1)")') 
+    write(17,'("NBYR  TSTEP        LAT       LONG     ELEV")') 
+    write(17,'(i4,i7,f11.5,f11.5,f9.2)') nbyr, 0, plat, plon, pelev
+
+    open (18, file=OUT_FILE(iout,4), status='replace')
+    write(18,'("Daily maximum & minimum temperature (degC)")') 
+    write(18,'("NBYR        LAT       LONG     ELEV")') 
+    write(18,'(i4,f11.5,f11.5,f9.2)') nbyr, plat, plon, pelev
+
+    open (19, file=OUT_FILE(iout,5), status='replace')
+    write(19,'("Daily mean humidity (%)")') 
+    write(19,'("NBYR        LAT       LONG     ELEV")') 
+    write(19,'(i4,f11.5,f11.5,f9.2)') nbyr, plat, plon, pelev
+
+    open (20, file=OUT_FILE(iout,6), status='replace')
+    write(20,'("Daily solar radiation (MJ m-2)")') 
+    write(20,'("NBYR        LAT       LONG     ELEV")') 
+    write(20,'(i4,f11.5,f11.5,f9.2)') nbyr, plat, plon, pelev
+
+    open (21, file=OUT_FILE(iout,7), status='replace')
+    write(21,'("Daily mean wind speed (m s-1)")') 
+    write(21,'("NBYR        LAT       LONG     ELEV")') 
+    write(21,'(i4,f11.5,f11.5,f9.2)') nbyr, plat, plon, pelev
+
+! -- loop start ----
+    count_subday = 0
+    count_day = 0
+    iyear2 = Syear
+
+    OUTER: DO
+      count_day = count_day + 1
+
+      max_tmp = -100.0d0
+      min_tmp = 100.0d0
+      tot_pcp = 0.0d0
+      ave_hmd = 0.0d0
+      tot_slr = 0.0d0
+      ave_wnd = 0.0d0
+
+      DO i=1,24
+        count_subday = count_subday + 1
+        read (15,*,iostat=iost) t, pcp, tmp, hmd, slr, wnd
+        if(iost/=0) exit OUTER
+        if(i==1) then
+          call cdate( nint(t)+jdate_Ref, iyear, imonth, iday )
+          if(iyear/=iyear2) then
+            iyear2 = iyear
+            count_subday = 1
+            count_day = 1
+          endif
+        endif
+        ! write *_sd.pcp file 
+        write(16,'(i4,i7,f9.2)') iyear, count_subday, pcp
+
+        max_tmp = max( max_tmp, tmp )
+        min_tmp = min( min_tmp, tmp )
+        tot_pcp = tot_pcp + pcp
+        ave_hmd = ave_hmd + hmd
+        tot_slr = tot_slr + slr
+        ave_wnd = ave_wnd + wnd
   
+      END DO
+
+      ave_hmd = ave_hmd/24.0d0
+      ave_wnd = ave_wnd/24.0d0
+      ! write *.pcp file 
+      write(17,'(i4,i7,f9.2)') iyear, count_day, tot_pcp
+      ! write *.tmp file 
+      write(18,'(i4,i7,f9.2,f9.2)') iyear, count_day, max_tmp, min_tmp
+      ! write *.hmd file 
+      write(19,'(i4,i7,f9.2)') iyear, count_day, ave_hmd
+      ! write *.slr file 
+      write(20,'(i4,i7,f9.2)') iyear, count_day, tot_slr
+      ! write *.wnd file 
+      write(21,'(i4,i7,f9.2)') iyear, count_day, ave_wnd
+
+    END DO OUTER
+
+    close(15)
+    close(16)
+    close(17)
+    close(18)
+    close(19)
+    close(20)
+    close(21)
+
+    write( 9,'(a)') trim( OUT_FILE(iout,2) )
+    write(10,'(a)') trim( OUT_FILE(iout,3) )
+    write(11,'(a)') trim( OUT_FILE(iout,4) )
+    write(12,'(a)') trim( OUT_FILE(iout,5) )
+    write(13,'(a)') trim( OUT_FILE(iout,6) )
+    write(14,'(a)') trim( OUT_FILE(iout,7) )
+  
+  END DO
+
+  close( 9)
+  close(10)
+  close(11)
+  close(12)
+  close(13)
+  close(14)
+ 
   write(*,*) 'FINISH!!'
 
 !---- End of Main program --------------------------------------------

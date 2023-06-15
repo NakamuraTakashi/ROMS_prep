@@ -37,6 +37,13 @@
 *swan_in_bottom.txt
 *swan_in_wind.txt
 *.xlsx
+*.cli
+*.pcp
+*.slr
+*.hmd
+*.wnd
+*.tmp
+*_tmp.txt
 
 # Data Files
 Data/*
