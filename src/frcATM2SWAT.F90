@@ -362,7 +362,8 @@ PROGRAM frcATM2SWAT
   real(8) :: tot_pcp, max_tmp, min_tmp, ave_hmd, tot_slr, ave_wnd
   integer :: nbyr
   integer :: count_subday, count_day 
-  integer :: iost 
+  integer :: iost
+  integer :: itstep
 
   real(8), allocatable :: lat_all(:), lon_all(:)
   real(8), allocatable :: elev(:,:)
@@ -619,23 +620,13 @@ PROGRAM frcATM2SWAT
   do j=1, Jm
     do i=1,Im
       if(in_range(i,j)) then
-!#if defined DSJRA55
-!        write (CLAT, "(I2.2)") lat(i,j)
-!        write (CLON, "(I2.2)") lon(i,j)
-!#else
-!        write (CLAT, "(I2.2)") lat(j)
-!        write (CLON, "(I2.2)") lon(i)
-!#endif
+
         iout = iout + 1
         write (CNUM, "(I4.4)") iout
         OUT_FILE(iout,1) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'_tmp.txt'
-!        OUT_FILE(iout,2) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.wnd.tmp'
-!        OUT_FILE(iout,3) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.tmp.tmp'
-!        OUT_FILE(iout,4) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.hmd.tmp'
-!        OUT_FILE(iout,5) = trim(FRC_prefix)//FRC_yyyymmdd//'_'//CNUM//'.slr.tmp'
     
         write(*,*) "CREATE: ", trim( OUT_FILE(iout,1) )
-        open(10, file=OUT_FILE(iout,1), status='replace')
+        open(10+iout, file=OUT_FILE(iout,1), status='replace')
 #if defined DSJRA55
         plat = lat(i,j)
         plon = lon(i,j)
@@ -648,10 +639,10 @@ PROGRAM frcATM2SWAT
               , plon, plat, pelev )
 
         pelev = max(pelev, 0.0d0)      
-        write(10,*) "LAT     LONG     ELEV"
-        write(10,*) plat, plon, pelev
-        write(10,*) "t     pcp     tmp     hmd     slr     wnd"
-        close(10)
+        write(10+iout,*) "LAT     LONG     ELEV"
+        write(10+iout,*) plat, plon, pelev
+        write(10+iout,*) "t     pcp     tmp     hmd     slr     wnd"
+
       endif
     end do
   end do
@@ -1157,8 +1148,6 @@ PROGRAM frcATM2SWAT
         do i=1,Im
           if(in_range(i,j)) then
             iout = iout + 1
-!            write(*,*) "WRITE: ", trim( OUT_FILE(iout,1) )
-            open(10, file=OUT_FILE(iout,1), status='old', position='append')
 #if defined JMA_MSM
             pcp = in_data2(i,j,10)*3600.0d0 ! kg m-2 s-1  -> mm h-1 
             tmp = in_data2(i,j,4)  ! degC
@@ -1189,8 +1178,8 @@ PROGRAM frcATM2SWAT
                        +in_data2(i,j,3)*in_data2(i,j,3) )  ! m s-1
             slr = in_data2(i,j,7)*3.6d-3  ! W m-2 -> MJ m-2 h-1
 #endif
-            write(10,*) t, pcp, tmp, hmd, slr, wnd
-            close(10)
+            write(10+iout,*) t, pcp, tmp, hmd, slr, wnd
+
           endif
         end do
       end do
@@ -1200,6 +1189,10 @@ PROGRAM frcATM2SWAT
 ! ---- LOOP2 END --------------------------------
   END DO
 !---- LOOP1 END --------------------------------
+
+  DO iout=1,Nout
+    close(10+iout)
+  END DO
 
 !==== CREATE SWAT+ weather input files ===========================
 
@@ -1257,26 +1250,25 @@ PROGRAM frcATM2SWAT
 
     open (18, file=OUT_FILE(iout,4), status='replace')
     write(18,'("Daily maximum & minimum temperature (degC)")') 
-    write(18,'("NBYR        LAT       LONG     ELEV")') 
-    write(18,'(i4,f11.5,f11.5,f9.2)') nbyr, plat, plon, pelev
+    write(18,'("NBYR  TSTEP        LAT       LONG     ELEV")') 
+    write(18,'(i4,i7,f11.5,f11.5,f9.2)') nbyr, 0, plat, plon, pelev
 
     open (19, file=OUT_FILE(iout,5), status='replace')
     write(19,'("Daily mean humidity (%)")') 
-    write(19,'("NBYR        LAT       LONG     ELEV")') 
-    write(19,'(i4,f11.5,f11.5,f9.2)') nbyr, plat, plon, pelev
+    write(19,'("NBYR  TSTEP        LAT       LONG     ELEV")') 
+    write(19,'(i4,i7,f11.5,f11.5,f9.2)') nbyr, 0, plat, plon, pelev
 
     open (20, file=OUT_FILE(iout,6), status='replace')
     write(20,'("Daily solar radiation (MJ m-2)")') 
-    write(20,'("NBYR        LAT       LONG     ELEV")') 
-    write(20,'(i4,f11.5,f11.5,f9.2)') nbyr, plat, plon, pelev
+    write(20,'("NBYR  TSTEP        LAT       LONG     ELEV")') 
+    write(20,'(i4,i7,f11.5,f11.5,f9.2)') nbyr, 0, plat, plon, pelev
 
     open (21, file=OUT_FILE(iout,7), status='replace')
     write(21,'("Daily mean wind speed (m s-1)")') 
-    write(21,'("NBYR        LAT       LONG     ELEV")') 
-    write(21,'(i4,f11.5,f11.5,f9.2)') nbyr, plat, plon, pelev
+    write(21,'("NBYR  TSTEP        LAT       LONG     ELEV")') 
+    write(21,'(i4,i7,f11.5,f11.5,f9.2)') nbyr, 0, plat, plon, pelev
 
 ! -- loop start ----
-    count_subday = 0
     count_day = 0
     iyear2 = Syear
 
@@ -1290,8 +1282,14 @@ PROGRAM frcATM2SWAT
       tot_slr = 0.0d0
       ave_wnd = 0.0d0
 
-      DO i=1,24
-        count_subday = count_subday + 1
+#if defined JRA55
+      itstep=8   ! 3-hourly
+#else
+      itstep=24  ! 1-hourly 
+#endif
+      count_subday = 0
+
+      DO i=1,itstep
         read (15,*,iostat=iost) t, pcp, tmp, hmd, slr, wnd
         if(iost/=0) exit OUTER
         if(i==1) then
@@ -1303,7 +1301,7 @@ PROGRAM frcATM2SWAT
           endif
         endif
         ! write *_sd.pcp file 
-        write(16,'(i4,i7,f9.2)') iyear, count_subday, pcp
+        write(16,'(i4,i5,i5,f9.2)') iyear, count_day, count_subday, pcp
 
         max_tmp = max( max_tmp, tmp )
         min_tmp = min( min_tmp, tmp )
@@ -1311,21 +1309,23 @@ PROGRAM frcATM2SWAT
         ave_hmd = ave_hmd + hmd
         tot_slr = tot_slr + slr
         ave_wnd = ave_wnd + wnd
+
+        count_subday = count_subday + 1
   
       END DO
 
-      ave_hmd = ave_hmd/24.0d0
-      ave_wnd = ave_wnd/24.0d0
+      ave_hmd = ave_hmd/dble(itstep)
+      ave_wnd = ave_wnd/dble(itstep)
       ! write *.pcp file 
-      write(17,'(i4,i7,f9.2)') iyear, count_day, tot_pcp
+      write(17,'(i4,i5,f9.2)') iyear, count_day, tot_pcp
       ! write *.tmp file 
-      write(18,'(i4,i7,f9.2,f9.2)') iyear, count_day, max_tmp, min_tmp
+      write(18,'(i4,i5,f9.2,f9.2)') iyear, count_day, max_tmp, min_tmp
       ! write *.hmd file 
-      write(19,'(i4,i7,f9.2)') iyear, count_day, ave_hmd
+      write(19,'(i4,i5,f9.2)') iyear, count_day, ave_hmd
       ! write *.slr file 
-      write(20,'(i4,i7,f9.2)') iyear, count_day, tot_slr
+      write(20,'(i4,i5,f9.2)') iyear, count_day, tot_slr
       ! write *.wnd file 
-      write(21,'(i4,i7,f9.2)') iyear, count_day, ave_wnd
+      write(21,'(i4,i5,f9.2)') iyear, count_day, ave_wnd
 
     END DO OUTER
 
