@@ -30,7 +30,7 @@
 /
 
 &sdate
-  Syear  = 2017   ! Starting year
+  Syear  = 2010   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
@@ -43,11 +43,18 @@
 
 &frc_era5_1
 !  NCnum = 1  ! Number of ERA5 files 
-  NCnum = 5  ! Number of ERA5 files 
+  NCnum = 12  ! Number of ERA5 files 
 /
 &frc_era5_2
 !  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
-  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2017.nc",
+  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2010.nc",
+               "../../Data/era5/Panay/era5_atm_2011.nc",
+               "../../Data/era5/Panay/era5_atm_2012.nc",
+               "../../Data/era5/Panay/era5_atm_2013.nc",
+               "../../Data/era5/Panay/era5_atm_2014.nc",
+               "../../Data/era5/Panay/era5_atm_2015.nc",
+               "../../Data/era5/Panay/era5_atm_2016.nc",
+               "../../Data/era5/Panay/era5_atm_2017.nc",
                "../../Data/era5/Panay/era5_atm_2018.nc",
                "../../Data/era5/Panay/era5_atm_2019.nc",
                "../../Data/era5/Panay/era5_atm_2021.nc",

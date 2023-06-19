@@ -1042,7 +1042,7 @@ PROGRAM frcATM2SWAT
         in_data2(:,:,9) = in_data(:,:,9)*0.01  ! percent -> ratio(0 to 1)
       endif
     ! for rain (Total precipitation rate)
-      in_data2(:,:,10) = in_data(:,:,10)/3600.0d0  ! kg m-2 h-1 -> kg m-2 s-1 
+      in_data2(:,:,10) = in_data(:,:,10)/3600.0d0  ! kg m-2 h-1 -> kg m-2 s-1 (= mm s-1) 
 # if defined SWRAD
     ! for short-wave radiation
       in_data2(:,:,11) = in_data(:,:,11)  ! W m-2 -> W m-2
@@ -1079,7 +1079,7 @@ PROGRAM frcATM2SWAT
       in_data2(:,:,8) = in_data(:,:,8)*0.01  ! percent -> ratio(0 to 1)
       in_data2(:,:,9) = in_data(:,:,9)*0.01  ! percent -> ratio(0 to 1)
     ! for rain (Total precipitation rate)
-      in_data2(:,:,10) = in_data(:,:,10)  ! kg m-2 s-1 -> kg m-2 s-1     
+      in_data2(:,:,10) = in_data(:,:,10)  ! kg m-2 s-1 -> kg m-2 s-1  (= mm s-1) 
 # if defined BULK_FLUX
     ! for bulk flux parameters, heating -> positive, cooling -> negattive
       in_data2(:,:,11) = -in_data(:,:,11)  ! W m-2 -> W m-2
@@ -1105,7 +1105,7 @@ PROGRAM frcATM2SWAT
       in_data2(:,:,8) = in_data(:,:,8)*0.01  ! percent -> ratio(0 to 1)
       in_data2(:,:,9) = in_data(:,:,9)*0.01  ! percent -> ratio(0 to 1)
     ! for rain (Total precipitation rate)
-      in_data2(:,:,10) = in_data(:,:,10)*1.0d0/86400.0d0  ! mm day-1 -> kg m-2 s-1  
+      in_data2(:,:,10) = in_data(:,:,10)*1.0d0/86400.0d0  ! mm day-1 -> kg m-2 s-1 (= mm s-1) 
 # if defined BULK_FLUX
     ! for bulk flux parameters, heating -> positive, cooling -> negattive
       in_data2(:,:,11) = -in_data(:,:,11)  ! W m-2 -> W m-2
@@ -1135,7 +1135,7 @@ PROGRAM frcATM2SWAT
         end do
       end do
     ! for rain (Total precipitation rate)
-      in_data2(:,:,6) = in_data(:,:,6)*1000.0d0/3600.0d0  ! m h-1 -> kg m-2 s-1  
+      in_data2(:,:,6) = in_data(:,:,6)*1000.0d0/3600.0d0  ! m h-1 -> kg m-2 s-1 (= mm s-1)   
     ! for bulk flux parameters, heating -> positive, cooling -> negattive
       in_data2(:,:,7) = in_data(:,:,7)/3600.0d0  ! J h-1 m-2 -> W m-2
       in_data2(:,:,8) = in_data(:,:,8)/3600.0d0  ! J h-1 m-2 -> W m-2
@@ -1149,7 +1149,7 @@ PROGRAM frcATM2SWAT
           if(in_range(i,j)) then
             iout = iout + 1
 #if defined JMA_MSM
-            pcp = in_data2(i,j,10)*3600.0d0 ! kg m-2 s-1  -> mm h-1 
+            pcp = max( in_data2(i,j,10)*3600.0d0, 0.0d0 ) ! kg m-2 s-1 (= mm s-1)  -> mm h-1 
             tmp = in_data2(i,j,4)  ! degC
             hmd = in_data2(i,j,5)  ! %
             wnd = sqrt( in_data2(i,j,2)*in_data(i,j,2)     &
@@ -1160,7 +1160,7 @@ PROGRAM frcATM2SWAT
             slr = To be developed  *3.6d-3  ! W m-2 -> MJ m-2 h-1
 # endif
 #elif defined DSJRA55 || defined JRA55
-            pcp = in_data2(i,j,10)*3600.0d0 ! kg m-2 s-1  -> mm h-1 
+            pcp = max( in_data2(i,j,10)*3600.0d0, 0.0d0 ) ! kg m-2 s-1 (= mm s-1)  -> mm h-1 
             tmp = in_data2(i,j,4)  ! degC
             hmd = in_data2(i,j,5)  ! %
             wnd = sqrt( in_data2(i,j,2)*in_data(i,j,2)     &
@@ -1171,7 +1171,7 @@ PROGRAM frcATM2SWAT
             slr = To be developed  *3.6d-3  ! W m-2 -> MJ m-2 h-1! W m-2
 # endif
 #elif defined ERA5
-            pcp = in_data2(i,j,6)*3600.0d0  ! kg m-2 s-1  -> mm h-1 
+            pcp = max( in_data2(i,j,6)*3600.0d0, 0.0d0 )  ! kg m-2 s-1 (= mm s-1) -> mm h-1 
             tmp = in_data2(i,j,4)  ! degC
             hmd = in_data2(i,j,5)  ! %
             wnd = sqrt( in_data2(i,j,2)*in_data(i,j,2)     &

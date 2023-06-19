@@ -25,7 +25,7 @@ Rlon = 127    # Longitude (degrees) of the top-right corner of the grid.
 Blat = 9      # Latitude  (degrees) of the bottom-left corner of the grid.
 Tlat = 15     # Latitude  (degrees) of the top-right corner of the grid.
 
-Year='2022'
+Year='2010'
 
 OUTPUT_DIR = '../../Data/era5/Panay'
 
