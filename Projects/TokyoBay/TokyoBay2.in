@@ -37,14 +37,14 @@
 /
 
 &sdate
-  Syear  = 2020   ! Starting year
+  Syear  = 2018   ! Starting year
   Smonth = 1     ! Starting month
   Sday   = 1     ! Starting day
 /
 
 &edate
-  Eyear  = 2021   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
+  Eyear  = 2018   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 2      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -146,7 +146,13 @@
 
 &frc_jmamsm
   MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Air/TokyoBay2_frc_MSMgb"
+!  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Air/TokyoBay2_frc_MSMgb"
+  FRC_prefix  = "TokyoBay2_frc_MSMgb"
 !  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
 !  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Air/TokyoBay2_frc_MSMnc"
+/
+
+&frc_jmalsm
+  LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
+  FRC_prefix  = "TokyoBay2_frc_LSM"
 /

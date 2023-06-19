@@ -4,6 +4,7 @@
 #
 export MY_CPP_FLAGS="-DJMA_MSM"
 #export MY_CPP_FLAGS="-DDSJRA55"
+#export MY_CPP_FLAGS="-DJMA_LSM"
 #export MY_CPP_FLAGS="-DJRA55"
 #export MY_CPP_FLAGS="-DERA5"
 
@@ -13,6 +14,7 @@ export MY_CPP_FLAGS="-DJMA_MSM"
 #
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSWRAD"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DNETCDF_INPUT"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJMA_MSM_CLOUD_ONLY"
 
 # ---- For JRA55 or DSJRA55 option --------------
 # BULK_FLUX: Downward/Upward short-wave/long-wave radiation flag
@@ -29,6 +31,6 @@ gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}
 export OMP_NUM_THREADS=12
 rm *.mod
 
-#./frcATM2ROMS.exe < TokyoBay1.in
+./frcATM2ROMS.exe < TokyoBay1.in
 #./frcATM2ROMS.exe < TokyoBay2.in
-./frcATM2ROMS.exe < TokyoBay3.in
+#./frcATM2ROMS.exe < TokyoBay3.in

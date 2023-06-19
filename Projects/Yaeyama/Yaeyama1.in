@@ -111,6 +111,11 @@
   FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc"
 /
 
+&frc_jmalsm
+  LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
+  FRC_prefix  = "Yaeyama1_frc_LSM"
+/
+
 &tide
   TIDE_DATA_dir = "C:/cygwin64/home/Takashi/ROMS_prep/src/"   ! For NAO99/NAO99J
   TIDE_prefix   = "Yaeyama1_tide_nao99Jb_test"

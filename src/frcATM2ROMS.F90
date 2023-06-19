@@ -6,10 +6,25 @@
 # if defined NETCDF_INPUT
 #  undef SWRAD
 # endif
+# if defined JMA_MSM_CLOUD_ONLY
+#  undef SWRAD
+# endif
+
 #elif defined DSJRA55 || defined JRA55
+# undef NETCDF_INPUT
 # undef SWRAD
+# undef JMA_MSM_CLOUD_ONLY
+
+#elif defined JMA_LSM
+# undef NETCDF_INPUT
+# undef BULK_FLUX
+# undef SWRAD
+# undef JMA_MSM_CLOUD_ONLY
+
 #elif defined ERA5
 # define NETCDF_INPUT
+# undef JMA_MSM_CLOUD_ONLY
+
 #endif
 
 PROGRAM frcATM2ROMS
@@ -122,6 +137,28 @@ PROGRAM frcATM2ROMS
     ,5         ,4         ,1          &  ! Upward long-wave radiation flux  (W m-2)
 # endif
     /), (/3, N_InPar/))
+
+#elif defined JMA_LSM
+!--- JMA_MSM parameter setting -----------------
+  character(256) :: LSM_dir
+  character(256) :: FRC_prefix
+
+  integer, parameter :: N_InPar  = 5
+  integer, parameter :: N_OutPar = 5
+  integer, parameter :: N_OutPar1 = 5
+
+  character(len=*), parameter :: GRIB_prefix  = "LANAL_"
+  character(len=*), parameter :: GRIB_suffix  = ".grb2"
+
+  character(256) :: GRIB_NAME(N_InPar) = (/   &
+     "10u  "     &
+    ,"10v  "     &
+    ,"t    "     &
+    ,"r    "     &
+    ,"prmsl"     &
+    /)
+  integer :: GRIB_LEVEL(5) = (/ 10,10,2,2,0 /)
+
 
 #elif defined JRA55
 !--- JRA55 parameter setting -----------------
@@ -305,6 +342,7 @@ PROGRAM frcATM2ROMS
     /)
 
   real(8), parameter :: PI = 3.141592653589793d0
+  real(8), parameter :: rad2deg = 180.0d0/PI
   real(8), allocatable :: latr(:, :)
   real(8), allocatable :: lonr(:, :)
   real(8), allocatable :: cosAu(:, :)
@@ -317,7 +355,7 @@ PROGRAM frcATM2ROMS
        
   integer :: Im, Jm
 
-#if defined DSJRA55
+#if defined DSJRA55 || defined JMA_LSM
   real(8), allocatable :: lat(:, :), lon(:, :)
   real(8), allocatable :: cosAx(:, :), sinAx(:, :)
   real(8), allocatable :: cosAy(:, :), sinAy(:, :)
@@ -354,6 +392,8 @@ PROGRAM frcATM2ROMS
   real(8) :: u, v
   real(8) :: dpT, sat_VP, VP
   logical :: file_exists
+  real(8) :: xp,yp
+
 !
 !-------------------------------------------------------------------------------
   namelist/grd/GRID_FILE
@@ -366,6 +406,9 @@ PROGRAM frcATM2ROMS
 #elif defined DSJRA55
   namelist/frc_dsjra55/DSJRA55_dir
   namelist/frc_dsjra55/FRC_prefix
+#elif defined JMA_LSM
+  namelist/frc_jmalsm/LSM_dir
+  namelist/frc_jmalsm/FRC_prefix
 #elif defined JRA55
   namelist/frc_jra55/JRA55_dir
   namelist/frc_jra55/FRC_prefix
@@ -389,6 +432,9 @@ PROGRAM frcATM2ROMS
 #elif defined DSJRA55
   rewind(5)
   read (5, nml=frc_dsjra55)
+#elif defined JMA_LSM
+  rewind(5)
+  read (5, nml=frc_jmalsm)
 #elif defined JRA55
   rewind(5)
   read (5, nml=frc_jra55)
@@ -516,6 +562,11 @@ PROGRAM frcATM2ROMS
   IN_FILE(2) = trim(DSJRA55_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
                  "/fcst_phy2m."//GRIB_yyyymmddhh
 
+# elif defined JMA_LSM
+!---- Set JMA-LSM GRIB2 file --------------------------------
+  IN_FILE(1) = trim(LSM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
+              GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
+
 # elif defined JRA55
 !---- Read JRA55 GRIB2 file --------------------------------
   IN_FILE(1) = trim(JRA55_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
@@ -539,13 +590,15 @@ PROGRAM frcATM2ROMS
 ! Allocate variable
   allocate(values(Im*Jm))
 
-# if defined DSJRA55
+# if defined DSJRA55 || defined JMA_LSM
   allocate(lat(Im,Jm))
   allocate(lon(Im,Jm))
   allocate(cosAx(Im,Jm))
   allocate(sinAx(Im,Jm))
   allocate(cosAy(Im,Jm))
   allocate(sinAy(Im,Jm))
+
+#  if defined DSJRA55
 !  ---- Get Lat Lon coordinates from Binary file --------------
   LL_FILE = trim(DSJRA55_dir)//"Consts/Lambert5km_latlon.dat"
   open(unit=20, file=LL_FILE, action='read',               &
@@ -565,10 +618,24 @@ PROGRAM frcATM2ROMS
   end do
   close(20)
 
+#  elif defined JMA_LSM
+!  ---- Calculate Lambert Lat Lon coordinates --------------
+!        Please see "users_guide_local_analisys.pdf" (p.2) 
+  do j=1, Jm
+    do i=1,Im
+      xp = (dble(i)-449.0d0)*5000.0d0
+      yp = 7.71061d6+(dble(j)-361.0d0)*5000.0d0
+      lat(i,j) = 90.0d0-2.0d0 * atan( 1.37003d-10*(xp*xp+yp*yp)**0.69875d0 )*rad2deg
+      lon(i,j) = 1.39750d0 * atan(xp/yp)*rad2deg + 140
+    end do
+  end do
+
+#  endif
+
   write(*,*) 'NW corner:', lat(1,1),  lon(1,1)
   write(*,*) 'SW corner:', lat(1,Jm), lon(1,Jm)
-  write(*,*) 'SE corner:', lat(Im,1), lon(Im,1)
-  write(*,*) 'NE corner:', lat(Im,Jm),lon(Im,Jm)
+  write(*,*) 'NE corner:', lat(Im,1), lon(Im,1)
+  write(*,*) 'SE corner:', lat(Im,Jm),lon(Im,Jm)
    
 !  ---- Calc. rotation angle --------------
   do j=1, Jm
@@ -604,13 +671,14 @@ PROGRAM frcATM2ROMS
 
   call codes_release(igrib)
   call codes_close_file(ifile)
+  write(*,*) "CLOSE: ", trim( IN_FILE(1) )
 #endif
 
   allocate(in_data(Im, Jm, N_InPar))
   allocate(in_data2(Im, Jm, N_OutPar))
 
 !==== Calculate weight parameters for interpolation ====================
-#if defined DSJRA55
+#if defined DSJRA55 || defined JMA_LSM
 !  ---- Calc. weight parameters for interpolation --------------  
   write(*,*) "CALC.: weight parameters for interpolation"
   call weight2D_grid2(Im,Jm,lon,lat,Nxr,Nyr,lonr,latr,ID_cont,w_cont)
@@ -626,8 +694,11 @@ PROGRAM frcATM2ROMS
   FRC_yyyymmdd(6:7)=MM
   FRC_yyyymmdd(8:9)=DD
 
+#if defined JMA_MSM_CLOUD_ONLY
+  FRC_FILE(1) = trim(FRC_prefix)//FRC_yyyymmdd//'_cloud.nc'
+#else
   FRC_FILE(1) = trim(FRC_prefix)//FRC_yyyymmdd//'_1.nc'
-  
+#endif  
   write(*,*) "CREATE: ", trim( FRC_FILE(1) )
   call check( nf90_create(trim( FRC_FILE(1) ), nf90_clobber, ncid) )
   call check( nf90_def_dim(ncid, 'xi_rho', Nxr, xi_rho_dimid) )
@@ -639,6 +710,9 @@ PROGRAM frcATM2ROMS
   call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
 
   DO iparam=1,N_OutPar1
+#if defined JMA_MSM_CLOUD_ONLY
+    if(iparam<6.or.iparam>9) cycle
+#endif
     call check( nf90_def_var(ncid, trim( NC_NAME(iparam) ), NF90_REAL, dimids, var_id) )
     call check( nf90_put_att(ncid, var_id, 'long_name', trim( NC_LNAME(iparam) )) )
     call check( nf90_put_att(ncid, var_id, 'units',     trim( NC_UNIT(iparam) ) ) )
@@ -646,8 +720,9 @@ PROGRAM frcATM2ROMS
   END DO
 ! End define mode.
   call check( nf90_enddef(ncid) )
-  call check( nf90_close(ncid) ) 
-  
+  call check( nf90_close(ncid) )
+
+#if !defined JMA_LSM  && !defined JMA_MSM_CLOUD_ONLY
   FRC_FILE(2) = trim(FRC_prefix)//FRC_yyyymmdd//'_2.nc'
   
   write(*,*) "CREATE: ", trim( FRC_FILE(2) )
@@ -670,6 +745,7 @@ PROGRAM frcATM2ROMS
 ! End define mode.
   call check( nf90_enddef(ncid) )
   call check( nf90_close(ncid) )
+#endif
 
 !==== LOOP set up ==========================================
   itime = 1
@@ -856,6 +932,13 @@ PROGRAM frcATM2ROMS
     IN_FILE(2) = trim(DSJRA55_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
                    "/fcst_phy2m."//GRIB_yyyymmddhh
 
+# elif defined JMA_LSM
+!---- Read DSJRA55 GRIB2 file --------------------------------
+    ihours = ihours + 1  !!! Files exist 1 hourly interval
+
+    IN_FILE(1) = trim(LSM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
+                  GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
+
 # elif defined JRA55
 !---- Read JRA55 GRIB2 file --------------------------------
     ihours = ihours + 3  !!! Files exist 3 hourly interval
@@ -905,8 +988,13 @@ PROGRAM frcATM2ROMS
       DO iparam=1,N_InPar
 #if defined JMA_MSM
         if(iparam==N_OutPar1 .and. ijdate<jd_msmnew) cycle
+#  if defined JMA_MSM_CLOUD_ONLY
+        if(iparam<6.or.iparam>9) cycle
+#  endif
 #endif
+
 #if defined NETCDF_INPUT
+! ======= NetCDF file input ================================================
 # if defined JMA_MSM
         if(iparam>N_OutPar1) then !!! for rain (rain fall rate)
           iin=2
@@ -944,8 +1032,9 @@ PROGRAM frcATM2ROMS
         call check( nf90_close(ncid) )     
    
 #else
+! ======= GRIB2 file input ================================================
 !      ---- Seek message --------------------------------
-# if defined JMA_MSM
+# if defined JMA_MSM || defined JMA_LSM
         iin=1
 # else
         if(iparam>=10) then !!! for rain (rain fall rate)
@@ -954,43 +1043,57 @@ PROGRAM frcATM2ROMS
           iin=1
         end if
 # endif
+
         write(*,*) "OPEN: ", trim( IN_FILE(iin) )
         call codes_open_file(ifile, trim( IN_FILE(iin) ),'r', iret)
         call codes_grib_new_from_file(ifile,igrib, iret)
 
-        DO WHILE (iret /= GRIB_END_OF_FILE)
-#if defined JMA_MSM
+        DO WHILE (iret /= CODES_END_OF_FILE)
+# if defined JMA_MSM
           call codes_get(igrib,'forecastTime',p1)
           call codes_get(igrib,'parameterName', p4)
           if (p1==GRIB_STEP(ifc) .and.             &
               trim(p4)==trim(GRIB_NAME(iparam))  ) exit
-#elif defined DSJRA55
+# elif defined DSJRA55
           call codes_get(igrib,'parameterCategory',p1)
           call codes_get(igrib,'parameterNumber', p2)
           call codes_get(igrib,'typeOfFirstFixedSurface', p3)
           call codes_get(igrib,'parameterName', p4)
           if (p1==GRIB_NUM(1,iparam) .and. p2==GRIB_NUM(2,iparam) .and. &
               p3==GRIB_NUM(3,iparam)   ) exit
-#elif defined JRA55
+# elif defined JMA_LSM
+          call codes_get(igrib,'level',p1)
+          call codes_get(igrib,'shortName', p4)
+          if (p1==GRIB_LEVEL(iparam) .and.             &
+              trim(p4)==trim(GRIB_NAME(iparam))  ) exit
+# elif defined JRA55
           call codes_get(igrib,'indicatorOfParameter',p1)
           call codes_get(igrib,'parameterName', p4)
           if (p1==GRIB_NUM(iparam) ) exit
-#endif
+# endif
           call codes_release(igrib)
           call codes_grib_new_from_file(ifile,igrib, iret)
         END DO
    
         write(*,*) "READ GRIB DATA: ", trim(p4)
+
+# if defined JMA_LSM
+        call codes_get(igrib,'dataDate',YYYYMMDD(iparam))
+        write(*,*) 'dataDate = ', YYYYMMDD(iparam)
+        call codes_get(igrib,'dataTime',hhmm(iparam))
+        write(*,*) 'dataTime = ', hhmm(iparam)
+# else
         call codes_get(igrib,'validityDate',YYYYMMDD(iparam))
         write(*,*) 'validityDate = ', YYYYMMDD(iparam)
         call codes_get(igrib,'validityTime',hhmm(iparam))
         write(*,*) 'validityTime = ', hhmm(iparam)
+# endif
   
-!        call codes_get(igrib,'dataDate',YYYYMMDD)
         call codes_get(igrib,'values', values)
         call codes_release(igrib)
-        call codes_close_file(ifile)      
-        
+        call codes_close_file(ifile) 
+        write(*,*) "CLOSE: ", trim( IN_FILE(iin) )
+     
         do i=1, Jm
           istart = 1 + Im*(i-1)
           iend   = Im*i
@@ -1000,6 +1103,7 @@ PROGRAM frcATM2ROMS
       END DO
 
 #if defined NETCDF_INPUT
+! ======= NetCDF file input ================================================
     ! Set date & time
       call check( nf90_open(trim( IN_FILE(1) ), nf90_nowrite, ncid) )
       start1D = (/ ifc /)
@@ -1018,12 +1122,13 @@ PROGRAM frcATM2ROMS
 # endif
 
 #else
+! ======= GRIB2 file input ================================================
     ! Set date & time
-      iyear  = YYYYMMDD(1)/10000
-      imonth = (YYYYMMDD(1)-iyear*10000)/100
-      iday   = YYYYMMDD(1)-iyear*10000-imonth*100
-      ihour  = hhmm(1)/100
-      imin   = hhmm(1)-100*ihour
+      iyear  = YYYYMMDD(7)/10000
+      imonth = (YYYYMMDD(7)-iyear*10000)/100
+      iday   = YYYYMMDD(7)-iyear*10000-imonth*100
+      ihour  = hhmm(7)/100
+      imin   = hhmm(7)-100*ihour
 
     !  ihour  = ihour-1 ! since time for precipitation is set +1 hour
 
@@ -1033,6 +1138,7 @@ PROGRAM frcATM2ROMS
 #endif
 !  ---- LOOP3.1 END --------------------------------
 #if defined JMA_MSM
+# if !defined JMA_MSM_CLOUD_ONLY
     ! for Pair (Pressure)
       if(ijdate<jd_msmnew) then
         in_data2(:,:,1) = in_data(:,:,1)  ! hPa -> millibar (= hPa) 
@@ -1050,6 +1156,7 @@ PROGRAM frcATM2ROMS
       endif
     ! for Qait (Relative humidity)
       in_data2(:,:,5) = in_data(:,:,5)
+# endif
     ! for cloud (cloud fraction) 
       if(ijdate<jd_msmnew) then
       ! no total cloud cover data
@@ -1064,12 +1171,15 @@ PROGRAM frcATM2ROMS
         in_data2(:,:,8) = in_data(:,:,8)*0.01  ! percent -> ratio(0 to 1)
         in_data2(:,:,9) = in_data(:,:,9)*0.01  ! percent -> ratio(0 to 1)
       endif
+# if !defined JMA_MSM_CLOUD_ONLY
     ! for rain (Total precipitation rate)
       in_data2(:,:,10) = in_data(:,:,10)/3600.0d0  ! kg m-2 h-1 -> kg m-2 s-1 
-# if defined SWRAD
+#  if defined SWRAD
     ! for short-wave radiation
       in_data2(:,:,11) = in_data(:,:,11)  ! W m-2 -> W m-2
-# endif 
+#  endif
+# endif
+
 ! --------------------------------------------
 #elif defined DSJRA55
     ! for Pair (Pressure)
@@ -1111,6 +1221,21 @@ PROGRAM frcATM2ROMS
       in_data2(:,:,14) =  in_data(:,:,14) ! downward long-wave
       in_data2(:,:,15) =  in_data(:,:,15)-in_data(:,:,16) ! net long-wave  = downward - upward
 # endif
+#elif defined JMA_LSM
+    ! for Pair (Pressure) index 5->1
+      in_data2(:,:,1) = in_data(:,:,5)*0.01  ! Pa -> millibar (= hPa) 
+    ! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors
+      ! indecis: 1->2, 2-> 3 
+      do j=1, Jm
+        do i=1,Im
+          in_data2(i,j,2) = in_data(i,j,1)*cosAx(i,j)-in_data(i,j,2)*sinAy(i,j)
+          in_data2(i,j,3) = in_data(i,j,1)*sinAx(i,j)+in_data(i,j,2)*cosAy(i,j)
+        end do
+      end do
+    ! for Tair index 3->4
+      in_data2(:,:,4) = in_data(:,:,3) - 273.15d0  ! K -> degC
+    ! for Qait (Relative humidity) index 4-> 5
+      in_data2(:,:,5) = in_data(:,:,4)
 ! --------------------------------------------
 #elif defined JRA55
     ! for Pair (Pressure)
@@ -1165,6 +1290,11 @@ PROGRAM frcATM2ROMS
 #endif         
 !  ---- LOOP3.2 START --------------------------------
       DO iparam=1,N_OutPar
+#if defined JMA_MSM
+# if defined JMA_MSM_CLOUD_ONLY
+        if(iparam<6.or.iparam>9) cycle
+# endif
+#endif
         write(*,*) 'Linear Interporation: ',trim( NC_NAME(iparam) )
 
         call interp2D_grid (Im, Jm, in_data2(:,:,iparam)       &  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1172,7 +1302,7 @@ PROGRAM frcATM2ROMS
                           , Id_cont, w_cont)
       END DO
 !  ---- LOOP3.2 END --------------------------------
-
+#if !defined JMA_MSM_CLOUD_ONLY
   !!! for U V: change regular Lat Lon to ROMS grid coordinat vectors 
       do j=0,M
         do i=0,L
@@ -1182,7 +1312,7 @@ PROGRAM frcATM2ROMS
           out_data(i,j,3) = v
         enddo
       enddo
-
+#endif
 !  ---- LOOP3.3 START --------------------------------
       time(1) = t
       write(*,*) time(1),TIME_ATT
@@ -1190,19 +1320,28 @@ PROGRAM frcATM2ROMS
       count1D = (/ 1 /)
       call writeNetCDF_1d( 'time', trim( FRC_FILE(1) )                  &
             , 1, time, start1D, count1D )
-#if defined JRA55
+
+#if !defined JMA_LSM && !defined JMA_MSM_CLOUD_ONLY
+# if defined JRA55
       time(1) = t+1.5d0/24.0d0
-#elif defined ERA5
+# elif defined ERA5
       time(1) = t-0.5d0/24.0d0
-#else
+# else
       time(1) = t+0.5d0/24.0d0
-#endif
+# endif
+
       start1D = (/ itime /)
       count1D = (/ 1 /)
       call writeNetCDF_1d( 'time', trim( FRC_FILE(2) )                  &
             , 1, time, start1D, count1D )
+#endif
 
       DO iparam=1,N_OutPar
+#if defined JMA_MSM
+# if defined JMA_MSM_CLOUD_ONLY
+        if(iparam<6.or.iparam>9) cycle
+# endif
+#endif
         if(iparam>N_OutPar1) then !!! for rain (rain fall rate)
           iin=2
         else

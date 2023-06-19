@@ -198,3 +198,8 @@
   MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
   FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Air/Yaeyama2_frc_MSMnc"
 /
+
+&frc_jmalsm
+  LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
+  FRC_prefix  = "Yaeyama2_frc_LSM"
+/
