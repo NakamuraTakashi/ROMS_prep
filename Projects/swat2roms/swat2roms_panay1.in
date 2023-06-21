@@ -46,7 +46,7 @@
 /
 
 &river1
-  OUT_FILE  = "Panay1_river_Nz15_daily.nc"
+  OUT_FILE  = "Panay1_river_Nz15_daily_2011-2022.nc"
 
   GLOBAL_ATT = "(1) XXXX river, (2) XXXX river"
 
@@ -54,8 +54,7 @@
   NCS = 1  ! Number of cohesive (mud) sediment tracers
   NNS = 1  ! Number of non-cohesive (sand) sediment tracers
 
-!  Nsrc = 23 ! Number of river-runoff point sources
-  Nsrc = 1 ! Number of river-runoff point sources
+  Nsrc = 17 ! Number of river-runoff point sources
 
   Ini_riverID = 1 ! Initial river ID number for NetCDF 'river'.
 /
@@ -63,31 +62,31 @@
 &river2
 
   RIVER_FILE  = "E:/Documents/Dropbox/swat/Projects/Panay_v3/Scenarios/Default/TxtInOut/channel_sd_day.txt"
-!  RIVER_FILE  = "../../Data/Dominika/channel_sd_day20172019_ch2.txt"
-!  RIVER_FILE  = "../../Data/Ayin/SWAT+_hourly_Busuanga/channel_day.txt"
-!  RIVER_FILE  = "channel_subday.txt"   ! Busuanga
-!  RIVER_FILE  = "../../Data/todoroki/channel_subday.txt"   ! Todoroki river
-!  RIVER_FILE  = "../../Data/todoroki/channel_day.txt"   ! Todoroki river
-!         Panay Riv. |            5 rivers into Batan Bay         | 1 riv. | Aklan Riv.|           4 rivs.                    |TGL riv.
-  cha_name = "cha605","cha702","cha700","cha673","cha796","cha724","cha0269","cha0145","cha0266","cha0242","cha0249","cha0283","cha0233","cha0233","cha0233","cha0233","cha0233","cha0233" ! channel name of the river mouth.
-!  cha_name = "cha1600", "cha1192", "cha1515", "cha1669", "cha1917", "cha2619", "cha1723", "cha2521", "cha1859", "cha0788", "cha0812", "cha0422", "cha0845", "cha1928", "cha0048", "cha1143", "cha1027", "cha1040", "cha0564", "cha1283", "cha0272", "cha1833", "cha1130"
-!  cha_name = "1" ! channel name of the river mouth.
 
-  Isrc = 265     ! river_Xposition; i point index of U or V face source/sink
-  Jsrc =  76     ! river_Eposition; j point index of U or V face source/sink
-!  Isrc = 265,261,259,257,252,251,250,249,248,210,208,181,175,168,141,127,110,109, 96, 72, 57, 41,  7     ! river_Xposition; i point index of U or V face source/sink
-!  Jsrc =  76, 71, 53, 49, 44, 44, 44, 44, 44, 30, 22, 22, 28, 32, 51, 41, 34, 34, 35, 25, 21,  7,  2     ! river_Eposition; j point index of U or V face source/sink
+!               1         2         3         4         5         6          7        8          9         10        11        12       13         14        15       16        17      
+!                         5 rivers into Batan Bay             | 1 riv.  | Aklan   |           4 rivs.                     |Tangalan | 2 rivs. inside    | KII riv.| Ibajay  |  Riv.   
+!                                                             |         |  Riv.   |                                       | riv.    |  Tangalan bay     |         | Riv.    | @HRU16  
+  cha_name = "cha0702","cha0700","cha0673","cha0796","cha0724","cha0269","cha0145","cha0266","cha0242","cha0249","cha0283","cha0233","cha0362","cha0585","cha0004","cha0001","cha0024"! channel name of the river mouth.
+
+!  Isrc = 265     ! river_Xposition; i point index of U or V face source/sink
+!  Jsrc =  76     ! river_Eposition; j point index of U or V face source/sink
+! *** Panay 1 **** 
+!          1               5                  10                  15      17     
+  Isrc = 210,206,182,175,166,167,138,127,110,110,110, 98, 86, 86, 72, 54,  8 ! river_Xposition; i point index of U or V face source/sink
+  Jsrc =  28, 20, 22, 28, 34, 43, 51, 41, 34, 34, 34, 34, 29, 29, 25, 19,  2 ! river_Eposition; j point index of U or V face source/sink
 
 ! river_direction; river runoff direction (0/1)
 !  0: flow across u-face, 1: flow across v-face
-  river_dir = 0
-!  river_dir = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+!  river_dir = 0
+!             1           5             10             15    17    
+  river_dir = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 ! river_direction; river runoff direction (-1/1)
 !  -1: flow from north to south, or flow from east to west
 !   1: flow from south to north, or flow from west to east
-  river_dir2 = 1
-!  river_dir2 = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,1, 1, 1, 1, 1
+!  river_dir2 = 1
+!              1           5             10             15    17    
+  river_dir2 = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 
 
 ! If the SWAT+ output of water quarity parameters (sed, no3, etc.) are yield (not concentration),

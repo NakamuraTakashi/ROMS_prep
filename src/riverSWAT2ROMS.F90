@@ -12,7 +12,7 @@ PROGRAM riverSWAT2ROMS
 ! ---------------------------------------------------------------------
  
   character(30) :: TIME_ATT  = "days since 2000-01-01 00:00:00"
-
+  real(8), parameter :: flow_min = 1.0d-7
   real(8), allocatable :: time_all(:)
   integer :: start1D(1), count1D(1)
   integer :: start2D(2), count2D(2)
@@ -957,7 +957,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iMUD(j)) * MUD_sf(j) + MUD_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = MUD0(j)
+            endif
           endif 
         endif
     
@@ -979,7 +983,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iSAND(j)) * SAND_sf(j) + SAND_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = SAND0(j)
+            endif
           endif 
         endif
     
@@ -1000,7 +1008,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(iTIC) * TIC_sf + TIC_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = TIC_0
+          endif
         endif
       endif
   
@@ -1019,7 +1031,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(iTAlk) * TAlk_sf + TAlk_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = TAlk0
+          endif
         endif
       endif
 
@@ -1038,7 +1054,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(iOxyg) * Oxyg_sf + Oxyg_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = Oxyg0
+          endif
         endif
       endif
 
@@ -1058,7 +1078,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iDOC(j)) * DOC_sf(j) + DOC_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = DOC_0(j)
+            endif
           endif  
         endif
     
@@ -1080,7 +1104,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iPOC(j)) * POC_sf(j) + POC_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = POC_0(j)
+            endif
           endif  
         endif
     
@@ -1102,7 +1130,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iPhyt(j)) * Phyt_sf(j) + Phyt_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = Phyt_0(j)
+            endif
           endif  
         endif
     
@@ -1124,7 +1156,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iZoop(j)) * Zoop_sf(j) + Zoop_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = Zoop_0(j)
+            endif
           endif  
         endif
     
@@ -1146,7 +1182,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iPIC(j)) * PIC_sf(j) + PIC_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = PIC_0(j)
+            endif
           endif  
         endif
     
@@ -1167,7 +1207,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(iNO3) * NO3_sf + NO3_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = NO3_0
+          endif
         endif  
       endif
 
@@ -1186,7 +1230,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(iNH4) * NH4_sf + NH4_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = NH4_0
+          endif
         endif  
       endif
 
@@ -1205,7 +1253,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(iPO4) * PO4_sf + PO4_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = PO4_0
+          endif
         endif  
       endif
 
@@ -1225,7 +1277,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iDON(j)) * DON_sf(j) + DON_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = DON_0(j)
+            endif
           endif  
         endif
 
@@ -1247,7 +1303,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iPON(j)) * PON_sf(j) + PON_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = PON_0(j)
+            endif
           endif  
         endif
 
@@ -1269,7 +1329,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iDOP(j)) * DOP_sf(j) + DOP_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = DOP_0(j)
+            endif
           endif  
         endif
 
@@ -1291,7 +1355,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(iPOP(j)) * POP_sf(j) + POP_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = POP_0(j)
+            endif
           endif  
         endif
 
@@ -1313,7 +1381,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(id13C_TIC) * d13C_TIC_sf + d13C_TIC_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = d13C_TIC0
+          endif
         endif  
       endif
   
@@ -1333,7 +1405,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id13C_DOC(j)) * d13C_DOC_sf(j) + d13C_DOC_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d13C_DOC_0(j)
+            endif
           endif  
         endif
     
@@ -1355,7 +1431,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id13C_POC(j)) * d13C_POC_sf(j) + d13C_POC_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d13C_POC_0(j)
+            endif
           endif  
         endif
     
@@ -1377,7 +1457,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id13C_Phyt(j)) * d13C_Phyt_sf(j) + d13C_Phyt_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d13C_Phyt_0(j)
+            endif
           endif  
         endif
     
@@ -1399,7 +1483,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id13C_Zoop(j)) * d13C_Zoop_sf(j) + d13C_Zoop_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d13C_Zoop_0(j)
+            endif
           endif  
         endif
 
@@ -1421,7 +1509,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id13C_PIC(j)) * d13C_PIC_sf(j) + d13C_PIC_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d13C_PIC_0(j)
+            endif
           endif  
         endif
 
@@ -1442,7 +1534,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(id15N_NO3) * d15N_NO3_sf + d15N_NO3_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = d15N_NO3_0
+          endif
         endif  
       endif
 
@@ -1461,7 +1557,11 @@ PROGRAM riverSWAT2ROMS
       else
         data(1,:,:) = river_data(id15N_NH4) * d15N_NH4_sf + d15N_NH4_off
         if(Yield) then
-          data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          if( river_flow(1,1)>flow_min ) then
+            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+          else
+            data(1,:,:) = d15N_NH4_0
+          endif
         endif  
       endif
 
@@ -1481,7 +1581,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id15N_DON(j)) * d15N_DON_sf(j) + d15N_DON_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d15N_DON_0(j)
+            endif
           endif  
         endif
 
@@ -1503,7 +1607,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id15N_PON(j)) * d15N_PON_sf(j) + d15N_PON_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d15N_PON_0(j)
+            endif
           endif  
         endif
 
@@ -1525,7 +1633,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id15N_Phyt(j)) * d15N_Phyt_sf(j) + d15N_Phyt_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d15N_Phyt_0(j)
+            endif
           endif  
         endif
     
@@ -1547,7 +1659,11 @@ PROGRAM riverSWAT2ROMS
         else
           data(1,:,:) = river_data(id15N_Zoop(j)) * d15N_Zoop_sf(j) + d15N_Zoop_off(j)
           if(Yield) then
-            data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            if( river_flow(1,1)>flow_min ) then
+              data(1,:,:) = data(1,:,:)/river_flow(1,1)
+            else
+              data(1,:,:) = d15N_Zoop_0(j)
+            endif
           endif  
         endif
 

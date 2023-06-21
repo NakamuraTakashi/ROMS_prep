@@ -1,0 +1,315 @@
+&refdate
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&zcoord
+
+  N_s_rho = 15
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see wikiROMS for details).
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see wikiROMS for details).
+  
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+/
+
+&roms2roms      
+! ROMS coarse NetCDF history file name
+  ROMS_HISFILE  = "ocean_his.nc"
+
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
+! 8: mud_, 9: sand_,
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC_, 14: POC_, 
+! 15: phytoplankton_, 16: zooplankton_, 17: PIC_ 
+! 18: NO3, 19: NH4, 20: PO4, 21: DON_, 22: PON_, 23: DOP_, 24: POP_, 
+! 25: TI13C, 26: DO13C_, 27: PO13C_, 
+! 28: phyt13C_, 29: zoop13C_, 30: PI13C_
+! 31: 15NO3, 32: 15NH4, 33: DO15N_, 34: PO15N_
+! 35: phyt15N_, 36: zoop15N_
+!    
+!           1       5        10        15        20        25        30        35  
+!           |       |         |         |         |         |         |         |  
+!  romsvar = 1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+! romsvar = 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0
+/
+
+&river1
+  OUT_FILE  = "Panay0_river_Nz15_daily_2011-2022.nc"
+!  OUT_FILE  = "Panay1_river_Nz15_daily_v2.nc"
+
+  GLOBAL_ATT = "(1) XXXX river, (2) XXXX river"
+
+!  NCS = 4  ! Number of cohesive (mud) sediment tracers
+  NCS = 1  ! Number of cohesive (mud) sediment tracers
+  NNS = 1  ! Number of non-cohesive (sand) sediment tracers
+
+  Nsrc = 27 ! Number of river-runoff point sources
+
+  Ini_riverID = 1 ! Initial river ID number for NetCDF 'river'.
+/
+
+&river2
+
+  RIVER_FILE  = "E:/Documents/Dropbox/swat/Projects/Panay_v3/Scenarios/Default/TxtInOut/channel_sd_day.txt"
+
+!               1         2         3         4         5         6          7        8          9         10        11        12       13         14        15       16        17        18        19        20        21        22        23        24        25        26        27     
+!              Panay  |             5 rivers into Batan Bay             | 1 riv.  | Aklan   |           4 rivs.                     |Tangalan | 2 rivs. inside    | KII riv.| Ibajay  |  Riv.   |  Riv.   |  Riv.   |  Riv.   |  Riv.   |  Riv.   |  Riv.   |  Riv.   |  Riv.   |  Riv.   |
+!               Riv.  |                                                 |         |  Riv.   |                                       | riv.    |  Tangalan bay     |         | Riv.    | @HRU16  | @HRU1   | @HRU18  | @HRU109 | @HRU112 | @HRU111 | @HRU2003| @HRU2349| @HRU2782| @HRU2827|
+  cha_name = "cha0605","cha0702","cha0700","cha0673","cha0796","cha0724","cha0269","cha0145","cha0266","cha0242","cha0249","cha0283","cha0233","cha0362","cha0585","cha0004","cha0001","cha0024","cha0019","cha0016","cha0181","cha0189","cha0180","cha2988","cha2983","cha5112","cha5782" ! channel name of the river mouth.
+
+!  Isrc = 265     ! river_Xposition; i point index of U or V face source/sink
+!  Jsrc =  76     ! river_Eposition; j point index of U or V face source/sink
+! *** Panay 0 **** 
+!          1               5                  10                  15                  20                  25      27    
+  Isrc = 151,119,119,119,119,119,113,108,106,103,103,103,101, 98, 98, 95, 91, 83, 76, 77, 83, 86, 87,112,116,124,126    ! river_Xposition; i point index of U or V face source/sink
+  Jsrc =  72, 55, 55, 55, 55, 55, 56, 56, 54, 54, 54, 54, 54, 53, 53, 52, 50, 47, 45, 38, 34, 36, 37, 15, 13,  4,  2    ! river_Eposition; j point index of U or V face source/sink
+
+! river_direction; river runoff direction (0/1)
+!  0: flow across u-face, 1: flow across v-face
+!  river_dir = 0
+!             1           5             10             15             20             25    27    
+  river_dir = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+! river_direction; river runoff direction (-1/1)
+!  -1: flow from north to south, or flow from east to west
+!   1: flow from south to north, or flow from west to east
+!  river_dir2 = 1
+!              1           5             10             15             20             25    27    
+  river_dir2 = 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+
+
+! If the SWAT+ output of water quarity parameters (sed, no3, etc.) are yield (not concentration),
+! Turn on the flag. (.TRUE. / .FALSE.)
+  Yield = .TRUE. 
+
+  LOCAL_TIME = 0 ! UTC+9; Set time-zone difference between local time and GMT in the input data.
+
+! --- Input data setting --------------------
+!
+! *_Label: label of the target values. 
+!          If set "Null", a constant value that sets at "*0" is applied.
+! *_sf:  scale_factor
+! *_off: offset
+! output_value = input_value * scale_factor + offset
+
+! Flow
+  Flow0 = 1.0d0 ! m3/s
+  Flow_Label = "flo_out"
+!  Flow_Label = "flow_m^3/s" 
+  Flow_sf  = 1.0d0   ! m3/s -> m3/s
+  Flow_off = 0.0d0
+
+! temp
+  T0 = 25.0d0  ! deg.C
+!  T_Label = "Null" 
+!  T_Label = "temp_out" 
+  T_Label = "water_temp" 
+  T_sf  = 1.0d0
+  T_off = 0.0d0
+
+! salt
+  S0 = 1.0d0   ! psu
+  S_Label = "Null" 
+  S_sf  = 1.0d0
+  S_off = 0.0d0
+
+! mud_
+!  MUD0 = 1.0d0, 1.0d0, 1.0d0, 1.0d0    ! mud_  (kg m-3)
+!  MUD_Label = "sil_out", "cla_out", "sag_out", "lag_out" 
+!  MUD_Label = "Null", "Null" 
+!  MUD_sf  = 1.16d-3, 1.16d-3, 1.16d-3, 1.16d-3  ! tons/day ->100/(24*60*60) = 1.16*10^-3 kg/s Kg/s/(m3/s)= kg/m3
+!  MUD_off = 0.0d0, 0.0d0, 0.0d0, 0.0d0
+
+  MUD0 = 1.0d0    ! mud_  (kg m-3)
+  MUD_Label = "sed_out"
+  MUD_sf  = 1.16d-3  ! tons/day ->100/(24*60*60) = 1.16*10^-3 kg/s Kg/s/(m3/s)= kg/m3
+  MUD_off = 0.0d0
+
+! sand_
+  SAND0 = 1.0d0    ! sand_  (kg m-3)
+  SAND_Label = "san_out"
+!  SAND_Label = "sed_tons"
+!  SAND_Label = "Null"
+  SAND_sf  = 1.16d-3  ! tons/day ->100/(24*60*60) = 1.16*10^-3 kg/s
+  SAND_off = 0.0d0
+
+! TIC
+  TIC_0 = 3600.0d0     ! DIC  (umol kg-1)
+  TIC_Label = "Null"
+  TIC_sf  = 1.0d0
+  TIC_off = 0.0d0
+
+! alkalinity
+  TAlk0 = 3600.0d0     ! TA  (umol kg-1)
+  TAlk_Label = "Null"
+  TAlk_sf  = 1.0d0
+  TAlk_off = 0.0d0
+
+! oxygen
+  Oxyg0 = 200.0d0      ! DO  (umol L-1)
+!  Oxyg_Label = "Null"
+  Oxyg_Label = "dox_out"
+  Oxyg_sf  = 0.362d0  ! kgO2/day -> 10^6/32.00/(24*60*60)=0.362 mmolO2/s; mmolO2/s/(m3/s)=mmolO2/m3 = umol/L
+  Oxyg_off = 0.0d0
+
+! DOC_  ( 01: Labile DOM, 02: Refractory DOM )
+  DOC_0 = 0.0d0, 0.0d0          ! DOC  (umol L-1)
+  DOC_Label = "Null", "Null"
+  DOC_sf  = 1.0d0, 1.0d0
+  DOC_off = 0.0d0, 0.0d0
+
+! POC_  ( 01: Detritus, 02: Coarse POM (leaf litter, etc.) )
+  POC_0 = 0.0d0, 0.0d0          ! POC  (umol L-1) 
+  POC_Label = "Null", "Null"
+  POC_sf  = 1.0d0, 1.0d0
+  POC_off = 0.0d0, 0.0d0
+
+! phytoplankton_  ( 01: Dinoflagellate, 02: Diatom, 03: Coccolithophorids )
+  Phyt_0 = 0.0d0, 0.0d0, 0.0d0   ! Phytoplankton1 (umolC L-1)
+  Phyt_Label = "Null", "Null", "Null"
+  Phyt_sf  = 1.0d0, 1.0d0, 1.0d0
+  Phyt_off = 0.0d0, 0.0d0, 0.0d0
+
+! zooplankton_  ( 01: General Zooplankton )
+  Zoop_0 = 0.0d0                 ! Zooplankton (umol L-1)
+  Zoop_Label = "Null"
+  Zoop_sf  = 1.0d0
+  Zoop_off = 0.0d0
+
+! PIC_  ( 01: Coccolith (CaCO3) )
+  PIC_0 = 0.0d0                 ! PIC  (umol L-1) 
+  PIC_Label = "Null"
+  PIC_sf  = 1.0d0
+  PIC_off = 0.0d0
+
+! NO3
+  NO3_0 = 0.0d0        ! NO3  (umol L-1)  0.5d0, 10.0d0 
+  NO3_Label = "no3_out"
+!  NO3_Label = "no3"
+  NO3_sf  = 0.826d0  ! kgN/day -> 10^6/14.007/(24*60*60)=0.826 mmolN/s; mmolN/s/(m3/s)=mmolN/m3 = umol/L
+  NO3_off = 0.0d0
+
+! NH4
+  NH4_0 = 0.0d0       ! NH4  (umol L-1) 
+  NH4_Label = "nh3_out"
+!  NH4_Label = "nh3"
+  NH4_sf  = 0.826d0  ! kgN/day -> 10^6/14.007/(24*60*60)=0.826 mmolN/s
+  NH4_off = 0.0d0
+
+! PO4
+  PO4_0 = 0.0d0       ! PO4  (umol L-1) 0.05d0, 2.0d0 
+  PO4_Label = "solp_out"
+!  PO4_Label = "solp"
+  PO4_sf  = 0.374d0  ! kgP/day -> 10^6/30.97/(24*60*60)=0.374 mmolP/s
+  PO4_off = 0.0d0
+
+! DON_  ( 01: Labile DOM, 02: Refractory DOM )
+  DON_0 = 0.0d0, 0.0d0   ! DON  (umol L-1) 
+  DON_Label = "orgn_out", "orgn_out"
+!  DON_Label = "orgn", "orgn"
+!  DON_Label = "Null", "Null"
+  DON_sf  = 0.826d0, 0.826d0  ! kgN/day -> 10^6/14.007/(24*60*60)=0.826 mmolN/s
+  DON_off = 0.0d0, 0.0d0
+
+! PON_  ( 01: Detritus, 02: Coarse POM (leaf litter, etc.) )
+  PON_0 = 0.0d0, 0.0d0   ! PON  (umol L-1) 
+  PON_Label = "orgn_out", "orgn_out"
+  PON_sf  = 0.826d0, 0.826d0  ! kgN/day -> 10^6/14.007/(24*60*60)=0.826 mmolN/s
+  PON_off = 0.0d0, 0.0d0
+
+! DOP_  ( 01: Labile DOM, 02: Refractory DOM )
+  DOP_0 = 0.0d0, 0.0d0   ! DOP  (umol L-1)
+  DOP_Label = "Null", "Null"
+  DOP_sf  = 0.374d0, 0.374d0  ! kgP/day -> 10^6/30.97/(24*60*60)=0.374 mmolP/s
+  DOP_off = 0.0d0, 0.0d0
+
+! POP_  ( 01: Detritus, 02: Coarse POM (leaf litter, etc.) )   
+  POP_0 = 0.0d0, 0.0d0   ! POP  (umol L-1) 
+  POP_Label = "Null", "Null"
+  POP_sf  = 0.374d0, 0.374d0  ! kgP/day -> 10^6/30.97/(24*60*60)=0.374 mmolP/s
+  POP_off = 0.0d0, 0.0d0
+
+! TI13C   * not supported
+  d13C_TIC0 = 0.7d0                ! d13C_TIC (permill VPDB)
+  d13C_TIC_Label = "Null"
+  d13C_TIC_sf  = 1.0d0
+  d13C_TIC_off = 0.0d0
+
+! DO13C_  ( 01: Labile DOM, 02: Refractory DOM )   * not supported
+  d13C_DOC_0 = -15.0d0, -15.0d0      ! d13C_DOC (permill VPDB)
+  d13C_DOC_Label = "Null", "Null"
+  d13C_DOC_sf  = 1.0d0, 1.0d0
+  d13C_DOC_off = 0.0d0, 0.0d0
+
+! PO13C_  ( 01: Detritus, 02: Coarse POM (leaf litter, etc.) )   * not supported
+  d13C_POC_0 = -15.0d0, -15.0d0      ! d13C_POC (permill VPDB)
+  d13C_POC_Label = "Null", "Null"
+  d13C_POC_sf  = 1.0d0, 1.0d0
+  d13C_POC_off = 0.0d0, 0.0d0
+
+! phyt13C_  ( 01: Dinoflagellate, 02: Diatom, 03: Coccolithophorids )   * not supported
+  d13C_Phyt_0 = -15.0d0, -15.0d0, -15.0d0   ! d13C_phytoplankton (permill VPDB)
+  d13C_Phyt_Label = "Null", "Null", "Null"
+  d13C_Phyt_sf  = 1.0d0, 1.0d0, 1.0d0
+  d13C_Phyt_off = 0.0d0, 0.0d0, 0.0d0
+
+! zoop13C_  ( 01: General Zooplankton )   * not supported
+  d13C_Zoop_0 = -20.0d0              ! d13C_zooplankton (permill VPDB)
+  d13C_Zoop_Label = "Null"
+  d13C_Zoop_sf  = 1.0d0
+  d13C_Zoop_off = 0.0d0
+
+! PI13C_  ( 01: Coccolith (CaCO3) )   * not supported
+  d13C_PIC_0 = -5.0d0               ! d13C_PIC (permill VPDB)
+  d13C_PIC_Label = "Null"
+  d13C_PIC_sf  = 1.0d0
+  d13C_PIC_off = 0.0d0
+
+! 15NO3   * not supported
+  d15N_NO3_0 = 0.7d0                ! d15N_NO3 (permill)
+  d15N_NO3_Label = "Null"
+  d15N_NO3_sf  = 1.0d0
+  d15N_NO3_off = 0.0d0
+
+! 15NH4   * not supported
+  d15N_NH4_0 = 0.7d0                ! d15N_TIC (permill)
+  d15N_NH4_Label = "Null"
+  d15N_NH4_sf  = 1.0d0
+  d15N_NH4_off = 0.0d0
+
+! DO15N_  ( 01: Labile DOM, 02: Refractory DOM )   * not supported
+  d15N_DON_0 = -15.0d0, -15.0d0      ! d15N_DOC (permill)
+  d15N_DON_Label = "Null", "Null"
+  d15N_DON_sf  = 1.0d0, 1.0d0
+  d15N_DON_off = 0.0d0, 0.0d0
+
+! PO15N_  ( 01: Detritus, 02: Coarse POM (leaf litter, etc.) )   * not supported
+  d15N_PON_0 = -15.0d0, -15.0d0      ! d15N_POC (permill)
+  d15N_PON_Label = "Null", "Null"
+  d15N_PON_sf  = 1.0d0, 1.0d0
+  d15N_PON_off = 0.0d0, 0.0d0
+
+! phyt15N_  ( 01: Dinoflagellate, 02: Diatom, 03: Coccolithophorids )   * not supported
+  d15N_Phyt_0 = -15.0d0, -15.0d0, -15.0d0   ! d15N_phytoplankton (permill)
+  d15N_Phyt_Label = "Null", "Null", "Null"
+  d15N_Phyt_sf  = 1.0d0, 1.0d0, 1.0d0
+  d15N_Phyt_off = 0.0d0, 0.0d0, 0.0d0
+
+! zoop15N_  ( 01: General Zooplankton )   * not supported
+  d15N_Zoop_0 = -20.0d0              ! d15N_zooplankton (permill)
+  d15N_Zoop_Label = "Null"
+  d15N_Zoop_sf  = 1.0d0
+  d15N_Zoop_off = 0.0d0
+/

@@ -1,0 +1,63 @@
+
+&range
+! -------------------------------------------------------------------------
+! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
+!
+!                 ______ (Rlon,Tlat)
+!                |      |
+!                |      |
+!                |______|
+!     (Llon,Blat)                     
+!
+! On Input:
+!
+!    Llon         Box left-edge   longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Rlon         Box right-edge  longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Blat         Box bottom-edge latitude  (degress, -80 to 80 )
+!    Tlat         Box top-edge    latitude  (degress, -80 to 80 )
+!
+! Geographical and Grid parameters --------
+!
+  Llon = 121.7d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+  Rlon = 123.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+  Blat = 10.9d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+  Tlat = 12.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
+/
+
+&gebco
+! GEBCO bathymetry NetCDF file     
+  BATH_FILE = "E:/Documents/Dropbox/CORAL_NET/GIS/GEBCO_23_Jun_2022_7b4a4893e435/gebco_2021_n13.5_s10.0_w120.0_e124.0.nc"
+/
+
+&sdate
+  Syear  = 2010   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
+/
+
+&edate
+  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&frc_era5_1
+!  NCnum = 1  ! Number of ERA5 files 
+  NCnum = 12  ! Number of ERA5 files 
+/
+&frc_era5_2
+!  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
+  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2010.nc",
+               "../../Data/era5/Panay/era5_atm_2011.nc",
+               "../../Data/era5/Panay/era5_atm_2012.nc",
+               "../../Data/era5/Panay/era5_atm_2013.nc",
+               "../../Data/era5/Panay/era5_atm_2014.nc",
+               "../../Data/era5/Panay/era5_atm_2015.nc",
+               "../../Data/era5/Panay/era5_atm_2016.nc",
+               "../../Data/era5/Panay/era5_atm_2017.nc",
+               "../../Data/era5/Panay/era5_atm_2018.nc",
+               "../../Data/era5/Panay/era5_atm_2019.nc",
+               "../../Data/era5/Panay/era5_atm_2021.nc",
+               "../../Data/era5/Panay/era5_atm_2022.nc"
+  FRC_prefix  = "Panay_ERA5"
+/

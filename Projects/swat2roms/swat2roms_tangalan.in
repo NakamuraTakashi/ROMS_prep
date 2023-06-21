@@ -46,7 +46,7 @@
 /
 
 &river1
-  OUT_FILE  = "Tangalan_river_Nz15_daily.nc"
+  OUT_FILE  = "Tangalan_river_Nz15_daily_2011-2022.nc"
 
   GLOBAL_ATT = "(1) XXXX river, (2) XXXX river"
 
@@ -54,35 +54,41 @@
   NCS = 1  ! Number of cohesive (mud) sediment tracers
   NNS = 1  ! Number of non-cohesive (sand) sediment tracers
 
-  Nsrc = 2 ! Number of river-runoff point sources
+  Nsrc = 4 ! Number of river-runoff point sources
 
   Ini_riverID = 1 ! Initial river ID number for NetCDF 'river'.
 /
 
 &river2
 
-  RIVER_FILE  = "E:/Documents/Dropbox/swat/Projects/Panay/Scenarios/Default/TxtInOut/channel_sd_day.txt"
-!  RIVER_FILE  = "../../Data/Dominika/channel_sd_day20172019_ch2.txt"
-!  RIVER_FILE  = "../../Data/Ayin/SWAT+_hourly_Busuanga/channel_day.txt"
-!  RIVER_FILE  = "channel_subday.txt"   ! Busuanga
-!  RIVER_FILE  = "../../Data/todoroki/channel_subday.txt"   ! Todoroki river
-!  RIVER_FILE  = "../../Data/todoroki/channel_day.txt"   ! Todoroki river
-  
-!  cha_name = "cha002" ! channel name of the river mouth.
-  cha_name = "cha0564", "cha1283"
+  RIVER_FILE  = "E:/Documents/Dropbox/swat/Projects/Panay_v3/Scenarios/Default/TxtInOut/channel_sd_day.txt"
+
+!               1         2         3         4          
+!            Tangalan | 2 rivs. inside    | KII riv. 
+!             riv.    |  Tangalan bay     |          
+  cha_name = "cha0233","cha0362","cha0585","cha0004" ! channel name of the river mouth.
+!  cha_name = "cha1600", "cha1192", "cha1515", "cha1669", "cha1917", "cha2619", "cha1723", "cha2521", "cha1859", "cha0788", "cha0812", "cha0422", "cha0845", "cha1928", "cha0048", "cha1143", "cha1027", "cha1040", "cha0564", "cha1283", "cha0272", "cha1833", "cha1130"
 !  cha_name = "1" ! channel name of the river mouth.
 
-  Isrc = 171, 53     ! river_Xposition; i point index of U or V face source/sink
-  Jsrc =  48, 12     ! river_Eposition; j point index of U or V face source/sink
+!  Isrc = 265     ! river_Xposition; i point index of U or V face source/sink
+!  Jsrc =  76     ! river_Eposition; j point index of U or V face source/sink
+! *** Panay 1 **** 
+!          1           4              
+  Isrc = 184,132,132, 47   ! river_Xposition; i point index of U or V face source/sink
+  Jsrc =  53, 39, 39, 12   ! river_Eposition; j point index of U or V face source/sink
 
 ! river_direction; river runoff direction (0/1)
 !  0: flow across u-face, 1: flow across v-face
-  river_dir = 0, 0
+!  river_dir = 0
+!             1        4
+  river_dir = 0, 0, 0, 0
 
 ! river_direction; river runoff direction (-1/1)
 !  -1: flow from north to south, or flow from east to west
 !   1: flow from south to north, or flow from west to east
-  river_dir2 = 1, 1
+!  river_dir2 = 1
+!              1        4
+  river_dir2 = 1, 1, 1, 1
 
 
 ! If the SWAT+ output of water quarity parameters (sed, no3, etc.) are yield (not concentration),
@@ -103,8 +109,7 @@
   Flow0 = 1.0d0 ! m3/s
   Flow_Label = "flo_out"
 !  Flow_Label = "flow_m^3/s" 
-!  Flow_sf  = 1.0d0   ! m3/s -> m3/s
-  Flow_sf  = 0.01d0   ! m3/s -> m3/s
+  Flow_sf  = 1.0d0   ! m3/s -> m3/s
   Flow_off = 0.0d0
 
 ! temp
