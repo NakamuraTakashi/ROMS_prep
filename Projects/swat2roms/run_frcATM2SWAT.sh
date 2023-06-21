@@ -31,4 +31,4 @@ export OMP_NUM_THREADS=11
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-./frcATM2SWAT.exe < atm2swat.in
+./frcATM2SWAT.exe < atm2swat_panay.in

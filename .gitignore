@@ -44,6 +44,8 @@
 *.wnd
 *.tmp
 *_tmp.txt
+*.bot
+*.grd
 
 # Data Files
 Data/*
