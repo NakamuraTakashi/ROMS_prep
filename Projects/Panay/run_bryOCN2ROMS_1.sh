@@ -53,4 +53,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=7
 
-./bryOCN2ROMS_1.exe < Boracay1.in
+./bryOCN2ROMS_1.exe < Panay0.in

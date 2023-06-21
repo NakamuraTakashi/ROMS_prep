@@ -29,5 +29,5 @@ rm *.mod
 #cp getHYCOM.exe getHYCOM_2018.exe
 
 #./getHYCOM_2018.exe < getHYCOM_Palau1.in
-./getHYCOM.exe < getHYCOM_Shizugawa1.in
-#./getHYCOM.exe < getHYCOM_Boracay1.in
+#./getHYCOM.exe < getHYCOM_Shizugawa1.in
+./getHYCOM.exe < getHYCOM_Panay0.in

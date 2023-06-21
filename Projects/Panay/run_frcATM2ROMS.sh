@@ -30,7 +30,7 @@ export OMP_NUM_THREADS=7
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-#./frcATM2ROMS.exe < Boracay1.in
+./frcATM2ROMS.exe < Panay0.in
 #./frcATM2ROMS.exe < Panay1.in
-./frcATM2ROMS.exe < Tangalan.in
+#./frcATM2ROMS.exe < Tangalan.in
 #./frcATM2ROMS.exe < BatanBay.in

@@ -53,4 +53,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=7
 
-./bryOCN2ROMS_2.exe < Panay.in
+./bryOCN2ROMS_2.exe < Panay1.in

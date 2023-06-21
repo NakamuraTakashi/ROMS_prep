@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Panay1_grd_v1.3.nc"
+  GRID_FILE = "Panay1_grd_v1.4.nc"
 /
 
 &mybath
@@ -51,7 +51,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Boracay1_grd_v1.0.nc"
+  parent_grid = "Panay0_grd_v1.0.nc"
   parent_Imin = 82
   parent_Imax = 139
   parent_Jmin = 47
@@ -60,17 +60,17 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Boracay1_grd_v1.1.nc"
+  F2C_OUT_FILE = "Panay0_grd_v1.1.nc"
 /
 
 &sdate
-  Syear  = 2021   ! Starting year
+  Syear  = 2022   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
@@ -163,25 +163,13 @@
 !  NCnum = 2  ! Number of ERA5 files 
 /
 &frc_era5_2
-  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
+  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2022.nc"
 !  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2020.nc",
 !               "../../Data/era5/Panay/era5_atm_2021.nc"
   FRC_prefix  = "Panay1_frc_ERA5"
 /
 
-&roms2swan_1
-  NCnum = 1  ! Number of ERA5 files 
-!  NCnum = 2  ! Number of ERA5 files 
-/
-
-&roms2swan_2
-  ATM_FILE  =  "Panay1_frc_ERA5_20210101_1.nc"
-!  ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc",
-!               "Panay0_swan_frc_ERA5_20220101_1.nc"
-
-!  OUTPUT_Dir  = "F:/COAWST_DATA/Panay/Panay1/wind_2021"
-  OUTPUT_Dir  = "swan_wind"
-
+&swangrid
   grid_size = 300.0d0    ! Grid resolution
                          !  Cartesian coordinate => (m)
                          !  Spherical coordinate => (degree)

@@ -39,5 +39,5 @@
 
 &hycom      
 ! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "F:/HYCOM_DATA/Boracay/Boracay_HYCOM_extracted"
+  HYCOM_prefix  = "F:/HYCOM_DATA/Panay/Panay0_HYCOM_extracted"
 /
