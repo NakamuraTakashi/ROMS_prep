@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2019-2021 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2019-2023 Takashi NAKAMURA  =====
 
 PROGRAM grdROMS_update
   use netcdf
@@ -47,6 +47,25 @@ PROGRAM grdROMS_update
   real(8) :: avg_h_rg
   integer :: ir,jr
 #endif
+#if defined OUTPUT_SWAN_GRID
+  real(8), allocatable :: yr(:, :)
+  real(8), allocatable :: xr(:, :)
+!--SWAN parameters ------------------------------------------------------ 
+  real(8) :: xpc, ypc      ! geographic location of the origin of the computational grid (m)
+  real(8) :: alpc          ! direction of the positive x−axis of the computational grid (degree)
+  real(8) :: xlenc, ylenc  ! length of the computational grid (m/degree)
+  integer :: mxc, myc      ! number of meshes in computational grid
+                           !   *this number is one less than the number of grid points in this domain!
+                           !   *Maybe because indices start from 0???
+  real(8) :: dxinp, dyinp  ! mesh size of the input grid (m/degree)
+!-------------------------------------------------------------------------------
+  real(8) :: grid_size, angle
+
+  character(256) :: BOTTOM_FILE
+  character(256) :: SWN_GRD_FILE
+  character(256) :: BLOCK_BOTTOM_TXT
+  integer :: len_fn
+#endif
 
   namelist/grd/GRID_FILE
 #if defined BATH_SMOOTHING
@@ -60,6 +79,9 @@ PROGRAM grdROMS_update
   namelist/refinement/parent_Jmin, parent_Jmax
   namelist/refinement/refine_factor
   namelist/fine2coarse/F2C_OUT_FILE
+#endif
+#if defined OUTPUT_SWAN_GRID
+  namelist/swangrid/grid_size, angle
 #endif
 
   ! Read parameters in namelist file
@@ -76,6 +98,10 @@ PROGRAM grdROMS_update
   read (5, nml=refinement)
   rewind(5)
   read (5, nml=fine2coarse)
+#endif
+#if defined OUTPUT_SWAN_GRID
+  rewind(5)
+  read (5, nml=swangrid)
 #endif
 
 #if defined GRID_FINE2COARSE
@@ -150,6 +176,24 @@ PROGRAM grdROMS_update
   count2D = (/ Nxr, Nyr /)
   call check( nf90_inq_varid(ncid, 'h', var_id) ) 
   call check( nf90_get_var(ncid, var_id, h) )
+
+#if defined OUTPUT_SWAN_GRID
+  allocate( yr(0:L, 0:M) )
+  allocate( xr(0:L, 0:M) )
+# if defined UTM_COORD
+  ! Get variable id
+  call check( nf90_inq_varid(ncid, 'x_rho', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, xr) )
+  call check( nf90_inq_varid(ncid, 'y_rho', var_id) )
+  call check( nf90_get_var(ncid, var_id, yr) )
+# else
+ call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, yr) )
+  call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, xr) )
+# endif  
+#endif
+
   ! Close NetCDF file
   call check( nf90_close(ncid) )
 
@@ -237,6 +281,75 @@ PROGRAM grdROMS_update
   count2D = (/ Nxv, Nyv /)
   call writeNetCDF_2d('mask_v', trim( GRID_FILE2 )    &
         , Nxv, Nyv, vmask, start2D, count2D )
+
+#if defined OUTPUT_SWAN_GRID
+  mxc = L
+  myc = M
+  alpc = angle * 180.0d0/PI
+# if defined GRID_FINE2COARSE
+  dxinp = grid_size*dble(refine_factor)
+  dyinp = grid_size*dble(refine_factor)
+# else
+  dxinp = grid_size
+  dyinp = grid_size
+# endif
+  xlenc = dxinp*dble(mxc)
+  ylenc = dyinp*dble(myc)
+
+  xpc = xr(0,0)
+  ypc = yr(0,0)
+
+  len_fn = len_trim(GRID_FILE2)
+
+  BOTTOM_FILE = trim( GRID_FILE2(1:len_fn-3) )//".bot"
+  SWN_GRD_FILE = trim( GRID_FILE2(1:len_fn-3) )//".grd"
+  BLOCK_BOTTOM_TXT = trim( GRID_FILE2(1:len_fn-3) )//"_swan_in_bottom.txt"
+
+!==== Output SWAN grid file ===============================
+! output BOTTOM file
+  do j=0, M
+    do i=0, L
+      if(rmask(i,j)==0.0d0) then
+        h(i,j) = 9999.0d0
+      endif 
+    enddo
+  enddo
+
+  write(*,*) "WRITE: ", trim( BOTTOM_FILE )  
+  open(10,file = BOTTOM_FILE)
+  do j=0,myc
+    write(10,*) h(0:mxc,j)
+  enddo
+  close(10)
+
+! output GRID file
+  write(*,*) "WRITE: ", trim( SWN_GRD_FILE )  
+  open(10,file = SWN_GRD_FILE )
+  do j=0,M
+    do i=0,L
+      write(10,*) xr(i,j)
+    enddo
+  enddo
+  do j=0,M
+    do i=0,L
+      write(10,*) yr(i,j)
+    enddo
+  enddo
+  close(10)
+
+  write(*,*) "WRITE: ", trim( BLOCK_BOTTOM_TXT )  
+  open(10,file=BLOCK_BOTTOM_TXT)
+  write(10, '( "&& KEYWORDS TO CREATE AND READ COMPUTATIONAL GRID &&" )' )
+  write(10, '( "CGRID REGULAR", 1x,f0.8, 1x,f0.6, 1x,f0.6, 1x,f0.6, 1x,f0.6, 1x,i0, 1x,i0, " &" )' ) &
+                                    xpc,     ypc,    alpc,   xlenc,   ylenc,   mxc,   myc
+  write(10, '( "        CIRCLE 36 0.04 1.0 20",/ )' )
+
+  write(10, '( "&& KEYWORDS TO CREATE AND READ BATHYMETRY GRID &&" )' )
+  write(10, '( "INPGRID BOTTOM REGULAR", 1x,f0.6, 1x,f0.6, 1x,f0.6, 1x,i0, 1x,i0, 1x,f0.6, 1x,f0.6, " EXC 9.999000e+003" )' ) &
+                                             xpc,     ypc,    alpc,   mxc,   myc,   dxinp,   dyinp
+  write(10, '( "READINP BOTTOM  1 ", A, " 4 0 FREE" )' )  "'"//trim(BOTTOM_FILE)//"'"
+  close(10) 
+#endif  
 
   write(*,*) 'FINISH!!'
       

@@ -1,11 +1,11 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Tangalan_grd_v1.0.nc"
+  GRID_FILE = "Tangalan_grd_v2.1.nc"
 /
 
 &mybath
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "E:/Documents/Dropbox/CORAL_NET/GIS/merged/Tangalan_bath_merged_v1.1.nc"
+  BATH_FILE = "E:/Documents/Dropbox/CORAL_NET/GIS/merged/Tangalan_bath_merged_v6.nc"
   x_ncname = 'x'
   y_ncname = 'y'
   bathy_ncname = 'Band1'
@@ -51,7 +51,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Panay1_grd_v1.2.nc"
+  parent_grid = "Panay1_grd_v1.3.nc"
   parent_Imin = 63
   parent_Imax = 101
   parent_Jmin = 23
@@ -60,7 +60,7 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Panay1_grd_v1.3.nc"
+  F2C_OUT_FILE = "Panay1_grd_v1.4.nc"
 /
 
 &sdate
@@ -169,22 +169,10 @@
   FRC_prefix  = "Tangalan_frc_ERA5"
 /
 
-&roms2swan_1
-  NCnum = 1  ! Number of ERA5 files 
-!  NCnum = 2  ! Number of ERA5 files 
-/
-
-&roms2swan_2
-  ATM_FILE  =  "Tangalan_frc_ERA5_20210101_1.nc"
-!  ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc",
-!               "Panay0_swan_frc_ERA5_20220101_1.nc"
-
-  OUTPUT_Dir  = "swan_wind"
-
+&swangrid
   grid_size = 60.0d0    ! Grid resolution
                          !  Cartesian coordinate => (m)
                          !  Spherical coordinate => (degree)
 
   angle = -0.75d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
-
 /

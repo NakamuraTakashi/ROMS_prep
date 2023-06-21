@@ -1,8 +1,10 @@
 #!/bin/bash
 export MY_CPP_FLAGS=""
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_ONE_GRID_BAY_REMOVAL"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DOUTPUT_SWAN_GRID"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
 
 SRC_DIR=../../src
 #FCFLAGS="-Wall -pedantic -std=f95 -fbounds-check -O -Wuninitialized -ffpe-trap=invalid,zero,overflow -fbacktrace"
@@ -14,4 +16,5 @@ rm *.mod
 #./grdROMS_update.exe < Boracay3.in
 #./grdROMS_update.exe < BatanBay.in
 #./grdROMS_update.exe < Aklan1.in
-./grdROMS_update.exe < Panay1.in
+#./grdROMS_update.exe < Panay1.in
+./grdROMS_update.exe < Tangalan.in
