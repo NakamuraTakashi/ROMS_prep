@@ -70,4 +70,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=7
 
-./iniOCN2ROMS.exe < Boracay1.in
+./iniOCN2ROMS.exe < Panay1.in

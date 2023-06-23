@@ -94,6 +94,16 @@ PROGRAM iniOCN2ROMS
   real(8), allocatable :: uv(:,:,:,:)
   real(8), allocatable :: vu(:,:,:,:)
   real(8), allocatable :: vv(:,:,:,:)
+#if defined ROMS_MODEL
+  real(8), allocatable :: bed(:,:,:,:)      ! bed layer properties 
+  real(8), allocatable :: bed_frac(:,:,:,:) !  
+  real(8), allocatable :: bottom(:,:,:,:)    ! exposed sediment layer properties 
+  real(8), allocatable :: Sd50(:)       
+  real(8), allocatable :: Srho(:)       
+  real(8), allocatable :: Wsed(:)       
+  real(8), allocatable :: tau_ce(:)       
+  real(8) :: Zob       
+#endif
 
   real(8), allocatable :: h_dg(:,:)      ! depth (meter) of donor grid
   real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
@@ -133,6 +143,12 @@ PROGRAM iniOCN2ROMS
   real(8), allocatable :: ullv_dg(:,:,:,:)
   real(8), allocatable :: vllu_dg(:,:,:,:)
   real(8), allocatable :: vllv_dg(:,:,:,:)
+#if defined ROMS_MODEL
+  real(8), allocatable :: bed_dg(:,:,:,:)      ! bed layer properties 
+!  real(8), allocatable :: bed_frac_dg(:,:,:,:) !  
+!  real(8), allocatable :: bottom_dg(:,:,:)    ! exposed sediment layer properties 
+#endif
+
 #if defined WET_DRY
   real(8), allocatable :: rmask_wet_dg(:,:,:)
   real(8), allocatable :: umask_wet_dg(:,:,:)
@@ -154,7 +170,7 @@ PROGRAM iniOCN2ROMS
   integer :: i,j,k
   integer :: idt,incdf
   real(8) :: d_lat,d_lon
-  real(8) :: cff
+  real(8) :: cff,cff1,cff2,cff3,cff4
   
   character(4) :: YYYY
   character(2) :: MM
@@ -203,6 +219,8 @@ PROGRAM iniOCN2ROMS
   integer :: iNC
   character(256), allocatable :: ROMS_HISFILE(:)
   integer :: romsvar(N_var)
+  integer :: Nbed, NCS, NNS, NST
+  integer :: Jmax
 #else
   integer :: romsvar(7)
 #endif 
@@ -1136,7 +1154,8 @@ PROGRAM iniOCN2ROMS
   !---- Create the ROMS initial conditions netCDF file --------------------------------
         
   call createNetCDFini2(  trim( ROMS_HISFILE(iNC) ),  trim( INI_FILE )   &
-        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar  )
+        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar, Nbed, NCS, NNS  )
+
 #else
 # if defined HYCOM_MODEL
   call jd(Ryear, Rmonth, Rday, jdate_Ref)
@@ -1592,6 +1611,131 @@ PROGRAM iniOCN2ROMS
   enddo
 
 #if defined ROMS_MODEL
+! Set sediment parameters
+  if(romsvar(8) == 1 .or. romsvar(9) == 1) then
+    NST = NCS+NNS
+    allocate( bed_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Nbed, 1) )
+    allocate( bed(0:L, 0:M, 1:Nbed, 1) )
+    allocate( bed_frac(0:L, 0:M, 1:Nbed, NST) )
+    allocate( bottom(0:L, 0:M, 1, 9:15) )
+    allocate( Sd50(NST) )
+    allocate( Srho(NST) )
+    allocate( Wsed(NST) )
+    allocate( tau_ce(NST) )
+
+
+    i = 1
+    j = 1
+    
+    do while ( i<= 8 )
+
+      start4D = (/ Irdg_min+1, Jrdg_min+1, 1,    itime /)
+      count4D = (/ Nxr_dg,     Nyr_dg,     Nbed, 1     /)
+  
+      if( i<=4 ) then
+        write(varnum,'(I2.2)') j
+        varname = trim( SED_NAME(i) )//varnum
+        status = nf90_inq_varid(ncid, trim( varname ), var_id)
+        if (status /= nf90_noerr) then
+          i=i+1
+          j = 1
+          cycle
+        endif
+        write(*,*) 'Read: ', trim( varname )
+        call check( nf90_get_var(ncid, var_id, bed_dg, start4D, count4D)  )
+        j=j+1     
+      elseif( i>=5 ) then
+        varname = trim( SED_NAME(i) )
+        call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
+        write(*,*) 'Read: ', trim( varname )
+        call check( nf90_get_var(ncid, var_id, bed_dg, start4D, count4D)  )
+        i=i+1
+      endif
+
+      do k=1,Nbed
+        write(*,*) 'Linear Interporation: ', trim( varname ), k
+        call interp2D_grid3_2(                                              &
+                Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, bed_dg(:,:,k,:)     &
+              , 0, L, 0, M                                                  &
+              , Id_cnt2Dr, w_cnt2Dr                                         &
+              , bed(:,:,k,:)  )
+      enddo
+
+      start4D = (/ 1,   1,   1,    1 /)
+      count4D = (/ Nxr, Nyr, Nbed, 1 /)
+      write(*,*)  'Write: ', trim( varname )
+      call check( nf90_open(trim( INI_FILE ), NF90_WRITE, ncid2) )
+      call check( nf90_inq_varid(ncid2, trim( varname ), var_id2) )
+      call check( nf90_put_var(ncid2, var_id2, bed, start = start4D, count = count4D) )
+      call check( nf90_close(ncid2) )
+
+      if( i==1 .and. NCS>0 ) bed_frac(:,:,:,j-1)=bed(:,:,:,1)
+      if( i==3 .and. NNS>0 ) bed_frac(:,:,:,NCS+j-1)=bed(:,:,:,1)
+      write(*,*) 'DEBUG1', bed_frac(1,1,1,:)
+
+    enddo
+
+
+    start1D = (/ 1   /)
+    count1D = (/ NST /)
+    call check( nf90_inq_varid(ncid, 'Sd50', var_id) )
+    call check( nf90_get_var(ncid, var_id, Sd50, start1D, count1D)  )
+    call check( nf90_inq_varid(ncid, 'Srho', var_id) )
+    call check( nf90_get_var(ncid, var_id, Srho, start1D, count1D)  )
+    call check( nf90_inq_varid(ncid, 'Wsed', var_id) )
+    call check( nf90_get_var(ncid, var_id, Wsed, start1D, count1D)  )
+    call check( nf90_inq_varid(ncid, 'tau_ce', var_id) )
+    call check( nf90_get_var(ncid, var_id, tau_ce, start1D, count1D)  )
+    call check( nf90_inq_varid(ncid, 'Zob', var_id) )
+    call check( nf90_get_var(ncid, var_id, Zob)  )
+
+    DO j=0, M
+      DO i=0, L
+        cff1=1.0d0
+        cff2=1.0d0
+        cff3=1.0d0
+        cff4=1.0d0
+        DO k=1,NST
+          cff1=cff1*Sd50(k)**bed_frac(i,j,1,k)
+          cff2=cff2*Srho(k)**bed_frac(i,j,1,k)
+          cff3=cff3*Wsed(k)**bed_frac(i,j,1,k)
+          cff4=cff4*tau_ce(k)**bed_frac(i,j,1,k)
+        END DO
+        bottom(i,j,1, 9)=cff1    ! isd50
+        bottom(i,j,1,10)=cff2    ! idens
+        bottom(i,j,1,11)=cff3    ! iwsed
+        bottom(i,j,1,12)=cff4    ! itauc
+        bottom(i,j,1,13)=0.10d0  ! irlen  !!!!!!!!!!!!!!!!
+        bottom(i,j,1,14)=0.01d0  ! irhgt  !!!!!!!!!!!!!!!!
+        bottom(i,j,1,15)=Zob     ! izdef
+
+#  ifdef SED_BIODIFF
+        bottom(i,j,1,idoff)=0.0d0
+        bottom(i,j,1,idslp)=0.0d0
+        bottom(i,j,1,idtim)=0.0d0
+        bottom(i,j,1,idbmx)=0.0d0
+        bottom(i,j,1,idbmm)=0.0d0
+        bottom(i,j,1,idbzs)=0.0d0
+        bottom(i,j,1,idbzm)=0.0d0
+        bottom(i,j,1,idbzp)=0.0d0
+#  endif
+      END DO
+    END DO
+
+    do i=9, 15
+      start3D = (/ 1,   1,   1 /)
+      count3D = (/ Nxr, Nyr, 1 /)
+      varname = trim( SED_NAME(i) )
+      write(*,*)  'Write: ', trim( varname )
+      call check( nf90_open(trim( INI_FILE ), NF90_WRITE, ncid2) )
+      call check( nf90_inq_varid(ncid2, trim( varname ), var_id2) )
+      call check( nf90_put_var(ncid2, var_id2, bottom(:,:,:,i), start = start3D, count = count3D) )
+      call check( nf90_close(ncid2) )
+    enddo    
+
+  endif
+
+! Close input file
   call check( nf90_close(ncid) )
 #endif
 

@@ -52,6 +52,9 @@ PROGRAM iniROMS_uniform
   real(8), allocatable :: u(:,:,:,:)    ! u-momentum component (meter second-1)
   real(8), allocatable :: v(:,:,:,:)    ! v-momentum component (meter second-1)
   real(8), allocatable :: t(:,:,:,:)    ! tracer 
+  real(8), allocatable :: bed(:,:,:,:)      ! bed layer properties 
+  real(8), allocatable :: bed_frac(:,:,:,:) !  
+  real(8), allocatable :: bottom(:,:,:)    ! exposed sediment layer properties 
 
   real(8) :: ocean_time(1)                 ! Ocean time (sec)
 
@@ -68,7 +71,8 @@ PROGRAM iniROMS_uniform
 
   integer :: Nxr, Nyr, Nxu, Nyu, Nxv, Nyv
   integer :: L, M, N
-
+  integer :: Nbed, NCS, NNS
+  
   integer :: ncid,var_id
   integer :: ncid2,var_id2
   !
@@ -176,7 +180,7 @@ PROGRAM iniROMS_uniform
 !-Create the ROMS initial conditions netCDF file --------------------------------
       
   call createNetCDFini2(  trim( ROMS_HISFILE ),  trim( INI_FILE )   &
-        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar  )
+        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar, Nbed, NCS, NNS  )
 
 !-Write ROMS initial conditions netCDF file --------------------------------
  

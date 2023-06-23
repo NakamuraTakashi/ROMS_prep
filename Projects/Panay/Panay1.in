@@ -87,7 +87,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Boracay1/Boracay1_his_20210102.nc"
+  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Panay/Panay0/Panay0_sed_his_20210102.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -103,7 +103,8 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+! romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &ocn2roms      
@@ -117,13 +118,13 @@
 /
 
 &bry
-  BRY_prefix  = "Panay1_bry_ROMS_Nz15"
+  BRY_prefix  = "Panay1_bry_ROMS_sed_Nz15"
   !    south north west east
   SNWE =  0,   1,   1,   0
 /
 
 &ini
-  INI_prefix  = "Panay1_ini_ROMS_Nz15"
+  INI_prefix  = "Panay1_ini_ROMS_sed_Nz15"
 
   INIyear  = 2021   ! Initial year
   INImonth = 1      ! Initial month

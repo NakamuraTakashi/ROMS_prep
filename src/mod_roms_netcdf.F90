@@ -168,6 +168,7 @@ MODULE mod_roms_netcdf
     ,"umol L-1        " &
     ,"umol L-1        " &
     /)
+    
   character(256), parameter :: BRY_NAME(4) =  &
     (/ "south", "north", "west ", "east " /)
   character(256), parameter :: BRY_LONGNAME(4) = (/ &
@@ -176,6 +177,59 @@ MODULE mod_roms_netcdf
     , "western boundary condition " &
     , "eastern boundary condition " &
     /)
+
+  character(256), parameter :: SED_NAME(15) = (/ &
+     "mudfrac_      " &  !  1
+    ,"mudmass_      " &  !  2 
+    ,"sandfrac_     " &  !  3
+    ,"sandmass_     " &  !  4 
+    ,"bed_thickness " &  !  5 
+    ,"bed_age       " &  !  6 
+    ,"bed_porosity  " &  !  7 
+    ,"bed_biodiff   " &  !  8 
+    ,"grain_diameter" &  !  9 
+    ,"grain_density " &  ! 10 
+    ,"settling_vel  " &  ! 11 
+    ,"erosion_stress" &  ! 12 
+    ,"ripple_length " &  ! 13 
+    ,"ripple_height " &  ! 14 
+    ,"Zo_def        " &  ! 15 
+     /)
+  character(256), parameter :: SED_LONGNAME(15) = (/ &
+     "cohesive sediment fraction             " &  !  1
+    ,"cohesive sediment mass                 " &  !  2 
+    ,"snoncohesive sediment fraction         " &  !  3
+    ,"noncohesive sediment mass              " &  !  4 
+    ,"sediment bed layer thickness           " &  !  5 
+    ,"sediment layer age                     " &  !  6 
+    ,"sediment layer porosity                " &  !  7 
+    ,"biodiffusivity at bottom of each layer " &  !  8 
+    ,"sediment median grain diameter size    " &  !  9 
+    ,"sediment median grain density          " &  ! 10 
+    ,"sediment median grain settling velocity" &  ! 11 
+    ,"sediment median critical erosion stress" &  ! 12 
+    ,"bottom ripple length                   " &  ! 13 
+    ,"bottom ripple height                   " &  ! 14 
+    ,"default bottom roughness length        " &  ! 15 
+     /)
+  character(256), parameter :: SED_UNIT(15) = (/ &
+     "nondimensional  " &  !  1
+    ,"kilogram meter-2" &  !  2 
+    ,"nondimensional  " &  !  3
+    ,"kilogram meter-2" &  !  4 
+    ,"meter           " &  !  5 
+    ,"seconds         " &  !  6 
+    ,"nondimensional  " &  !  7 
+    ,"meter2 second-1 " &  !  8 
+    ,"meter           " &  !  9 
+    ,"kilogram meter-3" &  ! 10 
+    ,"meter second-1  " &  ! 11 
+    ,"newton meter-2  " &  ! 12 
+    ,"meter           " &  ! 13 
+    ,"meter           " &  ! 14 
+    ,"meter           " &  ! 15 
+     /)
+
 
 ! ----- HYCOM OpenDAP URL -----
 
@@ -627,7 +681,9 @@ MODULE mod_roms_netcdf
           , TIME_ATT             &  
           , Nxr, Nyr, Nzr, Nt    &   
           , name_flag            &   
-      )
+!        Output parameters
+          , Nbed, NCS, NNS       &   
+          )
                                
 !    input parameters
       character(len=*),  intent( in) :: IN_FILE
@@ -635,6 +691,9 @@ MODULE mod_roms_netcdf
       character(len=*),  intent( in) :: TIME_ATT
       integer, intent( in) :: Nxr, Nyr, Nzr, Nt
       integer, intent( in) :: name_flag( N_var )
+      integer, intent(out) :: Nbed ! Number of sediment bed layers
+      integer, intent(out) :: NCS  ! Number of cohesive (mud) sediment tracers
+      integer, intent(out) :: NNS  ! Number of non-cohesive (sand) sediment tracers
       character(256) :: varname
       character(2) :: varnum
 
@@ -645,9 +704,16 @@ MODULE mod_roms_netcdf
       integer :: xv_dimid, yv_dimid
       integer :: zr_dimid, zw_dimid
       integer :: t_dimid
+      integer :: zb_dimid
       integer :: status
       integer, allocatable :: dimids(:)
       integer :: i,j
+
+!---- Initialize  --------------------------------
+
+      Nbed=0
+      NCS=0
+      NNS=0
 
 !---- Create the ROMS initial condition netCDF file --------------------------------
 
@@ -725,6 +791,8 @@ MODULE mod_roms_netcdf
             call check( nf90_copy_att(ncid2, var_id2, 'long_name', ncid, var_id) )
             call check( nf90_copy_att(ncid2, var_id2, 'units', ncid, var_id) )
             call check( nf90_copy_att(ncid2, var_id2, 'time', ncid, var_id) )
+            if (i==8) NCS=j
+            if (i==9) NNS=j
           enddo
         else
           write(*,*) 'Add variable: ', trim( VAR_NAME(i) )
@@ -737,6 +805,61 @@ MODULE mod_roms_netcdf
         endif
         deallocate(dimids)
       enddo
+
+! Add sediment parameters
+
+      if(name_flag(8) == 1 .or. name_flag(9) == 1) then
+
+        call get_dimension(ncid2, 'Nbed', Nbed)
+        call check( nf90_def_dim(ncid, 'Nbed', Nbed, zb_dimid) )
+
+        allocate(dimids(4))
+        dimids = (/ xr_dimid, yr_dimid, zb_dimid, t_dimid /)
+
+        do i=1, 8
+          if(i==1 .or. i==2) then
+            do j=1,NCS
+              write(varnum,'(I2.2)') j
+              varname = trim( SED_NAME(i) )//varnum
+              call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dimids, var_id) )
+              call check( nf90_copy_att(ncid2, var_id2, 'long_name', ncid, var_id) )
+              status = nf90_copy_att(ncid2, var_id2, 'units', ncid, var_id) 
+              call check( nf90_copy_att(ncid2, var_id2, 'time', ncid, var_id) )
+            enddo
+          elseif(i==3 .or. i==4) then
+            do j=1,NNS
+              allocate(dimids(4))
+              dimids = (/ xr_dimid, yr_dimid, zb_dimid, t_dimid /)
+              write(varnum,'(I2.2)') j
+              varname = trim( SED_NAME(i) )//varnum
+              call check( nf90_def_var(ncid, trim( varname ), NF90_DOUBLE, dimids, var_id) )
+              call check( nf90_copy_att(ncid2, var_id2, 'long_name', ncid, var_id) )
+              status = nf90_copy_att(ncid2, var_id2, 'units', ncid, var_id) 
+              call check( nf90_copy_att(ncid2, var_id2, 'time', ncid, var_id) )
+            enddo
+          else
+            write(*,*) 'Add variable: ', trim( SED_NAME(i) )
+            call check( nf90_inq_varid(ncid2, trim( SED_NAME(i) ), var_id2) )
+            call check( nf90_def_var(ncid, trim( SED_NAME(i) ), NF90_DOUBLE, dimids, var_id) )
+            call check( nf90_copy_att(ncid2, var_id2, 'long_name', ncid, var_id) )
+            status = nf90_copy_att(ncid2, var_id2, 'units', ncid, var_id) 
+            call check( nf90_copy_att(ncid2, var_id2, 'time', ncid, var_id) )
+          endif
+        enddo
+        deallocate(dimids)
+
+        allocate(dimids(3))
+        dimids = (/ xr_dimid, yr_dimid, t_dimid /)
+        do i=9, 15
+          call check( nf90_def_var(ncid, trim( SED_NAME(i) ), NF90_DOUBLE, dimids, var_id) )
+          call check( nf90_put_att(ncid, var_id, 'long_name', trim( SED_LONGNAME(i) ) ) )
+          call check( nf90_put_att(ncid, var_id, 'units',     trim( SED_UNIT(i) ) ) )
+          call check( nf90_put_att(ncid, var_id, 'time',      'ocean_time') )
+        enddo    
+        deallocate(dimids)
+
+      endif
+
 
   ! End define mode.
       call check( nf90_enddef(ncid) )
