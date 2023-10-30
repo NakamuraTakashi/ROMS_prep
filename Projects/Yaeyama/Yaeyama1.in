@@ -5,15 +5,15 @@
 /
 
 &sdate
-  Syear  = 2003   ! Starting year
+  Syear  = 2020   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2004   ! Ending year
+  Eyear  = 2020   ! Ending year
   Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -122,3 +122,10 @@
 !  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
 !  TIDE_prefix  = "Yaeyama1_tide_fes2014"
 /
+
+&wave_cwm
+  CWM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  SWAN_prefix  = "Yaeyama1_cwm"
+
+/
+

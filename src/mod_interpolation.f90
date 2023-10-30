@@ -339,10 +339,48 @@ CONTAINS
   enddo
   
   END SUBROUTINE seek_IJrange
+!
+! **********************************************************************
+! --- Nearest IJ indices ---------------------
+ 
+  SUBROUTINE nearest_id(                            &
+        Ids, Ide, Jds, Jde, Xd, Yd, Maskd, xr, yr   &
+      , Id, Jd )
 
-  ! **********************************************************************
+    implicit none
+! input parameters
+    integer, intent( in) :: Ids, Ide, Jds, Jde        ! start and end indices of donor X and Y points
+    real(8), intent( in) :: Xd(Ids:Ide, Jds:Jde)      ! donor X positions (2D fields)
+    real(8), intent( in) :: Yd(Ids:Ide, Jds:Jde)      ! donor Y positions (2D fields)
+    real(8), intent( in) :: Maskd(Ids:Ide, Jds:Jde)   ! donor land mask (land:0, water:1)
+    real(8), intent( in) :: xr     ! receiver x position
+    real(8), intent( in) :: yr     ! receiver y position
+! output parameters
+    integer, intent(out) :: Id, Jd ! nearest IJ indices of donor domain
+   
+    integer :: Idn,Jdn
+    real(8) :: dmin
+    real(8) :: d
 
-  !
+    dmin = sqrt((Xd(Ide,Jde)-Xd(Ids,Jds))**2.0d0 + (Yd(Ide,Jde)-Yd(Ids,Jds))**2.0d0 )
+    do Jdn=Jds,Jde
+      do Idn=Ids,Ide
+        if( Maskd(Idn,Jdn)==0.0d0 ) cycle
+        ! Check nearest points.
+        d = sqrt((Xd(Idn,Jdn)-xr)**2.0d0 + (Yd(Idn,Jdn)-yr)**2.0d0 )
+              
+        if( d < dmin ) then
+          dmin = d
+          Id = Idn
+          Jd = Jdn
+        end if
+      enddo
+    enddo
+  
+  END SUBROUTINE nearest_id
+!
+! **********************************************************************
+!
   SUBROUTINE weight2D_grid3(                          &
         Ids, Ide, Jds, Jde, Xd, Yd, Maskd             & 
       , irs, ire, jrs, jre, xr, yr                    &
