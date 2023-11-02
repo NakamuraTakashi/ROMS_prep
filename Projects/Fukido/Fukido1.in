@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v3.2.nc"
+  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v3.3.nc"
 /
 
 &gebco
@@ -161,4 +161,13 @@
 
   FRC_prefix  = "Ishigaki_frc_JMAobs_2020"
 !  FRC_prefix  = "Ishigaki_frc_JMAobs_2019_UTCp9"
+/
+
+&roms2swan_3
+  grid_size = 100.0d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = 0.0d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+
 /

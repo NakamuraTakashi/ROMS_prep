@@ -93,8 +93,8 @@
 /
 
 &roms2swan_1
-  NCnum = 1  ! Number of ERA5 files 
-!  NCnum = 2  ! Number of ERA5 files 
+  NCnum = 1  ! Number of FRC files 
+!  NCnum = 2  ! Number of FRC files 
 /
 &roms2swan_2
   ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc"
@@ -102,11 +102,11 @@
 !               "Panay0_swan_frc_ERA5_20220101_1.nc"
 
   OUTPUT_Dir  = "F:/COAWST_DATA/Panay/Panay0/wind_2021"
-
+/
+&roms2swan_3
   grid_size = 1500.0d0   ! Grid resolution
                          !  Cartesian coordinate => (m)
                          !  Spherical coordinate => (degree)
 
   angle = -0.75d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
-
 /

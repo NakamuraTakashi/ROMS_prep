@@ -39,14 +39,14 @@
 /
 
 &sdate
-  Syear  = 2008   ! Starting year
-  Smonth = 4      ! Starting month
-  Sday   = 16      ! Starting day
+  Syear  = 2020   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2008   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 5      ! Ending month
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
   Eday   = 2      ! Ending day
 /
 
@@ -202,4 +202,23 @@
 &frc_jmalsm
   LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
   FRC_prefix  = "Yaeyama2_frc_LSM"
+/
+
+&roms2swan_1
+  NCnum = 1  ! Number of FRC files 
+!  NCnum = 2  ! Number of FRC files 
+/
+&roms2swan_2
+  ATM_FILE  =  "F:/COAWST_DATA/Yaeyama/Yaeyama2/Air/Yaeyama2_frc_MSMgb_20200101_1.nc"
+!  ATM_FILE  =  "Panay0_swan_frc_ERA5_20210101_1.nc",
+!               "Panay0_swan_frc_ERA5_20220101_1.nc"
+
+  OUTPUT_Dir  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/wave/wind/2020"
+/
+&roms2swan_3
+  grid_size = 300.0d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = 0.0d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
 /

@@ -97,7 +97,7 @@ PROGRAM windROMS2SWAN
   namelist/roms2swan_1/NCnum
   namelist/roms2swan_2/ATM_FILE
   namelist/roms2swan_2/OUTPUT_Dir
-  namelist/roms2swan_2/grid_size, angle
+  namelist/roms2swan_3/grid_size, angle
 
 
   ! Read parameters in namelist file
@@ -115,6 +115,8 @@ PROGRAM windROMS2SWAN
   allocate( NC(NCnum) )
   rewind(5)
   read (5, nml=roms2swan_2)
+  rewind(5)
+  read (5, nml=roms2swan_3)
 
      
 !---- Read ROMS grid netCDF file --------------------------------

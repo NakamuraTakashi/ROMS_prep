@@ -180,11 +180,11 @@
 !               "Panay0_swan_frc_ERA5_20220101_1.nc"
 
   OUTPUT_Dir  = "swan_wind"
-
+/
+&roms2swan_3
   grid_size = 33.33333333333d0    ! Grid resolution
                          !  Cartesian coordinate => (m)
                          !  Spherical coordinate => (degree)
 
   angle = -0.75d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
-
 /

@@ -68,7 +68,7 @@ PROGRAM bryWAVE2SWAN
   integer :: Irgs(1000), Irge(1000), Jrgs(1000), Jrge(1000)
   integer :: Idgt, Jdgt
   integer :: iout, ibry
-  integer :: corner(1000)
+  integer :: corner(1000)=0
   character(4) :: IXXXX, JXXXX
   
   integer :: istart, iend
@@ -259,6 +259,8 @@ PROGRAM bryWAVE2SWAN
           Jrgs(Nout) = 0
         endif
       endif
+      if( i==0 ) corner(Nout)=-1
+      if( i==L ) corner(Nout)=-2
     enddo
   endif
   if (SNWE(4) == 1) then ! East
@@ -290,8 +292,11 @@ PROGRAM bryWAVE2SWAN
           Jdg(Nout) = Jdgt 
           Irgs(Nout) = L
           Jrgs(Nout) = j
+        else
+          if( corner(Nout)==-2 ) corner(Nout)=2
         endif
       endif
+      if( j==M ) corner(Nout)=-3
     enddo
   endif
   if( SNWE(2)==1 ) then ! North
@@ -323,8 +328,11 @@ PROGRAM bryWAVE2SWAN
           Jdg(Nout) = Jdgt 
           Irgs(Nout) = i
           Jrgs(Nout) = M
+        else
+          if( corner(Nout)==-3 ) corner(Nout)=3
         endif
       endif
+      if( i==0 ) corner(Nout)=-4
     enddo
   endif
   if( SNWE(3)==1 ) then ! West
@@ -356,13 +364,19 @@ PROGRAM bryWAVE2SWAN
           Jdg(Nout) = Jdgt 
           Irgs(Nout) = 0
           Jrgs(Nout) = j
+        else
+          if( corner(Nout)==-4 ) corner(Nout)=4
+          if( corner(1)==-1 .and. j==0 ) then
+            corner(Nout)=1
+            Nout =  Nout-1
+          endif
         endif
       endif
     enddo
   endif
   write(*,*) Nout
 !-Create the Output file --------------------------------
-  open(unit=10, file= 'BOUNDSPEC_SEGMENT_IJ.txt', status='replace')
+  open(unit=10, file= 'swan_in_BOUNDSPEC_SEGMENT_IJ.txt', status='replace')
 !  && BOUNDARY FORCING &&
 !  BOUND SHAPESPEC JONSWAP 3.3 PEAK DSPR DEGREES
 !  BOUNDSPEC SEGMENT IJ 30 0 63 0 63 191 50 191 CONSTANT FILE '../../Data/Shiraho_reef2/Wave/Shiraho_wave2_201901.dat'
@@ -375,10 +389,22 @@ PROGRAM bryWAVE2SWAN
     OUT_FILE(iout) = trim( SWAN_prefix )//'_'//YYYY//MM//DD//'_I'//IXXXX//'_J'//JXXXX//'.dat'
     open(unit=20+iout, file= trim( OUT_FILE(iout) ), status='replace')
     write(20+iout, "(a4)") 'TPAR'
-
-    write(10, '( "BOUNDSPEC SEGMENT IJ", 1x,I4, 1x,I4, 1x,I4, 1x,I4, " VARIABLE FILE 0 ", A )' )  &
-      Irgs(iout), Jrgs(iout), Irge(iout), Jrge(iout), "'"//trim(OUT_FILE(iout))//"'"
-
+    if(corner(iout)==1) then
+      write(10, '( "BOUNDSPEC SEGMENT IJ", 1x,I4, 1x,I4, 1x,I4, 1x,I4, 1x,I4, 1x,I4, " VARIABLE FILE 0 ", A )' )  &
+        Irge(Nout), Jrge(Nout), Irgs(iout), Jrgs(iout), Irge(iout), Jrge(iout), "'"//trim(OUT_FILE(iout))//"'"
+    elseif(corner(iout)==2) then
+      write(10, '( "BOUNDSPEC SEGMENT IJ", 1x,I4, 1x,I4, 1x,I4, 1x,I4, 1x,I4, 1x,I4, " VARIABLE FILE 0 ", A )' )  &
+        Irgs(iout), Jrgs(iout), Irge(iout), Jrgs(iout), Irge(iout), Jrge(iout), "'"//trim(OUT_FILE(iout))//"'"
+    elseif(corner(iout)==3) then
+      write(10, '( "BOUNDSPEC SEGMENT IJ", 1x,I4, 1x,I4, 1x,I4, 1x,I4, 1x,I4, 1x,I4, " VARIABLE FILE 0 ", A )' )  &
+        Irgs(iout), Jrgs(iout), Irgs(iout), Jrge(iout), Irge(iout), Jrge(iout), "'"//trim(OUT_FILE(iout))//"'"
+    elseif(corner(iout)==4) then
+      write(10, '( "BOUNDSPEC SEGMENT IJ", 1x,I4, 1x,I4, 1x,I4, 1x,I4, 1x,I4, 1x,I4, " VARIABLE FILE 0 ", A )' )  &
+        Irgs(iout), Jrgs(iout), Irge(iout), Jrgs(iout), Irge(iout), Jrge(iout), "'"//trim(OUT_FILE(iout))//"'"
+    else
+      write(10, '( "BOUNDSPEC SEGMENT IJ", 1x,I4, 1x,I4, 1x,I4, 1x,I4, " VARIABLE FILE 0 ", A )' )  &
+        Irgs(iout), Jrgs(iout), Irge(iout), Jrge(iout), "'"//trim(OUT_FILE(iout))//"'"
+    endif
   enddo
 
   close(10)
@@ -436,7 +462,14 @@ PROGRAM bryWAVE2SWAN
           call codes_release(igrib)
           call codes_grib_new_from_file(ifile,igrib, iret)
         END DO
+        call codes_get(igrib,'validityDate',YYYYMMDD)
+        write(*,*) 'validityDate=', YYYYMMDD
+        call codes_get(igrib,'validityTime',hhmm)
+        write(*,*) 'validityTime=', hhmm
         call codes_get(igrib,'values', values)
+
+        call codes_release(igrib)
+        call codes_grib_new_from_file(ifile,igrib, iret)
         do j=0, Mdg
           istart = 1 + Nxr_dg*j
           iend   = Nxr_dg*(j+1)
@@ -444,10 +477,6 @@ PROGRAM bryWAVE2SWAN
         end do
       END DO
 
-      call codes_get(igrib,'validityDate',YYYYMMDD)
-      write(*,*) 'validityDate=', YYYYMMDD
-      call codes_get(igrib,'validityTime',hhmm)
-      write(*,*) 'validityTime=', hhmm
 
       hhmmss = hhmm*100
 

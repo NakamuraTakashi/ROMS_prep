@@ -151,3 +151,11 @@
   LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
   FRC_prefix  = "Yaeyama3_frc_LSM"
 /
+
+&roms2swan_3
+  grid_size = 100.0d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = 0.0d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+/

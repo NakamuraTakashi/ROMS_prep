@@ -1,18 +1,28 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "../../COAWST/Data/Shiraho_reef/shiraho_reef_grid16.3.nc"
+  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Shiraho_reef2/Grid/shiraho_reef_grid16.3.nc"
+/
+
+&refinement
+! ROMS NetCDF coarse grid file     
+  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.2.nc"
+  parent_Imin = 1   ! not used
+  parent_Imax = 100 ! not used
+  parent_Jmin = 1   ! not used
+  parent_Jmax = 100 ! not used
+  refine_factor = 3 ! not used
 /
 
 &sdate
-  Syear  = 2019   ! Starting year
-  Smonth = 1     ! Starting month
-  Sday   = 1     ! Starting day
+  Syear  = 2009   ! Starting year
+  Smonth = 8     ! Starting month
+  Sday   = 14     ! Starting day
 /
 
 &edate
-  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1     ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2009   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 9      ! Ending month
+  Eday   = 16     ! Ending day
 /
 
 &refdate
@@ -20,6 +30,47 @@
   Ryear  = 2000   ! Reference year
   Rmonth = 1      ! Reference month
   Rday   = 1      ! Reference day
+/
+
+&roms2roms1
+  NCnum = 2  ! Number of ROMS his files 
+/
+
+&roms2roms2
+! ROMS coarse NetCDF history file name
+  ROMS_HISFILE  = "X:/COAWST_OUTPUT/Yaeyama2/Yaeyama2_his_20080914.nc",
+                  "X:/COAWST_OUTPUT/Yaeyama2/Yaeyama2_his_20090913.nc"
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
+! 8: mud_, 9: sand_,
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC_, 14: POC_, 
+! 15: phytoplankton_, 16: zooplankton_, 17: PIC_ 
+! 18: NO3, 19: NH4, 20: PO4, 21: DON_, 22: PON_, 23: DOP_, 24: POP_, 
+! 25: TI13C, 26: DO13C_, 27: PO13C_, 
+! 28: phyt13C_, 29: zoop13C_, 30: PI13C_
+! 31: 15NO3, 32: 15NH4, 33: DO15N_, 34: PO15N_
+! 35: phyt15N_, 36: zoop15N_
+!    
+!           1       5        10        15        20        25        30        35  
+!           |       |         |         |         |         |         |         |  
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+/
+
+&bry
+  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Shiraho_reef2/Bry/Shiraho_reef_bry_ROMS_Nz8"
+
+  !    south north west east
+  SNWE =  1,   1,   0,   1
+/
+
+&ini
+  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Shiraho_reef2/Ini/Shiraho_reef_ini_ROMS_Nz8"
+
+  INIyear  = 2009   ! Initial year
+  INImonth = 8      ! Initial month
+  INIday   = 15     ! Initial day
+  INIhour  = 0      ! Initial hour
 /
 
 &frc_jmaobs
@@ -91,4 +142,13 @@
   THETA_B = 1.0d0      ! bottom  stretching parameter
   TCLINE  = 30.0d0    ! critical depth (m)
   DCRIT   = 0.10d0     ! critical depth (m) for wetting and trying
+/
+
+&roms2swan_3
+  grid_size = 50.0d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = 0.0d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+
 /

@@ -5,15 +5,15 @@
 /
 
 &sdate
-  Syear  = 2020   ! Starting year
+  Syear  = 2011   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2020   ! Ending year
+  Eyear  = 2012   ! Ending year
   Emonth = 1      ! Ending month
-  Eday   = 3      ! Ending day
+  Eday   = 2      ! Ending day
 /
 
 &refdate
@@ -125,7 +125,25 @@
 
 &wave_cwm
   CWM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  SWAN_prefix  = "Yaeyama1_cwm"
+  SWAN_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/wave/TPAR/2011/Y1_cwm"
 
 /
 
+&roms2swan_1
+!  NCnum = 1  ! Number of FRC files 
+  NCnum = 2  ! Number of FRC files 
+/
+&roms2swan_2
+!  ATM_FILE  =  "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb_20200101_1.nc"
+  ATM_FILE  =  "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc_20110101_1.nc",
+               "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc_20120101_1.nc"
+
+  OUTPUT_Dir  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/wave/wind/2011"
+/
+&roms2swan_3
+  grid_size = 1500.0d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = 0.0d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+/
