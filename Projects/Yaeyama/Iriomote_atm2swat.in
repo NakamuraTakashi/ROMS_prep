@@ -28,7 +28,7 @@
 ! GEBCO bathymetry NetCDF file     
 !  BATH_FILE = "E:/Documents/Dropbox/CORAL_NET/GIS/GEBCO_23_Jun_2022_7b4a4893e435/gebco_2021_n13.5_s10.0_w120.0_e124.0.nc"
 !  BATH_FILE = "//131.112.42.6/disk1/GEBCO_2022/GEBCO_2022.nc"
-  BATH_FILE = "//131.112.42.6/disk1/GEBCO_2023/GEBCO_07_Nov_2023_8cd913f95b3c/gebco_2023_n25.3381_s23.5657_w122.981_e125.061.nc"
+  BATH_FILE = "//131.112.42.6/disk1/GEBCO_2023/GEBCO_07_Nov_2023_Yaeyama/gebco_2023_n25.3381_s23.5657_w122.981_e125.061.nc"
 /
 
 &sdate
