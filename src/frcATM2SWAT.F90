@@ -8,6 +8,8 @@
 # endif
 #elif defined DSJRA55 || defined JRA55
 # undef SWRAD
+# undef NETCDF_INPUT
+# define BULK_FLUX
 #elif defined ERA5
 # define NETCDF_INPUT
 #endif
@@ -38,7 +40,7 @@ PROGRAM frcATM2SWAT
   integer, parameter :: N_OutPar = 11
 # else
   integer, parameter :: N_InPar  = 10
-  integer, parameter :: N_OutPar = 10
+  integer, parameter :: N_OutPar = 11  ! 10 -> 11
 # endif
   integer, parameter :: N_OutPar1 = 9
 
@@ -162,7 +164,7 @@ PROGRAM frcATM2SWAT
 #elif defined ERA5
 !--- REA5 parameter setting -----------------
   character(256) :: FRC_prefix
-  integer :: jd_msmnew
+!  integer :: jd_msmnew
 
   integer, parameter :: N_InPar  = 8
   integer, parameter :: N_OutPar = 8
@@ -202,7 +204,7 @@ PROGRAM frcATM2SWAT
   character(256), allocatable :: ATM_FILE(:)
   real(8) :: d_jdate
   real(8) :: d_jdate_Start, d_jdate_Ref, d_jdate_Ref_atm
-  integer :: jdate_Start, jdate_End, jdate_Ref, jdate_Ref_atm
+  integer :: jdate_Start, jdate_End, jdate_Ref_atm
   integer :: N_days
   integer :: iNC, iNCm
   integer :: Nt
@@ -213,6 +215,7 @@ PROGRAM frcATM2SWAT
 
   integer :: ifile,idx,iret,igrib
   integer :: istart, iend
+  integer :: jdate_Ref, jd_now
   integer :: YYYYMMDD(N_InPar), hhmm(N_InPar)
   real(8), allocatable :: values(:)
   integer :: p1,p2,p3
@@ -221,88 +224,6 @@ PROGRAM frcATM2SWAT
   character(9) :: FRC_yyyymmdd = "_20020701" 
 !  character(30) :: TIME_ATT  = "days since 2000-01-01 00:00:00"
   character(256) :: FRC_FILE(2)
-
-  character(256) :: NC_NAME(N_OutPar) = (/    &
-     "Pair      "                             &
-    ,"Uwind     "                             &
-    ,"Vwind     "                             &
-    ,"Tair      "                             &
-    ,"Qair      "                             &
-#if defined JMA_MSM || defined DSJRA55 || defined JRA55
-    ,"lcloud    "                             &
-    ,"mcloud    "                             &
-    ,"hcloud    "                             &
-    ,"cloud     "                             &
-    ,"rain      "                             &
-# if defined SWRAD
-    ,"swrad     "                             &
-# elif defined BULK_FLUX
-    ,"latent    "                             &
-    ,"sensible  "                             &
-    ,"swrad     "                             &
-    ,"lwrad_down"                             &
-    ,"lwrad     "                             &
-# endif
-#elif defined ERA5
-    ,"rain      "                             &
-    ,"swrad     "                             &
-    ,"lwrad_down"                             &
-#endif
-    /)
-  character(256) :: NC_LNAME(N_OutPar) = (/   &
-     "surface air pressure               "    &
-    ,"surface u-wind component           "    &
-    ,"surface v-wind component           "    &
-    ,"surface air temperature            "    &
-    ,"surface air relative humidity      "    &
-#if defined JMA_MSM || defined DSJRA55 || defined JRA55
-    ,"low cloud fraction                 "    &
-    ,"medium cloud fraction              "    &
-    ,"high cloud fraction                "    &
-    ,"cloud fraction                     "    &
-    ,"rain fall rate                     "    &
-# if defined SWRAD
-    ,"solar shortwave radiation flux     "    &
-# elif defined BULK_FLUX
-    ,"net latent heat flux               "    &
-    ,"net sensible heat flux             "    &
-    ,"solar shortwave radiation flux     "    &
-    ,"downwelling longwave radiation flux"    &
-    ,"net longwave radiation flux        "    &
-# endif
-#elif defined ERA5
-    ,"rain fall rate                     "    &
-    ,"solar shortwave radiation flux     "    &
-    ,"downwelling longwave radiation flux"    &
-#endif
-    /)
-  character(256) :: NC_UNIT(N_OutPar) = (/    &
-     "millibar                 "              &
-    ,"meter second-1           "              &
-    ,"meter second-1           "              &
-    ,"Celsius                  "              &
-    ,"percentage               "              &
-#if defined JMA_MSM || defined DSJRA55 || defined JRA55
-    ,"0 to 1                   "              &
-    ,"0 to 1                   "              &
-    ,"0 to 1                   "              &
-    ,"0 to 1                   "              &
-    ,"kilogram meter-2 second-1"              &
-# if defined SWRAD
-    ,"watt meter-2             "              &
-# elif defined BULK_FLUX
-    ,"watt meter-2             "              &
-    ,"watt meter-2             "              &
-    ,"watt meter-2             "              &
-    ,"watt meter-2             "              &
-    ,"watt meter-2             "              &
-# endif
-#elif defined ERA5
-    ,"kilogram meter-2 second-1"              &
-    ,"watt meter-2             "              &
-    ,"watt meter-2             "              &
-#endif
-    /)
 
   real(8), parameter :: PI = 3.141592653589793d0
   real(8), allocatable :: latr(:, :)
@@ -369,7 +290,12 @@ PROGRAM frcATM2SWAT
   real(8), allocatable :: elev(:,:)
   integer :: N_lat_all, N_lon_all
   real(8) :: plat, plon, pelev
-!
+  real(8) :: cff, cff1, cff2,zenith,LatRad,Dangle,Hangle
+  real(8) :: dhour
+
+  real(8), parameter :: deg2rad = PI / 180.0d0
+  real(8), parameter :: Csolar = 1353.0d0          ! 1360-1380 W/m2
+
 !-------------------------------------------------------------------------------
   namelist/range/Tlat, Blat, Llon, Rlon
   namelist/gebco/BATH_FILE
@@ -658,6 +584,9 @@ PROGRAM frcATM2SWAT
   call jd(2006, 3, 1, jd_msmnew)
 #endif
 
+!  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  call jd(2000, 1, 1, jdate_Ref)
+
 #if defined ERA5
 !======= Set starting time and Ending time ========================
 
@@ -668,8 +597,6 @@ PROGRAM frcATM2SWAT
   
   write(*,*) jdate_Start, jdate_End, N_days
 
-!  call jd(Ryear, Rmonth, Rday, jdate_Ref)
-  call jd(2000, 1, 1, jdate_Ref)
   d_jdate_Ref = dble(jdate_Ref)
   write(*,*) d_jdate_Ref
 
@@ -1004,7 +931,7 @@ PROGRAM frcATM2SWAT
 
     !  ihour  = ihour-1 ! since time for precipitation is set +1 hour
 
-      call ndays(imonth, iday, iyear, Rmonth, Rday, Ryear, idays)
+      call ndays(imonth, iday, iyear, 1, 1, 2000, idays)
       
       t = dble(idays)+dble(ihour)/24.0d0+dble(imin)/1440.0d0
 #endif
@@ -1046,6 +973,48 @@ PROGRAM frcATM2SWAT
 # if defined SWRAD
     ! for short-wave radiation
       in_data2(:,:,11) = in_data(:,:,11)  ! W m-2 -> W m-2
+#else
+
+      jd_now=int(t)+jdate_Ref
+      call cdate(jd_now, iyear, imonth, iday)
+      call ndays(imonth, iday, iyear, 1, 1, iyear, idays)
+      dhour = (t-dble(floor(t)))*24.0d0
+
+      Dangle=23.44d0*COS((172.0d0-dble(idays))*2.0d0*pi/365.25d0)
+      Dangle=Dangle*deg2rad
+      Hangle=(12.0d0-dhour)*pi/12.0d0
+
+      do j=1, Jm
+        do i=1,Im
+!  Local daylight is a function of the declination (Dangle) and hour
+!  angle adjusted for the local meridian (Hangle-lonr(i,j)/15.0).
+!  The 15.0 factor is because the sun moves 15 degrees every hour.
+!
+          LatRad=lat(j)*deg2rad
+          cff1=SIN(LatRad)*SIN(Dangle)
+          cff2=COS(LatRad)*COS(Dangle)
+!
+!  Estimate variation in optical thickness of the atmosphere over
+!  the course of a day under cloudless skies (Zillman, 1972). To
+!  obtain net incoming shortwave radiation multiply by (1.0-0.6*c**3),
+!  where c is the fractional cloud cover.
+!
+!  The equation for saturation vapor pressure is from Gill (Atmosphere-
+!  Ocean Dynamics, pp 606).
+!
+          in_data2(i,j,11) = 0.0d0 ! for short-wave radiation
+
+          zenith=cff1+cff2*COS(Hangle-lon(i)*deg2rad)
+          IF (zenith.gt.0.0d0) THEN
+            sat_VP=6.1078d0*exp(5423.0d0*(1.0d0/273.15d0-1.0d0/(in_data2(i,j,4)+273.15d0)))   ! saturation vapor pressure (hPa=mbar)
+            VP    =sat_VP*in_data2(i,j,5)/100.0d0 ! water vapor pressure (hPa=mbar)  ! in_data2(i,j,5) -> humidity (%)
+            in_data2(i,j,11) =Csolar*zenith*zenith*                           & ! for short-wave radiation
+                (1.0d0-1.5d0*in_data2(i,j,9)**2+0.98d0*in_data2(i,j,9)**3)/   & ! (1) for JMAMSM data   ! in_data2(i,j,9) -> cloud fraction (0-1)
+!               (1.0d0-0.6d0*cloud(i,j)**3)/                                  & ! (2) default
+                ((zenith+2.7d0)*VP*1.0d-3+1.085d0*zenith+0.1d0)
+          END IF
+        end do
+      end do
 # endif 
 ! --------------------------------------------
 #elif defined DSJRA55
@@ -1154,11 +1123,8 @@ PROGRAM frcATM2SWAT
             hmd = in_data2(i,j,5)  ! %
             wnd = sqrt( in_data2(i,j,2)*in_data(i,j,2)     &
                        +in_data2(i,j,3)*in_data2(i,j,3) )  ! m s-1
-# if defined SWRAD
             slr = in_data2(i,j,11)*3.6d-3  ! W m-2 -> MJ m-2 h-1
-# else
-            slr = To be developed  *3.6d-3  ! W m-2 -> MJ m-2 h-1
-# endif
+
 #elif defined DSJRA55 || defined JRA55
             pcp = max( in_data2(i,j,10)*3600.0d0, 0.0d0 ) ! kg m-2 s-1 (= mm s-1)  -> mm h-1 
             tmp = in_data2(i,j,4)  ! degC
@@ -1166,7 +1132,7 @@ PROGRAM frcATM2SWAT
             wnd = sqrt( in_data2(i,j,2)*in_data(i,j,2)     &
                        +in_data2(i,j,3)*in_data2(i,j,3) )  ! m s-1
 # if defined BULK_FLUX
-            slr = in_data2(i,j,11)*3.6d-3  ! W m-2 -> MJ m-2 h-1 ! W m-2
+            slr = in_data2(i,j,13)*3.6d-3  ! W m-2 -> MJ m-2 h-1 ! W m-2
 # else
             slr = To be developed  *3.6d-3  ! W m-2 -> MJ m-2 h-1! W m-2
 # endif

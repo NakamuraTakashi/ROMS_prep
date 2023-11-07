@@ -4,16 +4,16 @@ rm frcATM2SWAT.exe
 # Please choose one of the following options
 #
 #export MY_CPP_FLAGS="-DJMA_MSM"
-#export MY_CPP_FLAGS="-DDSJRA55"
+export MY_CPP_FLAGS="-DDSJRA55"
 #export MY_CPP_FLAGS="-DJRA55"
-export MY_CPP_FLAGS="-DERA5"
+#export MY_CPP_FLAGS="-DERA5"
 
 # ---- For JMA_MSM option --------------
 # SWRAD: Downward short-wave radiation flag
 # Since 2017-Dec-05, short wave radiation data has been inclueded in MSM
 #
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSWRAD"
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DNETCDF_INPUT"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DNETCDF_INPUT"
 
 
 LIB="-L/usr/lib -L/usr/local/lib -leccodes_f90 -lnetcdff"
@@ -27,4 +27,5 @@ export OMP_NUM_THREADS=11
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-./frcATM2SWAT.exe < atm2swat_shizugawa.in
+./frcATM2SWAT.exe < Ishigaki_atm2swat.in
+#./frcATM2SWAT.exe < Iriomote_atm2swat.in

@@ -1,0 +1,56 @@
+
+&range
+! -------------------------------------------------------------------------
+! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
+!
+!                 ______ (Rlon,Tlat)
+!                |      |
+!                |      |
+!                |______|
+!     (Llon,Blat)                     
+!
+! On Input:
+!
+!    Llon         Box left-edge   longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Rlon         Box right-edge  longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Blat         Box bottom-edge latitude  (degress, -80 to 80 )
+!    Tlat         Box top-edge    latitude  (degress, -80 to 80 )
+!
+! Geographical and Grid parameters --------
+!
+  Llon = 123.65d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+  Rlon = 123.95d0    ! Longitude (degrees) of the top-right corner of the grid. 
+  Blat = 24.25d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+  Tlat = 24.45d0    ! Latitude  (degrees) of the top-right corner of the grid.
+/
+
+&gebco
+! GEBCO bathymetry NetCDF file     
+!  BATH_FILE = "E:/Documents/Dropbox/CORAL_NET/GIS/GEBCO_23_Jun_2022_7b4a4893e435/gebco_2021_n13.5_s10.0_w120.0_e124.0.nc"
+!  BATH_FILE = "//131.112.42.6/disk1/GEBCO_2022/GEBCO_2022.nc"
+  BATH_FILE = "//131.112.42.6/disk1/GEBCO_2023/GEBCO_07_Nov_2023_8cd913f95b3c/gebco_2023_n25.3381_s23.5657_w122.981_e125.061.nc"
+/
+
+&sdate
+  Syear  = 1990   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
+/
+
+&edate
+  Eyear  = 2010   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&frc_jmamsm
+!  MSM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2 2017-2022
+!  MSM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_GPV/"   ! GRIB2 2023-
+!  FRC_prefix  = "E:/SWAT/weather_test2/Ishigaki_MSMgb"
+  MSM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF !2006/3-2016
+  FRC_prefix  = "E:/SWAT/weather_test3/Iriomote_MSMnc"
+/
+&frc_dsjra55
+  DSJRA55_dir = "//131.112.42.6/disk1/dsjra55/"      ! GRIB2 1992-2006/2
+  FRC_prefix  = "E:/SWAT/weather_test4/Iriomote_DSJRA55"
+/

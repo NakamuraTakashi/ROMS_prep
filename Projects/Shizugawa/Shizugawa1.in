@@ -64,15 +64,15 @@
 /
 
 &sdate
-  Syear  = 2022   ! Starting year
+  Syear  = 2023   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 4      ! Ending month
-  Eday   = 2      ! Ending day
+  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 11     ! Ending month
+  Eday   = 1      ! Ending day
 /
 
 &refdate
@@ -148,14 +148,15 @@
 /
 
 &frc_dsjra55
-  DSJRA55_dir = "N:/Data/dsjra55/"  
+  DSJRA55_dir = "//131.112.42.6/disk1/dsjra55/"      ! GRIB2 1992-2016/2
   FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_DSJRA55"
 /
 
 &frc_jmamsm
-  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb"
-!  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+!  MSM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2 2017-2022
+  MSM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_GPV/"   ! GRIB2 2023-
+  FRC_prefix  = "X:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb"
+!  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF !2006/3-2016
 !  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMnc"
 /
 

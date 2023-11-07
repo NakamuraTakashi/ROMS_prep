@@ -36,6 +36,8 @@
 *swan_grid.grd
 *swan_in_bottom.txt
 *swan_in_wind.txt
+*swan_in_NGRID.txt
+*swan_in_BOUNDSPEC_SEGMENT_IJ.txt
 *.xlsx
 *.cli
 *.pcp
