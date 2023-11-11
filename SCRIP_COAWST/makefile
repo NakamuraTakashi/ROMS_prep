@@ -27,7 +27,7 @@ USE_NETCDF4=on
 
 USE_SCRIP := on
 
-COMPILERS = ../../Compilers
+COMPILERS = Compilers
 
 export HDF5_DISABLE_VERSION_CHECK=1
 
