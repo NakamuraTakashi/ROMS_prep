@@ -68,6 +68,6 @@ fi
 
 rm *.mod
 
-export OMP_NUM_THREADS=7
+export OMP_NUM_THREADS=30
 
 ./iniOCN2ROMS_3.exe < Tangalan.in

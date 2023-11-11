@@ -16,4 +16,4 @@ export OMP_NUM_THREADS=16
 
 rm *.mod
 
-./bryWAVE2SWAN.exe < Yaeyama1.in
+./bryWAVE2SWAN.exe < Shizugawa1.in

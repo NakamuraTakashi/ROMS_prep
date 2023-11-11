@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Shizugawa3_grd_v0.0.nc"
+  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.0.nc"
 /
 
 &mybath
@@ -169,4 +169,12 @@
 &frc_jmalsm
   LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
   FRC_prefix  = "Shizugawa3_frc_LSM"
+/
+
+&roms2swan_3
+  grid_size = 60.0d0    ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = -0.33d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
 /

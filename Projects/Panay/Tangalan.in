@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Tangalan_grd_v2.1.nc"
+  GRID_FILE = "../../../Data/Panay/Tangalan/Grid/Tangalan_grd_v2.1.nc"
 /
 
 &mybath
@@ -51,7 +51,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Panay1_grd_v1.3.nc"
+  parent_grid = "../../../Data/Panay/Panay1/Grid/Panay1_grd_v1.4.nc"
   parent_Imin = 63
   parent_Imax = 101
   parent_Jmin = 23
@@ -87,7 +87,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Panay/Panay1/Panay1_his_20210105_4.nc"
+  ROMS_HISFILE  = "../../../Output/Panay/Panay1/Panay1_sed_wav_his_20210105.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -103,7 +103,7 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
-  romsvar = 1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &ocn2roms      
@@ -117,17 +117,17 @@
 /
 
 &bry
-  BRY_prefix  = "Tangalan_bry_ROMS_Nz15"
+  BRY_prefix  = "Tangalan_sed_wav_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  0,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Tangalan_ini_ROMS_Nz15"
+  INI_prefix  = "Tangalan_sed_wav_ini_ROMS_Nz15"
 
   INIyear  = 2021   ! Initial year
   INImonth = 1      ! Initial month
-  INIday   = 5      ! Initial day
+  INIday   = 7      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

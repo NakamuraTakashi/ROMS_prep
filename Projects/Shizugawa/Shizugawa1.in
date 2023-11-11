@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Shizugawa1_grd_v0.1.nc"
+  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa1/Grid/Shizugawa1_grd_v0.1.nc"
 /
 
 &mybath
@@ -70,8 +70,8 @@
 /
 
 &edate
-  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 11     ! Ending month
+  Eyear  = 2024   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -93,11 +93,11 @@
 
 &jcope
 ! JCOPE-T
-  JCOPE_info_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
-  JCOPE_data_dir  =  "Q:/JCOPE-T/yaeyama/2019/"
+  JCOPE_info_dir  =  "D:/JCOPE-T/Shizugawa/2023/"
+  JCOPE_data_dir  =  "D:/JCOPE-T/Shizugawa/2023/"
 ! JCOPE-2M
-!  JCOPE_info_dir  =  "P:/JCOPE-2M/yaeyama/"
-!  JCOPE_data_dir  =  "P:/JCOPE-2M/yaeyama/"
+!  JCOPE_info_dir  =  "P:/JCOPE-2M/Shizugawa/"
+!  JCOPE_data_dir  =  "P:/JCOPE-2M/Shizugawa/"
 /
 
 &hycom_local1
@@ -112,13 +112,15 @@
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Bry/Shizugawa1_bry_HYCOM_Nz15"
+  !  BRY_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa1/Bry/Shizugawa1_bry_HYCOM_Nz15"
+BRY_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa1/Bry/Shizugawa1_bry_JCOPE-T_Nz15"
   !    south north west east
   SNWE =  1,   1,   0,   1
 /
 
 &ini
-  INI_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Ini/Shizugawa1_ini_HYCOM_Nz15"
+  !  INI_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Ini/Shizugawa1_ini_HYCOM_Nz15"
+INI_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa1/Ini/Shizugawa1_ini_JCOPE-T_Nz15"
 
   INIyear  = 2021   ! Initial year
   INImonth = 1      ! Initial month
@@ -170,4 +172,28 @@
 !  TIDE_prefix   = "Shizugawa1_tide_nao99Jb"
   TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
   TIDE_prefix  = "Shizugawa1_tide_fes2014"
+/
+&wave_cwm
+  CWM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2
+  SWAN_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa1/wave/TPAR/2018/S1_cwm"
+
+/
+
+&roms2swan_1
+!  NCnum = 1  ! Number of FRC files 
+  NCnum = 2  ! Number of FRC files 
+/
+&roms2swan_2
+!  ATM_FILE  =  "D:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20200101_1.nc"
+  ATM_FILE  =  "D:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20180101_1.nc",
+               "D:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20190101_1.nc"
+
+  OUTPUT_Dir  = "D:/COAWST_DATA/Shizugawa/Shizugawa1/wave/wind/2021"
+/
+&roms2swan_3
+  grid_size = 1500.0d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = -0.33d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
 /

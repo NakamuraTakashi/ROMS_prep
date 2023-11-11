@@ -2,8 +2,8 @@
 # ===== Ocean Models ========================================================================
 # Please choose one of the following options
 #
-export MY_CPP_FLAGS="-DHYCOM_MODEL"
-#export MY_CPP_FLAGS="-DJCOPE_MODEL"
+#export MY_CPP_FLAGS="-DHYCOM_MODEL"
+export MY_CPP_FLAGS="-DJCOPE_MODEL"
 #export MY_CPP_FLAGS="-DROMS_MODEL"
 
 # ===== HYCOM option ====================================================================
@@ -25,25 +25,25 @@ export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_30 -DREANALYSIS"
 
 # --  Local HYCOM extracted data by getHYCOM code 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
 
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 # Fast read option for HYCOM 4D data (u, v, temp, salt).
 # *If failure frequently occurs, please deactivate this option. 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
 
 # ===== ROMS option ======================================================================
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
 
 # ===== JCOPE option =====================================================================
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
 
 # ===== Tide model =======================================================================
 #tide_model=naotide
-tide_model=naotidej
+#tide_model=naotidej
 
 # ========================================================================================
 SRC_DIR=../../src

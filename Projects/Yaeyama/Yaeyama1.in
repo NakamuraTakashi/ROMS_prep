@@ -1,19 +1,19 @@
 &grd
 ! ROMS NetCDF grid file     
-!  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
-  GRID_FILE = "Yaeyama1_grd_v10.nc"
+  GRID_FILE = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
+!  GRID_FILE = "Yaeyama1_grd_v10.nc"
 /
 
 &sdate
-  Syear  = 2011   ! Starting year
+  Syear  = 2021   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2012   ! Ending year
+  Eyear  = 2022   ! Ending year
   Emonth = 1      ! Ending month
-  Eday   = 2      ! Ending day
+  Eday   = 1      ! Ending day
 /
 
 &refdate
@@ -105,10 +105,10 @@
 /
 
 &frc_jmamsm
-!  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb"
-  MSM_dir  =  "P:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc"
+  MSM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2
+  FRC_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb"
+!  MSM_dir  =  "P:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc"
 /
 
 &frc_jmalsm
@@ -124,8 +124,8 @@
 /
 
 &wave_cwm
-  CWM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  SWAN_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/wave/TPAR/2011/Y1_cwm"
+  CWM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2
+  SWAN_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/wave/TPAR/2022/Y1_cwm"
 
 /
 
@@ -134,11 +134,11 @@
   NCnum = 2  ! Number of FRC files 
 /
 &roms2swan_2
-!  ATM_FILE  =  "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb_20200101_1.nc"
-  ATM_FILE  =  "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc_20110101_1.nc",
-               "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc_20120101_1.nc"
+!  ATM_FILE  =  "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb_20200101_1.nc"
+  ATM_FILE  =  "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb_20180101_1.nc",
+               "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb_20190101_1.nc"
 
-  OUTPUT_Dir  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/wave/wind/2011"
+  OUTPUT_Dir  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/wave/wind/2018"
 /
 &roms2swan_3
   grid_size = 1500.0d0   ! Grid resolution

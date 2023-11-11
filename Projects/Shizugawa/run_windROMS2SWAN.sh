@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-rm *.exe
+#rm *.exe
 
 export MY_CPP_FLAGS=""
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
@@ -17,4 +17,4 @@ export OMP_NUM_THREADS=16
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-./windROMS2SWAN.exe < Yaeyama1.in
+./windROMS2SWAN.exe < Shizugawa1.in

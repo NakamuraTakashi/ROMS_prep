@@ -19,7 +19,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSWRAD"
 # ---- For JRA55 or DSJRA55 option --------------
 # BULK_FLUX: Downward/Upward short-wave/long-wave radiation flag
 # 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBULK_FLUX"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBULK_FLUX"
 
 LIB="-L/usr/lib -L/usr/local/lib -leccodes_f90 -lnetcdff"
 INCLUDE="-I/usr/include -I/usr/local/include"

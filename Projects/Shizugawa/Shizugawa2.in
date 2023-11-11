@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Shizugawa2_grd_v0.0.nc"
+  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.0.nc"
 /
 
 &mybath
@@ -51,7 +51,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Shizugawa1_grd_v0.1.nc"
+  parent_grid = "D:/COAWST_DATA/Shizugawa/Shizugawa1/Grid/Shizugawa1_grd_v0.1.nc"
   parent_Imin = 15
   parent_Imax = 29
   parent_Jmin = 29
@@ -82,14 +82,16 @@
 /
 
 &roms2roms1
-  NCnum = 3  ! Number of ROMS his files 
+  NCnum = 1  ! Number of ROMS his files 
+!  NCnum = 3  ! Number of ROMS his files 
 /
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Shizugawa1/Shizugawa1_his_20210102.nc",
-                  "E:/COAWTS_OUTPUT/Shizugawa1/Shizugawa1_his_20210131.nc",
-                  "E:/COAWTS_OUTPUT/Shizugawa1/Shizugawa1_his_20211231.nc"
+  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20210102.nc"
+!  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20210102.nc",
+!                  "E:/COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20210131.nc",
+!                  "E:/COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20211231.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -105,7 +107,7 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &ocn2roms      
@@ -119,17 +121,17 @@
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa2/Bry/Shizugawa2_bry_ROMS_Nz15"
+  BRY_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Bry/Shizugawa2_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  0,   0,   0,   1
 /
 
 &ini
-  INI_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa2/Ini/Shizugawa2_ini_ROMS_Nz15"
+  INI_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Ini/Shizugawa2_ini_ROMS_Nz15"
 
   INIyear  = 2021   ! Initial year
   INImonth = 1      ! Initial month
-  INIday   = 3      ! Initial day
+  INIday   = 5      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -170,4 +172,12 @@
 &frc_jmalsm
   LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
   FRC_prefix  = "Shizugawa2_frc_LSM"
+/
+
+&roms2swan_3
+  grid_size = 300.0d0    ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = -0.33d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
 /
