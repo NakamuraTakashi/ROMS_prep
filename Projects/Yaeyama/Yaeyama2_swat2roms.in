@@ -70,8 +70,8 @@
 !  Jsrc =  76     ! river_Eposition; j point index of U or V face source/sink
 ! *** Yaeyama2 **** 
 !          1               5               9     
-  Isrc = 219,206,202,219,219,237,211,181,181 ! river_Xposition; i point index of U or V face source/sink
-  Jsrc = 115,114,114,173,180,233,194,143,161 ! river_Eposition; j point index of U or V face source/sink
+  Isrc = 219,206,202,219,219,237,211,181,180 ! river_Xposition; i point index of U or V face source/sink
+  Jsrc = 155,144,144,173,180,233,194,143,160 ! river_Eposition; j point index of U or V face source/sink
 
 ! river_direction; river runoff direction (0/1)
 !  0: flow across u-face, 1: flow across v-face

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#rm *.exe
+rm grdROMS2SWAN.exe
 
 export MY_CPP_FLAGS=""
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
@@ -16,4 +16,5 @@ export OMP_NUM_THREADS=7
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-./grdROMS2SWAN.exe < Shizugawa3.in
+./grdROMS2SWAN.exe < Shizugawa2.in
+#./grdROMS2SWAN.exe < Shizugawa3.in

@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.0.nc"
+  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.2.nc"
 /
 
 &mybath
