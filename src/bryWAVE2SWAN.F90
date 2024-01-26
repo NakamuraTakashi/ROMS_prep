@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018-2023 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2024 Takashi NAKAMURA  =====
 
 PROGRAM bryWAVE2SWAN
   use netcdf
@@ -23,6 +23,7 @@ PROGRAM bryWAVE2SWAN
   integer, parameter :: N_Param = 3
       
 !----------------------------------------------------------------------
+#if defined JMA_CWM
 !--- JMA_CWM parameter setting -----------------
   character(256) :: CWM_dir
   character(256) :: SWAN_prefix
@@ -45,6 +46,57 @@ PROGRAM bryWAVE2SWAN
   integer :: p1,p2,p3
   character(256) :: p4
 
+#elif defined ERA5
+  !--- REA5 parameter setting -----------------
+  character(256) :: CWM_dir
+  character(256) :: SWAN_prefix
+  integer :: jd_msmnew
+  
+  integer, parameter :: N_InPar  = 3
+  integer, parameter :: N_OutPar = 3
+  integer, parameter :: N_OutPar1 = 5
+  
+  character(256) :: NCIN_NAME(N_InPar) = (/   &
+     "msl  "  &  ! Mean sea level pressure (Pa)
+    ,"u10  "  &  ! 10 metre U wind component (m s-1)
+    ,"v10  "  &  ! 10 metre V wind component (m s-1)
+    ,"t2m  "  &  ! 2 metre temperature (K)
+    ,"d2m  "  &  ! 2 metre dewpoint temperature (K)
+    ,"tp   "  &  ! Total precipitation (m h-1)
+    ,"ssrd "  &  ! Surface solar radiation downward (J h-1 m-2)
+    ,"strd "  &  ! Surface thermal radiation downward (J h-1 m-2)
+    /)
+  character(len=*), parameter :: NC_LAT_NAME  = 'latitude'
+  character(len=*), parameter :: NC_LON_NAME  = 'longitude'
+  character(len=*), parameter :: NC_TIME_NAME = 'time'
+  integer :: d_ref_days
+  real(8) :: sf, off
+  
+#endif
+  
+#if defined ERA5
+  TYPE T_NC
+    real(8), pointer :: time_all(:)
+    integer :: Nt
+    integer :: ItS, ItE
+  END TYPE T_NC
+  TYPE (T_NC), allocatable :: NC(:)
+  real(8), allocatable :: atm_time(:)
+  real(8), allocatable :: time2(:)
+  integer, allocatable :: iNCt(:)
+  integer, allocatable :: idt(:)
+  integer :: NCnum
+  integer :: iNCs, iNCe
+  character(256), allocatable :: ATM_FILE(:)
+  real(8) :: d_jdate
+  real(8) :: d_jdate_Start, d_jdate_Ref, d_jdate_Ref_atm
+  integer :: jdate_Start, jdate_End, jdate_Ref, jdate_Ref_atm
+  integer :: N_days
+  integer :: iNC, iNCm
+  integer :: Nt
+  
+#endif
+  
   real(8), allocatable :: out_data(:,:) ! output forcing data
        
   real(8), allocatable :: lat(:), lon(:)
@@ -97,8 +149,14 @@ PROGRAM bryWAVE2SWAN
   namelist/edate/Eyear, Emonth, Eday
   namelist/refdate/Ryear, Rmonth, Rday
   namelist/bry/BRY_prefix, SNWE
+#if defined JMA_CWM
   namelist/wave_cwm/CWM_dir
   namelist/wave_cwm/SWAN_prefix
+#elif defined ERA5
+  namelist/wave_era5_1/NCnum
+  namelist/wave_era5_2/WAV_FILE
+  namelist/wave_era5_2/SWAN_prefix
+#endif
 
   read (5, nml=grd)
   rewind(5)
@@ -108,10 +166,17 @@ PROGRAM bryWAVE2SWAN
   rewind(5)
   read (5, nml=refdate)
   rewind(5)
-  read (*, nml=bry)
+  read (5, nml=bry)
   rewind(5)
+#if defined JMA_CWM
   read (5, nml=wave_cwm)
   rewind(5)
+#elif defined ERA5
+  read (5, nml=wave_era5_1)
+  rewind(5)
+  read (5, nml=wave_era5_2)
+  rewind(5)
+#endif
 
 !---- Read ROMS grid netCDF file --------------------------------
   write(*,*) "OPEN: ", trim( GRID_FILE )
@@ -211,6 +276,27 @@ PROGRAM bryWAVE2SWAN
 !  write(*,*) in_data(0,0,3), rmask_dg(0,0)
 
 #elif defined ERA5
+!---- Read ERA5 NetCDF file --------------------------------
+  IN_FILE(1) = trim(ATM_FILE(1))
+
+  write(*,*) "OPEN: ", trim( IN_FILE(1) )
+  !Open NetCDF file
+  call check( nf90_open(trim( IN_FILE(1) ), nf90_nowrite, ncid) )
+
+  ! Get dimension data
+  call get_dimension(ncid, NC_LAT_NAME, Jm)
+  call get_dimension(ncid, NC_LON_NAME, Im)
+  write(*,*) Im,Jm
+  
+  ! Allocate variable
+  allocate(lat(Jm))
+  allocate(lon(Im))
+  
+  call check( nf90_inq_varid(ncid, NC_LAT_NAME, var_id) )
+  call check( nf90_get_var(ncid, var_id, lat) )
+  call check( nf90_inq_varid(ncid, NC_LON_NAME, var_id) )
+  call check( nf90_get_var(ncid, var_id, lon) )
+  call check( nf90_close(ncid) )
 
 #elif defined SWAN
 

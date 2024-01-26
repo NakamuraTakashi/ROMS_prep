@@ -1,0 +1,75 @@
+!=== JCOPE-T-DA data, u, v, ubar, vbar, 2022-03-15 21:00 ========
+&bry_repair
+
+  NC_FILE = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15_20220101.00.nc"
+
+! switches (1/0) for activate/deactivate the variables for repair
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+  romsvar = 0,1,1,1,1,0,0        
+
+!      south north west east
+  SNWE =  1,   1,   1,   1
+
+  itime = 1702 ! JCOPE-T-DA data: 2022-03-15 21:00
+  StrangeValue = 1.0d5 !1.8d0
+/
+
+!!=== JCOPE-T-DA data, salt, 2020-12-15 17:00 ========
+!&bry_repair
+!
+!  NC_FILE = "Yaeyama1_bry_JCOPET_Nz15_20200101.00.nc"
+!
+!! switches (1/0) for activate/deactivate the variables for repair
+!!
+!! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!!
+!!           1       5   7
+!  romsvar = 0,0,0,0,0,0,1        
+!
+!!      south north west east
+!  SNWE =  1,   1,   1,   1
+!
+!  itime = 8394 ! JCOPE-T-DA data: 2020-12-15 17:00
+!  StrangeValue = 1.0d5
+!/
+
+!!=== Global HYCOM data, all valiables, 2008-2-22 03:00 =========
+!&bry_repair
+!
+!  NC_FILE = "Yaeyama1_bry_HYCOM_Nz15_20080101.00_back.nc"
+!
+!! switches (1/0) for activate/deactivate the variables for repair
+!!
+!! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!!
+!!           1       5   7
+!  romsvar = 1,1,1,1,1,1,1
+!
+!!      south north west east
+!  SNWE =  1,   1,   1,   1
+!
+!  itime = 410 ! Global HYCOM data: 2008-02-22 03:00
+!  StrangeValue = 0.0d0  ! if set zero (0.0d0), all cell values are replaced to the mean value of two time steps.
+!/
+
+!!=== Global HYCOM data, v, 2017-02-09 15:00 =========
+!&bry_repair
+!
+!  NC_FILE = "Yaeyama1_bry_HYCOM_Nz15_20170101.00_back.nc"
+!
+!! switches (1/0) for activate/deactivate the variables for repair
+!!
+!! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!!
+!!           1       5   7
+!  romsvar = 1,1,1,1,1,1,1
+!
+!!      south north west east
+!  SNWE =  1,   1,   1,   1
+!
+!  itime = 318 ! Global HYCOM data: 2017-02-09 15:00
+!  StrangeValue = 0.0d0  ! if set zero (0.0d0), all cell values are replaced to the mean value of two time steps.
+!/

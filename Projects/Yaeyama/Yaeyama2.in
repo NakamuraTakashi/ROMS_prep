@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.2.nc"
+  GRID_FILE = "D:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.2.nc"
 !  GRID_FILE = "Yaeyama2_grd_v11.nc"
 /
 
@@ -20,7 +20,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
+  parent_grid = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
   parent_Imin = 155
   parent_Imax = 215
   parent_Jmin = 60
@@ -39,15 +39,15 @@
 /
 
 &sdate
-  Syear  = 2020   ! Starting year
-  Smonth = 1      ! Starting month
-  Sday   = 1      ! Starting day
+  Syear  = 2023   ! Starting year
+  Smonth = 6      ! Starting month
+  Sday   = 29      ! Starting day
 /
 
 &edate
-  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2024   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
-  Eday   = 2      ! Ending day
+  Eday   = 1      ! Ending day
 /
 
 &refdate
@@ -57,16 +57,14 @@
 /
 
 &roms2roms1
-  NCnum = 3  ! Number of ROMS his files 
+  NCnum = 1  ! Number of ROMS his files 
 /
 
 &roms2roms2     
 ! ROMS coarse NetCDF history file name
-!  ROMS_HISFILE  = "K:/COAWST/output/Yaeyama1_loric/YY1mb1_his_190610_kkl_roms_30lyr_clmoff.nc"
+!  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Yaeyama/Yaeyama1_swan_coupling/Yaeyama1_his_20130101.nc"
 !  ROMS_HISFILE  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15_20140502.00.nc"
-  ROMS_HISFILE  = "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20070106.nc",
-                  "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20080107.nc",
-                  "H:/COAWST_OUTPUT/Yaeyama1/Yaeyama1_his_20080222.nc"
+  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Yaeyama/Yaeyama1/Yaeyama1_his_20230629.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -114,7 +112,7 @@
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Bry/Yaeyama2_bry_ROMS_Nz15"
+  BRY_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama2/Bry/Yaeyama2_bry_ROMS_Nz15_tmp"
 !  BRY_prefix  = "Yaeyama2_bry_ROMS_Nz15"
 
   !    south north west east
@@ -124,11 +122,11 @@
 &ini
 !  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Ini/Yaeyama2_ini_ROMS_Nz15"
 !  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Ini/Yaeyama2_ini_HYCOMwNAO_Nz15"
-  INI_prefix  = "Yaeyama2_ini_ROMS_Nz15"
+  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama2/Ini_2/Yaeyama2_ini_ROMS_Nz15"
 
-  INIyear  = 1994   ! Initial year
-  INImonth = 1      ! Initial month
-  INIday   = 10     ! Initial day
+  INIyear  = 2013   ! Initial year
+  INImonth = 6      ! Initial month
+  INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -163,20 +161,20 @@
 ! 6: Precipitation, 7: Short-wave radiation, 8: Down-ward long-wave radiation
 !           1       5      
   airvar =  1,1,1,1,0,1,1,1
-!  airvar =  0,0,0,0,0,0,1,0
+!  airvar =  0,0,0,0,0,0,0,1
 
-  Pair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Pair2020.csv'   ! JMA Pressure data CSV file
-  wind_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/wind2020.csv'   ! JMA Wind data CSV file
-  Tair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Tair2020.csv'   ! JMA Air temperature data CSV file
-  Qair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Qair2020.csv'   ! JMA Humidity data CSV file
-  cloud_NAME = 'o:/JMA_DATA/Weather_Station/Ishigaki/cloud2020.csv'  ! JMA Cloud fraction data CSV file
-  rain_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/rain2020.csv'   ! JMA Precipitation data CSV file
-  swrad_NAME = 'o:/JMA_DATA/Weather_Station/Ishigaki/swrad2020.csv'  ! JMA Short-wave radiation data CSV file
+  Pair_NAME  =  '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/Pair2024tmp.csv'   ! JMA Pressure data CSV file
+  wind_NAME  =  '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/wind2024tmp.csv'   ! JMA Wind data CSV file
+  Tair_NAME  =  '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/Tair2024tmp.csv'   ! JMA Air temperature data CSV file
+  Qair_NAME  =  '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/Qair2024tmp.csv'   ! JMA Humidity data CSV file
+  cloud_NAME = '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/cloud2024tmp.csv'  ! JMA Cloud fraction data CSV file
+  rain_NAME  =  '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/rain2024tmp.csv'   ! JMA Precipitation data CSV file
+  swrad_NAME = '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/swrad2024tmp.csv'  ! JMA Short-wave radiation data CSV file
 
-  LW_prefix  = 'o:/JMA_DATA/Weather_Station/Ishigaki/lwrad_data/DL2020'   ! JMA long-wave radiation data TXT file
+  LW_prefix  = '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/lwrad_data/DL2023'   ! JMA long-wave radiation data TXT file
   LW_suffix  = '_ish.txt'          ! JMA long-wave radiation data TXT file
 
-  FRC_prefix  = "Ishigaki_frc_JMAobs_2020"
+  FRC_prefix  = "D:/COAWST_DATA/Yaeyama/Ishigaki_Air/Ishigaki_frc_JMAobs_2024tmp"
 !  FRC_prefix  = "Ishigaki_frc_JMAobs_2019_UTCp9"
 /
 

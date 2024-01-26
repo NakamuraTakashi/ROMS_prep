@@ -27,7 +27,7 @@ NGRIDS_WRF=0,
 !ROMS_GRIDS(1)='D:/COAWST_DATA/Shizugawa/Shizugawa1/Grid/Shizugawa1_grd_v0.1.nc',
 !--- Shizugawa2 -----
 !ROMS_GRIDS(1)='D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.0.nc',
-!--- Shizugawa2 -----
+!--- Shizugawa3 -----
 ROMS_GRIDS(1)='D:/COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.0.nc',
 
 !ROMS_GRIDS(2)='roms_grid2.nc',

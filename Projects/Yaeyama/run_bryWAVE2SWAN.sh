@@ -12,7 +12,7 @@ INCLUDE="-I/usr/include -I/usr/local/include"
 
 gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/bryWAVE2SWAN.F90 -fopenmp -O2 ${MY_CPP_FLAGS} ${INCLUDE} ${LIB} -o bryWAVE2SWAN.exe
 
-export OMP_NUM_THREADS=16
+export OMP_NUM_THREADS=32
 
 rm *.mod
 

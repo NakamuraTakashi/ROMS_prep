@@ -2,8 +2,8 @@
 # ===== Ocean Models ========================================================================
 # Please choose one of the following options
 #
-export MY_CPP_FLAGS="-DHYCOM_MODEL"
-#export MY_CPP_FLAGS="-DJCOPE_MODEL"
+#export MY_CPP_FLAGS="-DHYCOM_MODEL"
+export MY_CPP_FLAGS="-DJCOPE_MODEL"
 #export MY_CPP_FLAGS="-DROMS_MODEL"
 
 # ===== HYCOM option ====================================================================
@@ -25,7 +25,7 @@ export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_30 -DREANALYSIS"
 
 # --  Local HYCOM extracted data by getHYCOM code 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
 
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
@@ -33,13 +33,13 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
 
 # Fast read option for HYCOM 4D data (u, v, temp, salt).
 # *If failure frequently occurs, please deactivate this option. 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
 
 # ===== ROMS option ======================================================================
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
 
 # ===== JCOPE option =====================================================================
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
 
 
 echo "${MY_CPP_FLAGS}"
@@ -51,6 +51,6 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_TIME_DIR='${SRC_DIR}'"
 gfortran -fbounds-check -fno-align-commons ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_utility.F90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_jcope.F90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/set_scoord.f90  ${SRC_DIR}/set_depth.F90 ${SRC_DIR}/pzcon.f ${SRC_DIR}/potmp.f ${SRC_DIR}/bryOCN2ROMS.F90 ${MY_CPP_FLAGS} -fopenmp -O2 -I/usr/include -L/usr/lib -lnetcdff -o bryOCN2ROMS_1.exe
 rm *.mod
 
-export OMP_NUM_THREADS=12
+export OMP_NUM_THREADS=32
 
 ./bryOCN2ROMS_1.exe < Yaeyama1.in
