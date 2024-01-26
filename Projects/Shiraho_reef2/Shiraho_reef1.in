@@ -1,20 +1,61 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "shiraho1_grd_v0.0.nc"
+  GRID_FILE = "shiraho_reef_grd_v17.0.nc"
 /
 
-&gebco
+&mybath
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
+  BATH_FILE = "E:/Documents/Dropbox/Ishigaki_Data/GIS_data/Yaeyama_bath_merged_10m/Yaeyama_bath_merged_10m.nc"
+  x_ncname = 'x'
+  y_ncname = 'y'
+  bathy_ncname = 'Band1'
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 51  ! Negative zones are for the Southern hemisphere.
+  ispher = 6   ! Spheroid for projection (1-19)
+! ispher -- SPHEROID SELECTION: 1=CLARKE 1866; 2=CLARKE 1880;       
+!               3=BESSEL 1967; 4=NEW INTERNATIONAL 1967;
+!               5=INTERNATIONAL 1909 (1924) (HAYFORD);
+!               6=WORLD GEODETIC SYSTEM 1972; 7=EVEREST;
+!               8=WORLD GEODETIC SYSTEM 1966;
+!               9=GEODETIC REFERENCE SYSTEM 1980;
+!               10=AIRY; 11=MODIFIED EVEREST; 12=MODIFIED AIRY;         
+!               13=WALBECK; 14=SOUTH ASIA 1960 (FISCHER);
+!               15=AUSTRALIAN NATIONAL-SOUTH AMERICAN 1969;
+!               16=KRASSOVSKY; 17=HOUGH; 18=MERCURY 1960 (FISCHER);     
+!               19=MODIFIED MERCURY 1968 (FISCHER)
+!        NOTES:
+!               IF ISPHER.EQ.0: COMPUTE IN LAMBERT OR TRANSVERSE MERCATOR  
+!               IF ISPHER.NE.0: COMPUTE IN UNIVERSAL TRANSVERSE MERCATOR   
+!               IZONE IS UTM ZONE NUMBER OR STATE PLANE ZONE DEPENDING ON  
+!               SELECTION OF ISPHER.  IF UTM AND SOUTHERN HEMISPHERE, IZONE
+!               IS NEGATIVE.
+!    
+/
+
+&grd_setting_utm
+! Set utm x y coordinate at corner points. 
+  s_x = 626550
+  s_y = 2694215
+  e_x = 629700
+  e_y = 2703765
+
+! Set ROMS grid resolution
+! *The information is not used when GRID_REFINEMENT is activated.
+  RESOLUTION = 50.0d0 ! meter resolution
+
+  angle = 0.0d0   ! Angle (radians) between XI-axis and true EAST at RHO-points
 /
 
 &bath_smooth
-  rx0max = 0.5  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
 
-  hmin = -9.0d0  ! Minimum depth
+  hmin = -1.0d0  ! Minimum depth
 
  ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
  ! and one-grid bay grids 
