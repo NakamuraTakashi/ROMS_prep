@@ -6,7 +6,7 @@
 
 &sdate
   Syear  = 2023   ! Starting year
-  Smonth = 7      ! Starting month
+  Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
@@ -58,7 +58,7 @@
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPE2M_Nz15"
-  BRY_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15_tmp"
+  BRY_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /

@@ -130,8 +130,8 @@
   INI_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Ini/Shizugawa2_ini_ROMS_Nz15"
 
   INIyear  = 2021   ! Initial year
-  INImonth = 1      ! Initial month
-  INIday   = 5      ! Initial day
+  INImonth = 6      ! Initial month
+  INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 

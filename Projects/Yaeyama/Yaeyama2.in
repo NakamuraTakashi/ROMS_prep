@@ -40,8 +40,8 @@
 
 &sdate
   Syear  = 2023   ! Starting year
-  Smonth = 6      ! Starting month
-  Sday   = 29      ! Starting day
+  Smonth = 1      ! Starting month
+  Sday   = 1      ! Starting day
 /
 
 &edate
@@ -64,7 +64,7 @@
 ! ROMS coarse NetCDF history file name
 !  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Yaeyama/Yaeyama1_swan_coupling/Yaeyama1_his_20130101.nc"
 !  ROMS_HISFILE  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15_20140502.00.nc"
-  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Yaeyama/Yaeyama1/Yaeyama1_his_20230629.nc"
+  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Yaeyama/Yaeyama1/Yaeyama1_his_20231130.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -160,8 +160,8 @@
 ! 1: Pressure, 2: Wind, 3: Air temperature, 4: Humidity, 5: Cloud fraction
 ! 6: Precipitation, 7: Short-wave radiation, 8: Down-ward long-wave radiation
 !           1       5      
-  airvar =  1,1,1,1,0,1,1,1
-!  airvar =  0,0,0,0,0,0,0,1
+!  airvar =  1,1,1,1,0,1,1,1
+  airvar =  0,0,0,0,0,0,0,1
 
   Pair_NAME  =  '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/Pair2024tmp.csv'   ! JMA Pressure data CSV file
   wind_NAME  =  '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/wind2024tmp.csv'   ! JMA Wind data CSV file
@@ -174,7 +174,7 @@
   LW_prefix  = '//131.112.42.7/disk1/JMA_DATA/Weather_Station/Ishigaki/lwrad_data/DL2023'   ! JMA long-wave radiation data TXT file
   LW_suffix  = '_ish.txt'          ! JMA long-wave radiation data TXT file
 
-  FRC_prefix  = "D:/COAWST_DATA/Yaeyama/Ishigaki_Air/Ishigaki_frc_JMAobs_2024tmp"
+  FRC_prefix  = "D:/COAWST_DATA/Yaeyama/Ishigaki_Air/Ishigaki_frc_JMAobs_2023"
 !  FRC_prefix  = "Ishigaki_frc_JMAobs_2019_UTCp9"
 /
 

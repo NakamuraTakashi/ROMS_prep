@@ -18,7 +18,7 @@ NGRIDS_WRF=0,
 
 ! 3) Enter name of the ROMS grid file(s):
 !
-ROMS_GRIDS(1)='D:/ROMS/Data/Shiraho_reef/shiraho_reef_grid16.3.nc',
+ROMS_GRIDS(1)='D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Grid/shiraho_reef_grd_v17.0.nc',
 !ROMS_GRIDS(2)='roms_grid2.nc',
 
 ! 4) Enter SWAN information:
@@ -27,9 +27,9 @@ ROMS_GRIDS(1)='D:/ROMS/Data/Shiraho_reef/shiraho_reef_grid16.3.nc',
 !    -if the swan grids are Spherical(set cartesian=0) or
 !                           Cartesian(set cartesian=1).
 !
-SWAN_COORD(1)='D:/ROMS/Data/Shiraho_reef/swan_shiraho_coord16.2.grd',
+SWAN_COORD(1)='D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Grid/shiraho_swan_grd_v17.0.grd',
 !SWAN_COORD(2)='swan_coord2.grd',
-SWAN_BATH(1)='D:/ROMS/Data/Shiraho_reef/swan_shiraho_bathy16.2.bot',
+SWAN_BATH(1)='D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Grid/shiraho_swan_grd_v17.0.bot',
 !SWAN_BATH(2)='swan_bathy2.bot',
 SWAN_NUMX(1)=64,
 !SWAN_NUMX(2)=116,

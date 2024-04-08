@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "shiraho_reef_grd_v17.0.nc"
+  GRID_FILE = "D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Grid/shiraho_reef_grd_v17.0.nc"
 /
 
 &mybath
@@ -65,7 +65,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "../../../COAWST/Data/Yaeyama/Yaeyama2_grd_v10.nc"
+  parent_grid = "D:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.2.nc"
   parent_Imin = 216
   parent_Imax = 233
   parent_Jmin = 132
@@ -84,15 +84,15 @@
 /
 
 &sdate
-  Syear  = 2017   ! Starting year
-  Smonth = 1      ! Starting month
-  Sday   = 1      ! Starting day
+  Syear  = 2023   ! Starting year
+  Smonth = 9    ! Starting month
+  Sday   = 30    ! Starting day
 /
 
 &edate
-  Eyear  = 2018   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 10      ! Ending month
+  Eday   = 21     ! Ending day
 /
 
 &refdate
@@ -102,32 +102,76 @@
   Rday   = 1      ! Reference day
 /
 
+&roms2roms1
+  NCnum = 1  ! Number of ROMS his files 
+/
+
+&roms2roms2
+! ROMS coarse NetCDF history file name
+  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Yaeyama/Yaeyama2/Yaeyama2_his_20220914.nc"
+
+!  ROMS_HISFILE  = "L:/COAWST_OUTPUT/Yaeyama2/Yaeyama2_his_20100402.nc",
+!                  "L:/COAWST_OUTPUT/Yaeyama2/Yaeyama2_his_20090913.nc"
+
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt, 
+! 8: mud_, 9: sand_,
+! 10: TIC, 11: alkalinity, 12: oxygen, 13: DOC_, 14: POC_, 
+! 15: phytoplankton_, 16: zooplankton_, 17: PIC_ 
+! 18: NO3, 19: NH4, 20: PO4, 21: DON_, 22: PON_, 23: DOP_, 24: POP_, 
+! 25: TI13C, 26: DO13C_, 27: PO13C_, 
+! 28: phyt13C_, 29: zoop13C_, 30: PI13C_
+! 31: 15NO3, 32: 15NH4, 33: DO15N_, 34: PO15N_
+! 35: phyt15N_, 36: zoop15N_
+!    
+!           1       5        10        15        20        25        30        35  
+!           |       |         |         |         |         |         |         |  
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+/
+
+&bry
+  BRY_prefix  = "D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Bry/Shiraho_reef_bry_ROMS_Nz8"
+
+  !    south north west east
+  SNWE =  1,   1,   0,   1
+/
+
+&ini
+  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Ini/Shiraho_reef_ini_ROMS_Nz8"
+
+  INIyear  = 2023   ! Initial year
+  INImonth = 10      ! Initial month
+  INIday   = 1     ! Initial day
+  INIhour  = 0      ! Initial hour
+/
+
 &frc_jmaobs
 
 ! switches (1/0) for activate/deactivate the variables
 ! 1: Pressure, 2: Wind, 3: Air temperature, 4: Humidity, 5: Cloud fraction
 ! 6: Precipitation, 7: Short-wave radiation, 8: Down-ward long-wave radiation
 !           1       5      
-  airvar =  1,1,1,1,0,1,1,1
-!  airvar =  0,0,0,0,0,0,1,0
+  airvar =  1,1,1,1,1,1,1,1
+! airvar =  0,0,0,0,0,0,0,1
 
-  Pair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Pair2020.csv'   ! JMA Pressure data CSV file
-  wind_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/wind2020.csv'   ! JMA Wind data CSV file
-  Tair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Tair2020.csv'   ! JMA Air temperature data CSV file
-  Qair_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/Qair2020.csv'   ! JMA Humidity data CSV file
-  cloud_NAME = 'o:/JMA_DATA/Weather_Station/Ishigaki/cloud2020.csv'  ! JMA Cloud fraction data CSV file
-  rain_NAME  =  'o:/JMA_DATA/Weather_Station/Ishigaki/rain2020.csv'   ! JMA Precipitation data CSV file
-  swrad_NAME = 'o:/JMA_DATA/Weather_Station/Ishigaki/swrad2020.csv'  ! JMA Short-wave radiation data CSV file
+  Pair_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/Pair2019.csv'   ! JMA Pressure data CSV file
+  wind_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/wind2019.csv'   ! JMA Wind data CSV file
+  Tair_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/Tair2019.csv'   ! JMA Air temperature data CSV file
+  Qair_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/Qair2019.csv'   ! JMA Humidity data CSV file
+  cloud_NAME = 'E:/JMA_DATA/Weather_Station/Ishigaki/cloud2019.csv'  ! JMA Cloud fraction data CSV file
+  rain_NAME  =  'E:/JMA_DATA/Weather_Station/Ishigaki/rain2019.csv'   ! JMA Precipitation data CSV file
+  swrad_NAME = 'E:/JMA_DATA/Weather_Station/Ishigaki/swrad2019.csv'  ! JMA Short-wave radiation data CSV file
 
-  LW_prefix  = 'o:/JMA_DATA/Weather_Station/Ishigaki/lwrad_data/DL2020'   ! JMA long-wave radiation data TXT file
+  LW_prefix  = 'E:/JMA_DATA/Weather_Station/Ishigaki/DL2019'   ! JMA long-wave radiation data TXT file
   LW_suffix  = '_ish.txt'          ! JMA long-wave radiation data TXT file
 
-  FRC_prefix  = "Ishigaki_frc_JMAobs_2020"
+  FRC_prefix  = "Ishigaki_frc_JMAobs_2019"
 !  FRC_prefix  = "Ishigaki_frc_JMAobs_2019_UTCp9"
 /
 
 &wave_cwm
-  CWM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  CWM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
   SWAN_prefix  = "Shiraho_wave2"
 
 /
@@ -171,4 +215,13 @@
   THETA_B = 1.0d0      ! bottom  stretching parameter
   TCLINE  = 30.0d0    ! critical depth (m)
   DCRIT   = 0.10d0     ! critical depth (m) for wetting and trying
+/
+
+&roms2swan_3
+  grid_size = 50.0d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = 0.0d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+
 /

@@ -68,6 +68,6 @@ fi
 
 rm *.mod
 
-export OMP_NUM_THREADS=12
+export OMP_NUM_THREADS=32
 
 ./iniOCN2ROMS_3.exe < Shizugawa3.in

@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "TokyoBay2_grd_v2.0.nc"
+  GRID_FILE = "D:/COAWST_DATA/TokyoBay/TokyoBay2/Grid/TokyoBay2_grd_v2.1.nc"
 /
 
 &gebco
@@ -37,14 +37,14 @@
 /
 
 &sdate
-  Syear  = 2018   ! Starting year
+  Syear  = 2020   ! Starting year
   Smonth = 1     ! Starting month
   Sday   = 1     ! Starting day
 /
 
 &edate
-  Eyear  = 2018   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 2      ! Ending month
+  Eyear  = 2021   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -90,15 +90,17 @@
 
 &jcope
 ! JCOPE-T
-  JCOPE_info_dir  =  "P:/JCOPE-T/tokyobay/2018/"
-  JCOPE_data_dir  =  "P:/JCOPE-T/tokyobay/2018/"
+  JCOPE_info_dir  =  "//131.112.42.7/disk1/JCOPE-T/tokyobay/2020/"
+  JCOPE_data_dir  =  "//131.112.42.7/disk1/JCOPE-T/tokyobay/2020/"
+!  JCOPE_info_dir  =  "D:/JCOPE-T/tokyobay/2023/"
+!  JCOPE_data_dir  =  "D:/JCOPE-T/tokyobay/2023/"
 ! JCOPE-2M
 !  JCOPE_info_dir  =  "P:/JCOPE-2M/tokyobay/"
 !  JCOPE_data_dir  =  "P:/JCOPE-2M/tokyobay/"
 
 /
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Bry/TokyoBay2_bry_JCOPE-T_Nz30"
+  BRY_prefix  = "D:/COAWST_DATA/TokyoBay/TokyoBay2/Bry/TokyoBay2_bry_JCOPE-T_Nz30"
   !    south north west east
   SNWE =  1,   0,   0,   0
 /

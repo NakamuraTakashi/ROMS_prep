@@ -51,7 +51,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Shizugawa2_grd_v0.0.nc"
+  parent_grid = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.2.nc"
   parent_Imin = 3
   parent_Imax = 32
   parent_Jmin = 105
@@ -64,15 +64,15 @@
 /
 
 &sdate
-  Syear  = 2022   ! Starting year
-  Smonth = 1      ! Starting month
+  Syear  = 2021   ! Starting year
+  Smonth = 6      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2022   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 4      ! Ending month
-  Eday   = 3      ! Ending day
+  Eyear  = 2021   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 10      ! Ending month
+  Eday   = 2      ! Ending day
 /
 
 &refdate
@@ -82,13 +82,16 @@
 /
 
 &roms2roms1
-  NCnum = 2  ! Number of ROMS his files 
+  NCnum = 1  ! Number of ROMS his files 
 /
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "E:/COAWTS_OUTPUT/Shizugawa2/Shizugawa2_his_20210103.nc",
-                  "E:/COAWTS_OUTPUT/Shizugawa2/Shizugawa2_his_20220102.nc"
+  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa2/Shizugawa2_his_20210601.nc"
+  
+!  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa2/Shizugawa2_his_20210601.nc",
+!                  "E:/COAWST_OUTPUT/Shizugawa/Shizugawa2/Shizugawa2_his_20210724.nc",
+!                  "E:/COAWST_OUTPUT/Shizugawa/Shizugawa2/Shizugawa2_his_20210725.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -104,7 +107,7 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
-  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &ocn2roms      
@@ -118,17 +121,17 @@
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Bry/Shizugawa3_bry_ROMS_Nz15"
+  BRY_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Bry/Shizugawa3_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  0,   0,   0,   1
 /
 
 &ini
-  INI_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Ini/Shizugawa3_ini_ROMS_Nz15"
+  INI_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Ini/Shizugawa3_ini_ROMS_Nz15"
 
   INIyear  = 2021   ! Initial year
-  INImonth = 1      ! Initial month
-  INIday   = 4      ! Initial day
+  INImonth = 7      ! Initial month
+  INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
