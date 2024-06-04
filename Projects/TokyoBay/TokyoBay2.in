@@ -43,9 +43,9 @@
 /
 
 &edate
-  Eyear  = 2021   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -90,8 +90,8 @@
 
 &jcope
 ! JCOPE-T
-  JCOPE_info_dir  =  "//131.112.42.7/disk1/JCOPE-T/tokyobay/2020/"
-  JCOPE_data_dir  =  "//131.112.42.7/disk1/JCOPE-T/tokyobay/2020/"
+  JCOPE_info_dir  =  "//gshs.t4.gsic.titech.ac.jp/t4_bs/tga-NakamuLab/DATA/JCOPE-T/tokyobay/2020/"
+  JCOPE_data_dir  =  "//gshs.t4.gsic.titech.ac.jp/t4_bs/tga-NakamuLab/DATA/JCOPE-T/tokyobay/2020/"
 !  JCOPE_info_dir  =  "D:/JCOPE-T/tokyobay/2023/"
 !  JCOPE_data_dir  =  "D:/JCOPE-T/tokyobay/2023/"
 ! JCOPE-2M
@@ -106,11 +106,11 @@
 /
 
 &ini
-  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Ini/TokyoBay2_ini_JCOPET_Nz30"
+  INI_prefix  = "D:/COAWST_DATA/TokyoBay/TokyoBay2/Ini/TokyoBay2_ini_JCOPET_Nz30"
 
-  INIyear  = 2018   ! Initial year
-  INImonth = 6      ! Initial month
-  INIday   = 5      ! Initial day
+  INIyear  = 2020   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 /
@@ -157,4 +157,29 @@
 &frc_jmalsm
   LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
   FRC_prefix  = "TokyoBay2_frc_LSM"
+/
+
+&wave_cwm
+  CWM_dir  =  "//gshs.t4.gsic.titech.ac.jp/t4_bs/tga-NakamuLab/DATA/JMA_DATA/JMA_GPV/"   ! GRIB2
+  SWAN_prefix  = "D:/COAWST_DATA/TokyoBay/TokyoBay2/wave/TPAR/2020/TB2_cwm"
+
+/
+
+&roms2swan_1
+!  NCnum = 1  ! Number of FRC files 
+  NCnum = 1  ! Number of FRC files 
+/
+&roms2swan_2
+  ATM_FILE  =  "D:/COAWST_DATA/TokyoBay/TokyoBay2/Air/TokyoBay2_frc_MSMgb_20200101_1.nc"
+!  ATM_FILE  =  "D:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20180101_1.nc",
+!               "D:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20190101_1.nc"
+
+  OUTPUT_Dir  = "D:/COAWST_DATA/TokyoBay/TokyoBay2/wave/wind/2020"
+/
+&roms2swan_3
+  grid_size = 0.00555555555555d0   ! Grid resolution
+                         !  Cartesian coordinate => (m)
+                         !  Spherical coordinate => (degree)
+
+  angle = 0.0d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
 /

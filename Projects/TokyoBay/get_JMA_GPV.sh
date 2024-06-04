@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DIR_NAME="2021"
-LOCAL_DIR="/cygdrive/o/JMA_DATA/JMA_GPV"
+DIR_NAME="2024"
+LOCAL_DIR="//gshs.t4.gsic.titech.ac.jp/t4_bs/tga-NakamuLab/DATA/JMA_DATA/JMA_GPV"
 
 REMOTE_DIR="/arch/jmadata/data/gpv/original"
 
