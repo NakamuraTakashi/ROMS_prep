@@ -16,5 +16,5 @@ export OMP_NUM_THREADS=7
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-./grdROMS2SWAN.exe < Shizugawa2.in
-#./grdROMS2SWAN.exe < Shizugawa3.in
+#./grdROMS2SWAN.exe < Shizugawa2.in
+./grdROMS2SWAN.exe < Shizugawa3.in

@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.0.nc"
+  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.2.nc"
 /
 
 &mybath
@@ -51,7 +51,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.2.nc"
+  parent_grid = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.3.nc"
   parent_Imin = 3
   parent_Imax = 32
   parent_Jmin = 105
@@ -64,13 +64,13 @@
 /
 
 &sdate
-  Syear  = 2021   ! Starting year
+  Syear  = 2023   ! Starting year
   Smonth = 6      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2021   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 10      ! Ending month
   Eday   = 2      ! Ending day
 /
@@ -87,7 +87,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa2/Shizugawa2_his_20210601.nc"
+  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa2/Shizugawa2_his_20230605.nc"
   
 !  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa2/Shizugawa2_his_20210601.nc",
 !                  "E:/COAWST_OUTPUT/Shizugawa/Shizugawa2/Shizugawa2_his_20210724.nc",
@@ -129,7 +129,7 @@
 &ini
   INI_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Ini/Shizugawa3_ini_ROMS_Nz15"
 
-  INIyear  = 2021   ! Initial year
+  INIyear  = 2023   ! Initial year
   INImonth = 7      ! Initial month
   INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
