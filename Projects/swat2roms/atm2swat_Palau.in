@@ -1,0 +1,80 @@
+
+&range
+! -------------------------------------------------------------------------
+! NetCDF file for the box corners bounded by (Llon,Blat) and (Rlon,Tlat).
+!
+!                 ______ (Rlon,Tlat)
+!                |      |
+!                |      |
+!                |______|
+!     (Llon,Blat)                     
+!
+! On Input:
+!
+!    Llon         Box left-edge   longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Rlon         Box right-edge  longitude (degrees, 0 to 179.92)  !!! ranges of (-180 to -0.08) and (180 to 359.92) are not supported
+!    Blat         Box bottom-edge latitude  (degress, -80 to 80 )
+!    Tlat         Box top-edge    latitude  (degress, -80 to 80 )
+!
+! Geographical and Grid parameters --------
+!
+  Llon = 134.4d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
+  Rlon = 134.7d0    ! Longitude (degrees) of the top-right corner of the grid. 
+  Blat = 7.3d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+  Tlat = 7.8d0    ! Latitude  (degrees) of the top-right corner of the grid.
+/
+
+&gebco
+! GEBCO bathymetry NetCDF file     
+  BATH_FILE = "D:/GEBCO_2024/GEBCO_05_Jul_2024_Palau/gebco_2023_n11.0_s4.0_w131.0_e138.0.nc"
+/
+
+&sdate
+  Syear  = 2024   ! Starting year
+  Smonth = 5      ! Starting month
+  Sday   = 1      ! Starting day
+/
+
+&edate
+  Eyear  = 2024   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 7      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&frc_era5_1
+  NCnum = 30  ! Number of ERA5 files 
+/
+&frc_era5_2
+  ATM_FILE  =  "../GetERA5/Data/Palau/era5_atm_202201.nc",
+               "../GetERA5/Data/Palau/era5_atm_202202.nc",
+               "../GetERA5/Data/Palau/era5_atm_202203.nc",
+               "../GetERA5/Data/Palau/era5_atm_202204.nc",
+               "../GetERA5/Data/Palau/era5_atm_202205.nc",
+               "../GetERA5/Data/Palau/era5_atm_202206.nc",
+               "../GetERA5/Data/Palau/era5_atm_202207.nc",
+               "../GetERA5/Data/Palau/era5_atm_202208.nc",
+               "../GetERA5/Data/Palau/era5_atm_202209.nc",
+               "../GetERA5/Data/Palau/era5_atm_202210.nc",
+               "../GetERA5/Data/Palau/era5_atm_202211.nc",
+               "../GetERA5/Data/Palau/era5_atm_202212.nc",
+               "../GetERA5/Data/Palau/era5_atm_202301.nc",
+               "../GetERA5/Data/Palau/era5_atm_202302.nc",
+               "../GetERA5/Data/Palau/era5_atm_202303.nc",
+               "../GetERA5/Data/Palau/era5_atm_202304.nc",
+               "../GetERA5/Data/Palau/era5_atm_202305.nc",
+               "../GetERA5/Data/Palau/era5_atm_202306.nc",
+               "../GetERA5/Data/Palau/era5_atm_202307.nc",
+               "../GetERA5/Data/Palau/era5_atm_202308.nc",
+               "../GetERA5/Data/Palau/era5_atm_202309.nc",
+               "../GetERA5/Data/Palau/era5_atm_202310.nc",
+               "../GetERA5/Data/Palau/era5_atm_202311.nc",
+               "../GetERA5/Data/Palau/era5_atm_202312.nc",
+               "../GetERA5/Data/Palau/era5_atm_202401.nc",
+               "../GetERA5/Data/Palau/era5_atm_202402.nc",
+               "../GetERA5/Data/Palau/era5_atm_202403.nc",
+               "../GetERA5/Data/Palau/era5_atm_202404.nc",
+               "../GetERA5/Data/Palau/era5_atm_202405.nc",
+               "../GetERA5/Data/Palau/era5_atm_202406.nc"
+
+  FRC_prefix  = "Palau_ERA5"
+/

@@ -30,34 +30,50 @@
 /
 
 &sdate
-  Syear  = 2010   ! Starting year
+  Syear  = 2022   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
+  Eyear  = 2024   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 5      ! Ending month
   Eday   = 1      ! Ending day
 /
 
 &frc_era5_1
 !  NCnum = 1  ! Number of ERA5 files 
-  NCnum = 12  ! Number of ERA5 files 
+  NCnum = 28  ! Number of ERA5 files 
 /
 &frc_era5_2
-!  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
-  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2010.nc",
-               "../../Data/era5/Panay/era5_atm_2011.nc",
-               "../../Data/era5/Panay/era5_atm_2012.nc",
-               "../../Data/era5/Panay/era5_atm_2013.nc",
-               "../../Data/era5/Panay/era5_atm_2014.nc",
-               "../../Data/era5/Panay/era5_atm_2015.nc",
-               "../../Data/era5/Panay/era5_atm_2016.nc",
-               "../../Data/era5/Panay/era5_atm_2017.nc",
-               "../../Data/era5/Panay/era5_atm_2018.nc",
-               "../../Data/era5/Panay/era5_atm_2019.nc",
-               "../../Data/era5/Panay/era5_atm_2021.nc",
-               "../../Data/era5/Panay/era5_atm_2022.nc"
+  ATM_FILE  =  "../GetERA5/Data/Panay/era5_atm_202201.nc",
+               "../GetERA5/Data/Panay/era5_atm_202202.nc",
+               "../GetERA5/Data/Panay/era5_atm_202203.nc",
+               "../GetERA5/Data/Panay/era5_atm_202204.nc",
+               "../GetERA5/Data/Panay/era5_atm_202205.nc",
+               "../GetERA5/Data/Panay/era5_atm_202206.nc",
+               "../GetERA5/Data/Panay/era5_atm_202207.nc",
+               "../GetERA5/Data/Panay/era5_atm_202208.nc",
+               "../GetERA5/Data/Panay/era5_atm_202209.nc",
+               "../GetERA5/Data/Panay/era5_atm_202210.nc",
+               "../GetERA5/Data/Panay/era5_atm_202211.nc",
+               "../GetERA5/Data/Panay/era5_atm_202212.nc",
+               "../GetERA5/Data/Panay/era5_atm_202301.nc",
+               "../GetERA5/Data/Panay/era5_atm_202302.nc",
+               "../GetERA5/Data/Panay/era5_atm_202303.nc",
+               "../GetERA5/Data/Panay/era5_atm_202304.nc",
+               "../GetERA5/Data/Panay/era5_atm_202305.nc",
+               "../GetERA5/Data/Panay/era5_atm_202306.nc",
+               "../GetERA5/Data/Panay/era5_atm_202307.nc",
+               "../GetERA5/Data/Panay/era5_atm_202308.nc",
+               "../GetERA5/Data/Panay/era5_atm_202309.nc",
+               "../GetERA5/Data/Panay/era5_atm_202310.nc",
+               "../GetERA5/Data/Panay/era5_atm_202311.nc",
+               "../GetERA5/Data/Panay/era5_atm_202312.nc",
+               "../GetERA5/Data/Panay/era5_atm_202401.nc",
+               "../GetERA5/Data/Panay/era5_atm_202402.nc",
+               "../GetERA5/Data/Panay/era5_atm_202403.nc",
+               "../GetERA5/Data/Panay/era5_atm_202404.nc"
+
   FRC_prefix  = "Panay_ERA5"
 /

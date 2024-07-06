@@ -20,14 +20,14 @@ import cdsapi
 #                |______|
 #     (Llon,Blat)                     
 #
-Llon = 118    # Longitude (degrees) of the bottom-left corner of the grid. 
-Rlon = 127    # Longitude (degrees) of the top-right corner of the grid. 
-Blat = 9      # Latitude  (degrees) of the bottom-left corner of the grid.
-Tlat = 15     # Latitude  (degrees) of the top-right corner of the grid.
+Llon = 131    # Longitude (degrees) of the bottom-left corner of the grid. 
+Rlon = 138    # Longitude (degrees) of the top-right corner of the grid. 
+Blat = 4      # Latitude  (degrees) of the bottom-left corner of the grid.
+Tlat = 11     # Latitude  (degrees) of the top-right corner of the grid.
 
-Year='2010'
+Year='2024'
 
-OUTPUT_DIR = 'Data/Panay'
+OUTPUT_DIR = 'Data/Palau'
 
 FILE_NAME_prefix='era5_atm'
 
@@ -36,8 +36,8 @@ if not os.path.isdir(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 
 #-Loop start --------------------------------------------------------------------------
-Month12 = ['01', '02', '03','04', '05', '06','07', '08', '09','10', '11', '12']
-#Month12 = ['05']
+#Month12 = ['01', '02', '03','04', '05', '06','07', '08', '09','10', '11', '12']
+Month12 = ['05']
 
 for Month in Month12:
 

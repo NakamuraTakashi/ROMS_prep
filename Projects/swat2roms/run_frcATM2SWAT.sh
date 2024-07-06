@@ -21,10 +21,13 @@ INCLUDE="-I/usr/include -I/usr/local/include"
 
 SRC_DIR=../../src
 
-gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/frcATM2SWAT.F90 ${MY_CPP_FLAGS} -fopenmp -O2 ${INCLUDE} ${LIB} -o frcATM2SWAT.exe
+FFLAGS="-fbounds-check -O -Wuninitialized -fbacktrace"
+#FFLAGS="-O3"
 
-export OMP_NUM_THREADS=11
+gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/frcATM2SWAT.F90 ${MY_CPP_FLAGS} -fopenmp ${FFLAGS} ${INCLUDE} ${LIB} -o frcATM2SWAT.exe
+
+export OMP_NUM_THREADS=32
 export HDF5_DISABLE_VERSION_CHECK=1
 rm *.mod
 
-./frcATM2SWAT.exe < atm2swat_shizugawa.in
+./frcATM2SWAT.exe < atm2swat_Palau.in

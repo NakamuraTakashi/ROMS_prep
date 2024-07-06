@@ -567,7 +567,7 @@ PROGRAM frcATM2SWAT
         pelev = max(pelev, 0.0d0)      
         write(10+iout,*) "LAT     LONG     ELEV"
         write(10+iout,*) plat, plon, pelev
-        write(10+iout,*) "t     pcp     tmp     hmd     slr     wnd"
+        write(10+iout,*) "Year     Month     Day     Hour     pcp     tmp     hmd     slr     wnd"
 
       endif
     end do
@@ -920,6 +920,11 @@ PROGRAM frcATM2SWAT
     ! ERA5 time:    hours since 1900-01-01 00:00:00
       t = atm_time(itime)
 # endif
+      jd_now=int(t)+jdate_Ref
+      call cdate(jd_now, iyear, imonth, iday)
+      call ndays(imonth, iday, iyear, 1, 1, iyear, idays)
+!      dhour = (t-dble(floor(t)))*24.0d0
+      ihour = nint(mod(t,1.0d0)*24.0d0) 
 
 #else
     ! Set date & time
@@ -975,10 +980,12 @@ PROGRAM frcATM2SWAT
       in_data2(:,:,11) = in_data(:,:,11)  ! W m-2 -> W m-2
 #else
 
-      jd_now=int(t)+jdate_Ref
-      call cdate(jd_now, iyear, imonth, iday)
-      call ndays(imonth, iday, iyear, 1, 1, iyear, idays)
-      dhour = (t-dble(floor(t)))*24.0d0
+!      jd_now=int(t)+jdate_Ref
+!      call cdate(jd_now, iyear, imonth, iday)
+!      call ndays(imonth, iday, iyear, 1, 1, iyear, idays)
+!      dhour = (t-dble(floor(t)))*24.0d0
+
+      dhour = dble(ihour)
 
       Dangle=23.44d0*COS((172.0d0-dble(idays))*2.0d0*pi/365.25d0)
       Dangle=Dangle*deg2rad
@@ -1144,7 +1151,8 @@ PROGRAM frcATM2SWAT
                        +in_data2(i,j,3)*in_data2(i,j,3) )  ! m s-1
             slr = in_data2(i,j,7)*3.6d-3  ! W m-2 -> MJ m-2 h-1
 #endif
-            write(10+iout,*) t, pcp, tmp, hmd, slr, wnd
+!            write(10+iout,*) t, pcp, tmp, hmd, slr, wnd
+            write(10+iout,*) iyear, imonth, iday, ihour, pcp, tmp, hmd, slr, wnd
 
           endif
         end do
@@ -1186,7 +1194,7 @@ PROGRAM frcATM2SWAT
   write(14,'("Daily wind speed file names")') 
   write(14,'("FILENAME")') 
 
-  nbyr = Eyear - Syear
+  nbyr = iyear - Syear + 1
 
   DO iout=1,Nout
     open(15, file=OUT_FILE(iout,1), status='old')
@@ -1256,10 +1264,11 @@ PROGRAM frcATM2SWAT
       count_subday = 0
 
       DO i=1,itstep
-        read (15,*,iostat=iost) t, pcp, tmp, hmd, slr, wnd
+!        read (15,*,iostat=iost) t, pcp, tmp, hmd, slr, wnd
+        read (15,*,iostat=iost) iyear, imonth, iday, ihour, pcp, tmp, hmd, slr, wnd
         if(iost/=0) exit OUTER
         if(i==1) then
-          call cdate( nint(t)+jdate_Ref, iyear, imonth, iday )
+!          call cdate( nint(t)+jdate_Ref, iyear, imonth, iday )
           if(iyear/=iyear2) then
             iyear2 = iyear
             count_subday = 1

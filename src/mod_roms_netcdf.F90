@@ -69,8 +69,8 @@ MODULE mod_roms_netcdf
     ,"Oxyg          " &  ! 12
     ,"DOC_          " &  ! 13
     ,"POC_          " &  ! 14
-    ,"Phyt_         " &  ! 15
-    ,"Zoop_         " &  ! 16
+    ,"phytoplankton_" &  ! 15
+    ,"zooplankton_  " &  ! 16
     ,"PIC_          " &  ! 17
     ,"NO3           " &  ! 18
     ,"NH4           " &  ! 19

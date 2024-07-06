@@ -10,8 +10,6 @@ $INPUTS
 !--- TokyoBay1 -----
 !OUTPUT_NCFILE='D:/COAWST_DATA/Shizugawa/Shizugawa1/Grid/scrip_Shizugawa1.nc'
 !--- TokyoBay2 -----
-!OUTPUT_NCFILE='D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/scrip_Shizugawa2.nc'
-!--- TokyoBay3 -----
 OUTPUT_NCFILE='D:/COAWST_DATA/TokyoBay/TokyoBay2/Grid/scrip_TokyoBay2.nc'
 
 ! 2) Enter total number of ROMS, SWAN, WW3, and WRF grids:
@@ -26,8 +24,6 @@ NGRIDS_WRF=0,
 !--- TokyoBay1 -----
 !ROMS_GRIDS(1)='D:/COAWST_DATA/Shizugawa/Shizugawa1/Grid/Shizugawa1_grd_v0.1.nc',
 !--- TokyoBay2 -----
-!ROMS_GRIDS(1)='D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.0.nc',
-!--- TokyoBay3 -----
 ROMS_GRIDS(1)='D:/COAWST_DATA/TokyoBay/TokyoBay2/Grid/TokyoBay2_grd_v2.1.nc',
 
 !ROMS_GRIDS(2)='roms_grid2.nc',
@@ -44,11 +40,6 @@ ROMS_GRIDS(1)='D:/COAWST_DATA/TokyoBay/TokyoBay2/Grid/TokyoBay2_grd_v2.1.nc',
 !SWAN_NUMX(1)=102,
 !SWAN_NUMY(1)=162,
 !--- TokyoBay2 -----
-!SWAN_COORD(1)='D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_swan_grd_v0.0.grd',
-!SWAN_BATH(1)='D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_swan_grd_v0.0.bot',
-!SWAN_NUMX(1)=72,
-!SWAN_NUMY(1)=282,
-!--- TokyoBay3 -----
 SWAN_COORD(1)='D:/COAWST_DATA/TokyoBay/TokyoBay2/Grid/TokyoBay2_swan_v2.1.grd',
 SWAN_BATH(1)='D:/COAWST_DATA/TokyoBay/TokyoBay2/Grid/TokyoBay2_swan_v2.1.bot',
 SWAN_NUMX(1)=192, 
