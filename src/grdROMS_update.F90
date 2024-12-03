@@ -86,7 +86,7 @@ PROGRAM grdROMS_update
 
   ! Read parameters in namelist file
   
-  read (*, nml=grd)
+  read (5, nml=grd)
 #if defined BATH_SMOOTHING
   rewind(5)
   read (5, nml=bath_smooth)
@@ -187,7 +187,7 @@ PROGRAM grdROMS_update
   call check( nf90_inq_varid(ncid, 'y_rho', var_id) )
   call check( nf90_get_var(ncid, var_id, yr) )
 # else
- call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
+  call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
   call check( nf90_get_var(ncid, var_id, yr) )
   call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
   call check( nf90_get_var(ncid, var_id, xr) )

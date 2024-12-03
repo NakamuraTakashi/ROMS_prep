@@ -1,6 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.2.nc"
+!  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.2.nc"
+  GRID_FILE = "input/Shizugawa3_grd_v0.3a.nc"
 /
 
 &mybath
@@ -181,3 +182,26 @@
 
   angle = -0.33d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
 /
+
+&aquaculture1
+!  INPUT_CSV = "input/Shizugawa_aquaculture_test.csv"
+  INPUT_CSV = "input/Shizugawa_aquaculture2.csv"
+  Nheader = 1
+  Nidaq = 4
+
+  aqunit_interval = 0.5d0 ! Interval of the aquaculture unit (m) (Sakamaki et al., 2022)
+
+  NC_VARNAME = "aquaculture_"
+  NC_LONGNAME = "density of aquaculture unit"
+  NC_UNIT = "unit grid-1"
+/
+
+&aquaculture2
+  INPUT_CSV = "input/Shizugawa_ginzake_v2.csv"
+  Nheader = 1
+
+  NC_VARNAME = "aquaculture_05"
+  NC_LONGNAME = "Area of aquaculture unit"
+  NC_UNIT = "m2 grid-1"
+/
+
