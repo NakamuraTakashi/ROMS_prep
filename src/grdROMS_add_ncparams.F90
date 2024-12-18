@@ -19,7 +19,10 @@ PROGRAM grdROMS_add_ncparams
   real(8), allocatable :: lonr(:, :)
   real(8), allocatable :: xr(:, :)
   real(8), allocatable :: yr(:, :)
+  real(8), allocatable :: pm(:, :)
+  real(8), allocatable :: pn(:, :)
   real(8), allocatable :: rmask(:, :)
+  real(8), allocatable :: area(:, :)
   
   integer :: i,j
 
@@ -71,6 +74,15 @@ PROGRAM grdROMS_add_ncparams
   real(8), allocatable :: y_c(:), x_c(:)
   integer :: Iau, Jau
 #endif
+#if defined OUTPUT_SWAN_GRID
+!--SWAN parameters ------------------------------------------------------ 
+  integer :: mxc, myc      ! number of meshes in computational grid
+                           !   *this number is one less than the number of grid points in this domain!
+                           !   *Maybe because indices start from 0???
+!-------------------------------------------------------------------------------
+  character(256) :: SWAN_INPGRID_PREFIX = 'aquaculture'
+  character(256) :: SWAN_INPGRID_FILE
+#endif
 
   namelist/grd/GRID_FILE
   namelist/utm_zone/izone, ispher
@@ -119,7 +131,10 @@ PROGRAM grdROMS_add_ncparams
   allocate( lonr(1:L, 0:M) )
   allocate( xr(0:L, 0:M) )
   allocate( yr(0:L, 0:M) )
+  allocate( pm(0:L, 0:M) )
+  allocate( pn(0:L, 0:M) )
   allocate( rmask(0:L, 0:M) )
+  allocate( area(0:L, 0:M) )
   
   ! Get variables
   call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
@@ -128,6 +143,10 @@ PROGRAM grdROMS_add_ncparams
   call check( nf90_get_var(ncid, var_id, lonr) )
   call check( nf90_inq_varid(ncid, 'h', var_id) ) 
   call check( nf90_get_var(ncid, var_id, h) )
+  call check( nf90_inq_varid(ncid, 'pm', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, pm) )
+  call check( nf90_inq_varid(ncid, 'pn', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, pn) )
   call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
   call check( nf90_get_var(ncid, var_id, rmask) )
 #if defined UTM_COORD
@@ -142,6 +161,7 @@ PROGRAM grdROMS_add_ncparams
 
   write(*,*) "CLOSE: ", trim( GRID_FILE )
 
+  area(:,:)=1.0d0/pm(:,:)/pn(:,:)
 
 !=========== AQUACULTURE1 ===============================
 !---- Compute aquaculture data for ROMS grid netCDF file --------------------------------
@@ -198,16 +218,16 @@ PROGRAM grdROMS_add_ncparams
       y_au= ( dble(i_au)*y_e(i) + dble(N_au-i_au)*y_s(i) )/dble(N_au)
       call nearest_id( 0, L, 0, M, xr, yr, rmask, x_au, y_au, Iau, Jau )
       if(idaq(i)==1) then
-        data(Iau,Jau,1) = data(Iau,Jau,1) + 1.0d0
+        data(Iau,Jau,1) = data(Iau,Jau,1) + 1.0d0/area(Iau,Jau)
       elseif(idaq(i)==2) then
-        data(Iau,Jau,2) = data(Iau,Jau,2) + 1.0d0
+        data(Iau,Jau,2) = data(Iau,Jau,2) + 1.0d0/area(Iau,Jau)
       elseif(idaq(i)==3) then
-        data(Iau,Jau,3) = data(Iau,Jau,3) + 1.0d0
+        data(Iau,Jau,3) = data(Iau,Jau,3) + 1.0d0/area(Iau,Jau)
       elseif(idaq(i)==4) then
-        data(Iau,Jau,4) = data(Iau,Jau,4) + 1.0d0
+        data(Iau,Jau,4) = data(Iau,Jau,4) + 1.0d0/area(Iau,Jau)
       elseif(idaq(i)==6) then
-        data(Iau,Jau,3) = data(Iau,Jau,3) + 0.5d0
-        data(Iau,Jau,4) = data(Iau,Jau,4) + 0.5d0
+        data(Iau,Jau,3) = data(Iau,Jau,3) + 0.5d0/area(Iau,Jau)
+        data(Iau,Jau,4) = data(Iau,Jau,4) + 0.5d0/area(Iau,Jau)
       endif
     end do
   end do
@@ -247,7 +267,7 @@ PROGRAM grdROMS_add_ncparams
     read(10,*) str_idaq, lat_c(i), lon_c(i), area_aq(i)
     ! convert characters to integer
     read (str_idaq, *) idaq(i)
-    write(*,*) idaq(i), lat_c(i), lon_c(i), area_aq(i)
+!    write(*,*) idaq(i), lat_c(i), lon_c(i), area_aq(i)
     ! convert lat lon coordinate to UTM coordinate
     call ll2utm(lat_c(i),lon_c(i),x_c(i),y_c(i),izone,ispher)
 
@@ -261,7 +281,7 @@ PROGRAM grdROMS_add_ncparams
   do i=1, Ndata
     call nearest_id( 0, L, 0, M, xr, yr, rmask, x_c(i), y_c(i), Iau, Jau )
     if(idaq(i)==5) then
-      data(Iau,Jau,1) = area_aq(i)
+      data(Iau,Jau,1) = data(Iau,Jau,1) + area_aq(i)/area(Iau,Jau)
     endif
   end do
 !$omp end do
@@ -320,6 +340,24 @@ PROGRAM grdROMS_add_ncparams
    
   enddo
   call check( nf90_close(ncid) )
+
+! ===== Output SWAN grid file =========================
+#if defined OUTPUT_SWAN_GRID
+  mxc = L
+  myc = M
+  
+  do i=1,Nid
+    write(varnum,'(I2.2)') i
+    SWAN_INPGRID_FILE = trim( SWAN_INPGRID_PREFIX )//"_"//varnum//".dat"
+    write(*,*) "WRITE: ", trim( SWAN_INPGRID_FILE )  
+    open(10,file = SWAN_INPGRID_FILE)
+    do j=0,myc
+      write(10,*) data(0:mxc,j,i)
+    enddo
+    close(10)
+  enddo
+
+#endif  
 
   write(*,*) 'FINISH!!'
       

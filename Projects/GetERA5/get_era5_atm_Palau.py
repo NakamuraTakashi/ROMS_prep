@@ -25,11 +25,11 @@ Rlon = 138    # Longitude (degrees) of the top-right corner of the grid.
 Blat = 4      # Latitude  (degrees) of the bottom-left corner of the grid.
 Tlat = 11     # Latitude  (degrees) of the top-right corner of the grid.
 
-Years=['2017','2018','2019','2020']
-#Years=['2024']
+#Years=['2017','2018','2019','2020']
+Years=['2024']
 
-Months = ['01', '02', '03','04', '05', '06','07', '08', '09','10', '11', '12']
-#Months = ['05']
+#Months = ['01', '02', '03','04', '05', '06','07', '08', '09','10', '11', '12']
+Months = ['05']
 
 OUTPUT_DIR = 'Data/Palau'
 

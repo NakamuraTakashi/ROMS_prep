@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Grid/shiraho_reef_grd_v17.0.nc"
+  GRID_FILE = "/mnt/d/COAWST_DATA/Yaeyama/Shiraho_reef2/Grid/shiraho_roms_grd_JCOPET_v18.0.nc"
 /
 
 &mybath
@@ -65,7 +65,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "D:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.2.nc"
+  parent_grid = "/mnt/d/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.2.nc"
   parent_Imin = 216
   parent_Imax = 233
   parent_Jmin = 132
@@ -108,7 +108,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Yaeyama/Yaeyama2/Yaeyama2_his_20220914.nc"
+  ROMS_HISFILE  = "/mnt/e/COAWST_OUTPUT/Yaeyama/Yaeyama2/Yaeyama2_his_20220914.nc"
 
 !  ROMS_HISFILE  = "L:/COAWST_OUTPUT/Yaeyama2/Yaeyama2_his_20100402.nc",
 !                  "L:/COAWST_OUTPUT/Yaeyama2/Yaeyama2_his_20090913.nc"
@@ -131,18 +131,18 @@
 /
 
 &bry
-  BRY_prefix  = "D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Bry/Shiraho_reef_bry_ROMS_Nz8"
+  BRY_prefix  = "/mnt/d/COAWST_DATA/Yaeyama/Shiraho_reef2/Bry/Shiraho_reef_bry_ROMS_Nz8"
 
   !    south north west east
   SNWE =  1,   1,   0,   1
 /
 
 &ini
-  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Shiraho_reef2/Ini/Shiraho_reef_ini_ROMS_Nz8"
+  INI_prefix  = "/mnt/d/COAWST_DATA/Yaeyama/Shiraho_reef2/Ini/Shiraho_reef_ini_ROMS_Nz8"
 
   INIyear  = 2023   ! Initial year
   INImonth = 10      ! Initial month
-  INIday   = 1     ! Initial day
+  INIday   = 7     ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
