@@ -48,7 +48,7 @@ PROGRAM grdROMS_add_ncparams
   character(256) :: INPUT_CSV
   integer :: Nheader
   integer :: Nidaq
-  real(8) :: aqunit_interval
+  real(8), allocatable :: aqunit_interval(:)
   character(256) :: NC_VARNAME, NC_LONGNAME, NC_UNIT
 ! -------------------------------------------------------------------------
   integer :: Ndata
@@ -91,8 +91,9 @@ PROGRAM grdROMS_add_ncparams
   namelist/grd/GRID_FILE
   namelist/utm_zone/izone, ispher
 #if defined AQUACULTURE1
-  namelist/aquaculture1/INPUT_CSV, Nheader, Nidaq, aqunit_interval
+  namelist/aquaculture1/INPUT_CSV, Nheader, Nidaq
   namelist/aquaculture1/NC_VARNAME, NC_LONGNAME, NC_UNIT
+  namelist/aquaculture1_2/aqunit_interval
 #elif defined AQUACULTURE2
   namelist/aquaculture2/INPUT_CSV, Nheader
   namelist/aquaculture2/NC_VARNAME, NC_LONGNAME, NC_UNIT
@@ -106,6 +107,9 @@ PROGRAM grdROMS_add_ncparams
 #if defined AQUACULTURE1
   rewind(5)
   read (5, nml=aquaculture1)
+  allocate( aqunit_interval(Nidaq) )
+  rewind(5)
+  read (5, nml=aquaculture1_2)
 #elif defined AQUACULTURE2
   rewind(5)
   read (5, nml=aquaculture2)

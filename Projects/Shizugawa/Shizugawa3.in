@@ -189,11 +189,18 @@
   Nheader = 1
   Nidaq = 4
 
-  aqunit_interval = 0.5d0 ! Interval of the aquaculture unit (m) (Sakamaki et al., 2022)
-
   NC_VARNAME = "aquaculture_"
   NC_LONGNAME = "density of aquaculture unit"
   NC_UNIT = "unit m-2"
+/
+
+&aquaculture1_2
+! Interval of the aquaculture unit (m)
+!  01 Oyster:         0.5 m (Sakamaki et al., 2022)
+!  02 Wakame Seaweed: 1.0 m (need update!!!!)
+!  03 Sea squirt:     1.0 m (need update!!!!)
+!  04 Scallop:        1.0 m (need update!!!!)
+  aqunit_interval = 0.5d0, 1.0d0, 1.0d0, 1.0d0 
 /
 
 &aquaculture2
