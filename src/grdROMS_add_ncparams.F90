@@ -73,6 +73,10 @@ PROGRAM grdROMS_add_ncparams
   real(8), allocatable :: lat_c(:), lon_c(:), area_aq(:)
   real(8), allocatable :: y_c(:), x_c(:)
   integer :: Iau, Jau
+#elif defined NC2CSV
+
+#elif defined CSV2NC
+
 #endif
 #if defined OUTPUT_SWAN_GRID
 !--SWAN parameters ------------------------------------------------------ 
@@ -195,10 +199,16 @@ PROGRAM grdROMS_add_ncparams
     read(10,*) str_idaq, lat_s(i), lat_e(i), lon_s(i), lon_e(i)
     ! convert characters to integer
     read (str_idaq, *) idaq(i)
+#if defined UTM_COORD
+    x_s(i) = lon_s(i)
+    y_s(i) = lat_s(i)
+    x_e(i) = lon_e(i)
+    y_e(i) = lat_e(i)
+#else
     ! convert lat lon coordinate to UTM coordinate
     call ll2utm(lat_s(i),lon_s(i),x_s(i),y_s(i),izone,ispher)
     call ll2utm(lat_e(i),lon_e(i),x_e(i),y_e(i),izone,ispher)
-
+#endif
 !    write(*,*) idaq(i), lat_s(i), lat_e(i), lon_s(i), lon_e(i) ! Debug
 !    write(*,*) idaq(i), x_s(i), x_e(i), y_s(i), y_e(i) ! Debug
   end do
@@ -268,8 +278,13 @@ PROGRAM grdROMS_add_ncparams
     ! convert characters to integer
     read (str_idaq, *) idaq(i)
 !    write(*,*) idaq(i), lat_c(i), lon_c(i), area_aq(i)
+#if defined UTM_COORD
+    x_c(i) = lon_c(i)
+    y_c(i) = lat_c(i)
+#else
     ! convert lat lon coordinate to UTM coordinate
     call ll2utm(lat_c(i),lon_c(i),x_c(i),y_c(i),izone,ispher)
+#endif
 
   end do
   close(10)
