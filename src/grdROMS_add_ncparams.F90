@@ -224,7 +224,7 @@ PROGRAM grdROMS_add_ncparams
 !$omp do private(i,i_au,length_aq,N_au,y_au,x_au,Iau,Jau)
   do i=1, Ndata
     length_aq = sqrt( (x_s(i)-x_e(i))**2.0d0 + (y_s(i)-y_e(i))**2.0d0 )
-    N_au = int( length_aq/aqunit_interval )
+    N_au = int( length_aq/aqunit_interval(idaq(i)) )
 !    write(*,*) i,length_aq,N_au
 
     do i_au=1, N_au
