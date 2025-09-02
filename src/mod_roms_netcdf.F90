@@ -232,13 +232,31 @@ MODULE mod_roms_netcdf
 
 
 ! ----- HYCOM OpenDAP URL -----
-
-#if defined GOFS_31
+#if defined ESPC_D_V02
+# if defined ANALYSIS
+! -----ESPC-D-V02: Global 1/12 deg Analysis (since 2024-08-10 to present) -----
+!        ** grid is 0.08 deg lon x 0.08 deg lat between 40S-40N. 
+!           Poleward of 40S/40N, the grid is 0.08 deg lon x 0.04 deg lat. It spans 80S to 90N.
+  integer, parameter :: NCnum   = 2
+  character(55) :: HYCOM_FILE(5,NCnum) = reshape( [               &
+       "https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/ssh/2024"  &  ! Water Surface Elevation; 2d Variables 1-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/t3z/2024"  &  ! Water Temperature; 3z Variables 3-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/s3z/2024"  &  ! Salinity; 3z Variables 3-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/u3z/2024"  &  ! Eastward Water Velocity; 3z Variables 3-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/v3z/2024"  &  ! Northward Water Velocity; 3z Variables 3-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/ssh/2025"  &  ! Water Surface Elevation; 2d Variables 1-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/t3z/2025"  &  ! Water Temperature; 3z Variables 3-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/s3z/2025"  &  ! Salinity; 3z Variables 3-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/u3z/2025"  &  ! Eastward Water Velocity; 3z Variables 3-hourly
+      ,"https://tds.hycom.org/thredds/dodsC/ESPC-D-V02/v3z/2025"  &  ! Northward Water Velocity; 3z Variables 3-hourly
+    ], [5,NCnum] )
+# endif
+#elif defined GOFS_31
 # if defined ANALYSIS_Y
-! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2018-12-04 to present) -----
+! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2018-12-04 to 2024-09-04) -----
 !        ** GLBy0.08 grid is 0.08 deg lon x 0.04 deg lat that covers 80 S to 90 N.
   integer, parameter :: NCnum   = 1
-  character(54) :: HYCOM_FILE(NCnum) = (/                           &
+  character(54) :: HYCOM_FILE(NCnum) = (/                        &
        "https://tds.hycom.org/thredds/dodsC/GLBy0.08/expt_93.0"  &  ! lon(4500): 0 - 359.92
     /)
 # elif defined ANALYSIS
@@ -246,7 +264,7 @@ MODULE mod_roms_netcdf
 !        ** grid is 0.08 deg lon x 0.08 deg lat between 40S-40N. 
 !           Poleward of 40S/40N, the grid is 0.08 deg lon x 0.04 deg lat. It spans 80S to 90N.
   integer, parameter :: NCnum   = 6
-  character(53) :: HYCOM_FILE(NCnum) = (/                          &
+  character(53) :: HYCOM_FILE(NCnum) = (/                       &
        "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_56.3"  &  ! lon(4500): -180 - 179.92
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_57.2"  &  ! lon(4500): -180 - 179.92
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_92.8"  &  ! lon(4500): 0 - 359.92
@@ -257,7 +275,7 @@ MODULE mod_roms_netcdf
 # elif defined REANALYSIS
 ! ----- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (since 1994-01-01 to 2015-12-31) -----
   integer, parameter :: NCnum   = 22
-  character(63) :: HYCOM_FILE(NCnum) = (/                                    &
+  character(63) :: HYCOM_FILE(NCnum) = (/                                 &
        "http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1994"  &  ! lon(4500): -180 - 179.92
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1995"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBv0.08/expt_53.X/data/1996"  &
@@ -286,7 +304,7 @@ MODULE mod_roms_netcdf
 # if defined ANALYSIS
 ! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Analysis (since 2008-09-19 to 2018-11-20) -----
   integer, parameter :: NCnum   = 4
-  character(53) :: HYCOM_FILE(NCnum) = (/                          &
+  character(53) :: HYCOM_FILE(NCnum) = (/                       &
        "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_90.9"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.0"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_91.1"  &
@@ -295,7 +313,7 @@ MODULE mod_roms_netcdf
 # elif defined REANALYSIS
 ! -----  GOFS 3.0: HYCOM + NCODA Global 1/12 deg Reanalysis (since 1992-10-02 to 2012-12-31) -----
   integer, parameter :: NCnum   = 2
-  character(53) :: HYCOM_FILE(NCnum) = (/                          &
+  character(53) :: HYCOM_FILE(NCnum) = (/                       &
        "http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.0"  &
       ,"http://tds.hycom.org/thredds/dodsC/GLBu0.08/expt_19.1"  &
     /)
@@ -1512,12 +1530,14 @@ MODULE mod_roms_netcdf
         OUT_FILE             &
       , TIME_ATT             &  
       , Im, Jm, Nz, Nt       &   
+      , iparam               &   
   )
                            
 ! input parameters
     character(len=*),  intent( in) :: OUT_FILE
     character(len=*),  intent( in) :: TIME_ATT
     integer, intent( in) :: Im, Jm, Nz, Nt
+    integer, intent( in) :: iparam
     
     integer :: ncid2,var_id2
     integer :: lat_dimid, lon_dimid, depth_dimid, time_dimid
@@ -1541,10 +1561,12 @@ MODULE mod_roms_netcdf
     call check( nf90_def_var(ncid2, 'time', NF90_DOUBLE, time_dimid, var_id2) )
     call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Valid Time') )
     call check( nf90_put_att(ncid2, var_id2, 'units',     TIME_ATT ) )
-  
-    call check( nf90_def_var(ncid2, 'depth', NF90_DOUBLE, depth_dimid, var_id2) )
-    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Depth') )
-    call check( nf90_put_att(ncid2, var_id2, 'units',     'meter' ) )
+    
+    if(iparam/=1) then
+      call check( nf90_def_var(ncid2, 'depth', NF90_DOUBLE, depth_dimid, var_id2) )
+      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Depth') )
+      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter' ) )
+    endif
   
     call check( nf90_def_var(ncid2, 'lon', NF90_DOUBLE, lon_dimid, var_id2) )
     call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Longitude') )
@@ -1554,31 +1576,41 @@ MODULE mod_roms_netcdf
     call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Latitude') )
     call check( nf90_put_att(ncid2, var_id2, 'units',     'degrees_north' ) )
   
-    call check( nf90_def_var(ncid2, 'surf_el', NF90_DOUBLE, dim3Dids, var_id2) )
-    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Water Surface Elevation') )
-    call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
-    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    if(iparam==0 .or. iparam==1) then
+      call check( nf90_def_var(ncid2, 'surf_el', NF90_DOUBLE, dim3Dids, var_id2) )
+      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Water Surface Elevation') )
+      call check( nf90_put_att(ncid2, var_id2, 'units',     'meter') )
+      call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    endif
   
-    call check( nf90_def_var(ncid2, 'water_temp', NF90_DOUBLE, dim4Dids, var_id2) )
-    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Water Temperature') )
-    call check( nf90_put_att(ncid2, var_id2, 'units',     'degC') )
-    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    if(iparam==0 .or. iparam==2) then
+      call check( nf90_def_var(ncid2, 'water_temp', NF90_DOUBLE, dim4Dids, var_id2) )
+      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Water Temperature') )
+      call check( nf90_put_att(ncid2, var_id2, 'units',     'degC') )
+      call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    endif
   
-    call check( nf90_def_var(ncid2, 'salinity', NF90_DOUBLE, dim4Dids, var_id2) )
-    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Salinity') )
-    call check( nf90_put_att(ncid2, var_id2, 'units',     'psu') )
-    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    if(iparam==0 .or. iparam==3) then  
+      call check( nf90_def_var(ncid2, 'salinity', NF90_DOUBLE, dim4Dids, var_id2) )
+      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Salinity') )
+      call check( nf90_put_att(ncid2, var_id2, 'units',     'psu') )
+      call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    endif
   
-    call check( nf90_def_var(ncid2, 'water_u', NF90_DOUBLE, dim4Dids, var_id2) )
-    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Eastward Water Velocity') )
-    call check( nf90_put_att(ncid2, var_id2, 'units',     'm/s') )
-    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    if(iparam==0 .or. iparam==4) then  
+      call check( nf90_def_var(ncid2, 'water_u', NF90_DOUBLE, dim4Dids, var_id2) )
+      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Eastward Water Velocity') )
+      call check( nf90_put_att(ncid2, var_id2, 'units',     'm/s') )
+      call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    endif
   
-    call check( nf90_def_var(ncid2, 'water_v', NF90_DOUBLE, dim4Dids, var_id2) )
-    call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Northward Water Velocity') )
-    call check( nf90_put_att(ncid2, var_id2, 'units',     'm/s') )
-    call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
-  
+    if(iparam==0 .or. iparam==5) then 
+      call check( nf90_def_var(ncid2, 'water_v', NF90_DOUBLE, dim4Dids, var_id2) )
+      call check( nf90_put_att(ncid2, var_id2, 'long_name', 'Northward Water Velocity') )
+      call check( nf90_put_att(ncid2, var_id2, 'units',     'm/s') )
+      call check( nf90_put_att(ncid2, var_id2, 'time',      'time') )
+    endif
+   
     ! End define mode.
     call check( nf90_enddef(ncid2) )
     call check( nf90_close(ncid2) )

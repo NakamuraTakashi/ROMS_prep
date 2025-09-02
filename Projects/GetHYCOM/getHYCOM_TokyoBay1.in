@@ -41,3 +41,12 @@
 ! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
   HYCOM_prefix  = "F:/HYCOM_DATA/TokyoBay/TokyoBay_HYCOM_extracted"
 /
+
+&hycom2      
+ iparam  = 0 ! 0: surf_el, water_temp, salinity, water_u, water_v
+! iparam  = 1 ! 1: surf_el
+! iparam  = 2 ! 2: water_temp
+! iparam  = 3 ! 3: salinity
+! iparam  = 4 ! 4: water_u
+! iparam  = 5 ! 5: water_v
+/

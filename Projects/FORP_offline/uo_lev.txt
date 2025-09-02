@@ -1,0 +1,54 @@
+netcdf forp-jpn-v4_uo_dy_200601 {
+dimensions:
+	time = UNLIMITED ; // (31 currently)
+	lon = 1423 ;
+	lat = 1604 ;
+	lev = 60 ;
+variables:
+	double time(time) ;
+		time:standard_name = "time" ;
+		time:units = "hours since 1-1-1 00:00:00" ;
+		time:calendar = "standard" ;
+		time:axis = "T" ;
+	double lon(lon) ;
+		lon:standard_name = "longitude" ;
+		lon:long_name = "longitude" ;
+		lon:units = "degrees_east" ;
+		lon:axis = "X" ;
+	double lat(lat) ;
+		lat:standard_name = "latitude" ;
+		lat:long_name = "latitude" ;
+		lat:units = "degrees_north" ;
+		lat:axis = "Y" ;
+	double lev(lev) ;
+		lev:axis = "Z" ;
+		lev:standard_name = "depth" ;
+		lev:units = "m" ;
+	float uo(time, lev, lat, lon) ;
+		uo:long_name = "Sea Water X Velocity" ;
+		uo:_FillValue = -9.99e+33f ;
+		uo:missing_value = -9.99e+33f ;
+		uo:units = "cm/s" ;
+		uo:standard_name = "sea_water_x_velocity" ;
+
+// global attributes:
+		:CDI = "Climate Data Interface version 1.9.9 (https://mpimet.mpg.de/cdi)" ;
+		:Conventions = "None" ;
+		:title = "The Future Ocean Regional Projection (FORP) dataset version 4" ;
+		:frequency = "day" ;
+		:institution = "Japan Agency for Marine-Earth Science and Technology, and Meteorological Research Institute, Japan Meteorological Agency" ;
+		:source = "MRI.COM ver4.6" ;
+		:driving_model = "JRA55do" ;
+		:experiment = "historical" ;
+		:license = "Creative Commons Attribution 4.0 International License (CC-BY-4.0). https://creativecommons.org/licenses/by/4.0/legalcode.ja" ;
+		:project = "Integrated Research Program for Advancing Climate Models (TOUGOU) sponsored by the Ministry of Education, Culture, Sports, Science and Technology of Japan." ;
+		:format_conversion_date = "Sat Sep  3 13:05:07 JST 2022" ;
+		:CDO = "Climate Data Operators version 1.9.9 (https://mpimet.mpg.de/cdo)" ;
+data:
+
+ lev = 1, 3.5, 6.5, 10, 15, 22, 30.5, 40, 50, 60, 70, 80, 90, 100, 110, 120, 
+    130, 140, 150, 160, 170, 180, 190, 200, 212.5, 230, 250, 272.5, 300, 330, 
+    362.5, 400, 440, 485, 540, 600, 665, 740, 820, 905, 1000, 1100, 1212.5, 
+    1350, 1500, 1650, 1812.5, 2000, 2225, 2475, 2725, 3000, 3300, 3600, 3900, 
+    4200, 4550, 4975, 5500, 6150 ;
+}

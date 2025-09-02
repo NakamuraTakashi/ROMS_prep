@@ -13,7 +13,7 @@ export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
 
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-07-01 to 2020-02-18)
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
 
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (since 1994-01-01 to 2015-12-31)
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DREANALYSIS"
@@ -25,7 +25,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_30 -DREANALYSIS"
 
 # --  Local HYCOM extracted data by getHYCOM code 
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
 
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
@@ -33,7 +33,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 # Fast read option for HYCOM 4D data (u, v, temp, salt).
 # *If failure frequently occurs, please deactivate this option. 
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
 
 # ===== ROMS option ======================================================================
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
@@ -42,7 +42,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
 
 # ===== Tide model =======================================================================
-#tide_model=naotide
+tide_model=naotide
 #tide_model=naotidej
 
 # ========================================================================================
@@ -68,6 +68,6 @@ fi
 
 rm *.mod
 
-export OMP_NUM_THREADS=12
+export OMP_NUM_THREADS=30
 
 ./iniOCN2ROMS.exe < Palau1.in

@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2023 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2025 Takashi NAKAMURA  =====
 
 #if defined JMA_MSM
 # undef BULK_FLUX
@@ -22,7 +22,6 @@
 # undef JMA_MSM_CLOUD_ONLY
 
 #elif defined ERA5
-# define NETCDF_INPUT
 # undef JMA_MSM_CLOUD_ONLY
 
 #endif
@@ -205,6 +204,7 @@ PROGRAM frcATM2ROMS
   integer, parameter :: N_OutPar = 8
   integer, parameter :: N_OutPar1 = 5
 
+# if defined NETCDF_INPUT
   character(256) :: NCIN_NAME(N_InPar) = (/   &
      "msl  "  &  ! Mean sea level pressure (Pa)
     ,"u10  "  &  ! 10 metre U wind component (m s-1)
@@ -220,6 +220,19 @@ PROGRAM frcATM2ROMS
   character(len=*), parameter :: NC_TIME_NAME = 'time'
   integer :: d_ref_days
   real(8) :: sf, off
+
+# else
+  character(256) :: GRIB_NAME(N_InPar) = (/   &
+     "msl "  &  ! Mean sea level pressure (Pa)
+    ,"10u "  &  ! 10 metre U wind component (m s-1)
+    ,"10v "  &  ! 10 metre V wind component (m s-1)
+    ,"2t  "  &  ! 2 metre temperature (K)
+    ,"2d  "  &  ! 2 metre dewpoint temperature (K)
+    ,"tp  "  &  ! Total precipitation (m h-1)
+    ,"ssrd"  &  ! Surface solar radiation downward (J h-1 m-2)
+    ,"strd"  &  ! Surface thermal radiation downward (J h-1 m-2)
+    /)
+# endif
 
 #endif
 
@@ -248,12 +261,14 @@ PROGRAM frcATM2ROMS
 
   character(10) :: GRIB_yyyymmddhh = "2002070100"
 
-  integer :: ifile,idx,iret,igrib
+  integer :: ifile(2),iret(2),igrib(2)
   integer :: istart, iend
-  integer :: YYYYMMDD(N_InPar), hhmm(N_InPar)
+  integer :: YYYYMMDD(N_InPar), hhmm(N_InPar), endStep(N_InPar)
   real(8), allocatable :: values(:)
   integer :: p1,p2,p3
   character(256) :: p4
+  integer :: param_count
+  integer :: ips, ipe
 
   character(9) :: FRC_yyyymmdd = "_20020701" 
   character(30) :: TIME_ATT  = "days since 2000-01-01 00:00:00"
@@ -373,6 +388,8 @@ PROGRAM frcATM2ROMS
   character(256) :: IN_FILE(2), IN_FILE2(2)
   integer :: iyear, imonth, iday
   integer :: ihour, imin
+  integer :: iyear2, imonth2, iday2
+  integer :: ihour2, imin2
   integer :: i,j,k
   integer :: idays,ihours,ijdate,Sjdate
   integer :: itime
@@ -389,6 +406,7 @@ PROGRAM frcATM2ROMS
   
   integer :: iparam,ifc,iin,isp
   real(8) :: d_lat, d_lon
+  real(8) :: s_lat, s_lon
   real(8) :: u, v
   real(8) :: dpT, sat_VP, VP
   logical :: file_exists
@@ -574,19 +592,27 @@ PROGRAM frcATM2ROMS
   IN_FILE(2) = trim(JRA55_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
                  "/fcst_phy2m125."//GRIB_yyyymmddhh
 
+# elif defined ERA5
+!---- Set ERA5 GRIB2 file --------------------------------
+  IN_FILE(1) = trim(ATM_FILE(1))
 # endif
 
   !Open GRIB file
-  call codes_grib_multi_support_on	(	iret	)	
+  call codes_grib_multi_support_on	(	iret(1)	)	
   write(*,*) "OPEN: ", trim( IN_FILE(1) )
-  call codes_open_file(ifile, trim( IN_FILE(1) ),'r', iret)
-  call codes_grib_new_from_file(ifile,igrib, iret)
+  call codes_open_file(ifile(1), trim( IN_FILE(1) ),'r', iret(1))
+  call codes_grib_new_from_file(ifile(1),igrib(1), iret(1))
 !
+# if defined JMA_MSM || defined DSJRA55 || defined JMA_LSM || defined JRA55
 ! ! Get dimension data
-  call codes_get(igrib,'Ny', Jm)
-  call codes_get(igrib,'Nx', Im)
+  call codes_get(igrib(1),'Ny', Jm)
+  call codes_get(igrib(1),'Nx', Im)
+# elif defined ERA5
+! ! Get dimension data
+  call codes_get(igrib(1),'Nj', Jm)
+  call codes_get(igrib(1),'Ni', Im)
+# endif
   write(*,*) Im,Jm
-!
 ! Allocate variable
   allocate(values(Im*Jm))
 
@@ -662,15 +688,35 @@ PROGRAM frcATM2ROMS
   cosAy(:,Jm) = cosAy(:,Jm-1)
   sinAy(:,Jm) = sinAy(:,Jm-1)
 
-# else
+# elif defined JMA_MSM || defined JRA55
+!  ---- Get Lat Lon coordinates from GRIB file --------------
+  call codes_get(igrib(1),'distinctLatitudes',lat)
+  call codes_get(igrib(1),'distinctLongitudes',lon)
 
-  call codes_get(igrib,'distinctLatitudes',lat)
-  call codes_get(igrib,'distinctLongitudes',lon)
+# elif defined ERA5
+!  ---- Get Lat Lon coordinates from GRIB file --------------
+  allocate(lat(Jm))
+  allocate(lon(Im))
+  call codes_get(igrib(1),'latitudeOfFirstGridPointInDegrees',  s_lat)
+  call codes_get(igrib(1),'longitudeOfFirstGridPointInDegrees', s_lon)
+  call codes_get(igrib(1),'jDirectionIncrementInDegrees', d_lat)
+  call codes_get(igrib(1),'iDirectionIncrementInDegrees', d_lon)
+  do j=1,Jm
+    lat(j) = s_lat - d_lat*dble(j-1)
+  end do
+  do i=1,Im
+    lon(i) = s_lon + d_lon*dble(i-1)
+  end do
+
+  write(*,*) 'NW corner:', lat(1),  lon(1)
+  write(*,*) 'SW corner:', lat(Jm), lon(1)
+  write(*,*) 'NE corner:', lat(1), lon(Im)
+  write(*,*) 'SE corner:', lat(Jm),lon(Im)
 
 # endif 
 
-  call codes_release(igrib)
-  call codes_close_file(ifile)
+  call codes_release(igrib(1))
+  call codes_close_file(ifile(1))
   write(*,*) "CLOSE: ", trim( IN_FILE(1) )
 #endif
 
@@ -760,7 +806,6 @@ PROGRAM frcATM2ROMS
 
 #if defined ERA5
 !======= Set starting time and Ending time ========================
-
   call ndays(Emonth, Eday, Eyear, Smonth, Sday, Syear, N_days)
   call jd(Syear, Smonth, Sday, jdate_Start)
 
@@ -772,6 +817,8 @@ PROGRAM frcATM2ROMS
   d_jdate_Ref = dble(jdate_Ref)
   write(*,*) d_jdate_Ref
 
+# if defined NETCDF_INPUT
+!== ERA5 NetCDF format ========================
   call jd(1900, 1, 1, jdate_Ref_atm)! ERA5 time: hours since 1900-01-01 00:00:00
   d_jdate_Ref_atm = dble(jdate_Ref_atm)
   write(*,*) d_jdate_Ref_atm
@@ -794,6 +841,42 @@ PROGRAM frcATM2ROMS
 
     deallocate(time2)
   end do
+
+# else
+!== ERA5 GRIB format ========================
+  ! Check time
+  allocate( time2(100000) ) ! temporary array
+  do iNC=1, NCnum
+    write(*,*) 'CHECK: Time'
+    ! Open NetCDF file
+    write(*,*) "OPEN: ", trim( ATM_FILE(iNC) )
+    call codes_open_file(ifile(1), trim( ATM_FILE(iNC) ),'r', iret(1))
+    call codes_grib_new_from_file(ifile(1),igrib(1), iret(1))
+    NC(iNC)%Nt=0
+    do while (iret(1) /= CODES_END_OF_FILE)
+!      call codes_grib_new_from_file(ifile,igrib, iret)
+      call codes_get(igrib(1),'dataDate' , p1)
+      call codes_get(igrib(1),'dataTime' , p2)
+!      call codes_get(igrib,'endStep'  , p3)
+      call codes_get(igrib(1),'shortName', p4)
+      if (trim(p4)==trim(GRIB_NAME(1))  ) then
+        write(*,*) 'CHECK: Time', p1, p2
+        NC(iNC)%Nt = NC(iNC)%Nt + 1
+        call dble_jd2(p1, p2, time2( NC(iNC)%Nt ))
+      endif  
+      call codes_release(igrib(1))
+      call codes_grib_new_from_file(ifile(1),igrib(1), iret(1))
+    enddo
+
+    write(*,*) NC(iNC)%Nt
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+
+    NC(iNC)%time_all = time2( 1:NC(iNC)%Nt ) ! julina date
+
+  end do
+  call codes_close_file(ifile(1))
+  deallocate(time2)
+# endif
 
   write(*,*) NC(:)%Nt
 
@@ -895,8 +978,7 @@ PROGRAM frcATM2ROMS
     write (hh, "(I2.2)") ihour ! mod((itime-1)*1,24)
 #endif
 
-#if defined NETCDF_INPUT
-# if defined JMA_MSM
+#if defined JMA_MSM && defined NETCDF_INPUT
     ihours = ihours + 24  !!! Files exist daily interval
 
     IN_FILE2(1) = IN_FILE(1)  
@@ -904,7 +986,7 @@ PROGRAM frcATM2ROMS
     IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//DD//".nc"
     IN_FILE(2) = trim(MSM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
 
-# elif defined ERA5
+#elif defined ERA5
  
     iNCm = iNC
     iNC  = iNCt(itime)
@@ -912,7 +994,6 @@ PROGRAM frcATM2ROMS
       IN_FILE(1) = trim(ATM_FILE(iNC))
     endif
 
-# endif
 #else 
     GRIB_yyyymmddhh = YYYY//MM//DD//hh
 
@@ -972,6 +1053,19 @@ PROGRAM frcATM2ROMS
       cycle
     endif
 #endif
+! ---- Open GRIB files --------------------------------
+#if !defined NETCDF_INPUT
+# if defined DSJRA55 || defined JRA55
+    DO iin=1,2
+# else
+    DO iin=1,1
+# endif
+      write(*,*) "OPEN: ", trim( IN_FILE(iin) )
+      call codes_open_file(ifile(iin), trim( IN_FILE(iin) ),'r', iret(iin))
+      call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
+    END DO
+#endif
+
 !  ---- LOOP2 START --------------------------------
 #if defined JMA_MSM       
 # if defined NETCDF_INPUT
@@ -984,18 +1078,16 @@ PROGRAM frcATM2ROMS
 #else
     DO ifc=1,1
 #endif
+
+! ======= NetCDF file input ================================================
+#if defined NETCDF_INPUT
 !  ---- LOOP3.1 START --------------------------------
       DO iparam=1,N_InPar
-#if defined JMA_MSM
+# if defined JMA_MSM
         if(iparam==N_OutPar1 .and. ijdate<jd_msmnew) cycle
 #  if defined JMA_MSM_CLOUD_ONLY
         if(iparam<6.or.iparam>9) cycle
 #  endif
-#endif
-
-#if defined NETCDF_INPUT
-! ======= NetCDF file input ================================================
-# if defined JMA_MSM
         if(iparam>N_OutPar1) then !!! for rain (rain fall rate)
           iin=2
         else
@@ -1030,79 +1122,134 @@ PROGRAM frcATM2ROMS
         in_data(:,:,iparam)=in_data(:,:,iparam)*sf+off
 # endif
         call check( nf90_close(ncid) )     
-   
+      END DO
+!  ---- LOOP3.1 END --------------------------------   
 #else
+
 ! ======= GRIB2 file input ================================================
-!      ---- Seek message --------------------------------
-# if defined JMA_MSM || defined JMA_LSM
-        iin=1
+      param_count = 0  ! This countor is only used for GRIB input.
+      DO WHILE (param_count/=N_InPar)
+
+# if defined DSJRA55 || defined JRA55
+        DO iin=1,2
 # else
-        if(iparam>=10) then !!! for rain (rain fall rate)
-          iin=2
-        else
-          iin=1
-        end if
+        DO iin=1,1
+!        if(iparam>=10) then !!! for rain (rain fall rate)
+!          iin=2
+!        else
+!          iin=1
+!        end if
 # endif
-
-        write(*,*) "OPEN: ", trim( IN_FILE(iin) )
-        call codes_open_file(ifile, trim( IN_FILE(iin) ),'r', iret)
-        call codes_grib_new_from_file(ifile,igrib, iret)
-
-        DO WHILE (iret /= CODES_END_OF_FILE)
+          SEARCH_LOOP: DO WHILE (iret(iin) /= CODES_END_OF_FILE)
 # if defined JMA_MSM
-          call codes_get(igrib,'forecastTime',p1)
-          call codes_get(igrib,'parameterName', p4)
-          if (p1==GRIB_STEP(ifc) .and.             &
-              trim(p4)==trim(GRIB_NAME(iparam))  ) exit
+            call codes_get(igrib(iin),'forecastTime',p1)
+            call codes_get(igrib(iin),'parameterName', p4)
+            do i=1,N_InPar
+              if (p1==GRIB_STEP(ifc) .and.             &
+                  trim(p4)==trim(GRIB_NAME(iparam))  ) then
+                iparam = i
+                param_count = param_count + 1
+                exit SEARCH_LOOP
+              endif
+            end do
 # elif defined DSJRA55
-          call codes_get(igrib,'parameterCategory',p1)
-          call codes_get(igrib,'parameterNumber', p2)
-          call codes_get(igrib,'typeOfFirstFixedSurface', p3)
-          call codes_get(igrib,'parameterName', p4)
-          if (p1==GRIB_NUM(1,iparam) .and. p2==GRIB_NUM(2,iparam) .and. &
-              p3==GRIB_NUM(3,iparam)   ) exit
+            call codes_get(igrib(iin),'parameterCategory',p1)
+            call codes_get(igrib(iin),'parameterNumber', p2)
+            call codes_get(igrib(iin),'typeOfFirstFixedSurface', p3)
+            call codes_get(igrib(iin),'parameterName', p4)
+            if(iin==1) then
+              ips = 1
+              ipe = 9
+            else
+              ips = 10
+              ipe = N_InPar
+            end if
+            do i=ips,ipe
+              if (p1==GRIB_NUM(1,iparam) .and. p2==GRIB_NUM(2,iparam) .and. &
+                  p3==GRIB_NUM(3,iparam)   ) then
+                iparam = i
+                param_count = param_count + 1
+                exit SEARCH_LOOP
+              endif
+            end do
 # elif defined JMA_LSM
-          call codes_get(igrib,'level',p1)
-          call codes_get(igrib,'shortName', p4)
-          if (p1==GRIB_LEVEL(iparam) .and.             &
-              trim(p4)==trim(GRIB_NAME(iparam))  ) exit
+            call codes_get(igrib(iin),'level',p1)
+            call codes_get(igrib(iin),'shortName', p4)
+            do i=1,N_InPar
+              if (p1==GRIB_LEVEL(iparam) .and.             &
+                trim(p4)==trim(GRIB_NAME(iparam))  ) then
+                iparam = i
+                param_count = param_count + 1
+                exit SEARCH_LOOP
+              endif
+            end do
 # elif defined JRA55
-          call codes_get(igrib,'indicatorOfParameter',p1)
-          call codes_get(igrib,'parameterName', p4)
-          if (p1==GRIB_NUM(iparam) ) exit
+            call codes_get(igrib(iin),'indicatorOfParameter',p1)
+            call codes_get(igrib(iin),'parameterName', p4)
+            if(iin==1) then
+              ips = 1
+              ipe = 9
+            else
+              ips = 10
+              ipe = N_InPar
+            end if
+            do i=1,N_InPar
+              if (p1==GRIB_NUM(iparam) ) then
+                iparam = i
+                param_count = param_count + 1
+                exit SEARCH_LOOP
+              endif
+            end do
+# elif defined ERA5
+            call codes_get(igrib(iin),'dataDate' , p1)
+            call codes_get(igrib(iin),'dataTime' , p2)
+            call codes_get(igrib(iin),'endStep'  , p3)
+            call codes_get(igrib(iin),'shortName', p4)
+            call dble_jd2( p1, p2, d_jdate)
+            d_jdate = d_jdate + dble(p3)/24.0d0
+            if (d_jdate == NC(iNC)%time_all(ifc) ) then
+              do i=1,N_InPar
+                if (trim(p4)==trim(GRIB_NAME(i))  ) then
+                  iparam = i
+                  param_count = param_count + 1
+                  exit SEARCH_LOOP
+                endif
+              end do
+            endif
 # endif
-          call codes_release(igrib)
-          call codes_grib_new_from_file(ifile,igrib, iret)
-        END DO
+            call codes_release(igrib(iin))
+            call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
+          END DO SEARCH_LOOP
    
-        write(*,*) "READ GRIB DATA: ", trim(p4)
+          write(*,*) "READ GRIB DATA: ", trim(p4)
 
 # if defined JMA_LSM
-        call codes_get(igrib,'dataDate',YYYYMMDD(iparam))
-        write(*,*) 'dataDate = ', YYYYMMDD(iparam)
-        call codes_get(igrib,'dataTime',hhmm(iparam))
-        write(*,*) 'dataTime = ', hhmm(iparam)
-# else
-        call codes_get(igrib,'validityDate',YYYYMMDD(iparam))
-        write(*,*) 'validityDate = ', YYYYMMDD(iparam)
-        call codes_get(igrib,'validityTime',hhmm(iparam))
-        write(*,*) 'validityTime = ', hhmm(iparam)
+          call codes_get(igrib(iin),'dataDate',YYYYMMDD(iparam))
+          write(*,*) 'dataDate = ', YYYYMMDD(iparam)
+          call codes_get(igrib(iin),'dataTime',hhmm(iparam))
+          write(*,*) 'dataTime = ', hhmm(iparam)
+# elif defined JMA_MSM || defined DSJRA55 || defined JRA55
+          call codes_get(igrib(iin),'validityDate',YYYYMMDD(iparam))
+          write(*,*) 'validityDate = ', YYYYMMDD(iparam)
+          call codes_get(igrib(iin),'validityTime',hhmm(iparam))
+          write(*,*) 'validityTime = ', hhmm(iparam)
 # endif
   
-        call codes_get(igrib,'values', values)
-        call codes_release(igrib)
-        call codes_close_file(ifile) 
-        write(*,*) "CLOSE: ", trim( IN_FILE(iin) )
-     
-        do i=1, Jm
-          istart = 1 + Im*(i-1)
-          iend   = Im*i
-          in_data(:,i,iparam) = values(istart:iend)
-        end do
-#endif
-      END DO
+          call codes_get(igrib(iin),'values', values)
+          call codes_release(igrib(iin))
+          call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
 
-#if defined NETCDF_INPUT
+          do i=1, Jm
+            istart = 1 + Im*(i-1)
+            iend   = Im*i
+            in_data(:,i,iparam) = values(istart:iend)
+          end do
+        END DO
+
+      END DO
+#endif
+
+#if defined JMA_MSM && defined NETCDF_INPUT
 ! ======= NetCDF file input ================================================
     ! Set date & time
       call check( nf90_open(trim( IN_FILE(1) ), nf90_nowrite, ncid) )
@@ -1111,15 +1258,14 @@ PROGRAM frcATM2ROMS
       call check( nf90_inq_varid(ncid, NC_TIME_NAME, var_id) )  !!!  not Japan time (00:00:00+09:00)
       call check( nf90_get_var(ncid, var_id, time, start=start1D, count=count1D) )
       call check( nf90_close(ncid) )
-# if defined JMA_MSM
+
     ! JMA_MSM time: hours since 2000-01-01 00:00:00
       call ndays(imonth, iday, iyear, 1, 1, 2000, d_ref_days)
       t = time(1)/24.0d0 + dble(d_ref_days)
 
-# elif defined ERA5
-    ! ERA5 time:    hours since 1900-01-01 00:00:00
+#elif defined ERA5
+    ! ERA5 time
       t = atm_time(itime)
-# endif
 
 #else
 ! ======= GRIB2 file input ================================================
@@ -1356,8 +1502,23 @@ PROGRAM frcATM2ROMS
       END DO
 !  ---- LOOP3.3 END --------------------------------         
       itime = itime + 1
+
+
     END DO
 ! ---- LOOP2 END --------------------------------
+
+! ---- Close GRIB files --------------------------------
+#if !defined NETCDF_INPUT
+# if defined DSJRA55 || defined JRA55
+    DO iin=1,2
+# else
+    DO iin=1,1
+# endif
+        write(*,*) "CLOSE: ", trim( IN_FILE(iin) )
+        call codes_close_file(ifile(iin))
+    END DO
+#endif
+
   END DO
 !---- LOOP1 END --------------------------------
   

@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2021 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2025 Takashi NAKAMURA  =====
 
 PROGRAM getHYCOM
   use netcdf
@@ -13,10 +13,12 @@ PROGRAM getHYCOM
   integer :: Eyear, Emonth, Eday
   integer :: Ryear, Rmonth, Rday
   character(256) :: HYCOM_prefix
+  integer :: iparam
 ! -------------------------------------------------------------------------
   character(31) :: TIME_ATT   = "hours since 2000-01-01 00:00:00"
   character(12) :: HYCOM_suffix = "_20000101.nc"
   character(256) :: HYCOM_OUT_FILE
+  character(256) :: HYCOM_IN_FILE
   
   TYPE T_NC
     real(8), pointer :: time_all(:)
@@ -51,7 +53,8 @@ PROGRAM getHYCOM
   integer :: ncid2,var_id2
   integer :: N_xi_rho, N_eta_rho
   real(8) :: sf, off
-  integer :: Im, Jm, Nz
+  integer :: Im, Jm
+  integer :: Nz = 1
   integer :: Im_all, Jm_all
   integer :: IL, IR, JB, JT
   integer :: iNC, itime
@@ -60,11 +63,12 @@ PROGRAM getHYCOM
   integer :: st = 1
   real(8) :: time(1)
   integer :: itry, status
+  character(1) :: sparam
   namelist/range/Tlat, Blat, Llon, Rlon
   namelist/sdate/Syear, Smonth, Sday
   namelist/edate/Eyear, Emonth, Eday
   namelist/hycom/HYCOM_prefix
-      
+  namelist/hycom2/iparam
   ! Read parameters in namelist file
   
   read (5, nml=range)
@@ -74,6 +78,8 @@ PROGRAM getHYCOM
   read (5, nml=edate)
   rewind(5)
   read (5, nml=hycom)
+  rewind(5)
+  read (5, nml=hycom2)
   
   call jd(2000, 1, 1, jdate_20000101)
   d_jdate_20000101 = dble(jdate_20000101)
@@ -92,17 +98,29 @@ PROGRAM getHYCOM
   HYCOM_suffix(2:5)=YYYY
   HYCOM_suffix(6:7)=MM
   HYCOM_suffix(8:9)=DD
+#if defined ESPC_D_V02
+  write (sparam, "(I1.1)") iparam
+  HYCOM_OUT_FILE = trim( HYCOM_prefix )//'_'//sparam//HYCOM_suffix
+#else
   HYCOM_OUT_FILE = trim( HYCOM_prefix )//HYCOM_suffix
+#endif
 
 !---- Allocate lat, lon dimension data ---------------------------------
   
-  write(*,*) "OPEN: ", HYCOM_FILE(1)
-  call try_nf_open(HYCOM_FILE(1), nf90_nowrite, ncid)
+#if defined ESPC_D_V02
+  HYCOM_IN_FILE = HYCOM_FILE(iparam,1)
+#else
+  HYCOM_IN_FILE = HYCOM_FILE(1)
+#endif
+  write(*,*) "OPEN: ", trim(HYCOM_IN_FILE)
+  call try_nf_open(trim(HYCOM_IN_FILE), nf90_nowrite, ncid)
   
   ! Get dimension data
   call get_dimension(ncid, 'lat', Jm_all)
   call get_dimension(ncid, 'lon', Im_all)
-  call get_dimension(ncid, 'depth', Nz)
+  if(iparam/=1) then
+    call get_dimension(ncid, 'depth', Nz)
+  endif
   write(*,*) Jm_all, Im_all, Nz
       
 !      ! Allocate variable
@@ -112,9 +130,11 @@ PROGRAM getHYCOM
       
   call readNetCDF_1d(ncid, 'lat', Jm_all, lat_all)
   call readNetCDF_1d(ncid, 'lon', Im_all, lon_all)
-  call readNetCDF_1d(ncid, 'depth', Nz, depth)
+  if(iparam/=1) then
+    call readNetCDF_1d(ncid, 'depth', Nz, depth)
+  endif
   call check( nf90_close(ncid) )         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST code
-  write(*,*) "CLOSE: ", HYCOM_FILE(1)     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST code
+  write(*,*) "CLOSE: ", trim(HYCOM_IN_FILE)     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! TEST code
   write(*,*) Im, lon_all(1), lon_all(Im_all)
   JB=1
   do j=1,Jm_all
@@ -147,15 +167,25 @@ PROGRAM getHYCOM
   
   lat(:) = lat_all(JB:JT)
   lon(:) = lon_all(IL:IR)
-  write(*,*) Im,Jm,Nz
+  write(*,*) Im,Jm
   
   ! Initialize count and start for reading data
   
-  allocate(surf_el(Im,Jm,1))
-  allocate(water_temp(Im,Jm,Nz,1))
-  allocate(salinity(Im,Jm,Nz,1))
-  allocate(water_u(Im,Jm,Nz,1))
-  allocate(water_v(Im,Jm,Nz,1))
+  if(iparam==0 .or. iparam==1) then
+    allocate(surf_el(Im,Jm,1))
+  endif
+  if(iparam==0 .or. iparam==2) then
+    allocate(water_temp(Im,Jm,Nz,1))
+  endif
+  if(iparam==0 .or. iparam==3) then  
+    allocate(salinity(Im,Jm,Nz,1))
+  endif
+  if(iparam==0 .or. iparam==4) then  
+    allocate(water_u(Im,Jm,Nz,1))
+  endif
+  if(iparam==0 .or. iparam==5) then 
+    allocate(water_v(Im,Jm,Nz,1))
+  endif
           
 !---- Create the extracted HYCOM netCDF file --------------------------------
       
@@ -164,6 +194,7 @@ PROGRAM getHYCOM
       trim( HYCOM_OUT_FILE ) &
     , TIME_ATT               &  
     , Im, Jm, Nz, N_days+1   &   
+    , iparam                 &   
     )
   
   call check( nf90_open( trim( HYCOM_OUT_FILE ), NF90_WRITE, ncid2 ) )
@@ -178,17 +209,23 @@ PROGRAM getHYCOM
   call check( nf90_inq_varid(ncid2, 'lat', var_id2) )
   call check( nf90_put_var(ncid2, var_id2, lat, start = start1D, count = count1D) )
 
-  start1D = (/ 1  /)
-  count1D = (/ Nz /)
-  call check( nf90_inq_varid(ncid2, 'depth', var_id2) )
-  call check( nf90_put_var(ncid2, var_id2, depth, start = start1D, count = count1D) ) 
+  if(iparam/=1) then
+    start1D = (/ 1  /)
+    count1D = (/ Nz /)
+    call check( nf90_inq_varid(ncid2, 'depth', var_id2) )
+    call check( nf90_put_var(ncid2, var_id2, depth, start = start1D, count = count1D) ) 
+  endif
 
   call check( nf90_close(ncid2) )
 
 !---- Read HYCOM netCDF file --------------------------------
   write(*,*) "******************************************************************"
 
-#if defined GOFS_31
+#if defined ESPC_D_V02
+# if defined ANALYSIS
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_ESPC_D_V02_analysis_'//sparam//'.dat')
+# endif
+#elif defined GOFS_31
 # if defined ANALYSIS_Y
   open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_31_analysisY.dat')
 # elif defined ANALYSIS
@@ -215,8 +252,14 @@ PROGRAM getHYCOM
   do iNC=1, NCnum
     write(*,*) 'CHECK: Time'
     ! Open NetCDF file
-    write(*,*) "OPEN: ", HYCOM_FILE(iNC)
-    call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
+#if defined ESPC_D_V02
+  HYCOM_IN_FILE = HYCOM_FILE(iparam,iNC)
+#else
+  HYCOM_IN_FILE = HYCOM_FILE(iNC)
+#endif
+    write(*,*) "OPEN: ", trim(HYCOM_IN_FILE)
+    call try_nf_open(trim(HYCOM_IN_FILE), nf90_nowrite, ncid)
+
     call get_dimension(ncid, 'time', NC(iNC)%Nt)
     write(*,*) NC(iNC)%Nt
     write(50,*) NC(iNC)%Nt
@@ -224,7 +267,7 @@ PROGRAM getHYCOM
     allocate( time2(NC(iNC)%Nt) )
     call readNetCDF_1d(ncid, 'time', NC(iNC)%Nt, time2)
     call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
+    write(*,*) "CLOSE: ", trim(HYCOM_IN_FILE)
     NC(iNC)%time_all = time2
     write(50,*) NC(iNC)%time_all
     deallocate(time2)
@@ -282,8 +325,14 @@ PROGRAM getHYCOM
       cycle
     end if
     ! Seek lon index IL
-    write(*,*) "OPEN: ", HYCOM_FILE(iNC)
-    call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
+#if defined ESPC_D_V02
+    HYCOM_IN_FILE = HYCOM_FILE(iparam,iNC)
+#else
+    HYCOM_IN_FILE = HYCOM_FILE(iNC)
+#endif
+    write(*,*) "OPEN: ", trim(HYCOM_IN_FILE)
+    call try_nf_open(trim(HYCOM_IN_FILE), nf90_nowrite, ncid)
+
     call readNetCDF_1d(ncid, 'lon', Im_all, lon_all)
     write(*,*) Im_all, lon_all(1), lon_all(Im_all)
     IL=1
@@ -306,24 +355,34 @@ PROGRAM getHYCOM
 
       start3D = (/ IL, JB, itime /)
       count3D = (/ Im, Jm, 1  /)
-      call readNetCDF_3d_hycom2( HYCOM_FILE(iNC),  ncid, 'surf_el'   &
-        , Im, Jm, 1, start3D, count3D              &
-        , surf_el )
-  
+      if(iparam==0 .or. iparam==1) then
+        call readNetCDF_3d_hycom2( trim(HYCOM_IN_FILE),  ncid, 'surf_el'   &
+          , Im, Jm, 1, start3D, count3D              &
+          , surf_el )
+      endif
+
       start4D = (/ IL, JB, 1,  itime /)
       count4D = (/ Im, Jm, Nz, 1  /)
-      call readNetCDF_4d_hycom2( HYCOM_FILE(iNC),  ncid, 'water_temp'     &
-        , Im, Jm, Nz, 1, start4D, count4D          &
-        , water_temp )
-      call readNetCDF_4d_hycom2( HYCOM_FILE(iNC),  ncid, 'salinity'       &
-        , Im, Jm, Nz, 1, start4D, count4D          &
-        , salinity )
-      call readNetCDF_4d_hycom2( HYCOM_FILE(iNC),  ncid, 'water_u'        &
-        , Im, Jm, Nz, 1, start4D, count4D          &
-        , water_u )
-      call readNetCDF_4d_hycom2( HYCOM_FILE(iNC),  ncid, 'water_v'        &
-        , Im, Jm, Nz, 1, start4D, count4D          &
-        , water_v )
+      if(iparam==0 .or. iparam==2) then   
+        call readNetCDF_4d_hycom2( trim(HYCOM_IN_FILE),  ncid, 'water_temp'     &
+          , Im, Jm, Nz, 1, start4D, count4D          &
+          , water_temp )
+      endif
+      if(iparam==0 .or. iparam==3) then  
+        call readNetCDF_4d_hycom2( trim(HYCOM_IN_FILE),  ncid, 'salinity'       &
+          , Im, Jm, Nz, 1, start4D, count4D          &
+          , salinity )
+      endif
+      if(iparam==0 .or. iparam==4) then  
+        call readNetCDF_4d_hycom2( trim(HYCOM_IN_FILE),  ncid, 'water_u'        &
+          , Im, Jm, Nz, 1, start4D, count4D          &
+          , water_u )
+      endif
+      if(iparam==0 .or. iparam==5) then 
+        call readNetCDF_4d_hycom2( trim(HYCOM_IN_FILE),  ncid, 'water_v'        &
+          , Im, Jm, Nz, 1, start4D, count4D          &
+          , water_v )
+      endif
      
 ! --- Write NetCDF file ------------------------
       write(*,*) "Write: HYCOM data"
@@ -337,19 +396,29 @@ PROGRAM getHYCOM
           
       start3D = (/ 1,  1,  st /)
       count3D = (/ Im, Jm, 1 /)
-      call check( nf90_inq_varid(ncid2, 'surf_el', var_id2) )
-      call check( nf90_put_var(ncid2, var_id2, surf_el, start = start3D, count = count3D) )   
+      if(iparam==0 .or. iparam==1) then
+        call check( nf90_inq_varid(ncid2, 'surf_el', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, surf_el, start = start3D, count = count3D) )   
+      endif
            
       start4D = (/ 1,  1,  1,  st /)
       count4D = (/ Im, Jm, Nz, 1 /)
-      call check( nf90_inq_varid(ncid2, 'water_temp', var_id2) )
-      call check( nf90_put_var(ncid2, var_id2, water_temp, start = start4D, count = count4D) )   
-      call check( nf90_inq_varid(ncid2, 'salinity', var_id2) )
-      call check( nf90_put_var(ncid2, var_id2, salinity, start = start4D, count = count4D) )   
-      call check( nf90_inq_varid(ncid2, 'water_u', var_id2) )
-      call check( nf90_put_var(ncid2, var_id2, water_u, start = start4D, count = count4D) )   
-      call check( nf90_inq_varid(ncid2, 'water_v', var_id2) )
-      call check( nf90_put_var(ncid2, var_id2, water_v, start = start4D, count = count4D) )   
+      if(iparam==0 .or. iparam==2) then   
+        call check( nf90_inq_varid(ncid2, 'water_temp', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, water_temp, start = start4D, count = count4D) )   
+      endif
+      if(iparam==0 .or. iparam==3) then  
+        call check( nf90_inq_varid(ncid2, 'salinity', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, salinity, start = start4D, count = count4D) )   
+      endif
+      if(iparam==0 .or. iparam==4) then  
+        call check( nf90_inq_varid(ncid2, 'water_u', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, water_u, start = start4D, count = count4D) )   
+      endif
+      if(iparam==0 .or. iparam==5) then 
+        call check( nf90_inq_varid(ncid2, 'water_v', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, water_v, start = start4D, count = count4D) )   
+      endif
 
       call check( nf90_close(ncid2) ) 
       
@@ -357,7 +426,7 @@ PROGRAM getHYCOM
     
     end do
     call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", HYCOM_FILE(iNC)
+    write(*,*) "CLOSE: ", trim(HYCOM_IN_FILE)
     
     write(*,*) "******************************************************************"
   end do

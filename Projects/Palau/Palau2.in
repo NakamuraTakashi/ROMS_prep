@@ -1,11 +1,38 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Palau2_grd_v2.0.nc"
+  GRID_FILE = "Palau2_grd_v1.2.nc"
 /
 
-&gebco
+&mybath
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2020/GEBCO_2020.nc"
+  BATH_FILE = "input/Palau_bath_merged_all_gebco_sattelite_seachart_dem.nc"
+  x_ncname = 'x'
+  y_ncname = 'y'
+  bathy_ncname = 'Band1'
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 53  ! Negative zones are for the Southern hemisphere.
+  ispher = 6   ! Spheroid for projection (1-19)
+! ispher -- SPHEROID SELECTION: 1=CLARKE 1866; 2=CLARKE 1880;       
+!               3=BESSEL 1967; 4=NEW INTERNATIONAL 1967;
+!               5=INTERNATIONAL 1909 (1924) (HAYFORD);
+!               6=WORLD GEODETIC SYSTEM 1972; 7=EVEREST;
+!               8=WORLD GEODETIC SYSTEM 1966;
+!               9=GEODETIC REFERENCE SYSTEM 1980;
+!               10=AIRY; 11=MODIFIED EVEREST; 12=MODIFIED AIRY;         
+!               13=WALBECK; 14=SOUTH ASIA 1960 (FISCHER);
+!               15=AUSTRALIAN NATIONAL-SOUTH AMERICAN 1969;
+!               16=KRASSOVSKY; 17=HOUGH; 18=MERCURY 1960 (FISCHER);     
+!               19=MODIFIED MERCURY 1968 (FISCHER)
+!        NOTES:
+!               IF ISPHER.EQ.0: COMPUTE IN LAMBERT OR TRANSVERSE MERCATOR  
+!               IF ISPHER.NE.0: COMPUTE IN UNIVERSAL TRANSVERSE MERCATOR   
+!               IZONE IS UTM ZONE NUMBER OR STATE PLANE ZONE DEPENDING ON  
+!               SELECTION OF ISPHER.  IF UTM AND SOUTHERN HEMISPHERE, IZONE
+!               IS NEGATIVE.
+!    
 /
 
 &bath_smooth
@@ -14,7 +41,7 @@
 
 &land_mask
 
-  hmin = -5.0d0  ! Minimum depth
+  hmin = -1.0d0  ! Minimum depth
 
 ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
 ! and one-grid bay grids 
@@ -24,28 +51,28 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "Palau1_grd_v2.0.nc"
-  parent_Imin = 49
-  parent_Imax = 95
-  parent_Jmin = 52
-  parent_Jmax = 91
+  parent_grid = "Palau1_grd_v1.0.nc"
+  parent_Imin =  60
+  parent_Imax = 145
+  parent_Jmin =  80
+  parent_Jmax = 215
   refine_factor = 5
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Palau1_grd_v2.1.nc"
+  F2C_OUT_FILE = "Palau1_grd_v0.1.nc"
 /
 
 &sdate
-  Syear  = 2017   ! Starting year
-  Smonth = 4      ! Starting month
+  Syear  = 2023   ! Starting year
+  Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2017   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 5      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 5      ! Ending day
 /
 
 &refdate
@@ -60,7 +87,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "ocean_his.nc"
+  ROMS_HISFILE  = "../../../COAWST_OUTPUT/Palau/Palau1/P1_his_20230102.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -90,17 +117,17 @@
 /
 
 &bry
-  BRY_prefix  = "Palau2_bry_ROMS_Nz15"
+  BRY_prefix  = "Palau2_bry_ROMS_Nz30"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Palau2_ini_ROMS_Nz15"
+  INI_prefix  = "Palau2_ini_ROMS_Nz30"
 
-  INIyear  = 2017   ! Initial year
-  INImonth = 4      ! Initial month
-  INIday   = 2      ! Initial day
+  INIyear  = 2024   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 6      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -110,7 +137,7 @@
 
 &zcoord
 
-  N_s_rho = 15
+  N_s_rho = 30
 
 ! Set vertical, terrain-following coordinates transformation equation and
 ! stretching function (see wikiROMS for details).
@@ -136,9 +163,9 @@
 !  NCnum = 2  ! Number of ERA5 files 
 /
 &frc_era5_2
-  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
+  ATM_FILE  =  "../GetERA5/Data/Palau/era5_atm_2023.grib"
 !  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2020.nc",
 !               "../../Data/era5/Panay/era5_atm_2021.nc"
-  FRC_prefix  = "Boracay1_frc_ERA5"
+  FRC_prefix  = "/mnt/d/COAWST_DATA/Palau/Palau2/Air/Palau2_frc_ERA5"
 /
 

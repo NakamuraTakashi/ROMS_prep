@@ -1,7 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
 !  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.2.nc"
-  GRID_FILE = "input/Shizugawa3_grd_v0.3b.nc"
+  GRID_FILE = "input/Shizugawa3_grd_v0.4c.nc"
 /
 
 &mybath
@@ -185,7 +185,7 @@
 
 &aquaculture1
 !  INPUT_CSV = "input/Shizugawa_aquaculture_test.csv"
-  INPUT_CSV = "input/Shizugawa_aquaculture2.csv"
+  INPUT_CSV = "input/Shizugawa_aquaculture_2_csv.csv"
   Nheader = 1
   Nidaq = 4
 
@@ -197,14 +197,14 @@
 &aquaculture1_2
 ! Interval of the aquaculture unit (m)
 !  01 Oyster:         0.5 m (Sakamaki et al., 2022)
-!  02 Wakame Seaweed: 1.0 m (need update!!!!)
-!  03 Sea squirt:     1.0 m (need update!!!!)
-!  04 Scallop:        1.0 m (need update!!!!)
-  aqunit_interval = 0.5d0, 1.0d0, 1.0d0, 1.0d0 
+!  02 Wakame Seaweed: 0.3 m (JF-Miyagi; https://www.jf-miyagi.com/omotenashi/html/zukan03b.html)
+!  03 Sea squirt:     0.5 m (need update!!!!)
+!  04 Scallop:        0.2 m (need update!!!!)
+  aqunit_interval = 0.5d0, 0.3d0, 0.5d0, 0.2d0 
 /
 
 &aquaculture2
-  INPUT_CSV = "input/Shizugawa_ginzake_v2.csv"
+  INPUT_CSV = "input/Shizugawa_ginzake_csv.csv"
   Nheader = 1
 
   NC_VARNAME = "aquaculture_05"

@@ -1,10 +1,12 @@
 #!/bin/bash
+rm *.exe
 # ===== Ocean Models ========================================================================
 # Please choose one of the following options
 #
 #export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="-DJCOPE_MODEL"
-export MY_CPP_FLAGS="-DROMS_MODEL"
+#export MY_CPP_FLAGS="-DROMS_MODEL"
+export MY_CPP_FLAGS="-DFORP_MODEL"
 
 # ===== HYCOM option ====================================================================
 
@@ -36,7 +38,7 @@ export MY_CPP_FLAGS="-DROMS_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
 
 # ===== ROMS option ======================================================================
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
 
 # ===== JCOPE option =====================================================================
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
@@ -48,9 +50,9 @@ SRC_DIR=../../src
 
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_TIME_DIR='${SRC_DIR}'"
 
-gfortran -fbounds-check -fno-align-commons ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_utility.F90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_jcope.F90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/set_scoord.f90  ${SRC_DIR}/set_depth.F90 ${SRC_DIR}/pzcon.f ${SRC_DIR}/potmp.f ${SRC_DIR}/bryOCN2ROMS.F90 ${MY_CPP_FLAGS} -fopenmp -O2 -I/usr/include -L/usr/lib -lnetcdff -o bryOCN2ROMS.exe
+gfortran -fbounds-check -fno-align-commons ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_utility.F90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_jcope.F90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/set_scoord.f90  ${SRC_DIR}/set_depth.F90 ${SRC_DIR}/pzcon.f ${SRC_DIR}/potmp.f ${SRC_DIR}/hisOCN2ROMS.F90 ${MY_CPP_FLAGS} -fopenmp -O2 -I/usr/include -L/usr/lib -lnetcdff -o hisOCN2ROMS.exe
 rm *.mod
 
-export OMP_NUM_THREADS=12
+export OMP_NUM_THREADS=30
 
-./bryOCN2ROMS.exe < Palau3.in
+./hisOCN2ROMS.exe < FORP_offline.in

@@ -13,7 +13,7 @@ export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
 
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-07-01 to 2020-02-18)
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
 
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Renalysis (since 1994-01-01 to 2015-12-31)
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DREANALYSIS"
@@ -25,11 +25,11 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_30 -DREANALYSIS"
 
 # --  Local HYCOM extracted data by getHYCOM code 
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_LOCAL"
 
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 # Fast read option for HYCOM 4D data (u, v, temp, salt).
 # *If failure frequently occurs, please deactivate this option. 
@@ -48,9 +48,9 @@ SRC_DIR=../../src
 
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_TIME_DIR='${SRC_DIR}'"
 
-gfortran -fbounds-check -fno-align-commons ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_utility.F90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_jcope.F90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/set_scoord.f90  ${SRC_DIR}/set_depth.F90 ${SRC_DIR}/pzcon.f ${SRC_DIR}/potmp.f ${SRC_DIR}/bryOCN2ROMS.F90 ${MY_CPP_FLAGS} -fopenmp -O2 -I/usr/include -L/usr/lib -lnetcdff -o bryOCN2ROMS.exe
+gfortran -fbounds-check -fno-align-commons ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_utility.F90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}/mod_jcope.F90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/set_scoord.f90  ${SRC_DIR}/set_depth.F90 ${SRC_DIR}/pzcon.f ${SRC_DIR}/potmp.f ${SRC_DIR}/bryOCN2ROMS.F90 ${MY_CPP_FLAGS} -fopenmp -O2 -I/usr/include -L/usr/lib -lnetcdff -o bryOCN2ROMS_1.exe
 rm *.mod
 
-export OMP_NUM_THREADS=12
+export OMP_NUM_THREADS=30
 
-./bryOCN2ROMS.exe < Palau1.in
+./bryOCN2ROMS_1.exe < Palau1.in

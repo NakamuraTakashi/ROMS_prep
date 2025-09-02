@@ -1,0 +1,100 @@
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/17
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/18
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/19
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/20
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/21
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/22
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/23
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/00
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/01
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/02
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/03
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/04
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/05
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/06
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/07
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/08
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/09
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/10
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/11
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/12
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/13
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/14
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/15
+chmod -f 755 file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/01/16
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/00
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/01
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/02
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/03
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/04
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/05
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/06
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/07
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/08
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/09
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/10
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/11
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/12
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/13
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/14
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/15
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/16
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/17
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/18
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/19
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/20
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/21
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/22
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/02/23
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/00
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/01
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/02
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/03
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/04
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/05
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/06
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/07
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/08
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/09
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/10
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/11
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/12
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/13
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/14
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/15
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/16
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/17
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/18
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/19
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/20
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/21
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/22
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/03/23
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/00
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/01
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/02
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/03
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/04
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/05
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/06
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/07
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/08
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/09
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/10
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/11
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/12
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/13
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/14
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/15
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/16
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/17
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/18
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/19
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/20
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/21
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/22
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/04/23
+mkdir file:/mnt/f/DATA/TodaysEarth/TE-japan/MSM/hourly/2025/01/05

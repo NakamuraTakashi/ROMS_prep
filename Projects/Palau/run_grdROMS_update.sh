@@ -1,6 +1,8 @@
 #!/bin/bash
+rm *.exe
+
 export MY_CPP_FLAGS=""
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_FINE2COARSE"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_ONE_GRID_BAY_REMOVAL"
 
@@ -11,5 +13,5 @@ FCFLAGS="-O2"
 gfortran ${SRC_DIR}/mod_utility.F90 ${SRC_DIR}/mod_roms_netcdf.F90 ${SRC_DIR}/grdROMS_update.F90 ${MY_CPP_FLAGS} ${FCFLAGS} -I/usr/include -L/usr/lib -lnetcdff -o grdROMS_update.exe
 rm *.mod
 
-#./grdROMS_update.exe < Palau2.in
-./grdROMS_update.exe < Palau3.in
+#./grdROMS_update.exe < Palau1.in
+./grdROMS_update.exe < Palau2.in

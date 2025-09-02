@@ -5,8 +5,8 @@ rm grdROMS_add_ncparams.exe
 #cp input/Shizugawa3_grd_v0.2.nc input/Shizugawa3_grd_v0.3b.nc
 
 export MY_CPP_FLAGS=""
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DAQUACULTURE1"
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DAQUACULTURE2"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DAQUACULTURE1"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DAQUACULTURE2"
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DOUTPUT_SWAN_GRID"
 

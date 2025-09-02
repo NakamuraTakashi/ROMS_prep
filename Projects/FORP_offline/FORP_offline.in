@@ -1,25 +1,26 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "Palau1_grd_v0.0.nc"
+!  GRID_FILE = "forp-jpn-v4_grd_v1.0.nc"
+  GRID_FILE = "/mnt/d/COAWST_DATA/TokyoBay/TokyoBay1/Grid/TokyoBay1_grd_v1.0.nc"
 /
-
 &gebco
 ! GEBCO bathymetry NetCDF file     
-  BATH_FILE = "D:/Documents/GIS_data/GEBCO_2021/GEBCO_2021.nc"
+  BATH_FILE = "/mnt/d/GEBCO_2023-/GEBCO_29_Aug_2025_FORP_JPN02/gebco_2025_n55.0_s15.0_w110.0_e165.0.nc"
 /
 
 &grd_setting_ll
 ! Set lat, lon at specific station. 
-  s_lat = 6.920d0
-  e_lat = 7.900d0
-  s_lon = 132.778d0
-  e_lon = 136.295d0
+  s_lat = 19.96d0
+  e_lat = 52.03d0    !52.02d0
+  s_lon = 116.9393939d0
+  e_lon = 160.04d0 !160.030303d0
 
 ! Set ROMS grid resolution
 ! *The information is not used when GRID_REFINEMENT is activated.
-  RESOLUTION = 60.0d0 ! 1/36 degree resolution
+  RESOLUTION_LAT = 50.0d0 ! 1/50 degree resolution
+  RESOLUTION_LON = 33.0d0 ! 1/33 degree resolution
 
-  angle = -0.66d0   ! Angle (radians) between XI-axis and true EAST at RHO-points
+  angle = 0.0d0   ! Angle (radians) between XI-axis and true EAST at RHO-points
 /
 
 &bath_smooth
@@ -28,24 +29,24 @@
 
 &land_mask
 
-  hmin = 1.0d0  ! Minimum depth
+  hmin = -1.0d0  ! Minimum depth
 
  ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
  ! and one-grid bay grids 
   I_ocn = 50    ! rho point index i
-  J_ocn = 50    ! rho point index j
+  J_ocn = 1    ! rho point index j
 /
 
 &sdate
-  Syear  = 2017   ! Starting year
-  Smonth = 12     ! Starting month
-  Sday   = 1      ! Starting day
+  Syear  = 2006   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 20      ! Starting day
 /
 
 &edate
-  Eyear  = 2018   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2006   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 2      ! Ending month
+  Eday   = 5      ! Ending day
 /
 
 &refdate
@@ -62,21 +63,35 @@
 !           1       5   7
 !           |       |   |
   romsvar = 1,1,1,1,1,1,1        
+!  romsvar = 0,1,1,1,1,1,1        
+!  romsvar = 1,0,0,0,0,0,0        
+/
+
+&forp
+! Directory of FORP data files
+  FORP_data_dir = "/mnt/f/DATA/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/"
 /
 
 &bry
-  BRY_prefix  = "Palau1_bry_HYCOM_Nz15"
+  BRY_prefix  = "/mnt/d/COAWST_DATA/Palau/Palau1/Bry/Palau1_bry_HYCOM_GOF31_anaY_Nz30"
+!  BRY_prefix  = "Palau1_bry_HYCOM_ESPC_D_V02_uvts_Nz30"
+!  BRY_prefix  = "Palau1_bry_HYCOM_ESPC_D_V02_elev_Nz30"
+
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "Palau1_ini_HYCOM_Nz15"
+  INI_prefix  = "/mnt/d/COAWST_DATA/Palau/Palau1/Ini/Palau1_ini_HYCOM_GOF31_anaY_Nz30"
 
-  INIyear  = 2018   ! Initial year
-  INImonth = 7      ! Initial month
+  INIyear  = 2023   ! Initial year
+  INImonth = 1      ! Initial month
   INIday   = 2      ! Initial day
   INIhour  = 0      ! Initial hour
+/
+
+&his
+  HIS_prefix  = "forp-jpn-v4_his_Nz30"
 /
 
 &hcoord
@@ -84,7 +99,7 @@
 /
 
 &zcoord
-  N_s_rho = 15
+  N_s_rho = 30
 
 ! Set vertical, terrain-following coordinates transformation equation and
 ! stretching function (see wikiROMS for details).
@@ -110,10 +125,10 @@
 !  NCnum = 2  ! Number of ERA5 files 
 /
 &frc_era5_2
-  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2021.nc"
+  ATM_FILE  =  "../GetERA5/Data/Palau/era5_atm_2023.grib"
 !  ATM_FILE  =  "../../Data/era5/Panay/era5_atm_2020.nc",
 !               "../../Data/era5/Panay/era5_atm_2021.nc"
-  FRC_prefix  = "Boracay1_frc_ERA5"
+  FRC_prefix  = "/mnt/d/COAWST_DATA/Palau/Palau1/Air/Palau1_frc_ERA5"
 /
 
 &tide

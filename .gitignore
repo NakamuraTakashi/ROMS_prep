@@ -62,6 +62,7 @@ OTPS/DATA/*
 !OTPS/DATA/get_tpxo9_atlas30.sh
 
 Projects/GetERA5/my_setup.sh
+Projects/GetTE/my_TE-download.sh
 
 # Backup Files
 backup/*

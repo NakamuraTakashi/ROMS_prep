@@ -6,8 +6,8 @@
 #> pip show cdsapi
 # * check "pythonX.X" written in "Location: /usr/lib/pythonX.X/site-packages"
 #
-# Executable command (if pythonX.X = python3.9)
-#> python3.9 get_era5_atm.py
+# Executable command (if pythonX.X = python3.12)
+#> python3.12 get_era5_atm.py
 #---------------------------------------------------------------------------
 import os
 import cdsapi
@@ -26,10 +26,10 @@ Blat = 4      # Latitude  (degrees) of the bottom-left corner of the grid.
 Tlat = 11     # Latitude  (degrees) of the top-right corner of the grid.
 
 #Years=["2017","2018","2019","2020"]
-Years=["2023"]
+Years=["2022"]
 
 Months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-#Months = ["11"]
+#Months = ["01"]
 
 OUTPUT_DIR = 'Data/Palau'
 
@@ -60,8 +60,8 @@ for Year in Years:
                 "surface_solar_radiation_downwards",
                 "surface_thermal_radiation_downwards"
             ],
-            "year": Years,
-            "month": Months,
+            "year": Year,
+            "month": Month,
             "day": [
                 "01", "02", "03",
                 "04", "05", "06",

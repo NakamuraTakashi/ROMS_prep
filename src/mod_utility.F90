@@ -304,10 +304,10 @@ MODULE mod_utility
   END SUBROUTINE bathy_smooth
 
 ! Compute grid coordinate ---------------------
-  SUBROUTINE grid_size_rectangular(xbl, ybl, xtr, ytr, resolution, angle, Nx, Ny)
+  SUBROUTINE grid_size_rectangular(xbl, ybl, xtr, ytr, resolution_x, resolution_y, angle, Nx, Ny)
   real(8), intent(in ) :: xbl, ybl   ! (xbl, ybl): x, y coordinate of bottom left corner  
   real(8), intent(in ) :: xtr, ytr   ! (Xtr, Ytr): x, y coordinate of top right corner 
-  real(8), intent(in ) :: resolution ! (degree-1) resolution
+  real(8), intent(in ) :: resolution_x, resolution_y ! (degree-1) resolution
   real(8), intent(in ) :: angle      ! Angle (radians) between XI-axis and true EAST at RHO-points
   integer, intent(out) :: Nx         ! Number of X coodinate
   integer, intent(out) :: Ny         ! Number of Y coodinate
@@ -319,14 +319,14 @@ MODULE mod_utility
   x1 = x0*cos(-angle) - y0*sin(-angle)
   y1 = x0*sin(-angle) + y0*cos(-angle)
 
-  Nx = int( x1*resolution ) + 1
-  Ny = int( y1*resolution ) + 1
+  Nx = int( x1*resolution_x ) + 1
+  Ny = int( y1*resolution_y ) + 1
   
   END SUBROUTINE grid_size_rectangular
 
-  SUBROUTINE grid_gen_rectangular( xbl, ybl, resolution, angle, Nx, Ny, x, y )
+  SUBROUTINE grid_gen_rectangular( xbl, ybl, resolution_x, resolution_y, angle, Nx, Ny, x, y )
   real(8), intent(in ) :: xbl, ybl   ! (xbl, ybl): x, y coordinate of bottom left corner  
-  real(8), intent(in ) :: resolution ! (degree-1) resolution
+  real(8), intent(in ) :: resolution_x, resolution_y ! (degree-1) resolution
   real(8), intent(in ) :: angle      ! Angle (radians) between XI-axis and true EAST at RHO-points
   integer, intent(in ) :: Nx         ! Number of X coodinate
   integer, intent(in ) :: Ny         ! Number of Y coodinate
@@ -338,11 +338,11 @@ MODULE mod_utility
 
   x0(1,:) = 0.0d0
   do i=2, Nx
-    x0(i,:) = x0(i-1,:) + 1.0d0/resolution
+    x0(i,:) = x0(i-1,:) + 1.0d0/resolution_x
   enddo
   y0(:,1) = 0.0d0
   do j=2, Ny
-    y0(:,j) = y0(:,j-1) + 1.0d0/resolution
+    y0(:,j) = y0(:,j-1) + 1.0d0/resolution_y
   enddo
   do i=1, Nx
     do j=1, Ny

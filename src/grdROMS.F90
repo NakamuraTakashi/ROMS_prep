@@ -18,6 +18,7 @@ PROGRAM grdROMS
   character(256) :: y_ncname
   character(256) :: bathy_ncname
   real(8) :: RESOLUTION, angle
+  real(8) :: RESOLUTION_LAT, RESOLUTION_LON
   real(8) :: hmin
   real(8) :: rx0max
   integer :: spherical
@@ -147,7 +148,7 @@ PROGRAM grdROMS
   namelist/grd_setting_utm/RESOLUTION, angle
 # else
   namelist/grd_setting_ll/s_lat, e_lat, s_lon, e_lon
-  namelist/grd_setting_ll/RESOLUTION, angle
+  namelist/grd_setting_ll/RESOLUTION_LAT, RESOLUTION_LON, angle
 # endif
 #endif
 #if defined UTM_COORD
@@ -206,8 +207,10 @@ PROGRAM grdROMS
   e_lon = e_x
   e_lat = e_y
   RESOLUTION = 1.0d0/RESOLUTION
+  call grid_size_rectangular(s_lon, s_lat, e_lon, e_lat, RESOLUTION, RESOLUTION, angle, Nxr, Nyr)
+# else
+  call grid_size_rectangular(s_lon, s_lat, e_lon, e_lat, RESOLUTION_LON, RESOLUTION_LAT, angle, Nxr, Nyr)
 # endif
-  call grid_size_rectangular(s_lon, s_lat, e_lon, e_lat, RESOLUTION, angle, Nxr, Nyr)
 #endif
   Nxp = Nxr-1
   Nyp = Nyr-1
@@ -370,7 +373,7 @@ PROGRAM grdROMS
 #else      
 
 # if defined UTM_COORD
-  call grid_gen_rectangular( s_lon, s_lat, RESOLUTION, angle &
+  call grid_gen_rectangular( s_lon, s_lat, RESOLUTION, RESOLUTION, angle &
                            , Nxr, Nyr, xr, yr )
   ! UTM -> lat lon
   do j=1,Nyr
@@ -381,7 +384,7 @@ PROGRAM grdROMS
   enddo
 
 # else
-  call grid_gen_rectangular( s_lon, s_lat, RESOLUTION, angle &
+  call grid_gen_rectangular( s_lon, s_lat, RESOLUTION_LON, RESOLUTION_LAT, angle &
                            , Nxr, Nyr, lonr, latr )
 # endif  
   angler(:,:) = angle

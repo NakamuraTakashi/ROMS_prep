@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2023 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2025 Takashi NAKAMURA  =====
 
 #if defined JMA_MSM
 # undef BULK_FLUX
@@ -849,7 +849,7 @@ PROGRAM frcATM2SWAT
    
 #else
 !      ---- Seek message --------------------------------
-# if defined JMA_MSM
+# if defined JMA_MSM || defined ERA5
         iin=1
 # else
         if(iparam>=10) then !!! for rain (rain fall rate)
@@ -879,6 +879,13 @@ PROGRAM frcATM2SWAT
           call codes_get(igrib,'indicatorOfParameter',p1)
           call codes_get(igrib,'parameterName', p4)
           if (p1==GRIB_NUM(iparam) ) exit
+#elif defined ERA5
+          call codes_get(igrib,'dataDate' , p1)
+          call codes_get(igrib,'dataTime' , p2)
+          call codes_get(igrib,'endStep'  , p3)
+          call codes_get(igrib,'shortName', p4)
+          if (p1==GRIB_STEP(ifc) .and.             &
+              trim(p4)==trim(GRIB_NAME(iparam))  ) exit
 #endif
           call codes_release(igrib)
           call codes_grib_new_from_file(ifile,igrib, iret)

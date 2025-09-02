@@ -17,27 +17,36 @@
 !
 ! Geographical and Grid parameters --------
 !
-  Llon = 132.5d0    ! Longitude (degrees) of the bottom-left corner of the grid. 
-  Rlon = 136.5d0    ! Longitude (degrees) of the top-right corner of the grid. 
-  Blat = 5.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
-  Tlat = 9.5d0    ! Latitude  (degrees) of the top-right corner of the grid.
+  Llon = 131.0d0  ! Longitude (degrees) of the bottom-left corner of the grid. 
+  Rlon = 138.0d0    ! Longitude (degrees) of the top-right corner of the grid. 
+  Blat = 4.0d0    ! Latitude  (degrees) of the bottom-left corner of the grid.
+  Tlat = 11.0d0    ! Latitude  (degrees) of the top-right corner of the grid.
 /
 
 &sdate
 
-  Syear  = 2018   ! Starting year
-  Smonth = 2      ! Starting month
-  Sday   = 25      ! Starting day
+  Syear  = 2023   ! Starting year
+  Smonth = 12      ! Starting month
+  Sday   = 1      ! Starting day
 /
 
 &edate
 
-  Eyear  = 2019   ! Ending year
+  Eyear  = 2024   ! Ending year
   Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
 &hycom      
 ! HYCOM extracted NetCDF file name (= [HYCOM_prefix]+YYYYMM.nc, YYYY: Syear, MM: Smonth)
-  HYCOM_prefix  = "F:/HYCOM_DATA/Palau/Palau_HYCOM_extracted"
+  HYCOM_prefix  = "Palau_HYCOM_GOF31_anaY"
+/
+
+&hycom2      
+ iparam  = 0 ! 0: surf_el, water_temp, salinity, water_u, water_v
+! iparam  = 1 ! 1: surf_el
+! iparam  = 2 ! 2: water_temp
+! iparam  = 3 ! 3: salinity
+! iparam  = 4 ! 4: water_u
+! iparam  = 5 ! 5: water_v
 /

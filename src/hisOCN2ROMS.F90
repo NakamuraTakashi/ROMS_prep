@@ -1,0 +1,2137 @@
+
+!!!=== Copyright (c) 2014-2025 Takashi NAKAMURA  ===== 
+
+#if defined HYCOM_MODEL || defined JCOPE_MODEL
+# undef WET_DRY
+#endif
+#if defined ROMS_MODEL || defined JCOPE_MODEL
+# define ARAKAWA_C_GRID
+#endif
+#if defined HYCOM_LOCAL
+# undef GOFS_31
+# undef GOFS_30
+# undef ANALYSIS_Y
+# undef ANALYSIS
+# undef REANALYSIS
+# undef SKIP_CHECK_TIME
+#endif 
+
+PROGRAM bryOCN2ROMS
+  use netcdf
+  use mod_utility
+  use mod_roms_netcdf
+  use mod_calendar
+  use mod_interpolation
+#if defined JCOPE_MODEL
+  use mod_jcope
+#endif
+
+  implicit none
+      
+! ---------------------------------------------------------------------
+  integer :: Syear, Smonth, Sday
+  integer :: Eyear, Emonth, Eday
+  integer :: Ryear, Rmonth, Rday
+  integer :: itime,ibry
+  integer :: mode
+  character(256) :: GRID_FILE
+
+  character(256) :: HIS_prefix
+  integer :: N_s_rho
+  integer :: Nzr
+  integer :: spherical
+  integer :: Vtransform, Vstretching
+  real(8) :: THETA_S , THETA_B, TCLINE, DCRIT
+  integer :: Nzr_dg
+  integer :: Vtransform_dg, Vstretching_dg
+  integer :: LBri, UBri, LBrj, UBrj
+  integer :: LBui, UBui, LBuj, UBuj
+  integer :: LBvi, UBvi, LBvj, UBvj
+ 
+  integer :: Nrbry,Nubry,Nvbry
+
+  character(33) :: TIME_ATT  = "seconds since 2000-01-01 00:00:00"
+
+  character(15) :: HIS_suffix   = "_20000101.00.nc"
+  character(256) :: HIS_FILE
+  
+  real(8), allocatable :: time_all(:)
+  real(8), allocatable :: bry_time(:)
+  integer, allocatable :: iNCt(:)
+  integer :: start1D(1), count1D(1)
+  integer :: start2D(2), count2D(2)
+  integer :: start3D(3), count3D(3)
+  integer :: start4D(4), count4D(4)
+  
+  real(8), allocatable :: h(:,:)        ! depth (meter)
+  real(8), allocatable :: rmask(:,:)    ! land mask
+  real(8), allocatable :: umask(:,:)    ! land mask
+  real(8), allocatable :: vmask(:,:)    ! land mask
+  real(8), allocatable :: latr(:, :)
+  real(8), allocatable :: lonr(:, :)
+  real(8), allocatable :: latu(:, :)
+  real(8), allocatable :: lonu(:, :)
+  real(8), allocatable :: latv(:, :)
+  real(8), allocatable :: lonv(:, :)
+  real(8), allocatable :: cosAu(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
+  real(8), allocatable :: sinAu(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
+  real(8), allocatable :: cosAv(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
+  real(8), allocatable :: sinAv(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
+  real(8) :: hc       
+  real(8), allocatable :: sc_w(:)       
+  real(8), allocatable :: sc_r(:)  
+  real(8), allocatable :: Cs_w(:)       
+  real(8), allocatable :: Cs_r(:)  
+  real(8), allocatable :: z_r(:,:,:)
+  real(8), allocatable :: z_w(:,:,:)
+  real(8), allocatable :: z_u(:,:,:)
+  real(8), allocatable :: z_v(:,:,:)
+  real(8), allocatable :: dz_u(:,:,:)
+  real(8), allocatable :: dz_v(:,:,:)
+  real(8), allocatable :: hu(:,:)
+  real(8), allocatable :: hv(:,:)
+  
+  real(8), allocatable :: zeta(:,:,:)    ! free-surface (meter)
+  real(8), allocatable :: ubar(:,:,:)    ! vertically integrated u-momentum component (meter second-1)
+  real(8), allocatable :: vbar(:,:,:)    ! vertically integrated v-momentum component (milibar=hPa)
+  real(8), allocatable :: u(:,:,:,:)     ! u-momentum component (meter second-1)
+  real(8), allocatable :: v(:,:,:,:)     ! v-momentum component (meter second-1)
+  real(8), allocatable :: t(:,:,:,:)     ! tracer 
+  real(8), allocatable :: ull(:,:,:,:)   ! u-momentum component on lat lon coordinate (meter second-1)
+  real(8), allocatable :: vll(:,:,:,:)   ! v-momentum component on lat lon coordinate (meter second-1)
+  real(8), allocatable :: uu(:,:,:,:)
+  real(8), allocatable :: uv(:,:,:,:)
+  real(8), allocatable :: vu(:,:,:,:)
+  real(8), allocatable :: vv(:,:,:,:)
+  real(8), allocatable :: zeta_bry(:,:)  ! free-surface (meter)
+  real(8), allocatable :: ubar_bry(:,:)  ! vertically integrated u-momentum component (meter second-1)
+  real(8), allocatable :: vbar_bry(:,:)  ! vertically integrated v-momentum component (milibar=hPa)
+  real(8), allocatable :: u_bry(:,:,:)   ! u-momentum component (meter second-1)
+  real(8), allocatable :: v_bry(:,:,:)   ! v-momentum component (meter second-1)
+  real(8), allocatable :: t_bry(:,:,:)   ! tracer 
+
+  real(8), allocatable :: h_dg(:,:)      ! depth (meter) of donor grid
+  real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: umask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: vmask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: pmask_dg(:,:)  ! land mask of donor grid
+  real(8), allocatable :: latr_dg(:,:)
+  real(8), allocatable :: lonr_dg(:,:)
+  real(8), allocatable :: latu_dg(:,:)
+  real(8), allocatable :: lonu_dg(:,:)
+  real(8), allocatable :: latv_dg(:,:)
+  real(8), allocatable :: lonv_dg(:,:)
+  real(8), allocatable :: cosAu_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
+  real(8), allocatable :: sinAu_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
+  real(8), allocatable :: cosAv_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
+  real(8), allocatable :: sinAv_dg(:,:)  ! angle differece between lat lon and donor ROMS coordinates (radian)
+  real(8) :: hc_dg       
+  real(8), allocatable :: sc_w_dg(:)       
+  real(8), allocatable :: sc_r_dg(:)  
+  real(8), allocatable :: Cs_w_dg(:)       
+  real(8), allocatable :: Cs_r_dg(:)  
+  real(8), allocatable :: z_r_dg(:,:,:)
+  real(8), allocatable :: z_w_dg(:,:,:)
+  real(8), allocatable :: z_u_dg(:,:,:)
+  real(8), allocatable :: z_v_dg(:,:,:)
+
+  real(8) :: ocean_time(1)                ! Ocean time (sec)
+  real(8), allocatable :: zeta_dg(:,:,:)  ! free-surface (meter)
+  real(8), allocatable :: ubar_dg(:,:,:)  ! vertically integrated u-momentum component (meter second-1)
+  real(8), allocatable :: vbar_dg(:,:,:)  ! vertically integrated v-momentum component (milibar=hPa)
+  real(8), allocatable :: u_dg(:,:,:,:)   ! u-momentum component (meter second-1)
+  real(8), allocatable :: v_dg(:,:,:,:)   ! v-momentum component (meter second-1)
+  real(8), allocatable :: t_dg(:,:,:,:)   ! tracer 
+  real(8), allocatable :: ull_dg(:,:,:,:) ! u-momentum component on lat lon coordinate (meter second-1)
+  real(8), allocatable :: vll_dg(:,:,:,:) ! v-momentum component on lat lon coordinate (meter second-1)
+  real(8), allocatable :: ullu_dg(:,:,:,:) 
+  real(8), allocatable :: ullv_dg(:,:,:,:) 
+  real(8), allocatable :: vllu_dg(:,:,:,:) 
+  real(8), allocatable :: vllv_dg(:,:,:,:) 
+#if defined WET_DRY
+  real(8), allocatable :: umask_wet_dg(:,:,:)
+  real(8), allocatable :: vmask_wet_dg(:,:,:)
+#endif
+  integer, allocatable :: ID_cnt2Dr(:,:)
+  real(8), allocatable :: w_cnt2Dr (:,:)
+  integer, allocatable :: ID_cnt2Du(:,:)
+  real(8), allocatable :: w_cnt2Du (:,:)
+  integer, allocatable :: ID_cnt2Dv(:,:)
+  real(8), allocatable :: w_cnt2Dv (:,:)
+  integer, allocatable :: ID_cnt3Dr(:,:)
+  real(8), allocatable :: w_cnt3Dr (:,:)
+  integer, allocatable :: ID_cnt3Du(:,:)
+  real(8), allocatable :: w_cnt3Du (:,:)
+  integer, allocatable :: ID_cnt3Dv(:,:)
+  real(8), allocatable :: w_cnt3Dv (:,:)
+
+  integer :: i,j,k
+  real(8) :: d_lat,d_lon
+  real(8) :: cff
+  
+  character(4) :: YYYY
+  character(2) :: MM
+  character(2) :: DD
+  character(2) :: hh
+  character(11) :: YYYYMMDDpHH
+  character(12) :: YYYYMMDDhhmm
+  character(8) :: YYYYMMDD
+
+  real(8) :: d_jdate
+  integer :: N_days
+  integer :: jdate_Start, jdate_End, jdate_Ref
+  real(8) :: d_jdate_Start, d_jdate_Ref
+  
+  integer :: Nxr, Nyr, Nxu, Nyu, Nxv, Nyv
+  integer :: L, M, N
+  integer :: Ldg, Mdg, Ndg
+  integer :: irg, jrg, krg
+  integer :: Idg, Jdg, Kdg
+  integer :: Nxr_dg, Nyr_dg, Nxu_dg, Nyu_dg, Nxv_dg, Nyv_dg
+  integer :: Nt
+  integer :: Irdg_min, Irdg_max, Jrdg_min, Jrdg_max  ! Minimum and maximum ID of donor grid index.
+  integer :: Iudg_min, Iudg_max, Judg_min, Judg_max  ! Minimum and maximum ID of donor grid index.
+  integer :: Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max  ! Minimum and maximum ID of donor grid index.
+  integer, allocatable :: idt(:)
+
+  integer :: ncid,var_id
+  integer :: ncid2,var_id2
+  integer :: iNC, iNCm
+!  integer :: ItS, ItE
+  character(256) :: varname
+  character(2) :: varnum
+  integer :: status, access
+
+
+#if defined ROMS_MODEL
+  TYPE T_NC
+    real(8), pointer :: time_all(:)
+    integer :: Nt
+    integer :: ItS, ItE
+  END TYPE T_NC
+  TYPE (T_NC), allocatable :: NC(:)
+
+  real(8), allocatable :: time2(:)
+
+  character(256) :: parent_grid
+  integer :: parent_Imin, parent_Imax
+  integer :: parent_Jmin, parent_Jmax
+  integer :: refine_factor
+  integer :: NCnum
+  integer :: iNCs, iNCe
+  character(256), allocatable :: ROMS_HISFILE(:)
+  integer :: romsvar(N_var)
+#else
+  integer :: romsvar(7)
+#endif 
+
+#if defined HYCOM_MODEL
+
+  TYPE T_NC
+    real(8), pointer :: time_all(:)
+    real(8), pointer :: lat(:), lon(:), depth(:)
+    integer :: Nxr_dg, Nyr_dg, Nzr_dg
+    integer :: Nt
+    integer :: ItS, ItE
+  END TYPE T_NC
+!  TYPE (T_NC) :: NC(NCnum)
+  TYPE (T_NC), allocatable :: NC(:)
+
+  real(8), allocatable :: time2(:)
+
+  character(256) :: HY_VAR_NAME
+  integer :: iNCs, iNCe
+  integer :: jdate_20000101
+  real(8) :: d_jdate_20000101
+# if defined HYCOM_LOCAL
+  integer :: NCnum
+  character(256), allocatable :: HYCOM_FILE(:)
+# endif 
+#endif
+#if defined JCOPE_MODEL
+  character(256) :: JCOPE_info_dir, JCOPE_data_dir
+  character(256) :: JCOPE_data_file
+  real(8), allocatable :: jcope_data(:,:,:)
+  real(8), allocatable :: z(:,:,:), zz(:,:,:), dz(:,:,:)
+  real(8), allocatable :: lat(:), lon(:)
+  character(20) :: JCOPE_sufix(10000)
+  character(20) :: JCOPE_sufix_tmp
+  integer :: iyear, imonth, iday
+  integer :: ihour, imin
+  integer :: idays,ihours,ijdate,Sjdate
+#endif
+#if defined FORP_MODEL
+  character(256) :: FORP_data_dir
+  TYPE T_NC
+    character(256) :: FORP_FILE(5)
+    real(8), pointer :: time_all(:)
+    integer :: Nt
+    integer :: ItS, ItE
+  END TYPE T_NC
+  TYPE (T_NC), allocatable :: NC(:)
+!  real(8), allocatable :: time2(:)
+  real(8), allocatable :: latst(:), lonst(:), latuv(:), lonuv(:)
+  real(8), allocatable :: depth(:)
+  integer :: NCnum
+  integer :: iNCs, iNCe
+  character(13) :: FORP_sufix  = "_dy_200601.nc"
+  character(12) :: FORP_prefix = "forp-jpn-v4_"
+  character(256) :: FORP_FILE_tmp
+  integer :: Nt_tmp
+  integer :: jdate_00010101
+  real(8) :: d_jdate_00010101
+  integer :: iyear, imonth, iday
+  integer :: ihour, imin
+  integer :: idays,ihours,ijdate,Sjdate,Ejdate
+  character(256), parameter :: FORP_VAR_NAME(5) = (/ &
+     "zos   " &  !  1
+    ,"uo    " &  !  2 
+    ,"vo    " &  !  3
+    ,"thetao" &  !  4 
+    ,"so    " &  !  5 
+     /)
+#endif
+
+  namelist/grd/GRID_FILE
+#if defined ROMS_MODEL
+  namelist/refinement/parent_grid
+  namelist/refinement/parent_Imin, parent_Imax
+  namelist/refinement/parent_Jmin, parent_Jmax
+  namelist/refinement/refine_factor
+  namelist/roms2roms1/NCnum
+  namelist/roms2roms2/ROMS_HISFILE, romsvar
+#else
+  namelist/ocn2roms/romsvar  
+#endif
+#if defined JCOPE_MODEL
+  namelist/jcope/JCOPE_info_dir, JCOPE_data_dir
+#endif
+#if defined HYCOM_MODEL
+# if defined HYCOM_LOCAL
+  namelist/hycom_local1/NCnum
+  namelist/hycom_local2/HYCOM_FILE
+# endif
+#endif
+#if defined FORP_MODEL
+  namelist/forp/FORP_data_dir
+#endif
+  namelist/sdate/Syear, Smonth, Sday
+  namelist/edate/Eyear, Emonth, Eday
+  namelist/refdate/Ryear, Rmonth, Rday
+  namelist/his/HIS_prefix
+  namelist/hcoord/spherical
+  namelist/zcoord/N_s_rho
+  namelist/zcoord/Vtransform, Vstretching
+  namelist/zcoord/THETA_S, THETA_B, TCLINE, DCRIT
+
+  ! Read parameters in namelist file
+  
+  read (*, nml=grd)
+  rewind(5)
+#if defined ROMS_MODEL
+  read (5, nml=refinement)
+  rewind(5)
+  read (5, nml=roms2roms1)
+  allocate( ROMS_HISFILE(NCnum) )
+  allocate( NC(NCnum) )
+  rewind(5)
+  read (5, nml=roms2roms2)
+  rewind(5)
+#else
+  read (5, nml=ocn2roms)
+  rewind(5)
+#endif
+#if defined JCOPE_MODEL
+  read (5, nml=jcope)
+  rewind(5)
+#endif
+#if defined FORP_MODEL
+  read (5, nml=forp)
+  rewind(5)
+#endif
+  read (*, nml=sdate)
+  rewind(5)
+  read (*, nml=edate)
+  rewind(5)
+  read (*, nml=refdate)
+  rewind(5)
+  read (*, nml=his)
+  rewind(5)
+  read (*, nml=hcoord)
+  rewind(5)
+  read (*, nml=zcoord)
+#if defined HYCOM_MODEL
+# if defined HYCOM_LOCAL
+  rewind(5)
+  read (5, nml=hycom_local1)
+  allocate( HYCOM_FILE(NCnum) )
+  rewind(5)
+  read (5, nml=hycom_local2)
+# endif
+  allocate( NC(NCnum) )
+#endif          
+
+!-Modify time-unit description ---------------------------------
+  
+  write (YYYY, "(I4.4)") Ryear
+  write (MM, "(I2.2)") Rmonth
+  write (DD, "(I2.2)") Rday
+  TIME_ATT(15:18)=YYYY
+  TIME_ATT(20:21)=MM
+  TIME_ATT(23:24)=DD
+  
+!-Read ROMS grid netCDF file --------------------------------
+  write(*,*) "OPEN: ", trim( GRID_FILE )
+  
+  ! Open NetCDF grid file
+  call check( nf90_open(trim( GRID_FILE ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'xi_rho',  Nxr)
+  call get_dimension(ncid, 'eta_rho', Nyr)
+  Nxu  = Nxr-1
+  Nyu = Nyr
+  Nxv  = Nxr
+  Nyv = Nyr-1
+  Nzr = N_s_rho
+
+  L = Nxr-1
+  M = Nyr-1
+  N = Nzr
+  
+  allocate( latr(0:L, 0:M) )
+  allocate( lonr(0:L, 0:M) )
+  allocate( latu(1:L, 0:M) )
+  allocate( lonu(1:L, 0:M) )
+  allocate( latv(0:L, 1:M) )
+  allocate( lonv(0:L, 1:M) )
+  allocate( rmask(0:L, 0:M) )
+  allocate( umask(1:L, 0:M) )
+  allocate( vmask(0:L, 1:M) )
+  allocate( cosAu(1:L, 0:M) )
+  allocate( sinAu(1:L, 0:M) )
+  allocate( cosAv(0:L, 1:M) )
+  allocate( sinAv(0:L, 1:M) )
+  allocate( h(0:L, 0:M) )
+  allocate( sc_w(0:N) )
+  allocate( sc_r(1:N) )
+  allocate( Cs_w(0:N) )
+  allocate( Cs_r(1:N) )
+  allocate( z_r(0:L, 0:M, 1:N) )
+  allocate( z_w(0:L, 0:M, 0:N) )
+  allocate( z_u(1:L, 0:M, 1:N) )
+  allocate( z_v(0:L, 1:M, 1:N) )
+  allocate( dz_u(1:L, 0:M, 1:N) )
+  allocate( dz_v(0:L, 1:M, 1:N) )
+  allocate( hu(1:L, 0:M) )
+  allocate( hv(0:L, 1:M) ) 
+  
+  ! Get variables
+  start2D = (/ 1,  1 /)
+  count2D = (/ Nxr, Nyr /)
+  call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latr(0:L, 0:M)) )
+  call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonr) )
+  call check( nf90_inq_varid(ncid, 'lat_u', var_id) ) ! latitude at U-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latu) )
+  call check( nf90_inq_varid(ncid, 'lon_u', var_id) ) ! longitude at U-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonu) )
+  call check( nf90_inq_varid(ncid, 'lat_v', var_id) ) ! latitude at V-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latv) )
+  call check( nf90_inq_varid(ncid, 'lon_v', var_id) ) ! longitude at V-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonv) )
+  call check( nf90_inq_varid(ncid, 'h', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, h) )
+  call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, rmask) )
+  call check( nf90_inq_varid(ncid, 'mask_u', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, umask) )
+  call check( nf90_inq_varid(ncid, 'mask_v', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, vmask) )
+  ! Close NetCDF file
+  call check( nf90_close(ncid) )
+  
+  write(*,*) "CLOSE: ", trim( GRID_FILE )
+      
+  call set_scoord (  Nzr, Vtransform, Vstretching    &
+        , THETA_S, THETA_B, TCLINE, DCRIT            &
+!    output parameters
+        , hc, sc_w, sc_r, Cs_w, Cs_r )
+
+  call set_depth ( Nxr, Nyr, Nzr, h                  &
+        , Vtransform, hc, sc_w, sc_r, Cs_w, Cs_r     &
+!    output parameters
+        , z_r, z_w)
+  z_r = -z_r
+  z_w = -z_w
+  
+  do k=1,N
+    do j=0,M
+      do i=1,L
+        z_u(i,j,k)= (z_r(i-1,j,k)+z_r(i,j,k))*0.5d0
+        dz_u(i,j,k) = ((z_w(i-1,j,k-1)+z_w(i,j,k-1))-(z_w(i-1,j,k)+z_w(i,j,k)))*0.5d0
+      enddo
+    enddo
+  enddo
+  do k=1,N
+    do j=1,M
+      do i=0,L
+        z_v(i,j,k)= (z_r(i,j-1,k)+z_r(i,j,k))*0.5d0
+        dz_v(i,j,k) = ((z_w(i,j-1,k-1)+z_w(i,j,k-1))-(z_w(i,j-1,k)+z_w(i,j,k)))*0.5d0
+      enddo
+    enddo
+  enddo
+  
+  do j=0,M
+    do i=1,L
+      d_lat=latr(i,j)-latr(i-1,j)
+      d_lon=lonr(i,j)-lonr(i-1,j)
+      d_lon=d_lon*cos(latu(i,j)/180.0d0*PI)
+      cosAu(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+      sinAu(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+
+      hu(i,j) = (h(i-1,j)+h(i,j))*0.5d0
+      if(abs( hu(i,j) ) < 1.0d-2) hu(i,j) = 0.01d0
+    enddo
+  enddo
+  do j=1,M
+    do i=0,L
+      d_lat=latr(i,j)-latr(i,j-1)
+      d_lon=lonr(i,j-1)-lonr(i,j)
+      d_lon=d_lon*cos(latv(i,j)/180.0d0*PI)
+      cosAv(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+      sinAv(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+
+      hv(i,j) = (h(i,j-1)+h(i,j))*0.5d0
+      if(abs( hv(i,j) ) < 1.0d-2 ) hv(i,j) = 0.01d0
+    enddo         
+  enddo
+
+!======= Set starting time and Ending time ========================
+
+  call ndays(Emonth, Eday, Eyear, Smonth, Sday, Syear, N_days)
+  call jd(Syear, Smonth, Sday, jdate_Start)
+
+  jdate_End = jdate_Start + N_days
+  
+  write(*,*) jdate_Start, jdate_End, N_days
+
+  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  d_jdate_Ref = dble(jdate_Ref)
+  write(*,*) d_jdate_Ref
+  
+!======= Read grid coorinate of Ocean model ========================
+
+#if defined ROMS_MODEL
+  write(*,*) "************ ROMS MODEL ************"
+
+
+  !-Read ROMS parent grid netCDF file --------------------------------
+  write(*,*) "OPEN: ", trim( parent_grid )
+  
+  ! Open NetCDF grid file
+  call check( nf90_open(trim( parent_grid ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'xi_rho',  Nxr_dg)
+  call get_dimension(ncid, 'eta_rho', Nyr_dg)
+  Nxu_dg = Nxr_dg-1
+  Nyu_dg = Nyr_dg
+  Nxv_dg = Nxr_dg
+  Nyv_dg = Nyr_dg-1
+  Ldg = Nxr_dg-1
+  Mdg = Nyr_dg-1
+       
+  allocate( latr_dg(0:Ldg, 0:Mdg) )
+  allocate( lonr_dg(0:Ldg, 0:Mdg) )
+  allocate( latu_dg(1:Ldg, 0:Mdg) )
+  allocate( lonu_dg(1:Ldg, 0:Mdg) )
+  allocate( latv_dg(0:Ldg, 1:Mdg) )
+  allocate( lonv_dg(0:Ldg, 1:Mdg) )
+  allocate( rmask_dg(0:Ldg, 0:Mdg) )
+  allocate( umask_dg(1:Ldg, 0:Mdg) )
+  allocate( vmask_dg(0:Ldg, 1:Mdg) )
+  allocate( cosAu_dg(1:Ldg, 0:Mdg) )
+  allocate( sinAu_dg(1:Ldg, 0:Mdg) )
+  allocate( cosAv_dg(0:Ldg, 1:Mdg) )
+  allocate( sinAv_dg(0:Ldg, 1:Mdg) )
+  allocate( h_dg(0:Ldg, 0:Mdg) )
+  
+  ! Get variables
+  call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latr_dg) )
+  call check( nf90_inq_varid(ncid, 'lon_rho', var_id) ) ! longitude at RHO-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonr_dg) )
+  call check( nf90_inq_varid(ncid, 'lat_u', var_id) ) ! latitude at U-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latu_dg) )
+  call check( nf90_inq_varid(ncid, 'lon_u', var_id) ) ! longitude at U-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonu_dg) )
+  call check( nf90_inq_varid(ncid, 'lat_v', var_id) ) ! latitude at V-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, latv_dg) )
+  call check( nf90_inq_varid(ncid, 'lon_v', var_id) ) ! longitude at V-points (degree_east)
+  call check( nf90_get_var(ncid, var_id, lonv_dg) )
+  call check( nf90_inq_varid(ncid, 'h', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, h_dg) )
+  call check( nf90_inq_varid(ncid, 'mask_rho', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, rmask_dg) )
+  call check( nf90_inq_varid(ncid, 'mask_u', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, umask_dg) )
+  call check( nf90_inq_varid(ncid, 'mask_v', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, vmask_dg) )
+  ! Close NetCDF file
+  call check( nf90_close(ncid) )
+
+  do j=0,Mdg
+    do i=0,Ldg
+      if ( h_dg(i,j)<0.0d0 ) then
+        rmask_dg(i,j) = 0.0d0
+      end if
+    end do
+  end do
+    
+  write(*,*) "CLOSE: ", trim( parent_grid )
+
+!-Read ROMS ocean_his netCDF file --------------------------------
+
+  ! Open NetCDF file
+  write(*,*) "OPEN: ", trim( ROMS_HISFILE(1) )
+  call check( nf90_open(trim( ROMS_HISFILE(1) ), nf90_nowrite, ncid) )
+!  call get_dimension(ncid, 'ocean_time', Nt)
+  call get_dimension(ncid, 's_rho', Nzr_dg)
+
+!  allocate(time_all(Nt))
+
+  Ndg = Nzr_dg
+  allocate( sc_w_dg(0:Ndg ) )
+  allocate( sc_r_dg(1:Ndg ) )
+  allocate( Cs_w_dg(0:Ndg ) )
+  allocate( Cs_r_dg(1:Ndg ) )
+  allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_w_dg(0:Ldg, 0:Mdg, 0:Ndg ) )
+  allocate( z_u_dg(1:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_v_dg(0:Ldg, 1:Mdg, 1:Ndg ) )
+
+!  call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
+!  call check( nf90_get_var(ncid, var_id, time_all) )
+  call check( nf90_inq_varid(ncid, 's_rho', var_id) )
+  call check( nf90_get_var(ncid, var_id, sc_r_dg ) )
+  call check( nf90_inq_varid(ncid, 's_w', var_id) )
+  call check( nf90_get_var(ncid, var_id, sc_w_dg ) )
+  call check( nf90_inq_varid(ncid, 'Cs_r', var_id) )
+  call check( nf90_get_var(ncid, var_id, Cs_r_dg ) )
+  call check( nf90_inq_varid(ncid, 'Cs_w', var_id) )
+  call check( nf90_get_var(ncid, var_id, Cs_w_dg ) )
+  call check( nf90_inq_varid(ncid, 'Vtransform', var_id) )
+  call check( nf90_get_var(ncid, var_id, Vtransform_dg ) )
+  call check( nf90_inq_varid(ncid, 'hc', var_id) )
+  call check( nf90_get_var(ncid, var_id, hc_dg ) )
+  call check( nf90_close(ncid) )
+
+! Extract grid data
+
+  call set_depth ( Nxr_dg, Nyr_dg, Nzr_dg, h_dg                      &
+        , Vtransform_dg, hc_dg, sc_w_dg, sc_r_dg, Cs_w_dg, Cs_r_dg   &
+!    output parameters
+        , z_r_dg, z_w_dg)
+
+  z_r_dg = -z_r_dg
+  z_w_dg = -z_w_dg
+  
+  do k=1,Ndg
+    do j=0,Mdg
+      do i=1,Ldg
+        z_u_dg(i,j,k)= (z_r_dg(i-1,j,k)+z_r_dg(i,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+  do k=1,Ndg
+    do j=1,Mdg
+      do i=0,Ldg
+        z_v_dg(i,j,k)= (z_r_dg(i,j-1,k)+z_r_dg(i,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+
+  do j=0,Mdg
+    do i=1,Ldg
+      d_lat=latr_dg(i,j)-latr_dg(i-1,j)
+      d_lon=lonr_dg(i,j)-lonr_dg(i-1,j)
+      d_lon=d_lon*cos(latu_dg(i,j)/180.0d0*PI)
+      cosAu_dg(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+      sinAu_dg(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+    enddo
+  enddo
+  do j=1,Mdg
+    do i=0,Ldg
+      d_lat=latr_dg(i,j)-latr_dg(i,j-1)
+      d_lon=lonr_dg(i,j-1)-lonr_dg(i,j)
+      d_lon=d_lon*cos(latv_dg(i,j)/180.0d0*PI)
+      cosAv_dg(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+      sinAv_dg(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+    enddo         
+  enddo
+
+! Check time
+  do iNC=1, NCnum
+    write(*,*) 'CHECK: Time'
+    ! Open NetCDF file
+    write(*,*) "OPEN: ", trim( ROMS_HISFILE(iNC) )
+    call check( nf90_open(trim( ROMS_HISFILE(iNC) ), nf90_nowrite, ncid) )
+    call get_dimension(ncid, 'ocean_time', NC(iNC)%Nt)
+    write(*,*) NC(iNC)%Nt
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+    allocate( time2(NC(iNC)%Nt) )
+    call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
+    call check( nf90_get_var(ncid, var_id, time2) )
+    call check( nf90_close(ncid) )
+    NC(iNC)%time_all = time2
+
+    deallocate(time2)
+  end do
+
+  write(*,*) NC(:)%Nt
+
+  do iNC=1, NCnum-1
+    do i=2,NC(iNC)%Nt
+      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
+        NC(iNC)%Nt = i-1
+        exit
+      end if
+    end do
+  end do
+  
+  write(*,*) NC(:)%Nt
+
+  write(*,*) "******************************************************************"
+
+  NC(:)%ItE = -1
+  NC(:)%ItS = -1
+  
+  do iNC=NCnum,1,-1
+    do i=NC(iNC)%Nt,1,-1
+      d_jdate = d_jdate_Ref + NC(iNC)%time_all(i)/86400.0d0
+      if(d_jdate < dble(jdate_End)) then
+        write(*,*) '*** FOUND: Ending point @ ROMS_HISFILE',iNC
+        NC(iNC)%ItE=i
+        exit
+      endif
+    end do
+  end do
+  write(*,*) NC(:)%ItE 
+  
+  do iNC=1,NCnum
+    do i=NC(iNC)%ItE,1,-1
+      d_jdate = d_jdate_Ref + NC(iNC)%time_all(i)/86400.0d0
+      if(d_jdate < dble(jdate_Start)) then
+!        write(*,*) '*** FOUND: Starting point @ ROMS_HISFILE',iNC
+        exit
+      endif
+      NC(iNC)%ItS=i
+    end do
+  end do
+  write(*,*) NC(:)%ItS 
+
+  Nt = 0
+  iNCs = NCnum
+  iNCe = 1
+
+  do iNC=1,NCnum
+    if(NC(iNC)%ItS==-1) then
+      cycle
+    end if
+    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
+    iNCs = min(iNCs,iNC)
+    iNCe = max(iNCe,iNC)
+  enddo
+
+  allocate(bry_time(Nt))
+  allocate(idt(Nt))
+  allocate(iNCt(Nt))
+
+  i=1
+  do iNC=iNCs,iNCe
+    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
+      iNCt(i+k) = iNC
+      idt(i+k)  = NC(iNC)%ItS + k
+    enddo
+    j=i+NC(iNC)%ItE-NC(iNC)%ItS
+    bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
+    i=j+1
+  enddo
+
+  write(*,*) "*************************************" 
+
+#elif defined HYCOM_MODEL
+!---- Read HYCOM netCDF file --------------------------------
+
+  write(*,*) "************ HYCOM MODEL ************"
+  call jd(2000, 1, 1, jdate_20000101)
+  d_jdate_20000101 = dble(jdate_20000101)
+  write(*,*) d_jdate_20000101
+
+# if defined GOFS_31
+#  if defined ANALYSIS_Y
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_31_analysisY.dat')
+#  elif defined ANALYSIS
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_31_analysis.dat')
+#  elif defined REANALYSIS
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_31_reanalysis.dat')
+#  endif
+# elif defined GOFS_30
+#  if defined ANALYSIS
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_30_analysis.dat')
+#  elif defined REANALYSIS
+  open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_30_reanalysis.dat')
+#  endif
+# endif
+# if defined SKIP_CHECK_TIME
+  write(*,*) 'READ: Time'
+  do iNC=1, NCnum
+    read(50,*) NC(iNC)%Nt
+    write(*,*) NC(iNC)%Nt
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+    read(50,*) NC(iNC)%time_all
+  end do
+# else
+  do iNC=1, NCnum
+    write(*,*) 'CHECK: Time'
+    ! Open NetCDF file
+    write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
+    call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
+    call get_dimension(ncid, 'time', NC(iNC)%Nt)
+    write(*,*) NC(iNC)%Nt
+#  ifndef HYCOM_LOCAL
+    write(50,*) NC(iNC)%Nt
+#  endif
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+    allocate( time2(NC(iNC)%Nt) )
+    call readNetCDF_1d(ncid, 'time', NC(iNC)%Nt, time2)
+    call check( nf90_close(ncid) )
+    write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
+    NC(iNC)%time_all = time2
+#  ifndef HYCOM_LOCAL
+    write(50,*) NC(iNC)%time_all
+#  endif
+    deallocate(time2)
+  end do
+#endif
+  close(50)   
+
+  write(*,*) NC(:)%Nt
+  
+  do iNC=1, NCnum-1
+    do i=2,NC(iNC)%Nt
+      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
+        NC(iNC)%Nt = i-1
+        exit
+      end if
+    end do
+  end do
+  
+  write(*,*) NC(:)%Nt
+  
+  write(*,*) "******************************************************************"
+    
+  
+  NC(:)%ItE = -1
+  NC(:)%ItS = -1
+  
+  do iNC=NCnum,1,-1
+    do i=NC(iNC)%Nt,1,-1
+      d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24.0d0
+      if(d_jdate < dble(jdate_End)) then
+        write(*,*) '*** FOUND: Ending point @ HYCOM_FILE',iNC
+        NC(iNC)%ItE=i
+        exit
+      endif
+    end do
+  end do
+  write(*,*) NC(:)%ItE 
+  
+  do iNC=1,NCnum
+    do i=NC(iNC)%ItE,1,-1
+      d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24.0d0
+      if(d_jdate < dble(jdate_Start)) then
+!        write(*,*) '*** FOUND: Starting point @ HYCOM_FILE',iNC
+        exit
+      endif
+      NC(iNC)%ItS=i
+    end do
+  end do
+  write(*,*) NC(:)%ItS 
+
+  Nt = 0
+  iNCs = NCnum
+  iNCe = 1
+
+  do iNC=1,NCnum
+    if(NC(iNC)%ItS==-1) then
+      cycle
+    end if
+    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
+    iNCs = min(iNCs,iNC)
+    iNCe = max(iNCe,iNC)
+  enddo
+
+  allocate(bry_time(Nt))
+  allocate(idt(Nt))
+  allocate(iNCt(Nt))
+
+  i=1
+  do iNC=iNCs,iNCe
+    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
+      iNCt(i+k) = iNC
+      idt(i+k)  = NC(iNC)%ItS + k
+    enddo
+    j=i+NC(iNC)%ItE-NC(iNC)%ItS
+    bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
+    i=j+1
+  enddo
+
+  bry_time(:) = ( bry_time(:) + ( d_jdate_20000101 - d_jdate_Ref )*24.0d0)*3600.0d0 ! hour -> sec
+
+
+  !---- Read HYCOM netCDF grid cooredinate --------------------------------
+  do iNC=iNCs,iNCe
+    write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
+    call try_nf_open(trim( HYCOM_FILE(iNC) ), nf90_nowrite, ncid)
+    ! Get dimension data
+    call get_dimension(ncid, 'lat', Nyr_dg)
+    call get_dimension(ncid, 'lon', Nxr_dg)
+    if( romsvar(2)==1 .or. romsvar(3)==1 .or. &
+        romsvar(5)==1 .or. romsvar(6)==1       ) then
+      call get_dimension(ncid, 'depth', Nzr_dg)
+    else
+      Nzr_dg = 1
+    end if
+    write(*,*) Nxr_dg, Nyr_dg, Nzr_dg
+    ! Allocate variable
+    NC(iNC)%Nyr_dg = Nyr_dg
+    NC(iNC)%Nxr_dg = Nxr_dg
+    NC(iNC)%Nzr_dg = Nzr_dg
+
+    allocate( NC(iNC)%lat(Nyr_dg) )
+    allocate( NC(iNC)%lon(Nxr_dg) )
+    allocate( NC(iNC)%depth(Nzr_dg) )
+
+    call readNetCDF_1d(ncid, 'lat', Nyr_dg, NC(iNC)%lat)
+    call readNetCDF_1d(ncid, 'lon', Nxr_dg, NC(iNC)%lon)
+    if( romsvar(2)==1 .or. romsvar(3)==1 .or. &
+        romsvar(5)==1 .or. romsvar(6)==1       ) then
+      call readNetCDF_1d(ncid, 'depth', Nzr_dg, NC(iNC)%depth)
+    else
+      NC(iNC)%depth = 0.0d0
+    end if
+    call check( nf90_close(ncid) )
+    write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
+  enddo
+
+  write(*,*) "*************************************" 
+ 
+#elif defined JCOPE_MODEL
+  write(*,*) "************ JCOPE MODEL ************"
+  write(*,*) "Read domain description file: "
+
+  call read_jcope_info( JCOPE_info_dir, Nxr_dg, Nyr_dg, Nzr_dg )
+
+  allocate( lon( Nxr_dg ) )
+  allocate( lat( Nyr_dg ) )
+  allocate( z( Nxr_dg, Nyr_dg, Nzr_dg ) )
+  allocate( zz( Nxr_dg, Nyr_dg, Nzr_dg ) )
+  allocate( dz( Nxr_dg, Nyr_dg, Nzr_dg ) )
+
+  Nxu_dg = Nxr_dg-1
+  Nyu_dg = Nyr_dg
+  Nxv_dg = Nxr_dg
+  Nyv_dg = Nyr_dg-1
+  Ldg = Nxr_dg-1
+  Mdg = Nyr_dg-1
+  Ndg = Nzr_dg-1
+       
+  allocate( latr_dg(0:Ldg, 0:Mdg) )
+  allocate( lonr_dg(0:Ldg, 0:Mdg) )
+  allocate( latu_dg(1:Ldg, 0:Mdg) )
+  allocate( lonu_dg(1:Ldg, 0:Mdg) )
+  allocate( latv_dg(0:Ldg, 1:Mdg) )
+  allocate( lonv_dg(0:Ldg, 1:Mdg) )
+  allocate( rmask_dg(0:Ldg, 0:Mdg) )
+  allocate( umask_dg(1:Ldg, 0:Mdg) )
+  allocate( vmask_dg(0:Ldg, 1:Mdg) )
+  allocate( pmask_dg(1:Ldg, 1:Mdg) )
+  allocate( cosAu_dg(1:Ldg, 0:Mdg) )
+  allocate( sinAu_dg(1:Ldg, 0:Mdg) )
+  allocate( cosAv_dg(0:Ldg, 1:Mdg) )
+  allocate( sinAv_dg(0:Ldg, 1:Mdg) )
+  allocate( h_dg(0:Ldg, 0:Mdg) )
+  allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+!  allocate( z_w_dg(0:Ldg, 0:Mdg, 0:Ndg ) )
+  allocate( z_u_dg(1:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_v_dg(0:Ldg, 1:Mdg, 1:Ndg ) )
+
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 1, lon, lat )
+
+  do j=0,Mdg
+    do i=0,Ldg
+      latr_dg(i,j) = lat(j+1)
+      lonr_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonr_dg range : ", lonr_dg(0,0), lonr_dg(Ldg,Mdg)
+  write(*, *) " latr_dg range : ", latr_dg(0,0), latr_dg(Ldg,Mdg)
+  
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 2, lon, lat )
+
+  do j=0,Mdg
+    do i=1,Ldg
+      latu_dg(i,j) = lat(j+1)
+      lonu_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonu_dg range : ", lonu_dg(1,0), lonu_dg(Ldg,Mdg)
+  write(*, *) " latu_dg range : ", latu_dg(1,0), latu_dg(Ldg,Mdg)
+
+  call read_jcope_latlon( JCOPE_info_dir, Nxr_dg, Nyr_dg, 3, lon, lat )
+
+  do j=1,Mdg
+    do i=0,Ldg
+      latv_dg(i,j) = lat(j+1)
+      lonv_dg(i,j) = lon(i+1)
+    enddo
+  enddo
+  write(*, *) " lonv_dg range : ", lonv_dg(0,1), lonv_dg(Ldg,Mdg)
+  write(*, *) " latv_dg range : ", latv_dg(0,1), latv_dg(Ldg,Mdg)
+
+  call read_jcope_depth( JCOPE_info_dir, Nxr_dg, Nyr_dg, Nzr_dg, z, zz, dz )
+
+  do k=1,Ndg
+    z_r_dg(0:Ldg, 0:Mdg, k ) = -zz(1:Nxr_dg, 1:Nyr_dg, Nzr_dg-k )
+  enddo
+  h_dg(0:Ldg, 0:Mdg) = -z(1:Nxr_dg, 1:Nyr_dg, Nzr_dg )
+
+  do k=1,Ndg
+    do j=0,Mdg
+      do i=1,Ldg
+        z_u_dg(i,j,k)= (z_r_dg(i-1,j,k)+z_r_dg(i,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+  do k=1,Ndg
+    do j=1,Mdg
+      do i=0,Ldg
+        z_v_dg(i,j,k)= (z_r_dg(i,j-1,k)+z_r_dg(i,j,k))*0.5d0
+      enddo
+    enddo
+  enddo
+
+! Land masking
+  rmask_dg(:,:) = 1.0d0
+  do j=0,Mdg
+    do i=0,Ldg
+      if( h_dg(i,j) < 1.001d0 ) then  !! Land: Depth < 1.0 m grids
+        rmask_dg(i,j) = 0.0d0
+      endif
+    enddo
+  enddo
+
+  call uvp_masks( Nxr_dg, Nyr_dg, rmask_dg, umask_dg, vmask_dg, pmask_dg )
+
+
+  cosAu_dg(:,:) = 1.0d0
+  sinAu_dg(:,:) = 0.0d0
+
+  cosAv_dg(:,:) = 1.0d0
+  sinAv_dg(:,:) = 0.0d0
+
+! ---------------- bry_time check ----------------------------------
+
+  allocate( bry_time(10000) ) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  Nt = 0
+  itime = 1
+  ihours = 0
+  iyear = Syear
+  imonth = Smonth
+  iday = Sday
+  call jd(iyear, imonth, iday, Sjdate)
+
+  do
+    ihour = mod(ihours,24)
+    ijdate = Sjdate + int(ihours/24)
+    call cdate( ijdate, iyear, imonth, iday )
+    ! Check end date
+    if(iyear==Eyear .and. imonth==Emonth .and. iday==Eday) then
+      write(*,*) "Total time step: ", Nt
+      write(*,*) "Start file: ", trim( JCOPE_data_dir )//trim( JCOPE_prefix(4) )//trim( JCOPE_sufix(1) )
+      write(*,*) "End file:   ", trim( JCOPE_data_dir )//trim( JCOPE_prefix(4) )//trim( JCOPE_sufix(Nt) )
+      write(*,*) bry_time(1), bry_time(Nt)
+      exit
+    endif
+
+    write (YYYY, "(I4.4)") iyear
+    write (MM, "(I2.2)") imonth
+    write (DD, "(I2.2)") iday
+    write (hh, "(I2.2)") ihour
+    call jd(iyear, imonth, iday, ijdate)
+
+#  if defined JCOPE_T
+    ihours = ihours + 1  !!! Files exist 1 hourly interval
+    JCOPE_sufix_tmp = YYYY//MM//DD//hh//"00.bin"
+#  else
+    ihours = ihours + 24  !!! Files exist daily interval
+    JCOPE_sufix_tmp = YYYY//MM//DD
+#  endif
+
+    JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix_tmp )
+    status = access( trim( JCOPE_data_file ), ' ' )
+    if ( status /= 0 ) cycle 
+    Nt = Nt + 1
+    JCOPE_sufix(Nt) = JCOPE_sufix_tmp  
+    bry_time(Nt) = ( dble( ijdate ) + dble( ihour )/24.0d0 - d_jdate_Ref ) * 86400.0d0  ! sec
+  enddo
+
+!  allocate(idt(Nt))
+  allocate(iNCt(Nt))
+  
+  do i=1, Nt
+!    idt(i) = ItS + i-1
+    iNCt(i) = 1
+  enddo
+
+#elif defined FORP_MODEL
+
+!---- Read FORP netCDF file --------------------------------
+
+  write(*,*) "************ FORP MODEL ************"
+      
+  call jd(1, 1, 1, jdate_00010101)
+  d_jdate_00010101 = dble(jdate_00010101)
+  write(*,*) d_jdate_00010101
+
+  Nt = 0
+  itime = 1
+  ihours = 0
+  iyear = Syear
+  imonth = Smonth
+  iday = Sday
+  call jd(iyear, imonth, iday, Sjdate)
+
+  NCnum = Emonth - Smonth + 1
+  write(*,*) 'NCnum = ', NCnum
+  allocate( NC(NCnum) ) 
+
+  do iNC=1, NCnum
+    write(*,*) 'CHECK: Time'
+    ! Open NetCDF file
+    write (YYYY, "(I4.4)") Syear
+    write (MM, "(I2.2)") Smonth + iNC -1
+    FORP_sufix = "_dy_"//YYYY//MM//".nc"
+    do i=1,5
+      NC(iNC)%FORP_FILE(i) = &
+        trim( FORP_data_dir )// FORP_prefix // &
+        trim( FORP_VAR_NAME(i) )// FORP_sufix
+    enddo
+    write(*,*) "OPEN: ", trim( NC(iNC)%FORP_FILE(1) )
+    call check( nf90_open(NC(iNC)%FORP_FILE(1), nf90_nowrite, ncid) )
+    call get_dimension(ncid, 'time', NC(iNC)%Nt)
+    write(*,*) NC(iNC)%Nt
+
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+!    allocate( time2(NC(iNC)%Nt) )
+    call check( nf90_inq_varid(ncid, 'time', var_id) )
+!    call check( nf90_get_var(ncid, var_id, time2) )
+    call check( nf90_get_var(ncid, var_id, NC(iNC)%time_all) )
+    call check( nf90_close(ncid) )
+    write(*,*) "CLOSE: ", trim( NC(iNC)%FORP_FILE(1) )
+!    NC(iNC)%time_all = time2
+!    deallocate(time2)
+  end do
+
+  write(*,*) NC(:)%Nt
+  
+  do iNC=1, NCnum-1
+    do i=2,NC(iNC)%Nt
+      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
+        NC(iNC)%Nt = i-1
+        exit
+      end if
+    end do
+  end do
+  
+  write(*,*) NC(:)%Nt
+  
+  write(*,*) "******************************************************************"
+    
+  
+  NC(:)%ItE = -1
+  NC(:)%ItS = -1
+  
+  do iNC=NCnum,1,-1
+    do i=NC(iNC)%Nt,1,-1
+      d_jdate=d_jdate_00010101-2.0d0+NC(iNC)%time_all(i)/24.0d0
+      if(d_jdate < dble(jdate_End)) then
+        write(*,*) '*** FOUND: Ending point @ FORP_FILE',iNC
+        NC(iNC)%ItE=i
+        exit
+      endif
+    end do
+  end do
+  write(*,*) NC(:)%ItE 
+  
+  do iNC=1,NCnum
+    do i=NC(iNC)%ItE,1,-1
+      d_jdate=d_jdate_00010101-2.0d0+NC(iNC)%time_all(i)/24.0d0
+      write(*,*) 'DEBUG00', i, d_jdate_00010101, NC(iNC)%time_all(i)/24.0d0, d_jdate, dble(jdate_Start) 
+      if(d_jdate < dble(jdate_Start)) then
+!        write(*,*) '*** FOUND: Starting point @ FORP_FILE',iNC
+        exit
+      endif
+      NC(iNC)%ItS=i
+    end do
+  end do
+  write(*,*) NC(:)%ItS 
+
+  Nt = 0
+  iNCs = NCnum
+  iNCe = 1
+
+  do iNC=1,NCnum
+    if(NC(iNC)%ItS==-1) then
+      cycle
+    end if
+    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
+    iNCs = min(iNCs,iNC)
+    iNCe = max(iNCe,iNC)
+  enddo
+  write(*,*) 'DEBUG0', iNCs, iNCe, Nt 
+
+  allocate(bry_time(Nt))
+  allocate(idt(Nt))
+  allocate(iNCt(Nt))
+
+  i=1
+  do iNC=iNCs,iNCe
+    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
+      iNCt(i+k) = iNC
+      idt(i+k)  = NC(iNC)%ItS + k
+    enddo
+    j=i+NC(iNC)%ItE-NC(iNC)%ItS
+    bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
+    i=j+1
+  enddo
+  write(*,*) 'DEBUG1 iNCt', iNCt 
+  write(*,*) 'DEBUG2  idt', idt 
+
+  bry_time(:) = ( bry_time(:) + ( d_jdate_00010101-2.0d0 -d_jdate_Ref )*24.0d0)*3600.0d0 ! hour -> sec
+
+  
+  !---- Read FORP netCDF grid cooredinate --------------------------------
+  write(*,*) "OPEN: ", trim( NC(iNCs)%FORP_FILE(4) )
+  call check( nf90_open(trim( NC(iNCs)%FORP_FILE(4) ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lat', Nyr_dg)
+  call get_dimension(ncid, 'lon', Nxr_dg)
+  call get_dimension(ncid, 'lev', Nzr_dg)
+  write(*,*) Nxr_dg, Nyr_dg, Nzr_dg
+  ! Allocate variable
+
+  allocate( latst(Nyr_dg) )
+  allocate( lonst(Nxr_dg) )
+  allocate( depth(Nzr_dg) )
+
+  call check( nf90_inq_varid(ncid, 'lat', var_id) )
+  call check( nf90_get_var(ncid, var_id, latst) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) )
+  call check( nf90_get_var(ncid, var_id, lonst) )
+  call check( nf90_inq_varid(ncid, 'lev', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, depth) )
+
+  Ldg = Nxr_dg-1
+  Mdg = Nyr_dg-1
+  allocate( latr_dg(0:Ldg, 0:Mdg) )
+  allocate( lonr_dg(0:Ldg, 0:Mdg) )
+  allocate( latu_dg(0:Ldg, 0:Mdg) )
+  allocate( lonu_dg(0:Ldg, 0:Mdg) )
+  allocate( latv_dg(0:Ldg, 0:Mdg) )
+  allocate( lonv_dg(0:Ldg, 0:Mdg) )
+  allocate( rmask_dg(0:Ldg, 0:Mdg) )
+  allocate( umask_dg(0:Ldg, 0:Mdg) )
+  allocate( vmask_dg(0:Ldg, 0:Mdg) )
+  allocate( cosAu_dg(0:Ldg, 0:Mdg) )
+  allocate( sinAu_dg(0:Ldg, 0:Mdg) )
+  allocate( cosAv_dg(0:Ldg, 0:Mdg) )
+  allocate( sinAv_dg(0:Ldg, 0:Mdg) )
+  allocate( h_dg(0:Ldg, 0:Mdg) )
+  Ndg = Nzr_dg
+  allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_u_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_v_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+
+  call check( nf90_inq_varid(ncid, FORP_VAR_NAME(4), var_id) )
+  call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
+
+  call check( nf90_close(ncid) )
+  write(*,*) "CLOSE: ", trim( NC(iNCs)%FORP_FILE(4) )
+
+  write(*,*) "OPEN: ", trim( NC(iNCs)%FORP_FILE(2) )
+  call check( nf90_open(trim( NC(iNCs)%FORP_FILE(2) ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lat', Nyu_dg)
+  call get_dimension(ncid, 'lon', Nxu_dg)
+  allocate( latuv(Nyu_dg) )
+  allocate( lonuv(Nxu_dg) )
+  call check( nf90_inq_varid(ncid, 'lat', var_id) )
+  call check( nf90_get_var(ncid, var_id, latuv) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) )
+  call check( nf90_get_var(ncid, var_id, lonuv) )
+  call check( nf90_close(ncid) )
+  write(*,*) "CLOSE: ", trim( NC(iNCs)%FORP_FILE(2) )
+
+  Nyv_dg = Nyu_dg
+  Nxv_dg = Nxu_dg
+  do j=0,Mdg
+    do i=0,Ldg
+      latr_dg(i,j) = latst(j+1)
+      lonr_dg(i,j) = lonst(i+1)
+      latu_dg(i,j) = latuv(j+1)
+      lonu_dg(i,j) = lonuv(i+1)
+      latv_dg(i,j) = latuv(j+1)
+      lonv_dg(i,j) = lonuv(i+1)
+    enddo
+  enddo
+  do k=1,Ndg
+    do j=0,Mdg
+      do i=1,Ldg
+        z_r_dg(i,j,k)= depth(Ndg-k+1)
+      enddo
+    enddo
+  enddo
+  z_u_dg(:,:,:) = z_r_dg(:,:,:)
+  z_v_dg(:,:,:) = z_r_dg(:,:,:)
+  
+
+  cosAu_dg(:,:) = 1.0d0
+  sinAu_dg(:,:) = 0.0d0
+  cosAv_dg(:,:) = 1.0d0
+  sinAv_dg(:,:) = 0.0d0
+
+
+  write(*,*) "*************************************" 
+
+#else
+  write(*,*) "************ Please choose a OCEAN MODEL ************"
+  Stop
+#endif
+
+! ----------------------------------------------------
+!=== Create ROMS ocean_his netCDF file =========================
+  ocean_time(1) = bry_time(1)
+!-ROMS his netcdf file name -------------------------------------------------
+  call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
+  HIS_suffix(2:12)=YYYYMMDDpHH
+  HIS_FILE = trim( HIS_prefix )//HIS_suffix
+
+!-Create the ROMS his netCDF file --------------------------------
+#if defined ROMS_MODEL     
+!  call createNetCDFini2(  trim( ROMS_HISFILE(1) ),  trim( HIS_FILE )   &
+!        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar, Nbed, NCS, NNS  )
+  call createNetCDFini(  trim( HIS_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
+#else
+  call createNetCDFini(  trim( HIS_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
+#endif
+!-Write ROMS his netCDF file --------------------------------
+ 
+  call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+  call check( nf90_inq_varid(ncid2, 'spherical', var_id) )
+  call check( nf90_put_var(ncid2, var_id, spherical) )
+  call check( nf90_inq_varid(ncid2, 'Vtransform', var_id) )
+  call check( nf90_put_var(ncid2, var_id, Vtransform ) )
+  call check( nf90_inq_varid(ncid2, 'Vstretching', var_id) )
+  call check( nf90_put_var(ncid2, var_id, Vstretching ) )
+  call check( nf90_inq_varid(ncid2, 'theta_s', var_id) )
+  call check( nf90_put_var(ncid2, var_id, THETA_S ) )
+  call check( nf90_inq_varid(ncid2, 'theta_b', var_id) )
+  call check( nf90_put_var(ncid2, var_id, THETA_B) )
+  call check( nf90_inq_varid(ncid2, 'Tcline', var_id) )
+  call check( nf90_put_var(ncid2, var_id, TCLINE) )
+  call check( nf90_inq_varid(ncid2, 'hc', var_id) )
+  call check( nf90_put_var(ncid2, var_id, hc ) )
+  start1D = (/ 1 /)
+  count1D = (/ Nzr /)
+  call check( nf90_inq_varid(ncid2, 's_rho', var_id) )
+  call check( nf90_put_var(ncid2, var_id, sc_r, start1D, count1D) )
+  call check( nf90_inq_varid(ncid2, 'Cs_r', var_id) )
+  call check( nf90_put_var(ncid2, var_id, Cs_r, start1D, count1D) )
+  start1D = (/ 1 /)
+  count1D = (/ Nzr+1 /)
+  call check( nf90_inq_varid(ncid2, 's_w', var_id) )
+  call check( nf90_put_var(ncid2, var_id, sc_w, start1D,  count1D) )
+  call check( nf90_inq_varid(ncid2, 'Cs_w', var_id) )
+  call check( nf90_put_var(ncid2, var_id, Cs_w, start1D, count1D) )
+
+  start1D = (/ 1 /)
+  count1D = (/ Nt /)
+  call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
+  call check( nf90_put_var(ncid2, var_id, bry_time, start = start1D, count = count1D) )
+  call check( nf90_close(ncid2) )      
+
+!-Write ROMS his netCDF file --------------------------------
+
+  write(*,*) '***************** Start extracting *****************'
+
+  LBri = 0
+  UBri = L
+  LBrj = 0
+  UBrj = M
+  LBui = 1
+  UBui = L
+  LBuj = 0
+  UBuj = M
+  LBvi = 0
+  UBvi = L
+  LBvj = 1
+  UBvj = M
+  Nxr = UBri-LBri+1
+  Nxu = UBui-LBui+1
+  Nxv = UBvi-LBvi+1
+  Nyr = UBrj-LBrj+1
+  Nyu = UBuj-LBuj+1
+  Nyv = UBvj-LBvj+1
+
+  allocate( zeta(LBri:UBri, LBrj:UBrj, 1) )
+  allocate( ubar(LBui:UBui, LBuj:UBuj, 1) )
+  allocate( vbar(LBvi:UBvi, LBvj:UBvj, 1) )
+  allocate( u(LBui:UBui, LBuj:UBuj, 1:N, 1) )
+  allocate( v(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+  allocate( ull(LBui:UBui, LBuj:UBuj, 1:N, 1) )
+  allocate( uu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
+  allocate( vu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
+  allocate( vll(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+  allocate( uv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+  allocate( vv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+  allocate( t(LBri:UBri, LBrj:UBrj, 1:N, 1) )
+  
+  write(*,*) "*** Calculate weight factor ***"
+
+  allocate( ID_cnt2Dr(4, Nxr*Nyr) )
+  allocate( w_cnt2Dr (4, Nxr*Nyr) )
+  allocate( ID_cnt3Dr(6, Nxr*Nyr*Nzr) )
+  allocate( w_cnt3Dr (8, Nxr*Nyr*Nzr) )
+  allocate( ID_cnt2Du(4, Nxu*Nyu) )
+  allocate( w_cnt2Du (4, Nxu*Nyu) )
+  allocate( ID_cnt2Dv(4, Nxv*Nyv) )
+  allocate( w_cnt2Dv (4, Nxv*Nyv) )
+  allocate( ID_cnt3Du(6, Nxu*Nyu*Nzr) )
+  allocate( w_cnt3Du (8, Nxu*Nyu*Nzr) )
+  allocate( ID_cnt3Dv(6, Nxv*Nyv*Nzr) )
+  allocate( w_cnt3Dv (8, Nxv*Nyv*Nzr) )
+
+  iNC = 0
+
+  do itime=1,Nt
+    iNCm = iNC
+    iNC  = iNCt(itime)
+
+    if(iNCm < iNC) then
+#if defined ROMS_MODEL
+      write(*,*) "OPEN: ", trim( ROMS_HISFILE(iNC) )
+      call check( nf90_open(trim( ROMS_HISFILE(iNC) ), nf90_nowrite, ncid) )    
+
+#elif defined HYCOM_MODEL
+  !---- Load HYCOM netCDF grid cooredinate --------------------------------
+
+      Nyr_dg = NC(iNC)%Nyr_dg
+      Nxr_dg = NC(iNC)%Nxr_dg
+      Nzr_dg = NC(iNC)%Nzr_dg
+    
+      Nxu_dg = Nxr_dg
+      Nyu_dg = Nyr_dg
+      Nxv_dg = Nxr_dg
+      Nyv_dg = Nyr_dg
+      Ldg = Nxr_dg-1
+      Mdg = Nyr_dg-1
+    
+      allocate( latr_dg(0:Ldg, 0:Mdg) )
+      allocate( lonr_dg(0:Ldg, 0:Mdg) )
+      allocate( latu_dg(0:Ldg, 0:Mdg) )
+      allocate( lonu_dg(0:Ldg, 0:Mdg) )
+      allocate( latv_dg(0:Ldg, 0:Mdg) )
+      allocate( lonv_dg(0:Ldg, 0:Mdg) )
+      allocate( rmask_dg(0:Ldg, 0:Mdg) )
+      allocate( umask_dg(0:Ldg, 0:Mdg) )
+      allocate( vmask_dg(0:Ldg, 0:Mdg) )
+      allocate( cosAu_dg(0:Ldg, 0:Mdg) )
+      allocate( sinAu_dg(0:Ldg, 0:Mdg) )
+      allocate( cosAv_dg(0:Ldg, 0:Mdg) )
+      allocate( sinAv_dg(0:Ldg, 0:Mdg) )
+      allocate( h_dg(0:Ldg, 0:Mdg) )
+      Ndg = Nzr_dg
+      allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+      allocate( z_u_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+      allocate( z_v_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+    
+      do j=0,Mdg
+        do i=0,Ldg
+          latr_dg(i,j) = NC(iNC)%lat(j+1)
+          lonr_dg(i,j) = NC(iNC)%lon(i+1)
+        enddo
+      enddo
+      latu_dg(:,:) = latr_dg(:,:)
+      lonu_dg(:,:) = lonr_dg(:,:)
+      latv_dg(:,:) = latr_dg(:,:)
+      lonv_dg(:,:) = lonr_dg(:,:)
+      do k=1,Ndg
+        do j=0,Mdg
+          do i=1,Ldg
+            z_r_dg(i,j,k)= NC(iNC)%depth(Ndg-k+1)
+          enddo
+        enddo
+      enddo
+      z_u_dg(:,:,:) = z_r_dg(:,:,:)
+      z_v_dg(:,:,:) = z_r_dg(:,:,:)
+    
+      rmask_dg(:,:) = 1.0d0
+    
+      cosAu_dg(:,:) = 1.0d0
+      sinAu_dg(:,:) = 0.0d0
+    
+      cosAv_dg(:,:) = 1.0d0
+      sinAv_dg(:,:) = 0.0d0
+  
+      write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
+      call try_nf_open(trim( HYCOM_FILE(iNC) ), nf90_nowrite, ncid) 
+#endif            
+  
+      write(*,*) "Seek rho point donor IJ range"
+      call seek_IJrange(                                 &
+            0, Ldg, 0, Mdg, lonr_dg, latr_dg             & 
+          , LBri, UBri, LBrj, UBrj                       &
+          , lonr(LBri:UBri,LBrj:UBrj)                    &
+          , latr(LBri:UBri,LBrj:UBrj)                    &
+          , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max)
+    
+      Irdg_min = max(Irdg_min-2, 0 )
+      Irdg_max = min(Irdg_max+2,Ldg)
+      Jrdg_min = max(Jrdg_min-2, 0 )
+      Jrdg_max = min(Jrdg_max+2,Mdg)
+      Iudg_min = Irdg_min
+      Iudg_max = Irdg_max
+      Judg_min = Jrdg_min
+      Judg_max = Jrdg_max
+      Ivdg_min = Irdg_min
+      Ivdg_max = Irdg_max
+      Jvdg_min = Jrdg_min
+      Jvdg_max = Jrdg_max
+#if defined ARAKAWA_C_GRID
+      Iudg_min = Irdg_min+1
+      Jvdg_min = Jrdg_min+1
+#endif
+  
+      Nxr_dg =Irdg_max-Irdg_min+1
+      Nyr_dg =Jrdg_max-Jrdg_min+1
+      Nxu_dg =Iudg_max-Iudg_min+1
+      Nyu_dg =Judg_max-Judg_min+1
+      Nxv_dg =Ivdg_max-Ivdg_min+1
+      Nyv_dg =Jvdg_max-Jvdg_min+1
+      
+      write(*,*) Irdg_min, Irdg_max, Jrdg_min, Jrdg_max
+    
+      allocate( zeta_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1) )
+      allocate( ubar_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
+      allocate( vbar_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
+      allocate( u_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+      allocate( v_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+      allocate( t_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Ndg, 1) )
+      allocate( ull_dg (Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+      allocate( ullu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+      allocate( vllu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
+      allocate( vll_dg (Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+      allocate( vllv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+      allocate( ullv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
+#if defined WET_DRY
+      allocate( umask_wet_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
+      allocate( vmask_wet_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
+#endif
+
+#if defined HYCOM_MODEL
+      if( romsvar(1)==1 ) then
+        start3D = (/ Irdg_min+1, Jrdg_min+1, NC(iNC)%ItS /)
+        count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
+        write(*,*) 'Read surf_el, and create land mask'
+        call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
+              , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
+        do j=Jrdg_min,Jrdg_max
+          do i=Irdg_min,Irdg_max
+            if (zeta_dg(i,j,1)<=-10.0d0) then
+              rmask_dg(i,j) = 0.0d0
+            endif
+          enddo
+        enddo
+      elseif( romsvar(6)==1 ) then
+        start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      NC(iNC)%ItS /)
+        count4D = (/ Nxr_dg,     Nyr_dg,     1,      1           /)
+        write(*,*) 'Read water_temp, and create land mask'
+        call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_temp'   &
+              , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
+        do j=Jrdg_min,Jrdg_max
+          do i=Irdg_min,Irdg_max
+            if (t_dg(i,j,1,1)<=-10.0d0) then
+              rmask_dg(i,j) = 0.0d0
+            endif
+          enddo
+        enddo
+      else
+        Stop
+      endif
+      umask_dg(:,:) = rmask_dg(:,:)
+      vmask_dg(:,:) = rmask_dg(:,:)
+#endif
+  
+      write(*,*) "Calculate 2D rho point weight factor"
+      call weight2D_grid3_2(                              &
+            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max        &
+          , lonr_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
+          , latr_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
+          , rmask_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max) & 
+          , LBri, UBri, LBrj, UBrj                        &
+          , lonr(LBri:UBri,LBrj:UBrj)                     &
+          , latr(LBri:UBri,LBrj:UBrj)                     &
+          , ID_cnt2Dr, w_cnt2Dr )
+   
+      write(*,*) "Calculate 2D u point weight factor"
+      call weight2D_grid3_2(                              &
+            Iudg_min, Iudg_max, Judg_min, Judg_max        &
+          , lonu_dg(Iudg_min:Iudg_max,Judg_min:Judg_max)  &
+          , latu_dg(Iudg_min:Iudg_max,Judg_min:Judg_max)  &
+          , umask_dg(Iudg_min:Iudg_max,Judg_min:Judg_max) & 
+          , LBui, UBui, LBuj, UBuj                        &
+          , lonu(LBui:UBui,LBuj:UBuj)                     &
+          , latu(LBui:UBui,LBuj:UBuj)                     &
+          , ID_cnt2Du, w_cnt2Du )
+  
+      write(*,*) "Calculate 2D v point weight factor"
+      call weight2D_grid3_2(                              &
+            Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max        &
+          , lonv_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)  &
+          , latv_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)  &
+          , vmask_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max) & 
+          , LBvi, UBvi, LBvj, UBvj                        &
+          , lonv(LBvi:UBvi,LBvj:UBvj)                     &
+          , latv(LBvi:UBvi,LBvj:UBvj)                     &
+          , ID_cnt2Dv, w_cnt2Dv )
+  
+      write(*,*) "Calculate 3D rho point weight factor"
+      call weight3D_grid3_2(                                  &
+            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg    &
+          , z_r_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max,1:Ndg) &
+          , LBri, UBri, LBrj, UBrj, 1, N                      &
+          , z_r(LBri:UBri,LBrj:UBrj, 1:N)                     &
+          , ID_cnt2Dr, w_cnt2Dr                               &
+          , ID_cnt3Dr, w_cnt3Dr )
+  
+      write(*,*) "Calculate 3D u point weight factor"
+      call weight3D_grid3_2(                                  &
+            Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg    &
+          , z_u_dg(Iudg_min:Iudg_max,Judg_min:Judg_max,1:Ndg) &
+          , LBui, UBui, LBuj, UBuj, 1, N                      &
+          , z_u(LBui:UBui,LBuj:UBuj, 1:N)                     &
+          , ID_cnt2Du, w_cnt2Du                               &
+          , ID_cnt3Du, w_cnt3Du )
+  
+      write(*,*) "Calculate 3D v point weight factor"
+      call weight3D_grid3_2(                                  &
+            Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg    &
+          , z_v_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max,1:Ndg) &
+          , LBvi, UBvi, LBvj, UBvj, 1, N                      &
+          , z_v(LBvi:UBvi,LBvj:UBvj, 1:N)                     &
+          , ID_cnt2Dv, w_cnt2Dv                               &
+          , ID_cnt3Dv, w_cnt3Dv )
+  
+      write(*,*) "***************************************************************"
+
+    endif
+
+    ocean_time(1) = bry_time(itime)
+
+    call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
+    Write(*,*) 'Time = ',YYYYMMDDpHH
+!    Write(*,*) idt(itime) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
+    if( romsvar(1)==1 ) then
+      !- zeta --------------------------------
+#if defined ROMS_MODEL
+      write(*,*) 'Read: '//trim( ROMS_HISFILE(iNC) )
+      write(*,*) 'Read: zeta'
+      start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
+      count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
+      call check( nf90_inq_varid(ncid, 'zeta', var_id) )
+      call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
+#elif defined HYCOM_MODEL
+      write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
+      start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
+      count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
+      call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
+            , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
+#elif defined JCOPE_MODEL
+     JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix(itime) )
+     write(*,*) 'Read: ', trim( JCOPE_data_file )
+     call read_jcope_data2D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+           , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg )
+#elif defined FORP_MODEL
+      write(*,*) 'Read: '//trim( NC(iNC)%FORP_FILE(1) )
+      write(*,*) 'Read: '//trim( FORP_VAR_NAME(1) )
+      start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
+      count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
+      call check( nf90_open(NC(iNC)%FORP_FILE(1), nf90_nowrite, ncid) )
+      call check( nf90_inq_varid(ncid, FORP_VAR_NAME(1), var_id) )
+      call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
+      call check( nf90_close(ncid) )
+#endif
+      
+      write(*,*) 'Linear Interporation: zeta'
+      call interp2D_grid3_2(                                              &
+              Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg             &
+            , LBri, UBri, LBrj, UBrj                                      &
+            , Id_cnt2Dr, w_cnt2Dr                                         &
+            , zeta  ) 
+      
+      start3D = (/ 1,   1,   itime /)
+      count3D = (/ Nxr, Nyr, 1 /)
+      write(*,*)  'Write: zeta'
+      call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+      call check( nf90_inq_varid(ncid2, 'zeta', var_id2) )
+      call check( nf90_put_var(ncid2, var_id2, zeta, start = start3D, count = count3D) )
+      call check( nf90_close(ncid2) )
+    endif
+
+    if( romsvar(2)==1 .or. romsvar(3)==1 .or.         &
+        romsvar(4)==1 .or. romsvar(5)==1      ) then
+    !- u --------------------------------
+    
+#if defined ROMS_MODEL
+      write(*,*) 'Read: u'
+      start4D = (/ Iudg_min, Judg_min+1, 1,      idt(itime) /)
+      count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1          /)
+      call check( nf90_inq_varid(ncid, 'u', var_id) )
+      call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
+#elif defined HYCOM_MODEL
+      write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
+      start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
+      count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
+# if defined FAST_READ
+      call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, 'water_u'   &
+            , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
+# else
+      call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_u'        &
+            , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
+# endif
+#elif defined JCOPE_MODEL
+      JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( JCOPE_sufix(itime) )
+      write(*,*) 'Read: ', trim( JCOPE_data_file )
+      call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+            , Iudg_min, Iudg_max, Judg_min, Judg_max, u_dg(:,:,:,1) )
+#elif defined FORP_MODEL
+      write(*,*) 'Read: '//trim( NC(iNC)%FORP_FILE(2) )
+      write(*,*) 'Read: '//trim( FORP_VAR_NAME(2) )
+      start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
+      count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
+      call check( nf90_open(NC(iNC)%FORP_FILE(2), nf90_nowrite, ncid) )
+      call check( nf90_inq_varid(ncid, FORP_VAR_NAME(2), var_id) )
+      call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
+      call check( nf90_close(ncid) )
+      u_dg = u_dg*0.01d0  ! cm/s -> m/s
+#endif
+    
+#if defined WET_DRY
+      start3D = (/ Iudg_min, Judg_min+1, idt(itime) /)
+      count3D = (/ Nxu_dg,   Nyu_dg,     1          /)
+      call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
+      call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
+      
+      do j=Judg_min,Judg_max
+        do i=Iudg_min,Iudg_max
+          u_dg(i,j,:,1)= u_dg(i,j,:,1)*umask_wet_dg(i,j,1)
+        enddo
+      enddo
+#endif
+  !- v --------------------------------
+
+#if defined ROMS_MODEL
+      write(*,*) 'Read: v'
+      start4D = (/ Ivdg_min+1, Jvdg_min, 1,      idt(itime) /)
+      count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
+      call check( nf90_inq_varid(ncid, 'v', var_id) )
+      call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
+#elif defined HYCOM_MODEL
+      write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
+      start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
+      count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
+# if defined FAST_READ
+      call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, 'water_v'    &
+            , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
+# else
+      call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_v'         &
+            , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
+# endif
+#elif defined JCOPE_MODEL
+      JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( JCOPE_sufix(itime) )
+      write(*,*) 'Read: ', trim( JCOPE_data_file )
+      call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+            , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, v_dg(:,:,:,1) )
+#elif defined FORP_MODEL
+      write(*,*) 'Read: '//trim( NC(iNC)%FORP_FILE(3) )
+      write(*,*) 'Read: '//trim( FORP_VAR_NAME(3) )
+      start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
+      count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
+      call check( nf90_open(NC(iNC)%FORP_FILE(3), nf90_nowrite, ncid) )
+      call check( nf90_inq_varid(ncid, FORP_VAR_NAME(3), var_id) )
+      call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
+      call check( nf90_close(ncid) )
+      v_dg = v_dg*0.01d0  ! cm/s -> m/s
+#endif    
+#if defined WET_DRY
+      start3D = (/ Ivdg_min+1, Jvdg_min, idt(itime) /)
+      count3D = (/ Nxv_dg,     Nyv_dg,   1          /)
+      call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
+      call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
+      
+      do j=Jvdg_min,Jvdg_max
+        do i=Ivdg_min,Ivdg_max
+          v_dg(i,j,:,1)= v_dg(i,j,:,1)*vmask_wet_dg(i,j,1)
+        enddo
+      enddo
+#endif
+    !- convert ROMS donor coordinate to lat lon coordinate --------------------------------
+      do j=Judg_min,Judg_max
+        do i=Iudg_min,Iudg_max
+          ullu_dg(i,j,:,1) = u_dg(i,j,:,1)*cosAu_dg(i,j)
+          vllu_dg(i,j,:,1) = u_dg(i,j,:,1)*sinAu_dg(i,j)
+        enddo
+      enddo
+      do j=Jvdg_min,Jvdg_max
+        do i=Ivdg_min,Ivdg_max
+          ullv_dg(i,j,:,1) = -v_dg(i,j,:,1)*sinAv_dg(i,j)
+          vllv_dg(i,j,:,1) =  v_dg(i,j,:,1)*cosAv_dg(i,j)
+        enddo
+      enddo
+#if defined ARAKAWA_C_GRID
+      do i=Iudg_min,Iudg_max
+        do j=Judg_min,Judg_max-1
+          ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
+        enddo
+        ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
+      enddo
+      do j=Jvdg_min,Jvdg_max
+        do i=Ivdg_min,Ivdg_max-1
+          vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i+1,j-1,:,1)
+        enddo
+        vll_dg(Ivdg_max,j,:,1) = vllv_dg(Ivdg_max,j,:,1)+vllu_dg(Ivdg_max,j-1,:,1)
+      enddo
+#else
+      do j=Judg_min,Judg_max
+        do i=Iudg_min,Iudg_max
+            ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i,j,:,1)
+        enddo
+      enddo
+      do j=Jvdg_min,Jvdg_max
+        do i=Ivdg_min,Ivdg_max
+          vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i,j,:,1)
+        enddo
+      enddo
+#endif  
+  
+  
+      write(*,*) 'Linear Interporation: u'
+      call interp3D_grid3_2(                                  &
+              Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
+            , ull_dg                                          &
+            , LBui, UBui, LBuj, UBuj, 1, N                    &
+            , Id_cnt3Du, w_cnt3Du                             &
+            , ull )
+      
+      write(*,*) 'Linear Interporation: v'
+      call interp3D_grid3_2(                                  &
+              Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg  &
+            , vll_dg                                          &
+            , LBvi, UBvi, LBvj, UBvj, 1, N                    &
+            , Id_cnt3Dv, w_cnt3Dv                             &
+            , vll  ) 
+      
+      ! convert lat lon coordinate to ROMS refine coordinate --------------------------------
+  
+      do j=LBuj,UBuj
+        do i=LBui,UBui
+          uu(i,j,:,1) =  ull(i,j,:,1)*cosAu(i,j)
+          vu(i,j,:,1) = -ull(i,j,:,1)*sinAu(i,j)
+        enddo
+      enddo
+      do j=LBvj,UBvj
+        do i=LBvi,UBvi
+          uv(i,j,:,1) = vll(i,j,:,1)*sinAv(i,j)
+          vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
+        enddo
+      enddo
+      do i=LBui,UBui
+        do j=LBuj,UBuj-1
+          u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
+        enddo
+!          write(*,*) 'DEBUG 1', i,j, UBuj
+        u(i,UBuj,:,1) = uu(i,UBuj,:,1)+uv(i-1,UBuj,:,1)
+      enddo
+      do j=LBvj,UBvj
+        do i=LBvi,UBvi-1
+          v(i,j,:,1) = vv(i,j,:,1)+vu(i+1,j-1,:,1)
+        enddo
+        v(UBvi,j,:,1) = vv(UBvi,j,:,1)+vu(UBvi,j-1,:,1)
+      enddo
+
+      if( romsvar(2)==1 ) then
+        !- Write u v --------------------------------
+        start4D = (/ 1,   1,   1,   itime /)
+        count4D = (/ Nxu, Nyu, Nzr, 1 /)
+        write(*,*)  'Write: u'
+        call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_inq_varid(ncid2, 'u', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, u, start = start4D, count = count4D) )
+        call check( nf90_close(ncid2) )
+      endif
+      if( romsvar(3)==1 ) then
+        start4D = (/ 1,   1,   1,   itime /)
+        count4D = (/ Nxv, Nyv, Nzr, 1 /)
+        write(*,*)  'Write: v'
+        call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_inq_varid(ncid2, 'v', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, v, start = start4D, count = count4D) )
+        call check( nf90_close(ncid2) )
+      endif
+
+      ! Depth averaged velocity calculation --------------------------------
+      if( romsvar(4)==1 ) then
+        ubar(:,:,1)=0.0d0
+        do j=LBuj, UBuj
+          do i=LBui, UBui
+            do k=1,N
+                ubar(i,j,1) = ubar(i,j,1)+u(i,j,k,1)*dz_u(i,j,k)/hu(i,j)*umask(i,j)
+            enddo
+          enddo
+        enddo
+  
+        start3D = (/ 1,   1,   itime /)
+        count3D = (/ Nxu, Nyu, 1 /)
+        write(*,*)  'Write: ubar'
+        call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_inq_varid(ncid2, 'ubar', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, ubar, start = start3D, count = count3D) )
+        call check( nf90_close(ncid2) )
+      endif
+        
+      if( romsvar(5)==1 ) then 
+        vbar(:,:,1)=0.0d0
+        do j=LBvj, UBvj
+          do i=LBvi, UBvi
+            do k=1,N
+              vbar(i,j,1) = vbar(i,j,1)+v(i,j,k,1)*dz_v(i,j,k)/hv(i,j)*vmask(i,j)
+            enddo
+          enddo
+        enddo
+  
+        start3D = (/ 1,   1,   itime /)
+        count3D = (/ Nxv, Nyv, 1 /)
+        write(*,*)  'Write: vbar'
+        call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_inq_varid(ncid2, 'vbar', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, vbar, start = start3D, count = count3D) )
+        call check( nf90_close(ncid2) )
+      endif
+    endif
+  
+  !- Tracer (temp, salt, etc.) --------------------------------
+#if defined ROMS_MODEL    
+    i = 6
+    j = 1
+    do while ( i<= N_var )         
+      if( romsvar(i)==0 ) then
+        i=i+1
+        cycle
+      endif
+#else
+    do i=6, 7
+      if( romsvar(i)==0 ) cycle
+#endif    
+      varname = trim( VAR_NAME(i) )
+
+#if defined ROMS_MODEL   
+      start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
+      count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
+      if( i==8  .or. i==9  .or. i==13 .or. i==14 .or. i==15 .or. i==16 .or.  &
+          i==17 .or. i==21 .or. i==22 .or. i==23 .or. i==24 .or. i==26 .or.  &
+          i==27 .or. i==28 .or. i==29 .or. i==30 .or. i==33 .or. i==34 .or.  &
+          i==35 .or. i==36  ) then  ! mud_, sand_, etc...
+        write(varnum,'(I2.2)') j
+        varname = trim( VAR_NAME(i) )//varnum
+        status = nf90_inq_varid(ncid, trim( varname ), var_id)
+        if (status /= nf90_noerr) then
+          i=i+1
+          j = 1
+          cycle
+        endif
+        write(*,*) 'Read: ', trim( varname )
+        call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
+        j=j+1
+      else
+        write(*,*) 'Read: ', trim( varname )
+        call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
+        call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
+        i=i+1
+      endif
+#elif defined HYCOM_MODEL
+      if( i == 6 ) then
+        HY_VAR_NAME = 'water_temp'
+      elseif( i == 7 ) then
+        HY_VAR_NAME = 'salinity'
+      else
+        cycle
+      endif
+      write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
+      start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
+      count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
+# if defined FAST_READ
+      call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, trim( HY_VAR_NAME )   &
+            , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
+# else
+      call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, trim( HY_VAR_NAME )        &
+            , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
+# endif
+#elif defined JCOPE_MODEL
+      JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(i) )//trim( JCOPE_sufix(itime) )
+      write(*,*) 'Read: ', trim( JCOPE_data_file )
+      call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+            , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, t_dg(:,:,:,1) )
+# if !defined JCOPE_T
+      if( i == 6 ) then
+        t_dg(:,:,:,1) = t_dg(:,:,:,1) + 10.0d0
+      elseif( i == 7 ) then
+        t_dg(:,:,:,1) = t_dg(:,:,:,1) + 35.0d0
+      endif
+# endif
+#elif defined FORP_MODEL
+      start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
+      count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
+      if( i == 6 ) then
+        write(*,*) 'Read: '//trim( NC(iNC)%FORP_FILE(4) )
+        write(*,*) 'Read: '//trim( FORP_VAR_NAME(4) )
+        call check( nf90_open(NC(iNC)%FORP_FILE(4), nf90_nowrite, ncid) )
+        call check( nf90_inq_varid(ncid, FORP_VAR_NAME(4), var_id) )
+        call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
+        call check( nf90_close(ncid) )
+      elseif( i == 7 ) then
+        write(*,*) 'Read: '//trim( NC(iNC)%FORP_FILE(5) )
+        write(*,*) 'Read: '//trim( FORP_VAR_NAME(5) )
+        call check( nf90_open(NC(iNC)%FORP_FILE(5), nf90_nowrite, ncid) )
+        call check( nf90_inq_varid(ncid, FORP_VAR_NAME(5), var_id) )
+        call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
+        call check( nf90_close(ncid) )
+      else
+        cycle
+      endif
+#endif        
+      write(*,*) 'Linear Interporation: ', trim( varname )
+      call interp3D_grid3_2(                                &
+            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg  &
+          , t_dg                                            &
+          , LBri, UBri, LBrj, UBrj, 1, N                    &
+          , Id_cnt3Dr, w_cnt3Dr                             &
+          , t  ) 
+
+      start4D = (/ 1,   1,   1,   itime /)
+      count4D = (/ Nxr, Nyr, Nzr, 1 /)
+      write(*,*)  'Write: ', trim( varname )
+      call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+      call check( nf90_inq_varid(ncid2, trim( varname ), var_id2) )
+      call check( nf90_put_var(ncid2, var_id2, t, start = start4D, count = count4D) )
+      call check( nf90_close(ncid2) )
+    enddo
+
+    if ( itime < Nt ) then
+      if( iNC == iNCt(itime+1) ) cycle
+    endif
+
+    deallocate( zeta_dg )
+    deallocate( ubar_dg )
+    deallocate( vbar_dg )
+    deallocate( u_dg )
+    deallocate( v_dg )
+    deallocate( ull_dg  )
+    deallocate( ullu_dg )
+    deallocate( vllu_dg )
+    deallocate( vll_dg  )
+    deallocate( vllv_dg )
+    deallocate( ullv_dg )
+    deallocate( t_dg )
+#if defined WET_DRY
+    deallocate( umask_wet_dg )
+    deallocate( vmask_wet_dg )
+#endif
+
+#if defined ROMS_MODEL
+    call check( nf90_close(ncid) )
+    write(*,*) "CLOSE: ", trim( ROMS_HISFILE(iNC) )
+#endif
+
+#if defined HYCOM_MODEL
+    deallocate( latr_dg )
+    deallocate( lonr_dg )
+    deallocate( latu_dg )
+    deallocate( lonu_dg )
+    deallocate( latv_dg )
+    deallocate( lonv_dg )
+    deallocate( rmask_dg )
+    deallocate( umask_dg )
+    deallocate( vmask_dg )
+    deallocate( cosAu_dg )
+    deallocate( sinAu_dg )
+    deallocate( cosAv_dg )
+    deallocate( sinAv_dg )
+    deallocate( h_dg )
+    deallocate( z_r_dg )
+    deallocate( z_u_dg )
+    deallocate( z_v_dg )
+  
+    call check( nf90_close(ncid) )
+    write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
+#endif
+
+  enddo
+!  deallocate( zeta )
+!  deallocate( ubar )
+!  deallocate( vbar )
+!  deallocate( u )
+!  deallocate( v )
+!  deallocate( ull )
+!  deallocate( uu  )
+!  deallocate( vu  )
+!  deallocate( vll )
+!  deallocate( uv  )
+!  deallocate( vv  )
+!  deallocate( t )
+!  deallocate( zeta_bry )
+!  deallocate( ubar_bry )
+!  deallocate( vbar_bry )
+!  deallocate( u_bry )
+!  deallocate( v_bry )
+!  deallocate( t_bry )
+!
+!  deallocate( ID_cnt2Dr )
+!  deallocate( w_cnt2Dr  )
+!  deallocate( ID_cnt2Du )
+!  deallocate( w_cnt2Du  )
+!  deallocate( ID_cnt2Dv )
+!  deallocate( w_cnt2Dv  )
+!  deallocate( ID_cnt3Dr )
+!  deallocate( w_cnt3Dr  )
+!  deallocate( ID_cnt3Du )
+!  deallocate( w_cnt3Du  )
+!  deallocate( ID_cnt3Dv )
+!  deallocate( w_cnt3Dv  )
+
+  write(*,*) 'FINISH!!'
+      
+END PROGRAM bryOCN2ROMS
+      

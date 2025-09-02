@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2022 Takashi NAKAMURA  ===== 
+!!!=== Copyright (c) 2014-2025 Takashi NAKAMURA  ===== 
 
 #if defined HYCOM_MODEL || defined JCOPE_MODEL
 # undef WET_DRY
@@ -861,7 +861,12 @@ PROGRAM bryOCN2ROMS
     ! Get dimension data
     call get_dimension(ncid, 'lat', Nyr_dg)
     call get_dimension(ncid, 'lon', Nxr_dg)
-    call get_dimension(ncid, 'depth', Nzr_dg)
+    if( romsvar(2)==1 .or. romsvar(3)==1 .or. &
+        romsvar(5)==1 .or. romsvar(6)==1       ) then
+      call get_dimension(ncid, 'depth', Nzr_dg)
+    else
+      Nzr_dg = 1
+    end if
     write(*,*) Nxr_dg, Nyr_dg, Nzr_dg
     ! Allocate variable
     NC(iNC)%Nyr_dg = Nyr_dg
@@ -874,7 +879,12 @@ PROGRAM bryOCN2ROMS
 
     call readNetCDF_1d(ncid, 'lat', Nyr_dg, NC(iNC)%lat)
     call readNetCDF_1d(ncid, 'lon', Nxr_dg, NC(iNC)%lon)
-    call readNetCDF_1d(ncid, 'depth', Nzr_dg, NC(iNC)%depth)
+    if( romsvar(2)==1 .or. romsvar(3)==1 .or. &
+        romsvar(5)==1 .or. romsvar(6)==1       ) then
+      call readNetCDF_1d(ncid, 'depth', Nzr_dg, NC(iNC)%depth)
+    else
+      NC(iNC)%depth = 0.0d0
+    end if
     call check( nf90_close(ncid) )
     write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
   enddo
@@ -1349,18 +1359,35 @@ PROGRAM bryOCN2ROMS
 #endif
 
 #if defined HYCOM_MODEL
-        write(*,*) 'Read surf_el, and create land mask'
-        start3D = (/ Irdg_min+1, Jrdg_min+1, NC(iNC)%ItS /)
-        count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
-        call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
-              , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
-        do j=Jrdg_min,Jrdg_max
-          do i=Irdg_min,Irdg_max
-            if (zeta_dg(i,j,1)<-10.0d0) then
-              rmask_dg(i,j) = 0.0d0
-            endif
+        if( romsvar(1)==1 ) then
+          write(*,*) 'Read surf_el, and create land mask'
+          start3D = (/ Irdg_min+1, Jrdg_min+1, NC(iNC)%ItS /)
+          count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
+          call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
+                , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
+          do j=Jrdg_min,Jrdg_max
+            do i=Irdg_min,Irdg_max
+              if (zeta_dg(i,j,1)<=-10.0d0) then
+                rmask_dg(i,j) = 0.0d0
+              endif
+            enddo
           enddo
-        enddo
+        elseif( romsvar(6)==1 ) then
+          write(*,*) 'Read water_temp, and create land mask'
+          start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      NC(iNC)%ItS /)
+          count4D = (/ Nxr_dg,     Nyr_dg,     1,      1           /)
+          call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_temp'   &
+                , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
+          do j=Jrdg_min,Jrdg_max
+            do i=Irdg_min,Irdg_max
+              if (t_dg(i,j,1,1)<=-10.0d0) then
+                rmask_dg(i,j) = 0.0d0
+              endif
+            enddo
+          enddo
+        else
+          Stop
+        endif
         umask_dg(:,:) = rmask_dg(:,:)
         vmask_dg(:,:) = rmask_dg(:,:)
 #endif

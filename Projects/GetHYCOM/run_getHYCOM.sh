@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Please choose one of the following options
-# -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2018-12-04 to present)
+# -- ESPC-D-V02: Global 1/12 deg Analysis (since 2024-08-10 to present)
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DESPC_D_V02 -DANALYSIS"
+
+# -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2018-12-04 to 2024-09-04)
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
 
 # -- GOFS 3.1: 41-layer HYCOM + NCODA Global 1/12 deg Analysis (since 2014-07-01 to 2020-02-18)
@@ -18,7 +21,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGOFS_31 -DANALYSIS_Y"
 
 #----------------------------------------------------------------------------------------
 # Please activate if you want to skip time checking 
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_CHECK_TIME"
 
 SRC_DIR=../../src
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DHYCOM_TIME_DIR='${SRC_DIR}'"
@@ -28,6 +31,6 @@ rm *.mod
 
 #cp getHYCOM.exe getHYCOM_2018.exe
 
-#./getHYCOM_2018.exe < getHYCOM_Palau1.in
+./getHYCOM.exe < getHYCOM_Palau1.in
 #./getHYCOM.exe < getHYCOM_Shizugawa1.in
-./getHYCOM.exe < getHYCOM_Panay0.in
+#./getHYCOM.exe < getHYCOM_Panay0.in
