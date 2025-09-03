@@ -113,7 +113,7 @@ CONTAINS
     integer :: Idn,Jdn,Idmin,Jdmin
     integer :: Id(4),Jd(4)
     real(8) :: dmin
-    real(8) :: d,d1,d2,d3,d4,wt
+    real(8) :: d,d1,d2
     integer :: is,js,ie,je,istep
 
 !
@@ -129,6 +129,8 @@ CONTAINS
 !         Xd(Id1) xr(ir,jr) Xd(Id1+1)
 !
 !
+!$omp parallel
+!$omp do private(ir,jr,istep,js,is,je,ie,dmin,d,Idmin,Jdmin,Idn,Jdn,idc,Id,Jd,d1,d2,w)
 
     do ir=1,nxr
       do jr=1,nyr
@@ -212,6 +214,8 @@ CONTAINS
         
       enddo
     enddo
+!$omp end do
+!$omp end parallel
 
   END SUBROUTINE weight2D_grid2
     
@@ -558,8 +562,8 @@ CONTAINS
     integer :: Idn,Jdn,Idmin,Jdmin
     integer :: Id(4),Jd(4)
     real(8) :: dmin
-    real(8) :: d,d1,d2,d3,d4,wt
-    integer :: is,js,ie,je,istep
+    real(8) :: d,d1,d2
+    integer :: is,js,ie,je
     integer :: i,j,lnd,Imsk(3)
     real(8) :: wm
 
@@ -580,6 +584,9 @@ CONTAINS
     NYd = Jde-Jds+1
     nxr = ire-irs+1
     nyr = jre-jrs+1
+
+!$omp parallel
+!$omp do private(ir,jr,js,is,je,ie,dmin,d,Idmin,Jdmin,Idn,Jdn,idc,Id,Jd,d1,d2,w,lnd,Imsk,wm,i,j)
 
     do ir=irs,ire
       do jr=jrs,jre
@@ -681,6 +688,8 @@ CONTAINS
               
       enddo
     enddo
+!$omp end do
+!$omp end parallel
 
   END SUBROUTINE weight2D_grid3_2
     
@@ -1389,7 +1398,8 @@ CONTAINS
     nyr = jre-jrs+1
     nzr = kre-krs+1
 !    write(*,*) "DEBUG0",NXd,NYd,NZd,nxr,nyr,nzr !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+!$omp parallel
+!$omp do private(i,j,k,idc,ir,jr,kr,Id,Jd,Kd,w,w2,Zd1,Zd2,h)
     do i=irs,ire
       do j=jrs,jre
         ! Check the cornar points.
@@ -1483,6 +1493,8 @@ CONTAINS
         
       enddo
     enddo
+!$omp end do
+!$omp end parallel
      
   END SUBROUTINE weight3D_grid3_2
        
@@ -2855,6 +2867,30 @@ CONTAINS
        
     RETURN
   END SUBROUTINE FillExtraPoints3D
+! **********************************************************************
+
+  SUBROUTINE FillExtraDepth3D(Nx, Ny, Nz, V, vmin, vmax)
+
+    implicit none
+! input parameters
+    integer, intent( in) :: Nx, Ny, Nz
+    real(8), intent(inout) :: V(Nx,Ny, Nz)
+    real(8), intent( in) :: vmin, vmax
+    
+    integer :: i,j,k
+    
+    do i=1,Nx
+      do j=1,Ny
+        do k=Nz-1,1,-1
+          if ( V(i,j,k) <vmin .or. V(i,j,k) > vmax ) then
+            V(i,j,k) = V(i,j,k+1)
+          endif
+        end do
+      end do
+    end do
+    
+    RETURN
+  END SUBROUTINE FillExtraDepth3D
     
 END MODULE mod_interpolation
 

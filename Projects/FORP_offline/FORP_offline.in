@@ -1,7 +1,7 @@
 &grd
 ! ROMS NetCDF grid file     
-!  GRID_FILE = "forp-jpn-v4_grd_v1.0.nc"
-  GRID_FILE = "/mnt/d/COAWST_DATA/TokyoBay/TokyoBay1/Grid/TokyoBay1_grd_v1.0.nc"
+  GRID_FILE = "../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-v4_grd_v1.0.nc"
+!  GRID_FILE = "/mnt/d/COAWST_DATA/TokyoBay/TokyoBay1/Grid/TokyoBay1_grd_v1.0.nc"
 /
 &gebco
 ! GEBCO bathymetry NetCDF file     
@@ -40,13 +40,13 @@
 &sdate
   Syear  = 2006   ! Starting year
   Smonth = 1      ! Starting month
-  Sday   = 20      ! Starting day
+  Sday   = 1      ! Starting day
 /
 
 &edate
   Eyear  = 2006   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 2      ! Ending month
-  Eday   = 5      ! Ending day
+  Emonth = 1      ! Ending month
+  Eday   = 3      ! Ending day
 /
 
 &refdate
@@ -91,7 +91,7 @@
 /
 
 &his
-  HIS_prefix  = "forp-jpn-v4_his_Nz30"
+  HIS_prefix  = "../../../COAWST_DATA/FORP_offline/his/forp-jpn-v4_his_Nz30"
 /
 
 &hcoord

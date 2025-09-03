@@ -2241,6 +2241,72 @@ MODULE mod_roms_netcdf
     write(*,*) '*** SUCCESS'
 
   END SUBROUTINE readNetCDF_4d_hycom_fast
+!**** readNetCDF_4d ver 3 **********************************************
+      
+  SUBROUTINE readNetCDF_4d_forp(      &
+!    input parameters
+        NCFILE                        &
+      , NCNAME                        &
+      , Nxr, Nyr, Nzr, Nt             &
+      , start, count                  &
+!    output parameters
+      , data                          &
+    )
+                               
+!    input parameters
+    character(len=*), intent( in) :: NCFILE
+    character(len=*), intent( in) :: NCNAME
+    integer, intent( in) :: Nxr, Nyr, Nzr, Nt
+    integer, intent( in) :: start(4), count(4)
+    real(8), intent(out) :: data(Nxr, Nyr, Nzr, Nt)
+    
+    integer, parameter :: Num_try = 50
+    integer :: ncid
+    integer :: start2(4), count2(4)
+    integer :: var_id
+    integer :: err_flag, status
+    integer :: itry
+    integer :: i,j,k,l
+    real(8) :: sf, off
+    
+    start2 = start
+    count2 = count
+    count2(3)=1
+    
+    data(:,:,:,:) = -9999.0d0
+      
+! --- Read NetCDF file ------------------------
+      
+    write(*,*) 'OPEN: '// NCFILE
+    call check( nf90_open(NCFILE, nf90_nowrite, ncid) )
+    write(*,*) 'READ: '// NCNAME
+    ! Get variable id
+    call check( nf90_inq_varid(ncid, NCNAME, var_id) )
+
+    do k=1,Nzr
+      start2(3)=k
+      do itry=1,Num_try
+        call check( nf90_get_var(ncid, var_id, data(:,:,Nzr-k+1,:), start=start2, count=count2) )
+      end do
+    end do        
+    write(*,*) 'CLOSE: '// NCFILE
+   call check( nf90_close(ncid) )
+
+    do i=1,Nxr
+      do j=1,Nyr
+        do k=Nzr-1,1,-1
+          do l=1,Nt
+            if ( data(i,j,k,l) <-9999.0d0 ) then
+              data(i,j,k,l) = data(i,j,k+1,l)
+            endif
+          end do
+        end do
+      end do
+    end do
+
+    write(*,*) '*** SUCCESS'
+
+  END SUBROUTINE readNetCDF_4d_forp
 
 !**** readNetCDF_1d **********************************************
       
