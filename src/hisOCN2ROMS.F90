@@ -1393,10 +1393,10 @@ PROGRAM bryOCN2ROMS
   call check( nf90_inq_varid(ncid2, 'Cs_w', var_id) )
   call check( nf90_put_var(ncid2, var_id, Cs_w, start1D, count1D) )
 
-  start1D = (/ 1 /)
-  count1D = (/ Nt /)
-  call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
-  call check( nf90_put_var(ncid2, var_id, bry_time, start = start1D, count = count1D) )
+!  start1D = (/ 1 /)
+!  count1D = (/ Nt /)
+!  call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
+!  call check( nf90_put_var(ncid2, var_id, bry_time, start = start1D, count = count1D) )
   call check( nf90_close(ncid2) )      
 
 !-Write ROMS his netCDF file --------------------------------
@@ -1680,6 +1680,13 @@ PROGRAM bryOCN2ROMS
     call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
     Write(*,*) 'Time = ',YYYYMMDDpHH
 !    Write(*,*) idt(itime) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    start1D = (/ itime /)
+    count1D = (/ 1 /)
+    call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+    call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
+    call check( nf90_put_var(ncid2, var_id, ocean_time, start = start1D, count = count1D) )
+    call check( nf90_close(ncid2) )
       
     if( romsvar(1)==1 ) then
       !- zeta --------------------------------

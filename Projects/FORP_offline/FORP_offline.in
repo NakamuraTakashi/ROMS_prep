@@ -1,11 +1,16 @@
 &grd
 ! ROMS NetCDF grid file     
+!  GRID_FILE = "forp-jpn-v4_grd_v1.0.nc"
   GRID_FILE = "../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-v4_grd_v1.0.nc"
 !  GRID_FILE = "/mnt/d/COAWST_DATA/TokyoBay/TokyoBay1/Grid/TokyoBay1_grd_v1.0.nc"
 /
 &gebco
 ! GEBCO bathymetry NetCDF file     
   BATH_FILE = "/mnt/d/GEBCO_2023-/GEBCO_29_Aug_2025_FORP_JPN02/gebco_2025_n55.0_s15.0_w110.0_e165.0.nc"
+/
+&forp_bath
+! Path of FORP salinity (so) data files
+  FORP_SO_FILE = "/mnt/f/DATA/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/forp-jpn-v4_so_dy_200601.nc"
 /
 
 &grd_setting_ll
@@ -45,8 +50,8 @@
 
 &edate
   Eyear  = 2006   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
-  Eday   = 3      ! Ending day
+  Emonth = 2      ! Ending month
+  Eday   = 1      ! Ending day
 /
 
 &refdate
@@ -92,6 +97,7 @@
 
 &his
   HIS_prefix  = "../../../COAWST_DATA/FORP_offline/his/forp-jpn-v4_his_Nz30"
+!  HIS_prefix  = "test_his_Nz30"
 /
 
 &hcoord

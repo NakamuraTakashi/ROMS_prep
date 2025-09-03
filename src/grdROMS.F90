@@ -108,6 +108,11 @@ PROGRAM grdROMS
   integer :: id_slat, id_slon, id_elat, id_elon
   
   integer :: Nxr, Nyr, Nxp, Nyp, Nxu, Nyu, Nxv, Nyv
+#if defined FORP_BATH
+  character(256) :: FORP_SO_FILE
+  real(8), allocatable :: latst(:), lonst(:)
+  integer :: start4D(4), count4D(4)
+#endif
 #if defined GRID_REFINEMENT
   integer :: P_Nxr, P_Nyr, P_Nxp, P_Nyp, P_Nxu, P_Nyu, P_Nxv, P_Nyv
   integer :: ip,jp,is,js
@@ -130,6 +135,9 @@ PROGRAM grdROMS
   namelist/mybath/x_ncname
   namelist/mybath/y_ncname
   namelist/mybath/bathy_ncname
+#endif
+#if defined FORP_BATH
+  namelist/forp_bath/FORP_SO_FILE
 #endif
 #if defined BATH_SMOOTHING
   namelist/bath_smooth/rx0max
@@ -169,6 +177,10 @@ PROGRAM grdROMS
   rewind(5)
   read (5, nml=mybath)
 #endif
+#if defined FORP_BATH
+  rewind(5)
+  read (5, nml=forp_bath)
+#endif
 #if defined BATH_SMOOTHING
   rewind(5)
   read (5, nml=bath_smooth)
@@ -199,7 +211,30 @@ PROGRAM grdROMS
 !---- Compute Lat, Lon fields for ROMS grid netCDF file --------------------------------
 #if defined GRID_REFINEMENT
   Nxr = (parent_Imax-parent_Imin)*refine_factor+2
-  Nyr = (parent_Jmax-parent_Jmin)*refine_factor+2 
+  Nyr = (parent_Jmax-parent_Jmin)*refine_factor+2
+
+#elif defined FORP_BATH
+!-Read FORP netCDF file --------------------------------
+  write(*,*) "OPEN: ", trim(FORP_SO_FILE)
+  ! Open NetCDF FORP file
+  call check( nf90_open( trim(FORP_SO_FILE), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lat', Nyr)
+  call get_dimension(ncid, 'lon', Nxr)
+!  call get_dimension(ncid, 'lev', Nzr)
+  write(*,*) Nxr, Nyr
+  ! Allocate variable
+  allocate( latst(Nyr) )
+  allocate( lonst(Nxr) )
+
+  call check( nf90_inq_varid(ncid, 'lat', var_id) )
+  call check( nf90_get_var(ncid, var_id, latst) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) )
+  call check( nf90_get_var(ncid, var_id, lonst) )
+
+  call check( nf90_close(ncid) )
+  write(*,*) "CLOSE: ", trim( FORP_SO_FILE )
+
 #else      
 # if defined UTM_COORD
   s_lon = s_x
@@ -369,6 +404,16 @@ PROGRAM grdROMS
   rmask_r(Nxr,:)=rmask_r(Nxr-1,:)
   rmask_r(:,1)=rmask_r(:,2)
   rmask_r(:,Nyr)=rmask_r(:,Nyr-1)
+
+#elif defined FORP_BATH
+
+  do j=1,Nyr
+    do i=1,Nxr
+      latr(i,j) = latst(j)
+      lonr(i,j) = lonst(i)
+    enddo
+  enddo
+  angler(:,:) = 0.0d0
 
 #else      
 
@@ -605,6 +650,35 @@ PROGRAM grdROMS
 
   hraw(:,:) = h(:,:)
 
+
+#if defined FORP_BATH
+  write(*,*) "OPEN: ", trim(FORP_SO_FILE)
+  ! Open NetCDF FORP file
+  call check( nf90_open( trim(FORP_SO_FILE), nf90_nowrite, ncid) )
+  start4D = (/ 1,   1,   1,  1 /)
+  count4D = (/ Nxr, Nyr, 1,  1 /)
+  call check( nf90_inq_varid(ncid, 'so', var_id) )
+  call check( nf90_get_var(ncid, var_id, rmask, start4D, count4D) )
+  call check( nf90_close(ncid) )
+  write(*,*) "CLOSE: ", trim( FORP_SO_FILE )
+
+  do j=1,Nyr
+    do i=1,Nxr
+      if( rmask(i,j) < -10.0d0 ) then  !! Land: Mask < 0.5 grids
+        rmask(i,j) = 0.0d0
+      else
+        rmask(i,j) = 1.0d0
+        if(h(i,j) < 2.0d0) then
+          h(i,j) = 2.0d0  !! Minimum depth = 2 m
+        endif
+      endif
+    enddo
+  enddo
+  pmask(:,:) = 1.0d0
+  umask(:,:) = 1.0d0
+  vmask(:,:) = 1.0d0
+
+#else
   ! Compute land mask
   rmask(:,:) = 1.0d0
   pmask(:,:) = 1.0d0
@@ -612,6 +686,8 @@ PROGRAM grdROMS
   vmask(:,:) = 1.0d0
   
   CALL land_masking(Nxr, Nyr, h, hmin, rmask)
+
+#endif
 
 #if defined BATH_SMOOTHING
   ! Smoothing Bathymetry
