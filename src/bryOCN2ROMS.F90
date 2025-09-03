@@ -262,6 +262,37 @@ PROGRAM bryOCN2ROMS
   integer :: ihour, imin
   integer :: idays,ihours,ijdate,Sjdate
 #endif
+#if defined FORP_MODEL
+  character(256) :: FORP_data_dir
+  TYPE T_NC
+    character(256) :: FORP_FILE(5)
+    real(8), pointer :: time_all(:)
+    integer :: Nt
+    integer :: ItS, ItE
+  END TYPE T_NC
+  TYPE (T_NC), allocatable :: NC(:)
+!  real(8), allocatable :: time2(:)
+  real(8), allocatable :: latst(:), lonst(:), latuv(:), lonuv(:)
+  real(8), allocatable :: depth(:)
+  integer :: NCnum
+  integer :: iNCs, iNCe
+  character(13) :: FORP_sufix  = "_dy_200601.nc"
+  character(12) :: FORP_prefix = "forp-jpn-v4_"
+  character(256) :: FORP_FILE_tmp
+  integer :: Nt_tmp
+  integer :: jdate_00010101
+  real(8) :: d_jdate_00010101
+  integer :: iyear, imonth, iday
+  integer :: ihour, imin
+  integer :: idays,ihours,ijdate,Sjdate,Ejdate
+  character(256), parameter :: FORP_VAR_NAME(5) = (/ &
+     "zos   " &  !  1
+    ,"uo    " &  !  2 
+    ,"vo    " &  !  3
+    ,"thetao" &  !  4 
+    ,"so    " &  !  5 
+     /)
+#endif
 
   namelist/grd/GRID_FILE
 #if defined ROMS_MODEL
@@ -282,6 +313,9 @@ PROGRAM bryOCN2ROMS
   namelist/hycom_local1/NCnum
   namelist/hycom_local2/HYCOM_FILE
 # endif
+#endif
+#if defined FORP_MODEL
+  namelist/forp/FORP_data_dir
 #endif
   namelist/sdate/Syear, Smonth, Sday
   namelist/edate/Eyear, Emonth, Eday
@@ -311,6 +345,10 @@ PROGRAM bryOCN2ROMS
 #endif
 #if defined JCOPE_MODEL
   read (5, nml=jcope)
+  rewind(5)
+#endif
+#if defined FORP_MODEL
+  read (5, nml=forp)
   rewind(5)
 #endif
   read (*, nml=sdate)
@@ -1059,6 +1097,253 @@ PROGRAM bryOCN2ROMS
     iNCt(i) = 1
   enddo
 
+#elif defined FORP_MODEL
+
+!---- Read FORP netCDF file --------------------------------
+
+  write(*,*) "************ FORP MODEL ************"
+      
+  call jd(1, 1, 1, jdate_00010101)
+  d_jdate_00010101 = dble(jdate_00010101)
+  write(*,*) d_jdate_00010101
+
+  Nt = 0
+  itime = 1
+  ihours = 0
+  iyear = Syear
+  imonth = Smonth
+  iday = Sday
+  call jd(iyear, imonth, iday, Sjdate)
+
+  NCnum = Emonth - Smonth + 1
+  write(*,*) 'NCnum = ', NCnum
+  allocate( NC(NCnum) ) 
+
+  do iNC=1, NCnum
+    write(*,*) 'CHECK: Time'
+    ! Open NetCDF file
+    write (YYYY, "(I4.4)") Syear
+    write (MM, "(I2.2)") Smonth + iNC -1
+    FORP_sufix = "_dy_"//YYYY//MM//".nc"
+    do i=1,5
+      NC(iNC)%FORP_FILE(i) = &
+        trim( FORP_data_dir )// FORP_prefix // &
+        trim( FORP_VAR_NAME(i) )// FORP_sufix
+    enddo
+    write(*,*) "OPEN: ", trim( NC(iNC)%FORP_FILE(1) )
+    call check( nf90_open(NC(iNC)%FORP_FILE(1), nf90_nowrite, ncid) )
+    call get_dimension(ncid, 'time', NC(iNC)%Nt)
+    write(*,*) NC(iNC)%Nt
+
+    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
+!    allocate( time2(NC(iNC)%Nt) )
+    call check( nf90_inq_varid(ncid, 'time', var_id) )
+!    call check( nf90_get_var(ncid, var_id, time2) )
+    call check( nf90_get_var(ncid, var_id, NC(iNC)%time_all) )
+    call check( nf90_close(ncid) )
+    write(*,*) "CLOSE: ", trim( NC(iNC)%FORP_FILE(1) )
+!    NC(iNC)%time_all = time2
+!    deallocate(time2)
+  end do
+
+  write(*,*) NC(:)%Nt
+  
+  do iNC=1, NCnum-1
+    do i=2,NC(iNC)%Nt
+      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
+        NC(iNC)%Nt = i-1
+        exit
+      end if
+    end do
+  end do
+  
+  write(*,*) NC(:)%Nt
+  
+  write(*,*) "******************************************************************"
+    
+  
+  NC(:)%ItE = -1
+  NC(:)%ItS = -1
+  
+  do iNC=NCnum,1,-1
+    do i=NC(iNC)%Nt,1,-1
+      d_jdate=d_jdate_00010101-2.0d0+NC(iNC)%time_all(i)/24.0d0
+      if(d_jdate < dble(jdate_End)) then
+        write(*,*) '*** FOUND: Ending point @ FORP_FILE',iNC
+        NC(iNC)%ItE=i
+        exit
+      endif
+    end do
+  end do
+  write(*,*) NC(:)%ItE 
+  
+  do iNC=1,NCnum
+    do i=NC(iNC)%ItE,1,-1
+      d_jdate=d_jdate_00010101-2.0d0+NC(iNC)%time_all(i)/24.0d0
+      if(d_jdate < dble(jdate_Start)) then
+!        write(*,*) '*** FOUND: Starting point @ FORP_FILE',iNC
+        exit
+      endif
+      NC(iNC)%ItS=i
+    end do
+  end do
+  write(*,*) NC(:)%ItS 
+
+  Nt = 0
+  iNCs = NCnum
+  iNCe = 1
+
+  do iNC=1,NCnum
+    if(NC(iNC)%ItS==-1) then
+      cycle
+    end if
+    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
+    iNCs = min(iNCs,iNC)
+    iNCe = max(iNCe,iNC)
+  enddo
+
+  allocate(bry_time(Nt))
+  allocate(idt(Nt))
+  allocate(iNCt(Nt))
+
+  i=1
+  do iNC=iNCs,iNCe
+    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
+      iNCt(i+k) = iNC
+      idt(i+k)  = NC(iNC)%ItS + k
+    enddo
+    j=i+NC(iNC)%ItE-NC(iNC)%ItS
+    bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
+    i=j+1
+  enddo
+
+  bry_time(:) = ( bry_time(:) + ( d_jdate_00010101-2.0d0 -d_jdate_Ref )*24.0d0)*3600.0d0 ! hour -> sec
+
+  
+  !---- Read FORP netCDF grid cooredinate --------------------------------
+  write(*,*) "OPEN: ", trim( NC(iNCs)%FORP_FILE(4) )
+  call check( nf90_open(trim( NC(iNCs)%FORP_FILE(4) ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lat', Nyr_dg)
+  call get_dimension(ncid, 'lon', Nxr_dg)
+  call get_dimension(ncid, 'lev', Nzr_dg)
+  write(*,*) Nxr_dg, Nyr_dg, Nzr_dg
+  ! Allocate variable
+
+  allocate( latst(Nyr_dg) )
+  allocate( lonst(Nxr_dg) )
+  allocate( depth(Nzr_dg) )
+
+  call check( nf90_inq_varid(ncid, 'lat', var_id) )
+  call check( nf90_get_var(ncid, var_id, latst) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) )
+  call check( nf90_get_var(ncid, var_id, lonst) )
+  call check( nf90_inq_varid(ncid, 'lev', var_id) ) 
+  call check( nf90_get_var(ncid, var_id, depth) )
+
+  Ldg = Nxr_dg-1
+  Mdg = Nyr_dg-1
+  allocate( latr_dg(0:Ldg, 0:Mdg) )
+  allocate( lonr_dg(0:Ldg, 0:Mdg) )
+  allocate( latu_dg(0:Ldg, 0:Mdg) )
+  allocate( lonu_dg(0:Ldg, 0:Mdg) )
+  allocate( latv_dg(0:Ldg, 0:Mdg) )
+  allocate( lonv_dg(0:Ldg, 0:Mdg) )
+  allocate( rmask_dg(0:Ldg, 0:Mdg) )
+  allocate( umask_dg(0:Ldg, 0:Mdg) )
+  allocate( vmask_dg(0:Ldg, 0:Mdg) )
+  allocate( cosAu_dg(0:Ldg, 0:Mdg) )
+  allocate( sinAu_dg(0:Ldg, 0:Mdg) )
+  allocate( cosAv_dg(0:Ldg, 0:Mdg) )
+  allocate( sinAv_dg(0:Ldg, 0:Mdg) )
+  allocate( h_dg(0:Ldg, 0:Mdg) )
+  Ndg = Nzr_dg
+  allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_u_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+  allocate( z_v_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
+
+  start4D = (/ 1,      1,      1,  NC(iNCs)%ItS /)
+  count4D = (/ Nxr_dg, Nyr_dg, 1,  1            /)
+  call check( nf90_inq_varid(ncid, FORP_VAR_NAME(4), var_id) )
+  call check( nf90_get_var(ncid, var_id, rmask_dg, start4D, count4D) )
+
+  call check( nf90_close(ncid) )
+  write(*,*) "CLOSE: ", trim( NC(iNCs)%FORP_FILE(4) )
+
+  do j=0,Mdg
+    do i=0,Ldg
+      if( rmask_dg(i,j) < -10.0d0 ) then  !! Land: Mask < 0.5 grids
+        rmask_dg(i,j) = 0.0d0
+      else
+        rmask_dg(i,j) = 1.0d0
+      endif
+    enddo
+  enddo
+
+  write(*,*) "OPEN: ", trim( NC(iNCs)%FORP_FILE(2) )
+  call check( nf90_open(trim( NC(iNCs)%FORP_FILE(2) ), nf90_nowrite, ncid) )
+  ! Get dimension data
+  call get_dimension(ncid, 'lat', Nyu_dg)
+  call get_dimension(ncid, 'lon', Nxu_dg)
+  allocate( latuv(Nyu_dg) )
+  allocate( lonuv(Nxu_dg) )
+  call check( nf90_inq_varid(ncid, 'lat', var_id) )
+  call check( nf90_get_var(ncid, var_id, latuv) )
+  call check( nf90_inq_varid(ncid, 'lon', var_id) )
+  call check( nf90_get_var(ncid, var_id, lonuv) )
+
+  start4D = (/ 1,      1,      1,  NC(iNCs)%ItS /)
+  count4D = (/ Nxu_dg, Nyu_dg, 1,  1            /)
+  call check( nf90_inq_varid(ncid, FORP_VAR_NAME(2), var_id) )
+  call check( nf90_get_var(ncid, var_id, umask_dg, start4D, count4D) )
+  call check( nf90_close(ncid) )
+  write(*,*) "CLOSE: ", trim( NC(iNCs)%FORP_FILE(2) )
+  do j=0,Mdg
+    do i=0,Ldg
+      if( umask_dg(i,j) < -10000.0d0 ) then  !! Land: Mask < 0.5 grids
+        umask_dg(i,j) = 0.0d0
+      else
+        umask_dg(i,j) = 1.0d0
+      endif
+    enddo
+  enddo
+!  do j=0,Mdg
+!    write(10,*) rmask_dg(0:Ldg,j)
+!  enddo
+
+  vmask_dg(:,:) = umask_dg(:,:)
+  
+  Nyv_dg = Nyu_dg
+  Nxv_dg = Nxu_dg
+  do j=0,Mdg
+    do i=0,Ldg
+      latr_dg(i,j) = latst(j+1)
+      lonr_dg(i,j) = lonst(i+1)
+      latu_dg(i,j) = latuv(j+1)
+      lonu_dg(i,j) = lonuv(i+1)
+      latv_dg(i,j) = latuv(j+1)
+      lonv_dg(i,j) = lonuv(i+1)
+    enddo
+  enddo
+  do k=1,Ndg
+    do j=0,Mdg
+      do i=1,Ldg
+        z_r_dg(i,j,k)= depth(Ndg-k+1)
+      enddo
+    enddo
+  enddo
+  z_u_dg(:,:,:) = z_r_dg(:,:,:)
+  z_v_dg(:,:,:) = z_r_dg(:,:,:)
+  
+
+  cosAu_dg(:,:) = 1.0d0
+  sinAu_dg(:,:) = 0.0d0
+  cosAv_dg(:,:) = 1.0d0
+  sinAv_dg(:,:) = 0.0d0
+
+
+  write(*,*) "*************************************" 
+
 #else
   write(*,*) "************ Please choose a OCEAN MODEL ************"
   Stop
@@ -1482,6 +1767,16 @@ PROGRAM bryOCN2ROMS
        write(*,*) 'Read: ', trim( JCOPE_data_file )
        call read_jcope_data2D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
              , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg )
+#elif defined FORP_MODEL
+       write(*,*) 'Read: '//trim( NC(iNC)%FORP_FILE(1) )
+       write(*,*) 'Read: '//trim( FORP_VAR_NAME(1) )
+       start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
+       count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
+       call check( nf90_open(NC(iNC)%FORP_FILE(1), nf90_nowrite, ncid) )
+       call check( nf90_inq_varid(ncid, FORP_VAR_NAME(1), var_id) )
+       call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
+       call check( nf90_close(ncid) )
+       zeta_dg = zeta_dg*0.01d0  ! cm -> m
 #endif
       
         write(*,*) 'Linear Interporation: zeta'
@@ -1537,6 +1832,12 @@ PROGRAM bryOCN2ROMS
         write(*,*) 'Read: ', trim( JCOPE_data_file )
         call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
               , Iudg_min, Iudg_max, Judg_min, Judg_max, u_dg(:,:,:,1) )
+#elif defined FORP_MODEL
+        start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
+        count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
+        call readNetCDF_4d_forp( trim( NC(iNC)%FORP_FILE(2) ), trim( FORP_VAR_NAME(2) )        &
+              , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
+        u_dg = u_dg*0.01d0  ! cm/s -> m/s
 #endif
     
 #if defined WET_DRY
@@ -1575,6 +1876,12 @@ PROGRAM bryOCN2ROMS
         write(*,*) 'Read: ', trim( JCOPE_data_file )
         call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
               , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, v_dg(:,:,:,1) )
+#elif defined FORP_MODEL
+        start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
+        count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
+        call readNetCDF_4d_forp( trim( NC(iNC)%FORP_FILE(3) ), trim( FORP_VAR_NAME(3) )        &
+              , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
+        v_dg = v_dg*0.01d0  ! cm/s -> m/s
 #endif    
 #if defined WET_DRY
         start3D = (/ Ivdg_min+1, Jvdg_min, idt(itime) /)
@@ -1843,6 +2150,18 @@ PROGRAM bryOCN2ROMS
           t_dg(:,:,:,1) = t_dg(:,:,:,1) + 35.0d0
         endif
 # endif
+#elif defined FORP_MODEL
+        start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
+        count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
+        if( i == 6 ) then
+          k=4
+        elseif( i == 7 ) then
+          k=5
+        else
+          cycle
+        endif
+        call readNetCDF_4d_forp( trim( NC(iNC)%FORP_FILE(k) ), trim( FORP_VAR_NAME(k) )        &
+              , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 #endif        
         write(*,*) 'Linear Interporation: ', trim( varname )
         call interp3D_grid3_2(                                &
