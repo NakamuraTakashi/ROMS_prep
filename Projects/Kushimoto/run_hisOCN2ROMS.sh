@@ -6,7 +6,8 @@ rm *.exe
 #export MY_CPP_FLAGS="-DHYCOM_MODEL"
 #export MY_CPP_FLAGS="-DJCOPE_MODEL"
 #export MY_CPP_FLAGS="-DROMS_MODEL"
-export MY_CPP_FLAGS="-DFORP_MODEL"
+#export MY_CPP_FLAGS="-DFORP_MODEL"
+export MY_CPP_FLAGS="-DMOVEJPN_MODEL"
 
 # ===== HYCOM option ====================================================================
 
@@ -55,4 +56,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=32
 
-./hisOCN2ROMS.exe < FORP_offline.in
+./hisOCN2ROMS.exe < Kushimoto.in

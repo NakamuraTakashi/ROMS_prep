@@ -1,0 +1,179 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "Kushimoto_grd_v0.1.nc"
+!  GRID_FILE  = "/mnt/d/COAWST_DATA/Kushimoto/Grid/Kushimoto_grd_v0.0.nc"
+!  GRID_FILE = "/mnt/d/COAWST_DATA/Shizugawa/Shizugawa1/Grid/Shizugawa1_grd_v0.1.nc"
+/
+
+&mybath
+! GEBCO bathymetry NetCDF file     
+  BATH_FILE = "/mnt/f/Dropbox/Projects/Kushimoto/GIS/Bath/merged_DEM_M7050_10m_v1.nc"
+  x_ncname = 'x'
+  y_ncname = 'y'
+  bathy_ncname = 'Band1'
+/
+
+&utm_zone
+! UTM zone 
+  izone  = 53  ! Negative zones are for the Southern hemisphere.
+  ispher = 6   ! Spheroid for projection (1-19)
+! ispher -- SPHEROID SELECTION: 1=CLARKE 1866; 2=CLARKE 1880;       
+!               3=BESSEL 1967; 4=NEW INTERNATIONAL 1967;
+!               5=INTERNATIONAL 1909 (1924) (HAYFORD);
+!               6=WORLD GEODETIC SYSTEM 1972; 7=EVEREST;
+!               8=WORLD GEODETIC SYSTEM 1966;
+!               9=GEODETIC REFERENCE SYSTEM 1980;
+!               10=AIRY; 11=MODIFIED EVEREST; 12=MODIFIED AIRY;         
+!               13=WALBECK; 14=SOUTH ASIA 1960 (FISCHER);
+!               15=AUSTRALIAN NATIONAL-SOUTH AMERICAN 1969;
+!               16=KRASSOVSKY; 17=HOUGH; 18=MERCURY 1960 (FISCHER);     
+!               19=MODIFIED MERCURY 1968 (FISCHER)
+!        NOTES:
+!               IF ISPHER.EQ.0: COMPUTE IN LAMBERT OR TRANSVERSE MERCATOR  
+!               IF ISPHER.NE.0: COMPUTE IN UNIVERSAL TRANSVERSE MERCATOR   
+!               IZONE IS UTM ZONE NUMBER OR STATE PLANE ZONE DEPENDING ON  
+!               SELECTION OF ISPHER.  IF UTM AND SOUTHERN HEMISPHERE, IZONE
+!               IS NEGATIVE.
+!    
+/
+
+&grd_setting_utm
+! Set utm x y coordinate at corner points. 
+  s_x = 546600
+  s_y = 3685600
+  e_x = 588700
+  e_y = 3716000
+
+! Set ROMS grid resolution
+! *The information is not used when GRID_REFINEMENT is activated.
+  RESOLUTION = 100.0d0 ! meter resolution
+
+  angle = 0.0d0 ! Angle (radians) between XI-axis and true EAST at RHO-points
+/
+
+
+&bath_smooth
+  rx0max = 10.0  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
+
+&land_mask
+
+  hmin = -1.0d0  ! Minimum depth
+
+! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+! and one-grid bay grids 
+  I_ocn = 50    ! rho point index i
+  J_ocn = 50    ! rho point index j
+/
+
+&bath_smooth
+  rx0max = 0.01  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
+
+&land_mask
+
+  hmin = -1.0d0  ! Minimum depth
+
+ ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+ ! and one-grid bay grids 
+  I_ocn = 50    ! rho point index i
+  J_ocn = 1    ! rho point index j
+/
+
+&sdate
+  Syear  = 2010   ! Starting year
+  Smonth = 6      ! Starting month
+  Sday   = 1      ! Starting day
+/
+
+&edate
+  Eyear  = 2010   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 9      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&refdate
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&ocn2roms      
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+!           |       |   |
+  romsvar = 1,1,1,1,1,1,1        
+!  romsvar = 0,1,1,1,1,1,1        
+!  romsvar = 1,0,0,0,0,0,0        
+/
+
+&mricom
+! Directory of FORP data files
+  MRICOM_data_dir = "/mnt/f/DATA/MOVEJPN_MRI_2020/2010/"
+/
+
+&bry
+  BRY_prefix  = "/mnt/d/COAWST_DATA/Kushimoto/Bry/Kushimoto_bry_MOVE-JPN_Nz15"
+!  BRY_prefix  = "Kushimoto_bry_MOVE-JPN_Nz15"
+
+  !    south north west east
+  SNWE =  1,   0,   1,   1
+/
+
+&ini
+  INI_prefix  = "/mnt/d/COAWST_DATA/Kushimoto/Ini/Kushimoto_ini_MOVE-JPN_Nz15"
+
+  INIyear  = 2010   ! Initial year
+  INImonth = 7      ! Initial month
+  INIday   = 2      ! Initial day
+  INIhour  = 0      ! Initial hour
+/
+
+&his
+  HIS_prefix  = "/mnt/d/COAWST_DATA/Kushimoto/Ini/Kushimoto_ini_MOVE-JPN_Nz15"
+!  HIS_prefix  = "Kushimoto_ini_MOVE-JPN_Nz15"
+/
+
+&hcoord
+  spherical  = 1   
+/
+
+&zcoord
+  N_s_rho = 15
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see wikiROMS for details).
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see wikiROMS for details).
+
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+/
+
+&frc_dsjra55
+  DSJRA55_dir = "N:/Data/dsjra55/"  
+  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Air/Shizugawa3_frc_DSJRA55"
+/
+
+&frc_jmamsm
+  MSM_dir  =  "/mnt/y/JMA_DATA/JMA_netcdf/MSM-S/"   ! NetCDF
+  FRC_prefix  = "/mnt/d/COAWST_DATA/Kushimoto/Air/Kushimoto_frc_MSMnc"
+/
+
+&frc_jmalsm
+  LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
+  FRC_prefix  = "Shizugawa3_frc_LSM"
+/
+
+&tide
+  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
+  TIDE_prefix  = "Palau1_tide_fes2014"
+/

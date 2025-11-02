@@ -2243,7 +2243,7 @@ MODULE mod_roms_netcdf
   END SUBROUTINE readNetCDF_4d_hycom_fast
 !**** readNetCDF_4d ver 3 **********************************************
       
-  SUBROUTINE readNetCDF_4d_forp(      &
+  SUBROUTINE readNetCDF_4d_mricom(      &
 !    input parameters
         NCFILE                        &
       , NCNAME                        &
@@ -2306,7 +2306,7 @@ MODULE mod_roms_netcdf
 
     write(*,*) '*** SUCCESS'
 
-  END SUBROUTINE readNetCDF_4d_forp
+  END SUBROUTINE readNetCDF_4d_mricom
 
 !**** readNetCDF_1d **********************************************
       

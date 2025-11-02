@@ -7,7 +7,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFORP_BATH"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DMYBATH2ROMS"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DGRID_REFINEMENT"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DUTM_COORD"
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DBATH_SMOOTHING"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSKIP_ONE_GRID_BAY_REMOVAL"
 
 SRC_DIR=../../src
@@ -20,3 +20,6 @@ rm *.mod
 export OMP_NUM_THREADS=30
 
 ./grdROMS.exe < FORP_offline.in
+
+# memo: command for trim the specific area
+#ncks -d xi_rho,128,779 -d eta_rho,104,791 -d xi_u,128,778 -d eta_u,104,791 -d xi_v,128,779 -d eta_v,104,790 -d xi_psi,128,778 -d eta_psi,104,790 ../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-v4_grd_v1.1.nc -o forp-jpn-south_grd_v1.1.nc

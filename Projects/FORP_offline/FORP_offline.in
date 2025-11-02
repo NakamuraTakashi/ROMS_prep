@@ -1,8 +1,9 @@
 &grd
 ! ROMS NetCDF grid file     
 !  GRID_FILE = "forp-jpn-v4_grd_v1.0.nc"
-  GRID_FILE = "../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-v4_grd_v1.0.nc"
-!  GRID_FILE = "/mnt/d/COAWST_DATA/TokyoBay/TokyoBay1/Grid/TokyoBay1_grd_v1.0.nc"
+!  GRID_FILE = "../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-v4_grd_v1.1.nc"
+  GRID_FILE = "../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-south_grd_v1.1.nc"
+  !  GRID_FILE = "/mnt/d/COAWST_DATA/TokyoBay/TokyoBay1/Grid/TokyoBay1_grd_v1.0.nc"
 /
 &gebco
 ! GEBCO bathymetry NetCDF file     
@@ -29,7 +30,7 @@
 /
 
 &bath_smooth
-  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 0.01  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
@@ -72,9 +73,9 @@
 !  romsvar = 1,0,0,0,0,0,0        
 /
 
-&forp
+&mricom
 ! Directory of FORP data files
-  FORP_data_dir = "/mnt/f/DATA/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/"
+  MRICOM_data_dir = "/mnt/f/DATA/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/"
 /
 
 &bry
@@ -96,7 +97,7 @@
 /
 
 &his
-  HIS_prefix  = "../../../COAWST_DATA/FORP_offline/his/forp-jpn-v4_his_Nz30"
+  HIS_prefix  = "../../../COAWST_DATA/FORP_offline/his/forp-jpn-south_his_Nz30"
 !  HIS_prefix  = "test_his_Nz30"
 /
 
