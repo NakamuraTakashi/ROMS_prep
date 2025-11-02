@@ -572,6 +572,8 @@ PROGRAM frcATM2ROMS
 !---- Set JMA-MSM GRIB2 file --------------------------------
   IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
+  IN_FILE(2) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+              GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined DSJRA55
 !---- Set DSJRA55 GRIB2 file --------------------------------
@@ -1001,7 +1003,10 @@ PROGRAM frcATM2ROMS
     ihours = ihours + 3  !!! Files exist 3 hourly interval
 
     IN_FILE2(1) = IN_FILE(1)  
+    IN_FILE2(2) = IN_FILE(2)  
     IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+                  GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
+    IN_FILE(2) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
                   GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined DSJRA55
@@ -1055,11 +1060,12 @@ PROGRAM frcATM2ROMS
 #endif
 ! ---- Open GRIB files --------------------------------
 #if !defined NETCDF_INPUT
-# if defined DSJRA55 || defined JRA55
+# if defined JMA_MSM || defined DSJRA55 || defined JRA55
     DO iin=1,2
 # else
     DO iin=1,1
 # endif
+      call codes_grib_multi_support_on	(	iret(iin)	)	
       write(*,*) "OPEN: ", trim( IN_FILE(iin) )
       call codes_open_file(ifile(iin), trim( IN_FILE(iin) ),'r', iret(iin))
       call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
@@ -1128,27 +1134,32 @@ PROGRAM frcATM2ROMS
 
 ! ======= GRIB2 file input ================================================
       param_count = 0  ! This countor is only used for GRIB input.
-      DO WHILE (param_count/=N_InPar)
-
-# if defined DSJRA55 || defined JRA55
-        DO iin=1,2
+# if defined JMA_MSM || defined DSJRA55 || defined JRA55
+      DO iin=1,2
+        if(iin==1) then
+          ips = 1
+          ipe = 9
+        else
+          ips = 10
+          ipe = N_InPar
+        end if
 # else
-        DO iin=1,1
-!        if(iparam>=10) then !!! for rain (rain fall rate)
-!          iin=2
-!        else
-!          iin=1
-!        end if
+      DO iin=1,1
+        ipe = N_InPar
 # endif
+        DO WHILE (param_count/=ipe)
+
           SEARCH_LOOP: DO WHILE (iret(iin) /= CODES_END_OF_FILE)
 # if defined JMA_MSM
             call codes_get(igrib(iin),'forecastTime',p1)
             call codes_get(igrib(iin),'parameterName', p4)
-            do i=1,N_InPar
+!            write(*,*) 'DEBUG1 :', iin, p1, trim(p4)  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            do i=ips,ipe
               if (p1==GRIB_STEP(ifc) .and.             &
-                  trim(p4)==trim(GRIB_NAME(iparam))  ) then
+                  trim(p4)==trim(GRIB_NAME(i))  ) then
                 iparam = i
                 param_count = param_count + 1
+!                write(*,*) 'DEBUG2 :', iin, iparam, param_count, ifc  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 exit SEARCH_LOOP
               endif
             end do
@@ -1157,16 +1168,9 @@ PROGRAM frcATM2ROMS
             call codes_get(igrib(iin),'parameterNumber', p2)
             call codes_get(igrib(iin),'typeOfFirstFixedSurface', p3)
             call codes_get(igrib(iin),'parameterName', p4)
-            if(iin==1) then
-              ips = 1
-              ipe = 9
-            else
-              ips = 10
-              ipe = N_InPar
-            end if
             do i=ips,ipe
-              if (p1==GRIB_NUM(1,iparam) .and. p2==GRIB_NUM(2,iparam) .and. &
-                  p3==GRIB_NUM(3,iparam)   ) then
+              if (p1==GRIB_NUM(1,i) .and. p2==GRIB_NUM(2,i) .and. &
+                  p3==GRIB_NUM(3,i)   ) then
                 iparam = i
                 param_count = param_count + 1
                 exit SEARCH_LOOP
@@ -1176,8 +1180,8 @@ PROGRAM frcATM2ROMS
             call codes_get(igrib(iin),'level',p1)
             call codes_get(igrib(iin),'shortName', p4)
             do i=1,N_InPar
-              if (p1==GRIB_LEVEL(iparam) .and.             &
-                trim(p4)==trim(GRIB_NAME(iparam))  ) then
+              if (p1==GRIB_LEVEL(i) .and.             &
+                trim(p4)==trim(GRIB_NAME(i))  ) then
                 iparam = i
                 param_count = param_count + 1
                 exit SEARCH_LOOP
@@ -1194,7 +1198,7 @@ PROGRAM frcATM2ROMS
               ipe = N_InPar
             end if
             do i=1,N_InPar
-              if (p1==GRIB_NUM(iparam) ) then
+              if (p1==GRIB_NUM(i) ) then
                 iparam = i
                 param_count = param_count + 1
                 exit SEARCH_LOOP
@@ -1223,12 +1227,19 @@ PROGRAM frcATM2ROMS
    
           write(*,*) "READ GRIB DATA: ", trim(p4)
 
-# if defined JMA_LSM
+# if defined JMA_MSM
+          call codes_get(igrib(iin),'dataDate',YYYYMMDD(iparam))
+          write(*,*) 'dataDate =     ', YYYYMMDD(iparam)
+          call codes_get(igrib(iin),'dataTime',hhmm(iparam))
+          hhmm(iparam) = hhmm(iparam) + p1*100
+          write(*,*) 'dataTime =     ', hhmm(iparam)
+!          write(*,*) 'forecastTime = ', p1
+# elif defined JMA_LSM
           call codes_get(igrib(iin),'dataDate',YYYYMMDD(iparam))
           write(*,*) 'dataDate = ', YYYYMMDD(iparam)
           call codes_get(igrib(iin),'dataTime',hhmm(iparam))
           write(*,*) 'dataTime = ', hhmm(iparam)
-# elif defined JMA_MSM || defined DSJRA55 || defined JRA55
+# elif defined DSJRA55 || defined JRA55
           call codes_get(igrib(iin),'validityDate',YYYYMMDD(iparam))
           write(*,*) 'validityDate = ', YYYYMMDD(iparam)
           call codes_get(igrib(iin),'validityTime',hhmm(iparam))
@@ -1509,7 +1520,7 @@ PROGRAM frcATM2ROMS
 
 ! ---- Close GRIB files --------------------------------
 #if !defined NETCDF_INPUT
-# if defined DSJRA55 || defined JRA55
+# if defined JMA_MSM || defined DSJRA55 || defined JRA55
     DO iin=1,2
 # else
     DO iin=1,1
