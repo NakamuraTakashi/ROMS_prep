@@ -7,6 +7,7 @@ rm *.exe
 #export MY_CPP_FLAGS="-DJCOPE_MODEL"
 #export MY_CPP_FLAGS="-DROMS_MODEL"
 export MY_CPP_FLAGS="-DFORP_MODEL"
+#export MY_CPP_FLAGS="-DMOVEJPN_MODEL"
 
 # ===== HYCOM option ====================================================================
 

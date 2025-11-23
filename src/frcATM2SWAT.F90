@@ -31,7 +31,7 @@ PROGRAM frcATM2SWAT
 !----------------------------------------------------------------------
 #if defined JMA_MSM
 !--- JMA_MSM parameter setting -----------------
-  character(256) :: MSM_dir
+  character(256) :: ATM_dir
   character(256) :: FRC_prefix
   integer :: jd_msmnew
 
@@ -89,7 +89,7 @@ PROGRAM frcATM2SWAT
 
 #elif defined DSJRA55
 !--- DSJRA55 parameter setting -----------------
-  character(256) :: DSJRA55_dir
+  character(256) :: ATM_dir
   character(256) :: FRC_prefix
   character(256) :: LL_FILE
   real :: bd
@@ -127,7 +127,7 @@ PROGRAM frcATM2SWAT
 
 #elif defined JRA55
 !--- JRA55 parameter setting -----------------
-  character(256) :: JRA55_dir
+  character(256) :: ATM_dir
   character(256) :: FRC_prefix
 
 # if defined BULK_FLUX
@@ -302,14 +302,14 @@ PROGRAM frcATM2SWAT
   namelist/sdate/Syear, Smonth, Sday
   namelist/edate/Eyear, Emonth, Eday
 #if defined JMA_MSM
-  namelist/frc_jmamsm/MSM_dir
-  namelist/frc_jmamsm/FRC_prefix
+  namelist/frc_atm/ATM_dir
+  namelist/frc_atm/FRC_prefix
 #elif defined DSJRA55
-  namelist/frc_dsjra55/DSJRA55_dir
-  namelist/frc_dsjra55/FRC_prefix
+  namelist/frc_atm/ATM_dir
+  namelist/frc_atm/FRC_prefix
 #elif defined JRA55
-  namelist/frc_jra55/JRA55_dir
-  namelist/frc_jra55/FRC_prefix
+  namelist/frc_atm/ATM_dir
+  namelist/frc_atm/FRC_prefix
 #elif defined ERA5
   namelist/frc_era5_1/NCnum
   namelist/frc_era5_2/ATM_FILE
@@ -326,13 +326,13 @@ PROGRAM frcATM2SWAT
   read (5, nml=edate)
 #if defined JMA_MSM
   rewind(5)
-  read (5, nml=frc_jmamsm)
+  read (5, nml=frc_atm)
 #elif defined DSJRA55
   rewind(5)
-  read (5, nml=frc_dsjra55)
+  read (5, nml=frc_atm)
 #elif defined JRA55
   rewind(5)
-  read (5, nml=frc_jra55)
+  read (5, nml=frc_atm)
 #elif defined ERA5
   rewind(5)
   read (5, nml=frc_era5_1)
@@ -358,8 +358,8 @@ PROGRAM frcATM2SWAT
 !---- NetCDF input file -------------------------------------------
 # if defined JMA_MSM
 !---- Read JMA-MSM NetCDF file --------------------------------
-  IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//DD//".nc"
-  IN_FILE(2) = trim(MSM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
+  IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//DD//".nc"
+  IN_FILE(2) = trim(ATM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
 
 # elif defined ERA5
 !---- Read ERA5 NetCDF file --------------------------------
@@ -391,21 +391,21 @@ PROGRAM frcATM2SWAT
   GRIB_yyyymmddhh = YYYY//MM//DD//"00"
 # if defined JMA_MSM
 !---- Set JMA-MSM GRIB2 file --------------------------------
-  IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+  IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined DSJRA55
 !---- Set DSJRA55 GRIB2 file --------------------------------
-  IN_FILE(1) = trim(DSJRA55_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
+  IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
                  "/fcst_surf."//GRIB_yyyymmddhh
-  IN_FILE(2) = trim(DSJRA55_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
+  IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
                  "/fcst_phy2m."//GRIB_yyyymmddhh
 
 # elif defined JRA55
 !---- Read JRA55 GRIB2 file --------------------------------
-  IN_FILE(1) = trim(JRA55_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
+  IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
                  "/fcst_surf125."//GRIB_yyyymmddhh
-  IN_FILE(2) = trim(JRA55_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
+  IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
                  "/fcst_phy2m125."//GRIB_yyyymmddhh
 
 # endif
@@ -432,7 +432,7 @@ PROGRAM frcATM2SWAT
   allocate(cosAy(Im,Jm))
   allocate(sinAy(Im,Jm))
 !  ---- Get Lat Lon coordinates from Binary file --------------
-  LL_FILE = trim(DSJRA55_dir)//"Consts/Lambert5km_latlon.dat"
+  LL_FILE = trim(ATM_dir)//"Consts/Lambert5km_latlon.dat"
   open(unit=20, file=LL_FILE, action='read',               &
        form='unformatted', access='direct', recl=4,        &
        CONVERT='BIG_ENDIAN', status='old')
@@ -729,8 +729,8 @@ PROGRAM frcATM2SWAT
 
     IN_FILE2(1) = IN_FILE(1)  
     IN_FILE2(2) = IN_FILE(2)  
-    IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//DD//".nc"
-    IN_FILE(2) = trim(MSM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
+    IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//DD//".nc"
+    IN_FILE(2) = trim(ATM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
 
 # elif defined ERA5
  
@@ -748,25 +748,25 @@ PROGRAM frcATM2SWAT
     ihours = ihours + 3  !!! Files exist 3 hourly interval
 
     IN_FILE2(1) = IN_FILE(1)  
-    IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+    IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
                   GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined DSJRA55
 !---- Read DSJRA55 GRIB2 file --------------------------------
     ihours = ihours + 1  !!! Files exist 1 hourly interval
 
-    IN_FILE(1) = trim(DSJRA55_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
+    IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
                    "/fcst_surf."//GRIB_yyyymmddhh
-    IN_FILE(2) = trim(DSJRA55_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
+    IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
                    "/fcst_phy2m."//GRIB_yyyymmddhh
 
 # elif defined JRA55
 !---- Read JRA55 GRIB2 file --------------------------------
     ihours = ihours + 3  !!! Files exist 3 hourly interval
 
-    IN_FILE(1) = trim(JRA55_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
+    IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
                    "/fcst_surf125."//GRIB_yyyymmddhh
-    IN_FILE(2) = trim(JRA55_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
+    IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
                    "/fcst_phy2m125."//GRIB_yyyymmddhh
 
 # endif

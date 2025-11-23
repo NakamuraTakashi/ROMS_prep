@@ -131,19 +131,14 @@
 
 /
 
-&frc_jra55
-  JRA55_dir  =  "N:/JRA-55/"  
-  FRC_prefix  = "Yaeyama3_frc_JRA55"
-/
+!&frc_atm
+!  ATM_dir = "N:/dsjra55/"  
+!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_atm"
+!/
 
-&frc_dsjra55
-  DSJRA55_dir = "N:/dsjra55/"  
-  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_DSJRA55"
-/
-
-&frc_jmamsm
-!  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
+&frc_atm
+!  ATM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
 !  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_MSMgb"
-  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+  ATM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
   FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Air/Yaeyama3_frc_MSMnc"
 /

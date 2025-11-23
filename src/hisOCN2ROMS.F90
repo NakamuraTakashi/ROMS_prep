@@ -1129,7 +1129,8 @@ PROGRAM bryOCN2ROMS
   iday = Sday
   call jd(iyear, imonth, iday, Sjdate)
 
-  NCnum = Emonth - Smonth + 1
+  NCnum = 12*(Eyear-Syear) + Emonth - Smonth + 1
+  NCnum = min( NCnum, 12 )  ! FORP data limit to 1 year
   write(*,*) 'NCnum = ', NCnum
   allocate( NC(NCnum) ) 
 

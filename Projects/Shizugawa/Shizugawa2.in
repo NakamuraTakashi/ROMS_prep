@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.3.nc"
+  GRID_FILE = "../../../COAWST_DATA/Shizugawa/Shizugawa2/Grid/Shizugawa2_grd_v0.3.nc"
 /
 
 &mybath
@@ -51,7 +51,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "D:/COAWST_DATA/Shizugawa/Shizugawa1/Grid/Shizugawa1_grd_v0.1.nc"
+  parent_grid = "../../../COAWST_DATA/Shizugawa/Shizugawa1/Grid/Shizugawa1_grd_v0.1.nc"
   parent_Imin = 15
   parent_Imax = 29
   parent_Jmin = 29
@@ -64,15 +64,15 @@
 /
 
 &sdate
-  Syear  = 2023   ! Starting year
-  Smonth = 6      ! Starting month
+  Syear  = 2025   ! Starting year
+  Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 10     ! Ending month
-  Eday   = 2      ! Ending day
+  Eyear  = 2025   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 11      ! Ending month
+  Eday   = 1      ! Ending day
 /
 
 &refdate
@@ -88,10 +88,10 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20230601.nc"
-!  ROMS_HISFILE  = "E:/COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20210102.nc",
-!                  "E:/COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20210131.nc",
-!                  "E:/COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20211231.nc"
+  ROMS_HISFILE  = "../../../COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20230601.nc"
+!  ROMS_HISFILE  = "../../../COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20210102.nc",
+!                  "../../../COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20210131.nc",
+!                  "../../../COAWST_OUTPUT/Shizugawa/Shizugawa1/Shizugawa1_his_20211231.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -121,15 +121,15 @@
 /
 
 &bry
-  BRY_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Bry/Shizugawa2_bry_ROMS_Nz15"
+  BRY_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa2/Bry/Shizugawa2_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  0,   0,   0,   1
 /
 
 &ini
-  INI_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa2/Ini/Shizugawa2_ini_ROMS_Nz15"
+  INI_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa2/Ini/Shizugawa2_ini_ROMS_Nz15"
 
-  INIyear  = 2023   ! Initial year
+  INIyear  = 2024   ! Initial year
   INImonth = 6      ! Initial month
   INIday   = 5      ! Initial day
   INIhour  = 0      ! Initial hour
@@ -157,22 +157,23 @@
   DCRIT   = 0.10d0     ! critical depth (m)
 /
 
-&frc_dsjra55
-  DSJRA55_dir = "N:/Data/dsjra55/"  
-  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa2/Air/Shizugawa2_frc_DSJRA55"
+!&frc_atm
+!  ATM_dir = "N:/Data/dsjra55/"  
+!  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa2/Air/Shizugawa2_frc_atm"
+!/
+
+&frc_atm
+! memo: sudo mount -t drvfs //131.112.42.6/disk1 /mnt/x/
+  ATM_dir  =  "/mnt/x/JMA_DATA/JMA_GPV/"   ! GRIB2 2016-
+  FRC_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa2/Air/Shizugawa2_frc_MSMgb"
+!  ATM_dir  =  "/mnt/x/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF !2006/3-2016
+!  FRC_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa2/Air/Shizugawa2_frc_MSMnc"
 /
 
-&frc_jmamsm
-  MSM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa2/Air/Shizugawa2_frc_MSMgb"
-!  MSM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-!  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa2/Air/Shizugawa2_frc_MSMnc"
-/
-
-&frc_jmalsm
-  LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
-  FRC_prefix  = "Shizugawa2_frc_LSM"
-/
+!&frc_atm
+!  ATM_dir  =  "X:/JMA_LSM/"   ! GRIB2
+!  FRC_prefix  = "Shizugawa2_frc_LSM"
+!/
 
 &roms2swan_3
   grid_size = 300.0d0    ! Grid resolution

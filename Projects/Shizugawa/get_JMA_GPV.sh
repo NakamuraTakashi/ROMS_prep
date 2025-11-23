@@ -1,7 +1,8 @@
 #!/bin/bash
 
-DIR_NAME="2024"
-LOCAL_DIR="//gshs.t4.gsic.titech.ac.jp/t4_bs/tga-NakamuLab/DATA/JMA_DATA/JMA_GPV"
+DIR_NAME="2025"
+#LOCAL_DIR="//gshs.t4.gsic.titech.ac.jp/t4_bs/tga-NakamuLab/DATA/JMA_DATA/JMA_GPV"
+LOCAL_DIR="/mnt/x/JMA_DATA/JMA_GPV"
 
 REMOTE_DIR="/arch/jmadata/data/gpv/original"
 

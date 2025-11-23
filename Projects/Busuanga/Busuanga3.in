@@ -126,9 +126,9 @@
 
 /
 
-&frc_jra55
-  JRA55_dir  =  "W:/JRA-55/"
-  FRC_prefix  = "Busuanga3_frc_JRA55"
+&frc_atm
+  ATM_dir  =  "W:/JRA-55/"
+  FRC_prefix  = "Busuanga3_frc_atm"
 /
 
 &frc_era5_1

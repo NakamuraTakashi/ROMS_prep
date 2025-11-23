@@ -42,14 +42,14 @@
   Eday   = 2      ! Ending day
 /
 
-&frc_jmamsm
-!  MSM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2 2017-2022
-!  MSM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_GPV/"   ! GRIB2 2023-
+&frc_atm
+!  ATM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2 2017-2022
+!  ATM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_GPV/"   ! GRIB2 2023-
 !  FRC_prefix  = "E:/SWAT/weather/Sanriku_MSMgb"
-  MSM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF !2006/3-2016
+  ATM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF !2006/3-2016
   FRC_prefix  = "E:/SWAT/weather/Sanriku_MSMnc"
 /
-&frc_dsjra55
-  DSJRA55_dir = "//131.112.42.6/disk1/dsjra55/"      ! GRIB2 1992-2016/2
-  FRC_prefix  = "E:/SWAT/weather/Sanriku_DSJRA55"
-/
+!&frc_atm
+!  ATM_dir = "//131.112.42.6/disk1/dsjra55/"      ! GRIB2 1992-2016/2
+!  FRC_prefix  = "E:/SWAT/weather/Sanriku_DSJRA55"
+!/

@@ -24,6 +24,9 @@
 #elif defined ERA5
 # undef JMA_MSM_CLOUD_ONLY
 
+#elif defined FORP_ATM
+# define NETCDF_INPUT
+
 #endif
 
 PROGRAM frcATM2ROMS
@@ -40,11 +43,11 @@ PROGRAM frcATM2ROMS
   integer :: Eyear, Emonth, Eday
   character(256) :: GRID_FILE
   integer :: Ryear, Rmonth, Rday
+  character(256) :: ATM_dir
+  character(256) :: FRC_prefix
 !----------------------------------------------------------------------
 #if defined JMA_MSM
 !--- JMA_MSM parameter setting -----------------
-  character(256) :: MSM_dir
-  character(256) :: FRC_prefix
   integer :: jd_msmnew
 
 # if defined SWRAD
@@ -101,8 +104,6 @@ PROGRAM frcATM2ROMS
 
 #elif defined DSJRA55
 !--- DSJRA55 parameter setting -----------------
-  character(256) :: DSJRA55_dir
-  character(256) :: FRC_prefix
   character(256) :: LL_FILE
   real :: bd
 # if defined BULK_FLUX
@@ -139,9 +140,6 @@ PROGRAM frcATM2ROMS
 
 #elif defined JMA_LSM
 !--- JMA_MSM parameter setting -----------------
-  character(256) :: LSM_dir
-  character(256) :: FRC_prefix
-
   integer, parameter :: N_InPar  = 5
   integer, parameter :: N_OutPar = 5
   integer, parameter :: N_OutPar1 = 5
@@ -161,7 +159,7 @@ PROGRAM frcATM2ROMS
 
 #elif defined JRA55
 !--- JRA55 parameter setting -----------------
-  character(256) :: JRA55_dir
+  character(256) :: ATM_dir
   character(256) :: FRC_prefix
 
 # if defined BULK_FLUX
@@ -197,7 +195,6 @@ PROGRAM frcATM2ROMS
     /)
 #elif defined ERA5
 !--- REA5 parameter setting -----------------
-  character(256) :: FRC_prefix
   integer :: jd_msmnew
 
   integer, parameter :: N_InPar  = 8
@@ -234,9 +231,31 @@ PROGRAM frcATM2ROMS
     /)
 # endif
 
+#elif defined FORP_ATM
+!--- FORP parameter setting -----------------
+  integer, parameter :: N_InPar  = 8
+  integer, parameter :: N_OutPar = 8
+  integer, parameter :: N_OutPar1 = 5
+
+  character(256) :: NCIN_NAME(N_InPar) = (/   &
+     "pso   "  &  ! Sea Water Pressure at Sea Water Surface (hPa)
+    ,"uas   "  &  ! Eastward Near-Surface Wind (cm s-1)
+    ,"vas   "  &  ! Northward Near-Surface Wind (cm s-1)
+    ,"tas   "  &  ! Near-Surface Air Temperature (degC)
+    ,"evs   "  &  ! Water Evaporation Flux Where Ice Free Ocean Over Sea (kg m-2 s-1)
+    ,"pr    "  &  ! Precipitation (kg m-2 s-1)
+    ,"rsntds"  &  ! Net Downward Shortwave Radiation at Sea Water Surface (W m-2)
+    ,"rlntds"  &  ! Surface Net Downward Longwave Radiation (W m-2)
+    /)
+  character(len=*), parameter :: NC_LAT_NAME  = 'lat'
+  character(len=*), parameter :: NC_LON_NAME  = 'lon'
+  character(len=*), parameter :: NC_TIME_NAME = 'time'
+  integer :: d_ref_days
+  real(8) :: sf, off
+
 #endif
 
-#if defined ERA5
+#if defined ERA5 || defined FORP_ATM
   TYPE T_NC
     real(8), pointer :: time_all(:)
     integer :: Nt
@@ -256,6 +275,7 @@ PROGRAM frcATM2ROMS
   integer :: N_days
   integer :: iNC, iNCm
   integer :: Nt
+  real(8), allocatable :: amask(:, :), amaskv(:, :)
 
 #endif
 
@@ -299,6 +319,10 @@ PROGRAM frcATM2ROMS
     ,"rain      "                             &
     ,"swrad     "                             &
     ,"lwrad_down"                             &
+#elif defined FORP_ATM
+    ,"rain      "                             &
+    ,"swrad     "                             &
+    ,"lwrad     "                             &
 #endif
     /)
   character(256) :: NC_LNAME(N_OutPar) = (/   &
@@ -326,6 +350,10 @@ PROGRAM frcATM2ROMS
     ,"rain fall rate                     "    &
     ,"solar shortwave radiation flux     "    &
     ,"downwelling longwave radiation flux"    &
+#elif defined FORP_ATM
+    ,"rain fall rate                     "    &
+    ,"solar shortwave radiation flux     "    &
+    ,"net longwave radiation flux        "    &
 #endif
     /)
   character(256) :: NC_UNIT(N_OutPar) = (/    &
@@ -353,6 +381,10 @@ PROGRAM frcATM2ROMS
     ,"kilogram meter-2 second-1"              &
     ,"watt meter-2             "              &
     ,"watt meter-2             "              &
+#elif defined FORP_ATM
+    ,"kilogram meter-2 second-1"              &
+    ,"watt meter-2             "              &
+    ,"watt meter-2             "              &
 #endif
     /)
 
@@ -369,6 +401,7 @@ PROGRAM frcATM2ROMS
   real(8), allocatable :: out_data(:,:,:) ! output forcing data
        
   integer :: Im, Jm
+  integer :: Irdg_min, Irdg_max, Jrdg_min, Jrdg_max  ! Minimum and maximum ID of donor grid index.
 
 #if defined DSJRA55 || defined JMA_LSM
   real(8), allocatable :: lat(:, :), lon(:, :)
@@ -377,15 +410,19 @@ PROGRAM frcATM2ROMS
 #else
   real(8), allocatable :: lat(:), lon(:)
 #endif
+  real(8), allocatable :: alat(:, :), alon(:, :)
+  real(8), allocatable :: alatv(:, :), alonv(:, :)
 
   real(8) :: t
   real(8) :: time(1)
   integer, allocatable :: ID_cont(:,:)
   real(8), allocatable :: w_cont(:,:)
+  integer, allocatable :: ID_contv(:,:)
+  real(8), allocatable :: w_contv(:,:)
   integer :: start1D(1), count1D(1)
   integer :: start3D(3), count3D(3)
   
-  character(256) :: IN_FILE(2), IN_FILE2(2)
+  character(256), allocatable :: IN_FILE(:), IN_FILE2(:)
   integer :: iyear, imonth, iday
   integer :: ihour, imin
   integer :: iyear2, imonth2, iday2
@@ -419,21 +456,24 @@ PROGRAM frcATM2ROMS
   namelist/edate/Eyear, Emonth, Eday
   namelist/refdate/Ryear, Rmonth, Rday
 #if defined JMA_MSM
-  namelist/frc_jmamsm/MSM_dir
-  namelist/frc_jmamsm/FRC_prefix
+  namelist/frc_atm/ATM_dir
+  namelist/frc_atm/FRC_prefix
 #elif defined DSJRA55
-  namelist/frc_dsjra55/DSJRA55_dir
-  namelist/frc_dsjra55/FRC_prefix
+  namelist/frc_atm/ATM_dir
+  namelist/frc_atm/FRC_prefix
 #elif defined JMA_LSM
-  namelist/frc_jmalsm/LSM_dir
-  namelist/frc_jmalsm/FRC_prefix
+  namelist/frc_atm/ATM_dir
+  namelist/frc_atm/FRC_prefix
 #elif defined JRA55
-  namelist/frc_jra55/JRA55_dir
-  namelist/frc_jra55/FRC_prefix
+  namelist/frc_atm/ATM_dir
+  namelist/frc_atm/FRC_prefix
 #elif defined ERA5
   namelist/frc_era5_1/NCnum
   namelist/frc_era5_2/ATM_FILE
   namelist/frc_era5_2/FRC_prefix
+#elif defined FORP_ATM
+  namelist/frc_atm/ATM_dir
+  namelist/frc_atm/FRC_prefix
 #endif
   ! Read parameters in namelist file
   
@@ -446,16 +486,16 @@ PROGRAM frcATM2ROMS
   read (5, nml=refdate)
 #if defined JMA_MSM
   rewind(5)
-  read (5, nml=frc_jmamsm)
+  read (5, nml=frc_atm)
 #elif defined DSJRA55
   rewind(5)
-  read (5, nml=frc_dsjra55)
+  read (5, nml=frc_atm)
 #elif defined JMA_LSM
   rewind(5)
-  read (5, nml=frc_jmalsm)
+  read (5, nml=frc_atm)
 #elif defined JRA55
   rewind(5)
-  read (5, nml=frc_jra55)
+  read (5, nml=frc_atm)
 #elif defined ERA5
   rewind(5)
   read (5, nml=frc_era5_1)
@@ -463,6 +503,9 @@ PROGRAM frcATM2ROMS
   allocate( NC(NCnum) )
   rewind(5)
   read (5, nml=frc_era5_2)
+#elif defined FORP_ATM
+  rewind(5)
+  read (5, nml=frc_atm)
 #endif
 !---- Modify time-unit description ---------------------------------
       
@@ -493,6 +536,10 @@ PROGRAM frcATM2ROMS
   allocate(out_data(0:L, 0:M, N_OutPar))
   allocate(ID_cont(4, Nxr*Nyr))
   allocate(w_cont(4, Nxr*Nyr))
+#if defined FORP_ATM
+  allocate(ID_contv(4, Nxr*Nyr))
+  allocate(w_contv(4, Nxr*Nyr))
+#endif
 
   ! Get variable id
   call check( nf90_inq_varid(ncid, 'lat_rho', var_id) ) ! latitude at RHO-points (degree_east)
@@ -537,12 +584,23 @@ PROGRAM frcATM2ROMS
 !---- NetCDF input file -------------------------------------------
 # if defined JMA_MSM
 !---- Read JMA-MSM NetCDF file --------------------------------
-  IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//DD//".nc"
-  IN_FILE(2) = trim(MSM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
+  allocate( IN_FILE(2) )
+  IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//DD//".nc"
+  IN_FILE(2) = trim(ATM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
 
 # elif defined ERA5
 !---- Read ERA5 NetCDF file --------------------------------
+  allocate( IN_FILE(1) )
   IN_FILE(1) = trim(ATM_FILE(1))
+
+# elif defined FORP_ATM
+!---- Read ERA5 NetCDF file --------------------------------
+  allocate( IN_FILE(N_InPar) )
+  do iin=1,N_InPar
+    IN_FILE(iin) = trim(ATM_dir)//"forp-jpn-v4_"//trim(NCIN_NAME(iin))// &
+                   "_dy_"//YYYY//MM//".nc"
+  end do
+
 # endif
 
   write(*,*) "OPEN: ", trim( IN_FILE(1) )
@@ -557,6 +615,9 @@ PROGRAM frcATM2ROMS
   ! Allocate variable
   allocate(lat(Jm))
   allocate(lon(Im))
+  allocate(amask(Im,Jm))
+  allocate(alat(Im,Jm))
+  allocate(alon(Im,Jm))
   
   call check( nf90_inq_varid(ncid, NC_LAT_NAME, var_id) )
   call check( nf90_get_var(ncid, var_id, lat) )
@@ -564,34 +625,62 @@ PROGRAM frcATM2ROMS
   call check( nf90_get_var(ncid, var_id, lon) )
   call check( nf90_close(ncid) )
 
+  do j=1,Jm
+    do i=1,Im
+      alat(i,j) = lat(j)
+      alon(i,j) = lon(i)
+    enddo
+  enddo
+
+# if defined FORP_ATM
+  allocate(amaskv(Im,Jm))
+  allocate(alatv(Im,Jm))
+  allocate(alonv(Im,Jm))
+  write(*,*) "OPEN: ", trim( IN_FILE(2) )
+  !Open NetCDF file
+  call check( nf90_open(trim( IN_FILE(2) ), nf90_nowrite, ncid) )
+  call check( nf90_inq_varid(ncid, NC_LAT_NAME, var_id) )
+  call check( nf90_get_var(ncid, var_id, lat) )
+  call check( nf90_inq_varid(ncid, NC_LON_NAME, var_id) )
+  call check( nf90_get_var(ncid, var_id, lon) )
+  call check( nf90_close(ncid) )
+
+  do j=1,Jm
+    do i=1,Im
+      alatv(i,j) = lat(j)
+      alonv(i,j) = lon(i)
+    enddo
+  enddo
+# endif
+
 #else
 
 !---- GRIB2 input file -------------------------------------------
   GRIB_yyyymmddhh = YYYY//MM//DD//"00"
 # if defined JMA_MSM
 !---- Set JMA-MSM GRIB2 file --------------------------------
-  IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+  IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
-  IN_FILE(2) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+  IN_FILE(2) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined DSJRA55
 !---- Set DSJRA55 GRIB2 file --------------------------------
-  IN_FILE(1) = trim(DSJRA55_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
+  IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
                  "/fcst_surf."//GRIB_yyyymmddhh
-  IN_FILE(2) = trim(DSJRA55_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
+  IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
                  "/fcst_phy2m."//GRIB_yyyymmddhh
 
 # elif defined JMA_LSM
 !---- Set JMA-LSM GRIB2 file --------------------------------
-  IN_FILE(1) = trim(LSM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
+  IN_FILE(1) = trim(ATM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined JRA55
 !---- Read JRA55 GRIB2 file --------------------------------
-  IN_FILE(1) = trim(JRA55_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
+  IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
                  "/fcst_surf125."//GRIB_yyyymmddhh
-  IN_FILE(2) = trim(JRA55_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
+  IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
                  "/fcst_phy2m125."//GRIB_yyyymmddhh
 
 # elif defined ERA5
@@ -628,7 +717,7 @@ PROGRAM frcATM2ROMS
 
 #  if defined DSJRA55
 !  ---- Get Lat Lon coordinates from Binary file --------------
-  LL_FILE = trim(DSJRA55_dir)//"Consts/Lambert5km_latlon.dat"
+  LL_FILE = trim(ATM_dir)//"Consts/Lambert5km_latlon.dat"
   open(unit=20, file=LL_FILE, action='read',               &
        form='unformatted', access='direct', recl=4,        &
        CONVERT='BIG_ENDIAN', status='old')
@@ -725,14 +814,81 @@ PROGRAM frcATM2ROMS
   allocate(in_data(Im, Jm, N_InPar))
   allocate(in_data2(Im, Jm, N_OutPar))
 
+# if defined FORP_ATM
+! create atm land mask grid
+  amask = 1.0d0
+  amaskv = 1.0d0
+
+  write(*,*) "OPEN: ", trim( IN_FILE(1) )
+  !Open NetCDF file
+  call check( nf90_open(trim( IN_FILE(1) ), nf90_nowrite, ncid) )
+  start3D = (/ 1,  1,  1 /)
+  count3D = (/ Im, Jm, 1 /)
+  call check( nf90_inq_varid(ncid, trim( NCIN_NAME(1) ), var_id) ) 
+  call check( nf90_get_var(ncid, var_id, in_data(:,:,1), start=start3D, count=count3D) )
+  call check( nf90_close(ncid) )     
+  
+  write(*,*) "CREATE: FORP atm T points land mask"
+  do j=1, Jm
+    do i=1,Im
+      if(in_data(i,j,1)<-1.0d10) then
+        amask(i,j)=0.0d0
+      endif
+    end do
+  end do
+
+  write(*,*) "OPEN: ", trim( IN_FILE(2) )
+  !Open NetCDF file
+  call check( nf90_open(trim( IN_FILE(2) ), nf90_nowrite, ncid) )
+  start3D = (/ 1,  1,  1 /)
+  count3D = (/ Im, Jm, 1 /)
+  call check( nf90_inq_varid(ncid, trim( NCIN_NAME(2) ), var_id) ) 
+  call check( nf90_get_var(ncid, var_id, in_data(:,:,2), start=start3D, count=count3D) )
+  call check( nf90_close(ncid) )     
+  
+  write(*,*) "CREATE: FORP atm V points land mask"
+  do j=1, Jm
+    do i=1,Im
+      if(in_data(i,j,2)<-1.0d10) then
+        amaskv(i,j)=0.0d0
+      endif
+    end do
+  end do
+  Irdg_min = 1
+  Irdg_max = Im
+  Jrdg_min = 1
+  Jrdg_max = Jm
+
+# endif
+
 !==== Calculate weight parameters for interpolation ====================
+!  ---- Calc. weight parameters for interpolation --------------  
+  write(*,*) "CALC.: weight parameters for interpolation"
 #if defined DSJRA55 || defined JMA_LSM
-!  ---- Calc. weight parameters for interpolation --------------  
-  write(*,*) "CALC.: weight parameters for interpolation"
   call weight2D_grid2(Im,Jm,lon,lat,Nxr,Nyr,lonr,latr,ID_cont,w_cont)
+#elif defined FORP_ATM
+!  call weight2D_grid2(Im,Jm,lon,lat,Nxr,Nyr,lonr,latr,ID_cont,w_cont)
+  write(*,*) "CALC.: weight parameters for T points"
+  call weight2D_grid3_2(                              &
+            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max        &
+          , alon(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
+          , alat(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
+          , amask(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max) & 
+          , 0, L, 0, M                        &
+          , lonr(0:L,0:M)                     &
+          , latr(0:L,0:M)                     &
+          , ID_cont,w_cont )
+  write(*,*) "CALC.: weight parameters for V points"
+  call weight2D_grid3_2(                              &
+            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max        &
+          , alonv(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
+          , alatv(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
+          , amaskv(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max) & 
+          , 0, L, 0, M                        &
+          , lonr(0:L,0:M)                     &
+          , latr(0:L,0:M)                     &
+          , ID_contv,w_contv )
 #else
-!  ---- Calc. weight parameters for interpolation --------------  
-  write(*,*) "CALC.: weight parameters for interpolation"
   call weight2D_grid(Im,Jm,lon,lat,Nxr,Nyr,lonr,latr,ID_cont,w_cont)  
 #endif
 
@@ -806,7 +962,7 @@ PROGRAM frcATM2ROMS
   call jd(2006, 3, 1, jd_msmnew)
 #endif
 
-#if defined ERA5
+#if defined ERA5 || defined FORP_ATM
 !======= Set starting time and Ending time ========================
   call ndays(Emonth, Eday, Eyear, Smonth, Sday, Syear, N_days)
   call jd(Syear, Smonth, Sday, jdate_Start)
@@ -821,8 +977,35 @@ PROGRAM frcATM2ROMS
 
 # if defined NETCDF_INPUT
 !== ERA5 NetCDF format ========================
+#  if defined ERA5
   call jd(1900, 1, 1, jdate_Ref_atm)! ERA5 time: hours since 1900-01-01 00:00:00
   d_jdate_Ref_atm = dble(jdate_Ref_atm)
+#  elif defined FORP_ATM
+  call jd(1, 1, 1, jdate_Ref_atm)! FORP time: hours since 1-01-01 00:00:00
+
+  d_jdate_Ref_atm = dble(jdate_Ref_atm)-2.0d0
+  Nt = 0
+  itime = 1
+  ihours = 0
+  iyear = Syear
+  imonth = Smonth
+  iday = Sday
+  call jd(iyear, imonth, iday, Sjdate)
+
+  NCnum = 12*(Eyear-Syear) + Emonth - Smonth + 1
+  NCnum = min( NCnum, 12 )  ! FORP data limit to 1 year
+  write(*,*) 'NCnum = ', NCnum
+  allocate( ATM_FILE(NCnum) )
+  allocate( NC(NCnum) ) 
+  do iNC=1, NCnum
+    write (YYYY, "(I4.4)") Syear
+    write (MM, "(I2.2)") Smonth + iNC -1
+    ATM_FILE(iNC) = trim(ATM_dir)//"forp-jpn-v4_"//trim(NCIN_NAME(1))// &
+                   "_dy_"//YYYY//MM//".nc"
+  end do
+
+#  endif
+
   write(*,*) d_jdate_Ref_atm
 
 ! Check time
@@ -958,7 +1141,7 @@ PROGRAM frcATM2ROMS
 
 !===== LOOP1 START ================================================
   DO
-#if defined ERA5
+#if defined ERA5 || defined FORP_ATM
     ! Check end date
     if(itime>Nt) then
       write(*,*) "Completed!!!"
@@ -985,8 +1168,8 @@ PROGRAM frcATM2ROMS
 
     IN_FILE2(1) = IN_FILE(1)  
     IN_FILE2(2) = IN_FILE(2)  
-    IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//DD//".nc"
-    IN_FILE(2) = trim(MSM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
+    IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//DD//".nc"
+    IN_FILE(2) = trim(ATM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
 
 #elif defined ERA5
  
@@ -996,6 +1179,15 @@ PROGRAM frcATM2ROMS
       IN_FILE(1) = trim(ATM_FILE(iNC))
     endif
 
+#elif defined FORP_ATM
+    iNC  = iNCt(itime)
+    do iin=1, N_InPar
+      write (YYYY, "(I4.4)") Syear
+      write (MM, "(I2.2)") Smonth + iNC -1
+      IN_FILE(iin) = trim(ATM_dir)//"forp-jpn-v4_"//trim(NCIN_NAME(iin))// &
+                     "_dy_"//YYYY//MM//".nc"
+    end do
+
 #else 
     GRIB_yyyymmddhh = YYYY//MM//DD//hh
 
@@ -1004,34 +1196,34 @@ PROGRAM frcATM2ROMS
 
     IN_FILE2(1) = IN_FILE(1)  
     IN_FILE2(2) = IN_FILE(2)  
-    IN_FILE(1) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+    IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
                   GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
-    IN_FILE(2) = trim(MSM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+    IN_FILE(2) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
                   GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined DSJRA55
 !---- Read DSJRA55 GRIB2 file --------------------------------
     ihours = ihours + 1  !!! Files exist 1 hourly interval
 
-    IN_FILE(1) = trim(DSJRA55_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
+    IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
                    "/fcst_surf."//GRIB_yyyymmddhh
-    IN_FILE(2) = trim(DSJRA55_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
+    IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
                    "/fcst_phy2m."//GRIB_yyyymmddhh
 
 # elif defined JMA_LSM
 !---- Read DSJRA55 GRIB2 file --------------------------------
     ihours = ihours + 1  !!! Files exist 1 hourly interval
 
-    IN_FILE(1) = trim(LSM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
+    IN_FILE(1) = trim(ATM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
                   GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined JRA55
 !---- Read JRA55 GRIB2 file --------------------------------
     ihours = ihours + 3  !!! Files exist 3 hourly interval
 
-    IN_FILE(1) = trim(JRA55_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
+    IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
                    "/fcst_surf125."//GRIB_yyyymmddhh
-    IN_FILE(2) = trim(JRA55_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
+    IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
                    "/fcst_phy2m125."//GRIB_yyyymmddhh
 
 # endif
@@ -1079,7 +1271,7 @@ PROGRAM frcATM2ROMS
 # else
     DO ifc=isp,isp+2
 # endif
-#elif defined ERA5
+#elif defined ERA5 || defined FORP_ATM
     DO ifc=NC(iNC)%ItS,NC(iNC)%ItE
 #else
     DO ifc=1,1
@@ -1101,6 +1293,8 @@ PROGRAM frcATM2ROMS
         end if
 # elif defined ERA5
         iin=1
+# elif defined FORP_ATM
+        iin = iparam
 # endif
 
         write(*,*) "OPEN: ", trim( IN_FILE(iin) )
@@ -1126,6 +1320,8 @@ PROGRAM frcATM2ROMS
         call check( nf90_get_att(ncid, var_id, 'scale_factor', sf) )
         call check( nf90_get_att(ncid, var_id, 'add_offset', off) )
         in_data(:,:,iparam)=in_data(:,:,iparam)*sf+off
+# elif defined FORP_ATM
+        call check( nf90_get_var(ncid, var_id, in_data(:,:,iparam), start=start3D, count=count3D) )
 # endif
         call check( nf90_close(ncid) )     
       END DO
@@ -1274,7 +1470,7 @@ PROGRAM frcATM2ROMS
       call ndays(imonth, iday, iyear, 1, 1, 2000, d_ref_days)
       t = time(1)/24.0d0 + dble(d_ref_days)
 
-#elif defined ERA5
+#elif defined ERA5 || defined FORP_ATM
     ! ERA5 time
       t = atm_time(itime)
 
@@ -1444,6 +1640,27 @@ PROGRAM frcATM2ROMS
     ! for bulk flux parameters, heating -> positive, cooling -> negattive
       in_data2(:,:,7) = in_data(:,:,7)/3600.0d0  ! J h-1 m-2 -> W m-2
       in_data2(:,:,8) = in_data(:,:,8)/3600.0d0  ! J h-1 m-2 -> W m-2
+! --------------------------------------------
+#elif defined FORP_ATM
+    ! for Pair (Pressure)
+      in_data2(:,:,1) = in_data(:,:,1)  ! hPa -> millibar (= hPa) 
+    ! for U V
+      in_data2(:,:,2) = in_data(:,:,2)*0.01d0  ! cm s-1 -> m s-1 
+      in_data2(:,:,3) = in_data(:,:,3)*0.01d0  ! cm s-1 -> m s-1 
+    ! for Tair
+      in_data2(:,:,4) = in_data(:,:,4)  ! degC -> degC
+    ! for Qair: Water Evaporation Flux (kg m-2 s-1) to Relative humidity (%)
+      do j=1, Jm
+        do i=1,Im
+          !!! TO BE UPDATED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          in_data2(i,j,5) = in_data(i,j,5)
+        end do
+      end do
+    ! for rain (Total precipitation rate)
+      in_data2(:,:,6) = in_data(:,:,6)  ! kg m-2 s-1 -> kg m-2 s-1  
+    ! for bulk flux parameters, heating -> positive, cooling -> negattive
+      in_data2(:,:,7) = in_data(:,:,7)  ! W m-2 -> W m-2
+      in_data2(:,:,8) = in_data(:,:,8)  ! W m-2 -> W m-2
 #endif         
 !  ---- LOOP3.2 START --------------------------------
       DO iparam=1,N_OutPar
@@ -1454,9 +1671,25 @@ PROGRAM frcATM2ROMS
 #endif
         write(*,*) 'Linear Interporation: ',trim( NC_NAME(iparam) )
 
+#if defined FORP_ATM
+        if(iparam==2 .or. iparam==3) then
+          call interp2D_grid3_2(                                              &
+              Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, in_data2(:,:,iparam)  &
+            , 0, L, 0, M                                      &
+            , ID_contv, w_contv                               &
+            , out_data(0:L,0:M,iparam)  )
+        else
+          call interp2D_grid3_2(                                              &
+              Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, in_data2(:,:,iparam)  &
+            , 0, L, 0, M                                      &
+            , Id_cont, w_cont                                 &
+            , out_data(0:L,0:M,iparam)  )
+        endif
+#else 
         call interp2D_grid (Im, Jm, in_data2(:,:,iparam)       &  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                           , Nxr, Nyr, out_data(:,:,iparam)     &
                           , Id_cont, w_cont)
+#endif
       END DO
 !  ---- LOOP3.2 END --------------------------------
 #if !defined JMA_MSM_CLOUD_ONLY
@@ -1483,6 +1716,8 @@ PROGRAM frcATM2ROMS
       time(1) = t+1.5d0/24.0d0
 # elif defined ERA5
       time(1) = t-0.5d0/24.0d0
+# elif defined FORP_ATM
+      time(1) = t
 # else
       time(1) = t+0.5d0/24.0d0
 # endif

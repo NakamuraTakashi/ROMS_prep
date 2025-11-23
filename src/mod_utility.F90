@@ -275,7 +275,7 @@ MODULE mod_utility
   integer :: ip,im,jp,jm
   real(8) :: rx0, MAX_rx0
 
-  do k=1,1000
+  do k=1,5000
     MAX_rx0 = 0.0d0
     do j=1, N_eta_rho-1
       do i=1, N_xi_rho-1

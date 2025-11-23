@@ -1,18 +1,18 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
+  GRID_FILE = "../../../COAWST_DATA/Yaeyama/Yaeyama1/Grid/Yaeyama1_grd_v10.nc"
 !  GRID_FILE = "Yaeyama1_grd_v10.nc"
 /
 
 &sdate
-  Syear  = 2023   ! Starting year
+  Syear  = 2025   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2024   ! Ending year
-  Emonth = 1      ! Ending month
+  Eyear  = 2025   ! Ending year
+  Emonth = 11      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -33,8 +33,8 @@
 
 &jcope
 ! JCOPE-T
-  JCOPE_info_dir  =  "D:/JCOPE-T/yaeyama/2023/"
-  JCOPE_data_dir  =  "D:/JCOPE-T/yaeyama/2023/"
+  JCOPE_info_dir  =  "/mnt/w/share/JCOPE-T/yaeyama/2025/"
+  JCOPE_data_dir  =  "/mnt/w/share/JCOPE-T/yaeyama/2025/"
 !  JCOPE_info_dir  =  "//131.112.42.7/disk2/JCOPE-T/yaeyama/2020/"
 !  JCOPE_data_dir  =  "//131.112.42.7/disk2/JCOPE-T/yaeyama/2020/"
 ! JCOPE-2M
@@ -58,14 +58,14 @@
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPE2M_Nz15"
-  BRY_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
+  BRY_prefix  = "../../../COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15"
-!  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
+!  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15"
+  INI_prefix  = "../../../COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
 !  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPE2MwNAO_Nz15"
 
   INIyear  = 2013   ! Initial year
@@ -95,30 +95,25 @@
   DCRIT   = 0.10d0     ! critical depth (m)
 /
 
-&frc_jra55
-  JRA55_dir  =  "N:/JRA-55/" 
-  FRC_prefix  = "Yaeyama1_frc_JRA55"
-/
+!&frc_atm
+!  ATM_dir = "D:/cygwin64/home/Takashi/tmp/dsjra55/"  
+!!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_atm"
+!  FRC_prefix  = "Yaeyama1_frc_atm"
+!/
 
-&frc_dsjra55
-  DSJRA55_dir = "D:/cygwin64/home/Takashi/tmp/dsjra55/"  
-!  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_DSJRA55"
-  FRC_prefix  = "Yaeyama1_frc_DSJRA55"
-/
-
-&frc_jmamsm
-!  MSM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2
-  MSM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_GPV/"   ! GRIB2
+&frc_atm
+!  ATM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2
+  ATM_dir  =  "/mnt/x/JMA_DATA/JMA_GPV/"   ! GRIB2
 !  FRC_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb"
-  FRC_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb_tmp"
-!  MSM_dir  =  "P:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+  FRC_prefix  = "../../../COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb"
+!  ATM_dir  =  "P:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
 !  FRC_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMnc"
 /
 
-&frc_jmalsm
-  LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
-  FRC_prefix  = "Yaeyama1_frc_LSM"
-/
+!&frc_atm
+!  ATM_dir  =  "/mnt/x/JMA_DATA/JMA_LSM/"   ! GRIB2
+!  FRC_prefix  = "Yaeyama1_frc_LSM"
+!/
 
 &tide
   TIDE_DATA_dir = "C:/cygwin64/home/Takashi/ROMS_prep/src/"   ! For NAO99/NAO99J
@@ -128,9 +123,9 @@
 /
 
 &wave_cwm
-  CWM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2
+  CWM_dir  =  "/mnt/x/JMA_DATA/JMA_GPV/"   ! GRIB2
 !  CWM_dir  =  "//131.112.42.7/disk1/JMA_DATA/JMA_GPV/"   ! GRIB2
-  SWAN_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/wave/TPAR/2007/Y1_cwm"
+  SWAN_prefix  = "../../../COAWST_DATA/Yaeyama/Yaeyama1/wave/TPAR/2007/Y1_cwm"
 /
 &wave_era5_1
   NCnum = 1  ! Number of ERA5 files 
@@ -150,8 +145,8 @@
 /
 &roms2swan_2
 !  ATM_FILE  =  "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_MSMgb_tmp_20240101_1.nc"
-  ATM_FILE  =  "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_DSJRA55_19940101_1.nc",
-               "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_DSJRA55_19950101_1.nc"
+  ATM_FILE  =  "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_atm_19940101_1.nc",
+               "D:/COAWST_DATA/Yaeyama/Yaeyama1/Air/Yaeyama1_frc_atm_19950101_1.nc"
 
   OUTPUT_Dir  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/wave/wind/1994"
 /

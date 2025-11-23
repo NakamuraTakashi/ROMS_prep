@@ -122,20 +122,20 @@
   DCRIT   = 0.10d0     ! critical depth (m) for wetting and trying
 /
 
-&frc_jra55
-  JRA55_dir  =  "W:/JRA-55/"  
-  FRC_prefix  = "Fukido2_frc_JRA55"
-/
+!&frc_atm
+!  ATM_dir  =  "W:/JRA-55/"  
+!  FRC_prefix  = "Fukido2_frc_atm"
+!/
+!
+!&frc_atm
+!  ATM_dir = "E:/Data/dsjra55/"  
+!  FRC_prefix  = "Fukido2_frc_atm"
+!/
 
-&frc_dsjra55
-  DSJRA55_dir = "E:/Data/dsjra55/"  
-  FRC_prefix  = "Fukido2_frc_DSJRA55"
-/
-
-&frc_jmamsm
-  MSM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
+&frc_atm
+  ATM_dir  =  "E:/JMA_DATA/JMA_GPV/"   ! GRIB2
   FRC_prefix  = "Fukido2_frc_MSMgb"
-!  MSM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
+!  ATM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
 !  FRC_prefix  = "Fukido2_frc_MSMnc"
 /
 

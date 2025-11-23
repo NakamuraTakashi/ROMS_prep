@@ -1,0 +1,139 @@
+&grd
+! ROMS NetCDF grid file     
+  GRID_FILE = "forp-kuroshio_grd_v0.0.nc"
+!  GRID_FILE = "../../../COAWST_DATA/FORP_Kuroshio/Grid/forp-kuroshio_grd_v0.0.nc"
+/
+&gebco
+! GEBCO bathymetry NetCDF file     
+  BATH_FILE = "/mnt/d/GEBCO_2023-/GEBCO_29_Aug_2025_FORP_JPN02/gebco_2025_n55.0_s15.0_w110.0_e165.0.nc"
+/
+&movejpn_bath
+! MOVE-JPN bathymetry directory
+  topo_dir = "/mnt/f/DATA/FORP/FORP-JPN02/version4/MOVE-JPN_bathymetry/"
+/
+
+&grd_setting_ll
+! Set lat, lon at specific station. 
+  s_lat =  21.00d0
+  e_lat =  41.00d0    !52.02d0
+  s_lon = 120.00d0
+  e_lon = 143.50d0 !160.030303d0
+
+! Set ROMS grid resolution
+! *The information is not used when GRID_REFINEMENT is activated.
+  RESOLUTION_LAT = 50.0d0 ! 1/50 degree resolution
+  RESOLUTION_LON = 50.0d0 ! 1/50 degree resolution
+
+  angle = 0.20d0   ! Angle (radians) between XI-axis and true EAST at RHO-points
+/
+
+&bath_smooth
+  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
+/
+
+&land_mask
+
+  hmin = 1.0d0  ! Minimum depth
+
+ ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
+ ! and one-grid bay grids 
+  I_ocn = 50    ! rho point index i
+  J_ocn = 1    ! rho point index j
+/
+
+&sdate
+  Syear  = 2100   ! Starting year
+  Smonth = 1      ! Starting month
+  Sday   = 1     ! Starting day
+/
+
+&edate
+  Eyear  = 2101   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
+  Eday   = 1      ! Ending day
+/
+
+&refdate
+  Ryear  = 2000   ! Reference year
+  Rmonth = 1      ! Reference month
+  Rday   = 1      ! Reference day
+/
+
+&ocn2roms      
+! switches (1/0) for activate/deactivate the variables
+!
+! 1: zeta, 2: u 3: v, 4: ubar, 5: vbar, 6: temp, 7: salt
+!
+!           1       5   7
+!           |       |   |
+  romsvar = 1,1,1,1,1,1,1        
+!  romsvar = 0,1,1,1,1,1,1        
+!  romsvar = 1,0,0,0,0,0,0        
+/
+
+&mricom
+! Directory of FORP data files
+!! FORP-JPN02: JRA55do historical
+!  MRICOM_data_dir = "/mnt/w/share/dias/data/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/"
+
+!! FORP-JPN02: MRI-CGCM3_rcp85
+  MRICOM_data_dir = "/mnt/w/share/dias/data/FORP/FORP-JPN02/version4//MRI-CGCM3_rcp85_ver4/ts_2086-2100/nc_day/2100/"
+/
+
+&bry
+  BRY_prefix  = "../../../COAWST_DATA/FORP_Kuroshio/Bry/Kuro_bry_FORP_Nz30"
+
+  !    south north west east
+  SNWE =  1,   1,   1,   1
+/
+
+&ini
+  INI_prefix  = "../../../COAWST_DATA/FORP_Kuroshio/Ini/Kuro_ini_FORP_Nz30"
+
+  INIyear  = 2023   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 2      ! Initial day
+  INIhour  = 0      ! Initial hour
+/
+
+&his
+!  HIS_prefix  = "../../../COAWST_DATA/FORP_Kuroshio/his/Kuro_his_FORP_Nz30"
+  HIS_prefix  = "../../../COAWST_DATA/FORP_Kuroshio/Ini/Kuro_Ini_FORP_Nz30"
+!  HIS_prefix  = "test_his_Nz30"
+/
+
+&hcoord
+  spherical  = 1   
+/
+
+&zcoord
+  N_s_rho = 30
+
+! Set vertical, terrain-following coordinates transformation equation and
+! stretching function (see wikiROMS for details).
+
+  Vtransform  = 2      ! transformation equation
+  Vstretching = 4      ! stretching function
+
+! Vertical S-coordinates parameters (see wikiROMS for details).
+
+  THETA_S = 7.0d0      ! surface stretching parameter
+  THETA_B = 0.1d0      ! bottom  stretching parameter
+  TCLINE  = 200.0d0    ! critical depth (m)
+  DCRIT   = 0.10d0     ! critical depth (m)
+/
+
+&frc_atm
+!! FORP-JPN02: JRA55do historical
+!  ATM_dir  =  "/mnt/w/share/dias/data/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/"
+!  FRC_prefix  = "../../../COAWST_DATA/FORP_Kuroshio/Air/Kuro_frc_FORP-JRA55do"
+
+!! FORP-JPN02: MRI-CGCM3_rcp85
+  ATM_dir  =  "/mnt/w/share/dias/data/FORP/FORP-JPN02/version4//MRI-CGCM3_rcp85_ver4/ts_2086-2100/nc_day/2100/"
+  FRC_prefix  = "../../../COAWST_DATA/FORP_Kuroshio/Air/Kuro_frc_FORP-MRI-CGCM3-rcp85"
+/
+
+&tide
+  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
+  TIDE_prefix  = "Kuro_tide_fes2014"
+/

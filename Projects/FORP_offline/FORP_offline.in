@@ -1,25 +1,25 @@
 &grd
 ! ROMS NetCDF grid file     
-!  GRID_FILE = "forp-jpn-v4_grd_v1.0.nc"
+  GRID_FILE = "forp-jpn-south_grd_v2.1_rx0.2.nc"
+!  GRID_FILE = "forp-jpn-v4_grd_v2.0.nc"
 !  GRID_FILE = "../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-v4_grd_v1.1.nc"
-  GRID_FILE = "../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-south_grd_v1.1.nc"
-  !  GRID_FILE = "/mnt/d/COAWST_DATA/TokyoBay/TokyoBay1/Grid/TokyoBay1_grd_v1.0.nc"
+!  GRID_FILE = "../../../COAWST_DATA/FORP_offline/Grid/forp-jpn-south_grd_v2.0.nc"
 /
 &gebco
 ! GEBCO bathymetry NetCDF file     
   BATH_FILE = "/mnt/d/GEBCO_2023-/GEBCO_29_Aug_2025_FORP_JPN02/gebco_2025_n55.0_s15.0_w110.0_e165.0.nc"
 /
-&forp_bath
-! Path of FORP salinity (so) data files
-  FORP_SO_FILE = "/mnt/f/DATA/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/forp-jpn-v4_so_dy_200601.nc"
+&movejpn_bath
+! MOVE-JPN bathymetry directory
+  topo_dir = "/mnt/f/DATA/FORP/FORP-JPN02/version4/MOVE-JPN_bathymetry/"
 /
 
 &grd_setting_ll
 ! Set lat, lon at specific station. 
-  s_lat = 19.96d0
-  e_lat = 52.03d0    !52.02d0
-  s_lon = 116.9393939d0
-  e_lon = 160.04d0 !160.030303d0
+  s_lat =  19.97000d0
+  e_lat =  52.03000d0    !52.02d0
+  s_lon = 116.95455d0
+  e_lon = 160.04545d0 !160.030303d0
 
 ! Set ROMS grid resolution
 ! *The information is not used when GRID_REFINEMENT is activated.
@@ -30,12 +30,12 @@
 /
 
 &bath_smooth
-  rx0max = 0.01  ! Smoothing parameter (better to set rx0max <= 0.2)
+  rx0max = 0.2  ! Smoothing parameter (better to set rx0max <= 0.2)
 /
 
 &land_mask
 
-  hmin = -1.0d0  ! Minimum depth
+  hmin = 1.0d0  ! Minimum depth
 
  ! Pickup one ocean grid (any grid is OK) for renoving isolated ocean grids
  ! and one-grid bay grids 
@@ -46,12 +46,12 @@
 &sdate
   Syear  = 2006   ! Starting year
   Smonth = 1      ! Starting month
-  Sday   = 1      ! Starting day
+  Sday   = 1     ! Starting day
 /
 
 &edate
-  Eyear  = 2006   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 2      ! Ending month
+  Eyear  = 2007   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 1      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -75,7 +75,7 @@
 
 &mricom
 ! Directory of FORP data files
-  MRICOM_data_dir = "/mnt/f/DATA/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/"
+  MRICOM_data_dir = "/mnt/w/share/dias/data/FORP/FORP-JPN02/version4/JRA55do_historical_ver4/ts_2006-2018/nc_day/2006/"
 /
 
 &bry
@@ -97,7 +97,8 @@
 /
 
 &his
-  HIS_prefix  = "../../../COAWST_DATA/FORP_offline/his/forp-jpn-south_his_Nz30"
+  HIS_prefix  = "../../../COAWST_DATA/FORP_offline/his/forp-jpn-south_his_grd2.1_rx0.2_Nz40"
+!  HIS_prefix  = "../../../COAWST_DATA/FORP_offline/Ini/forp-jpn-south_Ini_Nz15"
 !  HIS_prefix  = "test_his_Nz30"
 /
 
@@ -106,7 +107,7 @@
 /
 
 &zcoord
-  N_s_rho = 30
+  N_s_rho = 40
 
 ! Set vertical, terrain-following coordinates transformation equation and
 ! stretching function (see wikiROMS for details).
@@ -122,9 +123,9 @@
   DCRIT   = 0.10d0     ! critical depth (m)
 /
 
-&frc_jra55
-  JRA55_dir  =  "N:/JRA-55/"
-  FRC_prefix  = "Palau1_frc_JRA55"
+&frc_atm
+  ATM_dir  =  "N:/JRA-55/"
+  FRC_prefix  = "Palau1_frc_atm"
 /
 
 &frc_era5_1

@@ -64,14 +64,14 @@
 /
 
 &sdate
-  Syear  = 2024   ! Starting year
+  Syear  = 2025   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
   Eyear  = 2025   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
+  Emonth = 11      ! Ending month
   Eday   = 1      ! Ending day
 /
 
@@ -93,8 +93,8 @@
 
 &jcope
 ! JCOPE-T
-  JCOPE_info_dir  =  "/mnt/w/syn1/share/JCOPE-T/Shizugawa/2024/"
-  JCOPE_data_dir  =  "/mnt/w/syn1/share/JCOPE-T/Shizugawa/2024/"
+  JCOPE_info_dir  =  "/mnt/w/share/JCOPE-T/Shizugawa/2025/"
+  JCOPE_data_dir  =  "/mnt/w/share/JCOPE-T/Shizugawa/2025/"
 ! JCOPE-2M
 !  JCOPE_info_dir  =  "P:/JCOPE-2M/Shizugawa/"
 !  JCOPE_data_dir  =  "P:/JCOPE-2M/Shizugawa/"
@@ -122,9 +122,9 @@ BRY_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa1/Bry/Shizugawa1_bry_JCOP
   !  INI_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Ini/Shizugawa1_ini_HYCOM_Nz15"
 INI_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa1/Ini/Shizugawa1_ini_JCOPE-T_Nz15"
 
-  INIyear  = 2021   ! Initial year
+  INIyear  = 2025   ! Initial year
   INImonth = 1      ! Initial month
-  INIday   = 2      ! Initial day
+  INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
@@ -149,23 +149,23 @@ INI_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa1/Ini/Shizugawa1_ini_JCOP
   DCRIT   = 0.10d0     ! critical depth (m)
 /
 
-&frc_dsjra55
-  DSJRA55_dir = "//131.112.42.6/disk1/dsjra55/"      ! GRIB2 1992-2016/2
-  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_DSJRA55"
-/
+!&frc_atm
+!  ATM_dir = "//131.112.42.6/disk1/dsjra55/"      ! GRIB2 1992-2016/2
+!  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_atm"
+!/
 
-&frc_jmamsm
+&frc_atm
 ! memo: sudo mount -t drvfs //131.112.42.6/disk1 /mnt/x/
-  MSM_dir  =  "/mnt/x/JMA_DATA/JMA_GPV/"   ! GRIB2 2023-
+  ATM_dir  =  "/mnt/x/JMA_DATA/JMA_GPV/"   ! GRIB2 2016-
   FRC_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb"
-!  MSM_dir  =  "/mnt/x/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF !2006/3-2016
+!  ATM_dir  =  "/mnt/x/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF !2006/3-2016
 !  FRC_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMnc"
 /
 
-&frc_jmalsm
-  LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
-  FRC_prefix  = "Shizugawa1_frc_LSM"
-/
+!&frc_atm
+!  ATM_dir  =  "X:/JMA_LSM/"   ! GRIB2
+!  FRC_prefix  = "Shizugawa1_frc_LSM"
+!/
 
 &tide
 !  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/ROMS_prep/src/"   ! For NAO99/NAO99J
@@ -174,21 +174,22 @@ INI_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa1/Ini/Shizugawa1_ini_JCOP
   TIDE_prefix  = "Shizugawa1_tide_fes2014"
 /
 &wave_cwm
-  CWM_dir  =  "//131.112.42.6/disk2/JMA_DATA/JMA_GPV/"   ! GRIB2
-  SWAN_prefix  = "D:/COAWST_DATA/Shizugawa/Shizugawa1/wave/TPAR/2018/S1_cwm"
+! memo: sudo mount -t drvfs //131.112.42.6/disk1 /mnt/x/
+  CWM_dir  =  "/mnt/x/JMA_DATA/JMA_GPV/"   ! GRIB2
+  SWAN_prefix  = "../../../COAWST_DATA/Shizugawa/Shizugawa1/wave/TPAR/2025/S1_cwm"
 
 /
 
 &roms2swan_1
-!  NCnum = 1  ! Number of FRC files 
-  NCnum = 2  ! Number of FRC files 
+  NCnum = 1  ! Number of FRC files 
+!  NCnum = 2  ! Number of FRC files 
 /
 &roms2swan_2
-!  ATM_FILE  =  "D:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20200101_1.nc"
-  ATM_FILE  =  "D:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20180101_1.nc",
-               "D:/COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20190101_1.nc"
+  ATM_FILE  =  "../../../COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20250101_1.nc"
+!  ATM_FILE  =  "../../../COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20240101_1.nc",
+!               "../../../COAWST_DATA/Shizugawa/Shizugawa1/Air/Shizugawa1_frc_MSMgb_20250101_1.nc"
 
-  OUTPUT_Dir  = "D:/COAWST_DATA/Shizugawa/Shizugawa1/wave/wind/2021"
+  OUTPUT_Dir  = "../../../COAWST_DATA/Shizugawa/Shizugawa1/wave/wind/2025"
 /
 &roms2swan_3
   grid_size = 1500.0d0   ! Grid resolution

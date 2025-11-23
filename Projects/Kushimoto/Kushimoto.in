@@ -158,19 +158,9 @@
   DCRIT   = 0.10d0     ! critical depth (m)
 /
 
-&frc_dsjra55
-  DSJRA55_dir = "N:/Data/dsjra55/"  
-  FRC_prefix  = "F:/COAWST_DATA/Shizugawa/Shizugawa3/Air/Shizugawa3_frc_DSJRA55"
-/
-
-&frc_jmamsm
-  MSM_dir  =  "/mnt/y/JMA_DATA/JMA_netcdf/MSM-S/"   ! NetCDF
+&frc_atm
+  ATM_dir  =  "/mnt/y/JMA_DATA/JMA_netcdf/MSM-S/"   ! NetCDF
   FRC_prefix  = "/mnt/d/COAWST_DATA/Kushimoto/Air/Kushimoto_frc_MSMnc"
-/
-
-&frc_jmalsm
-  LSM_dir  =  "X:/JMA_LSM/"   ! GRIB2
-  FRC_prefix  = "Shizugawa3_frc_LSM"
 /
 
 &tide

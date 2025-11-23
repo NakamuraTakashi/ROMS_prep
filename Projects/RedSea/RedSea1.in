@@ -100,9 +100,9 @@
   DCRIT   = 0.10d0     ! critical depth (m)
 /
 
-&frc_jra55
-  JRA55_dir  =  "N:/JRA-55/"
-  FRC_prefix  = "RedSea1_frc_JRA55"
+&frc_atm
+  ATM_dir  =  "N:/JRA-55/"
+  FRC_prefix  = "RedSea1_frc_atm"
 /
 
 &frc_era5_1

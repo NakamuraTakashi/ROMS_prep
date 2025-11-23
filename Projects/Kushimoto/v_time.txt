@@ -1,0 +1,26 @@
+netcdf nc_v {
+dimensions:
+	lon = 1423 ;
+	lat = 1604 ;
+	depth = 60 ;
+	time = UNLIMITED ; // (1 currently)
+variables:
+	double lon(lon) ;
+		lon:axis = "X" ;
+		lon:units = "degrees_east" ;
+	double lat(lat) ;
+		lat:axis = "Y" ;
+		lat:units = "degrees_north" ;
+	double depth(depth) ;
+		depth:axis = "Z" ;
+		depth:units = "m" ;
+	double time(time) ;
+		time:units = "days since 2010-07-01 00:00:00" ;
+		time:axis = "T" ;
+	float vo(time, depth, lat, lon) ;
+		vo:missing_value = -9.99e+33f ;
+		vo:_FillValue = -9.99e+33f ;
+data:
+
+ time = 0 ;
+}
