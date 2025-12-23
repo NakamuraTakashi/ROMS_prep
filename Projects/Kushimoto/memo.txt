@@ -1,0 +1,3 @@
+sudo mount -t drvfs //131.112.42.2/syn1 /mnt/x/
+sudo umount /mnt/x/
+sudo mount -t drvfs //131.112.42.6/disk1 /mnt/y/
