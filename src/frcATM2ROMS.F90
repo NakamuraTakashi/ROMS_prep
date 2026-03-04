@@ -659,6 +659,7 @@ PROGRAM frcATM2ROMS
   GRIB_yyyymmddhh = YYYY//MM//DD//"00"
 # if defined JMA_MSM
 !---- Set JMA-MSM GRIB2 file --------------------------------
+  allocate( IN_FILE(2) )
   IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
   IN_FILE(2) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
@@ -666,6 +667,7 @@ PROGRAM frcATM2ROMS
 
 # elif defined DSJRA55
 !---- Set DSJRA55 GRIB2 file --------------------------------
+  allocate( IN_FILE(2) )
   IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
                  "/fcst_surf."//GRIB_yyyymmddhh
   IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
@@ -673,11 +675,13 @@ PROGRAM frcATM2ROMS
 
 # elif defined JMA_LSM
 !---- Set JMA-LSM GRIB2 file --------------------------------
+  allocate( IN_FILE(1) )
   IN_FILE(1) = trim(ATM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
 
 # elif defined JRA55
 !---- Read JRA55 GRIB2 file --------------------------------
+  allocate( IN_FILE(2) )
   IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
                  "/fcst_surf125."//GRIB_yyyymmddhh
   IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
@@ -685,6 +689,7 @@ PROGRAM frcATM2ROMS
 
 # elif defined ERA5
 !---- Set ERA5 GRIB2 file --------------------------------
+  allocate( IN_FILE(1) )
   IN_FILE(1) = trim(ATM_FILE(1))
 # endif
 
