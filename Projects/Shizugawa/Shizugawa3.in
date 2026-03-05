@@ -2,7 +2,8 @@
 ! ROMS NetCDF grid file     
 !  GRID_FILE = "D:/COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.2.nc"
 !  GRID_FILE = "input/Shizugawa3_grd_v0.4c.nc"
-  GRID_FILE = "../../../COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.4c.nc"
+!  GRID_FILE = "../../../COAWST_DATA/Shizugawa/Shizugawa3/Grid/Shizugawa3_grd_v0.4c.nc"
+  GRID_FILE = "Shizugawa3_grd_v0.5.nc"
 /
 
 &mybath

@@ -80,3 +80,8 @@ Projects/test/*
 
 # Fortran temp. output files
 fort.*
+
+*.tar
+Projects/GetXRAIN/XRAIN/*
+Projects/GetXRAIN/list.txt
+Projects/GetXRAIN/files.tar

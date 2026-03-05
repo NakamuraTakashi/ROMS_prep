@@ -1,0 +1,717 @@
+netcdf Y3_river_2D_const_1900_2100_v1 {
+dimensions:
+	river = 4 ;
+	s_rho = 15 ;
+	river_time = 2 ;
+variables:
+	double river(river) ;
+		river:long_name = "river runoff identification number" ;
+	double river_Xposition(river) ;
+		river_Xposition:long_name = "river XI-position" ;
+		river_Xposition:LuvSrc_meaning = "i point index of U or V face source/sink" ;
+		river_Xposition:LwSrc_meaning = "i point index of RHO center source/sink" ;
+	double river_Eposition(river) ;
+		river_Eposition:long_name = "river ETA-position" ;
+		river_Eposition:LuvSrc_meaning = "j point index of U or V face source/sink" ;
+		river_Eposition:LwSrc_meaning = "j point index of RHO center source/sink" ;
+	double river_direction(river) ;
+		river_direction:long_name = "river runoff direction" ;
+		river_direction:flag_values = "0, 1" ;
+		river_direction:flag_meanings = "flow across u-face, flow across v-face" ;
+		river_direction:LwSrc_True = "flag not used" ;
+	double river_Vshape(s_rho, river) ;
+		river_Vshape:long_name = "river runoff mass transport vertical profile" ;
+		river_Vshape:requires = "must sum to 1 over s_rho" ;
+	double river_time(river_time) ;
+		river_time:long_name = "river runoff time" ;
+		river_time:units = "days since 2000-01-01 00:00:00" ;
+	double river_transport(river_time, river) ;
+		river_transport:long_name = "river runoff vertically integrated mass transport" ;
+		river_transport:units = "meter3 second-1" ;
+		river_transport:time = "river_time" ;
+	double river_temp(river_time, river) ;
+		river_temp:long_name = "river runoff potential temperature" ;
+		river_temp:units = "Celsius" ;
+		river_temp:time = "river_time" ;
+	double river_salt(river_time, river) ;
+		river_salt:long_name = "river runoff salinity" ;
+		river_salt:time = "river_time" ;
+	double river_mud_01(river_time, river) ;
+		river_mud_01:long_name = "iver runoff suspended sediment concentration" ;
+		river_mud_01:units = "kilogram meter-3" ;
+		river_mud_01:time = "river_time" ;
+	double river_DIC_01(river_time, river) ;
+		river_DIC_01:long_name = "iver runoff DIC_01" ;
+		river_DIC_01:units = "umol kg-1" ;
+		river_DIC_01:time = "river_time" ;
+	double river_DIC_02(river_time, river) ;
+		river_DIC_02:long_name = "iver runoff DIC_02" ;
+		river_DIC_02:units = "umol kg-1" ;
+		river_DIC_02:time = "river_time" ;
+	double river_TA(river_time, river) ;
+		river_TA:long_name = "river runoff TA" ;
+		river_TA:units = "umol kg-1" ;
+		river_TA:time = "river_time" ;
+	double river_DO(river_time, river) ;
+		river_DO:long_name = "river runoff DO" ;
+		river_DO:units = "umol L-1" ;
+		river_DO:time = "river_time" ;
+	double river_NO3_01(river_time, river) ;
+		river_NO3_01:long_name = "river runoff NO3_01" ;
+		river_NO3_01:units = "umol L-1" ;
+		river_NO3_01:time = "river_time" ;
+	double river_NO3_02(river_time, river) ;
+		river_NO3_02:long_name = "river runoff NO3_02" ;
+		river_NO3_02:units = "umol L-1" ;
+		river_NO3_02:time = "river_time" ;
+	double river_NH4_01(river_time, river) ;
+		river_NH4_01:long_name = "river runoff NH4_01" ;
+		river_NH4_01:units = "umol L-1" ;
+		river_NH4_01:time = "river_time" ;
+	double river_NH4_02(river_time, river) ;
+		river_NH4_02:long_name = "river runoff NH4_02" ;
+		river_NH4_02:units = "umol L-1" ;
+		river_NH4_02:time = "river_time" ;
+	double river_PO4_01(river_time, river) ;
+		river_PO4_01:long_name = "river runoff PO4_01" ;
+		river_PO4_01:units = "umol L-1" ;
+		river_PO4_01:time = "river_time" ;
+	double river_PO4_02(river_time, river) ;
+		river_PO4_02:long_name = "river runoff PO4_02" ;
+		river_PO4_02:units = "umol L-1" ;
+		river_PO4_02:time = "river_time" ;
+	double river_DOC01_01(river_time, river) ;
+		river_DOC01_01:long_name = "river runoff DOC01_01" ;
+		river_DOC01_01:units = "umol L-1" ;
+		river_DOC01_01:time = "river_time" ;
+	double river_DOC02_01(river_time, river) ;
+		river_DOC02_01:long_name = "river runoff DOC02_01" ;
+		river_DOC02_01:units = "umol L-1" ;
+		river_DOC02_01:time = "river_time" ;
+	double river_DOC01_02(river_time, river) ;
+		river_DOC01_02:long_name = "river runoff DOC01_02" ;
+		river_DOC01_02:units = "umol L-1" ;
+		river_DOC01_02:time = "river_time" ;
+	double river_DOC02_02(river_time, river) ;
+		river_DOC02_02:long_name = "river runoff DOC02_02" ;
+		river_DOC02_02:units = "umol L-1" ;
+		river_DOC02_02:time = "river_time" ;
+	double river_DON01_01(river_time, river) ;
+		river_DON01_01:long_name = "river runoff DON01_01" ;
+		river_DON01_01:units = "umol L-1" ;
+		river_DON01_01:time = "river_time" ;
+	double river_DON02_01(river_time, river) ;
+		river_DON02_01:long_name = "river runoff DON02_01" ;
+		river_DON02_01:units = "umol L-1" ;
+		river_DON02_01:time = "river_time" ;
+	double river_DON01_02(river_time, river) ;
+		river_DON01_02:long_name = "river runoff DON01_02" ;
+		river_DON01_02:units = "umol L-1" ;
+		river_DON01_02:time = "river_time" ;
+	double river_DON02_02(river_time, river) ;
+		river_DON02_02:long_name = "river runoff DON02_02" ;
+		river_DON02_02:units = "umol L-1" ;
+		river_DON02_02:time = "river_time" ;
+	double river_DOP01_01(river_time, river) ;
+		river_DOP01_01:long_name = "river runoff DOP01_01" ;
+		river_DOP01_01:units = "umol L-1" ;
+		river_DOP01_01:time = "river_time" ;
+	double river_DOP02_01(river_time, river) ;
+		river_DOP02_01:long_name = "river runoff DOP02_01" ;
+		river_DOP02_01:units = "umol L-1" ;
+		river_DOP02_01:time = "river_time" ;
+	double river_DOP01_02(river_time, river) ;
+		river_DOP01_02:long_name = "river runoff DOP01_02" ;
+		river_DOP01_02:units = "umol L-1" ;
+		river_DOP01_02:time = "river_time" ;
+	double river_DOP02_02(river_time, river) ;
+		river_DOP02_02:long_name = "river runoff DOP02_02" ;
+		river_DOP02_02:units = "umol L-1" ;
+		river_DOP02_02:time = "river_time" ;
+	double river_POC01_01(river_time, river) ;
+		river_POC01_01:long_name = "river runoff POC01_01" ;
+		river_POC01_01:units = "umol L-1" ;
+		river_POC01_01:time = "river_time" ;
+	double river_POC02_01(river_time, river) ;
+		river_POC02_01:long_name = "river runoff POC02_01" ;
+		river_POC02_01:units = "umol L-1" ;
+		river_POC02_01:time = "river_time" ;
+	double river_POC03_01(river_time, river) ;
+		river_POC03_01:long_name = "river runoff POC03_01" ;
+		river_POC03_01:units = "umol L-1" ;
+		river_POC03_01:time = "river_time" ;
+	double river_PON01_01(river_time, river) ;
+		river_PON01_01:long_name = "river runoff PON01_01" ;
+		river_PON01_01:units = "umol L-1" ;
+		river_PON01_01:time = "river_time" ;
+	double river_PON02_01(river_time, river) ;
+		river_PON02_01:long_name = "river runoff PON02_01" ;
+		river_PON02_01:units = "umol L-1" ;
+		river_PON02_01:time = "river_time" ;
+	double river_PON03_01(river_time, river) ;
+		river_PON03_01:long_name = "river runoff PON03_01" ;
+		river_PON03_01:units = "umol L-1" ;
+		river_PON03_01:time = "river_time" ;
+	double river_POP01_01(river_time, river) ;
+		river_POP01_01:long_name = "river runoff POP01_01" ;
+		river_POP01_01:units = "umol L-1" ;
+		river_POP01_01:time = "river_time" ;
+	double river_POP02_01(river_time, river) ;
+		river_POP02_01:long_name = "river runoff POP02_01" ;
+		river_POP02_01:units = "umol L-1" ;
+		river_POP02_01:time = "river_time" ;
+	double river_POP03_01(river_time, river) ;
+		river_POP03_01:long_name = "river runoff POP03_01" ;
+		river_POP03_01:units = "umol L-1" ;
+		river_POP03_01:time = "river_time" ;
+	double river_PhyC01_01(river_time, river) ;
+		river_PhyC01_01:long_name = "river runoff PhyC01_01" ;
+		river_PhyC01_01:units = "umolC L-1" ;
+		river_PhyC01_01:time = "river_time" ;
+	double river_PhyC02_01(river_time, river) ;
+		river_PhyC02_01:long_name = "river runoff PhyC02_01" ;
+		river_PhyC02_01:units = "umolC L-1" ;
+		river_PhyC02_01:time = "river_time" ;
+	double river_PhyC03_01(river_time, river) ;
+		river_PhyC03_01:long_name = "river runoff PhyC03_01" ;
+		river_PhyC03_01:units = "umolC L-1" ;
+		river_PhyC03_01:time = "river_time" ;
+	double river_PhyC04_01(river_time, river) ;
+		river_PhyC04_01:long_name = "river runoff PhyC04_01" ;
+		river_PhyC04_01:units = "umolC L-1" ;
+		river_PhyC04_01:time = "river_time" ;
+	double river_PhyN01_01(river_time, river) ;
+		river_PhyN01_01:long_name = "river runoff PhyN01_01" ;
+		river_PhyN01_01:units = "umolN L-1" ;
+		river_PhyN01_01:time = "river_time" ;
+	double river_PhyN02_01(river_time, river) ;
+		river_PhyN02_01:long_name = "river runoff PhyN02_01" ;
+		river_PhyN02_01:units = "umolN L-1" ;
+		river_PhyN02_01:time = "river_time" ;
+	double river_PhyN03_01(river_time, river) ;
+		river_PhyN03_01:long_name = "river runoff PhyN03_01" ;
+		river_PhyN03_01:units = "umolN L-1" ;
+		river_PhyN03_01:time = "river_time" ;
+	double river_PhyN04_01(river_time, river) ;
+		river_PhyN04_01:long_name = "river runoff PhyN04_01" ;
+		river_PhyN04_01:units = "umolN L-1" ;
+		river_PhyN04_01:time = "river_time" ;
+	double river_PhyP01_01(river_time, river) ;
+		river_PhyP01_01:long_name = "river runoff PhyP01_01" ;
+		river_PhyP01_01:units = "umolP L-1" ;
+		river_PhyP01_01:time = "river_time" ;
+	double river_PhyP02_01(river_time, river) ;
+		river_PhyP02_01:long_name = "river runoff PhyP02_01" ;
+		river_PhyP02_01:units = "umolP L-1" ;
+		river_PhyP02_01:time = "river_time" ;
+	double river_PhyP03_01(river_time, river) ;
+		river_PhyP03_01:long_name = "river runoff PhyP03_01" ;
+		river_PhyP03_01:units = "umolP L-1" ;
+		river_PhyP03_01:time = "river_time" ;
+	double river_PhyP04_01(river_time, river) ;
+		river_PhyP04_01:long_name = "river runoff PhyP04_01" ;
+		river_PhyP04_01:units = "umolP L-1" ;
+		river_PhyP04_01:time = "river_time" ;
+	double river_ZooC01_01(river_time, river) ;
+		river_ZooC01_01:long_name = "river runoff ZooC01_01" ;
+		river_ZooC01_01:units = "umolC L-1" ;
+		river_ZooC01_01:time = "river_time" ;
+	double river_ZooN01_01(river_time, river) ;
+		river_ZooN01_01:long_name = "river runoff ZooN01_01" ;
+		river_ZooN01_01:units = "umolN L-1" ;
+		river_ZooN01_01:time = "river_time" ;
+	double river_ZooP01_01(river_time, river) ;
+		river_ZooP01_01:long_name = "river runoff ZooP01_01" ;
+		river_ZooP01_01:units = "umolP L-1" ;
+		river_ZooP01_01:time = "river_time" ;
+	double river_PIC01_01(river_time, river) ;
+		river_PIC01_01:long_name = "river runoff PIC01_01" ;
+		river_PIC01_01:units = "umolC L-1" ;
+		river_PIC01_01:time = "river_time" ;
+	double river_PIC02_01(river_time, river) ;
+		river_PIC02_01:long_name = "river runoff PIC02_01" ;
+		river_PIC02_01:units = "umolC L-1" ;
+		river_PIC02_01:time = "river_time" ;
+	double river_H2S_01(river_time, river) ;
+		river_H2S_01:long_name = "river runoff H2S_01" ;
+		river_H2S_01:units = "umol L-1" ;
+		river_H2S_01:time = "river_time" ;
+	double river_S0_01(river_time, river) ;
+		river_S0_01:long_name = "river runoff S0_01" ;
+		river_S0_01:units = "umol L-1" ;
+		river_S0_01:time = "river_time" ;
+	double river_POC01_02(river_time, river) ;
+		river_POC01_02:long_name = "river runoff POC01_02" ;
+		river_POC01_02:units = "umol L-1" ;
+		river_POC01_02:time = "river_time" ;
+	double river_POC02_02(river_time, river) ;
+		river_POC02_02:long_name = "river runoff POC02_02" ;
+		river_POC02_02:units = "umol L-1" ;
+		river_POC02_02:time = "river_time" ;
+	double river_POC03_02(river_time, river) ;
+		river_POC03_02:long_name = "river runoff POC03_02" ;
+		river_POC03_02:units = "umol L-1" ;
+		river_POC03_02:time = "river_time" ;
+	double river_PON01_02(river_time, river) ;
+		river_PON01_02:long_name = "river runoff PON01_02" ;
+		river_PON01_02:units = "umol L-1" ;
+		river_PON01_02:time = "river_time" ;
+	double river_PON02_02(river_time, river) ;
+		river_PON02_02:long_name = "river runoff PON02_02" ;
+		river_PON02_02:units = "umol L-1" ;
+		river_PON02_02:time = "river_time" ;
+	double river_PON03_02(river_time, river) ;
+		river_PON03_02:long_name = "river runoff PON03_02" ;
+		river_PON03_02:units = "umol L-1" ;
+		river_PON03_02:time = "river_time" ;
+	double river_POP01_02(river_time, river) ;
+		river_POP01_02:long_name = "river runoff POP01_02" ;
+		river_POP01_02:units = "umol L-1" ;
+		river_POP01_02:time = "river_time" ;
+	double river_POP02_02(river_time, river) ;
+		river_POP02_02:long_name = "river runoff POP02_02" ;
+		river_POP02_02:units = "umol L-1" ;
+		river_POP02_02:time = "river_time" ;
+	double river_POP03_02(river_time, river) ;
+		river_POP03_02:long_name = "river runoff POP03_02" ;
+		river_POP03_02:units = "umol L-1" ;
+		river_POP03_02:time = "river_time" ;
+	double river_PhyC01_02(river_time, river) ;
+		river_PhyC01_02:long_name = "river runoff PhyC01_02" ;
+		river_PhyC01_02:units = "umolC L-1" ;
+		river_PhyC01_02:time = "river_time" ;
+	double river_PhyC02_02(river_time, river) ;
+		river_PhyC02_02:long_name = "river runoff PhyC02_02" ;
+		river_PhyC02_02:units = "umolC L-1" ;
+		river_PhyC02_02:time = "river_time" ;
+	double river_PhyC03_02(river_time, river) ;
+		river_PhyC03_02:long_name = "river runoff PhyC03_02" ;
+		river_PhyC03_02:units = "umolC L-1" ;
+		river_PhyC03_02:time = "river_time" ;
+	double river_PhyC04_02(river_time, river) ;
+		river_PhyC04_02:long_name = "river runoff PhyC04_02" ;
+		river_PhyC04_02:units = "umolC L-1" ;
+		river_PhyC04_02:time = "river_time" ;
+	double river_PhyN01_02(river_time, river) ;
+		river_PhyN01_02:long_name = "river runoff PhyN01_02" ;
+		river_PhyN01_02:units = "umolN L-1" ;
+		river_PhyN01_02:time = "river_time" ;
+	double river_PhyN02_02(river_time, river) ;
+		river_PhyN02_02:long_name = "river runoff PhyN02_02" ;
+		river_PhyN02_02:units = "umolN L-1" ;
+		river_PhyN02_02:time = "river_time" ;
+	double river_PhyN03_02(river_time, river) ;
+		river_PhyN03_02:long_name = "river runoff PhyN03_02" ;
+		river_PhyN03_02:units = "umolN L-1" ;
+		river_PhyN03_02:time = "river_time" ;
+	double river_PhyN04_02(river_time, river) ;
+		river_PhyN04_02:long_name = "river runoff PhyN04_02" ;
+		river_PhyN04_02:units = "umolN L-1" ;
+		river_PhyN04_02:time = "river_time" ;
+	double river_PhyP01_02(river_time, river) ;
+		river_PhyP01_02:long_name = "river runoff PhyP01_02" ;
+		river_PhyP01_02:units = "umolP L-1" ;
+		river_PhyP01_02:time = "river_time" ;
+	double river_PhyP02_02(river_time, river) ;
+		river_PhyP02_02:long_name = "river runoff PhyP02_02" ;
+		river_PhyP02_02:units = "umolP L-1" ;
+		river_PhyP02_02:time = "river_time" ;
+	double river_PhyP03_02(river_time, river) ;
+		river_PhyP03_02:long_name = "river runoff PhyP03_02" ;
+		river_PhyP03_02:units = "umolP L-1" ;
+		river_PhyP03_02:time = "river_time" ;
+	double river_PhyP04_02(river_time, river) ;
+		river_PhyP04_02:long_name = "river runoff PhyP04_02" ;
+		river_PhyP04_02:units = "umolP L-1" ;
+		river_PhyP04_02:time = "river_time" ;
+	double river_ZooC01_02(river_time, river) ;
+		river_ZooC01_02:long_name = "river runoff ZooC01_02" ;
+		river_ZooC01_02:units = "umolC L-1" ;
+		river_ZooC01_02:time = "river_time" ;
+	double river_ZooN01_02(river_time, river) ;
+		river_ZooN01_02:long_name = "river runoff ZooN01_02" ;
+		river_ZooN01_02:units = "umolN L-1" ;
+		river_ZooN01_02:time = "river_time" ;
+	double river_ZooP01_02(river_time, river) ;
+		river_ZooP01_02:long_name = "river runoff ZooP01_02" ;
+		river_ZooP01_02:units = "umolP L-1" ;
+		river_ZooP01_02:time = "river_time" ;
+	double river_PIC01_02(river_time, river) ;
+		river_PIC01_02:long_name = "river runoff PIC01_02" ;
+		river_PIC01_02:units = "umolC L-1" ;
+		river_PIC01_02:time = "river_time" ;
+	double river_PIC02_02(river_time, river) ;
+		river_PIC02_02:long_name = "river runoff PIC02_02" ;
+		river_PIC02_02:units = "umolC L-1" ;
+		river_PIC02_02:time = "river_time" ;
+	double river_H2S_02(river_time, river) ;
+		river_H2S_02:long_name = "river runoff H2S_02" ;
+		river_H2S_02:units = "umol L-1" ;
+		river_H2S_02:time = "river_time" ;
+	double river_S0_02(river_time, river) ;
+		river_S0_02:long_name = "river runoff S0_02" ;
+		river_S0_02:units = "umol L-1" ;
+		river_S0_02:time = "river_time" ;
+
+// global attributes:
+		:type = "ROMS FORCING file" ;
+		:title = "Yaeyama3 Rivers Forcing" ;
+		:grd_file = "Yaeyama3_grd_v12.2.nc" ;
+		:rivers = "(1) Arakawa river, (2) Nagura river, (3) Nakama river, (4) SGD" ;
+data:
+
+ river = 1, 2, 3, 4 ;
+
+ river_Xposition = 275, 272,   4,  -1 ;
+
+ river_Eposition = 212, 270, 138,  -1 ;
+
+ river_direction = 0, 0, 0, 0 ;
+
+ river_Vshape =
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667,
+  0.0666666666666667, 0.0666666666666667, 0.0666666666666667, 0.0666666666666667 ;
+
+ river_time = -3652, 36525 ;
+
+ river_transport =
+  0.17, 0.71, 0.56, 0.005,
+  0.17, 0.71, 0.56, 0.005 ;
+
+ river_temp =
+  20, 20, 20, 20,
+  20, 20, 20, 20 ;
+
+ river_salt =
+  3, 3, 3, 3,
+  3, 3, 3, 3 ;
+
+ river_mud_01 =
+  0.007, 0.007, 0.004, 0.0,
+  0.007, 0.007, 0.004, 0.0 ;
+
+ river_DIC_01 =
+  3500, 3500, 3500, 3500,
+  3500, 3500, 3500, 3500 ;
+
+ river_DIC_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_TA =
+  3500, 3500, 3500, 3500,
+  3500, 3500, 3500, 3500 ;
+
+ river_DO =
+  200, 200, 200, 200,
+  200, 200, 200, 200 ;
+
+ river_NO3_01 =
+  130, 26, 3, 300,
+  130, 26, 3, 300 ;
+
+ river_NO3_02 =
+  130, 26, 3, 300,
+  130, 26, 3, 300 ;
+
+ river_NH4_01 =
+  4.0, 2.5, 1.0, 0.8,
+  4.0, 2.5, 1.0, 0.8 ;
+
+ river_NH4_02 =
+  4.0, 2.5, 1.0, 0.8,
+  4.0, 2.5, 1.0, 0.8 ;
+
+ river_PO4_01 =
+  6.0, 1.0, 0.05, 0.2,
+  6.0, 1.0, 0.05, 0.2 ;
+
+ river_PO4_02 =
+  6.0, 1.0, 0.05, 0.2,
+  6.0, 1.0, 0.05, 0.2 ;
+
+ river_DOC01_01 =
+  30, 20, 20, 10,
+  30, 20, 20, 10 ;
+
+ river_DOC02_01 =
+  330, 130, 130, 60,
+  330, 130, 130, 60 ;
+
+ river_DOC01_02 =
+  30, 20, 20, 10,
+  30, 20, 20, 10 ;
+
+ river_DOC02_02 =
+  330, 130, 130, 60,
+  330, 130, 130, 60 ;
+
+ river_DON01_01 =
+   4.5,  3.0,  3.0,  1.5,
+   4.5,  3.0,  3.0,  1.5 ;
+
+ river_DON02_01 =
+  50.0, 20.0, 20.0, 10.0,
+  50.0, 20.0, 20.0, 10.0 ;
+
+ river_DON01_02 =
+   4.5,  3.0,  3.0,  1.5,
+   4.5,  3.0,  3.0,  1.5 ;
+
+ river_DON02_02 =
+  50.0, 20.0, 20.0, 10.0,
+  50.0, 20.0, 20.0, 10.0 ;
+
+ river_DOP01_01 =
+   0.3,  0.2,  0.2,  0.1,
+   0.3,  0.2,  0.2,  0.1 ;
+
+ river_DOP02_01 =
+   3.1,  1.2,  1.2,  0.6,
+   3.1,  1.2,  1.2,  0.6 ;
+
+ river_DOP01_02 =
+   0.3,  0.2,  0.2,  0.1,
+   0.3,  0.2,  0.2,  0.1 ;
+
+ river_DOP02_02 =
+   3.1,  1.2,  1.2,  0.6,
+   3.1,  1.2,  1.2,  0.6 ;
+
+ river_POC01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POC02_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POC03_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PON01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PON02_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PON03_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POP01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POP02_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POP03_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyC01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyC02_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyC03_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyC04_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyN01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyN02_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyN03_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP04_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP02_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP03_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP04_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_ZooC01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_ZooN01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_ZooP01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PIC01_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PIC02_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_H2S_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_S0_01 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POC01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POC02_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POC03_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PON01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PON02_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PON03_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POP01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POP02_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_POP03_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyC01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyC02_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyC03_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyC04_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyN01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyN02_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyN03_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP04_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP02_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP03_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PhyP04_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_ZooC01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_ZooN01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_ZooP01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PIC01_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_PIC02_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_H2S_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+
+ river_S0_02 =
+  0, 0, 0, 0,
+  0, 0, 0, 0 ;
+}

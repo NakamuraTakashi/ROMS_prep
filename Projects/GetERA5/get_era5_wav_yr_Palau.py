@@ -26,7 +26,7 @@ Blat = 4      # Latitude  (degrees) of the bottom-left corner of the grid.
 Tlat = 11     # Latitude  (degrees) of the top-right corner of the grid.
 
 #Years=["2017","2018","2019","2020","2021"]
-Years=["2023"]
+Years=["2024"]
 
 OUTPUT_DIR = 'Data/Palau'
 
