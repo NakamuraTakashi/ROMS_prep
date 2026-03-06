@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# Need 
-# > pip install netcdf4
 
 import netCDF4
 

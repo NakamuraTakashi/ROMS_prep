@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from matplotlib.colors import LinearSegmentedColormap
 import numpy as np

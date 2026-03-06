@@ -18,4 +18,4 @@ echo "url: https://cds.climate.copernicus.eu/api" > $HOME/.cdsapirc
 echo "key: ********-****-****-****-************" >> $HOME/.cdsapirc
 #
 #pip3 install cdsapi
-pip install "cdsapi>=0.7.2" --break-system-packages
+uv add "cdsapi>=0.7.7"

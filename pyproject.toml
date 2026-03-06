@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "cdsapi>=0.7.7",
     "matplotlib>=3.10.8",
     "netcdf4>=1.7.4",
     "xarray>=2026.2.0",

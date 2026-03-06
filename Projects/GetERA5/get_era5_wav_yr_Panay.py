@@ -1,6 +1,6 @@
 #---------------------------------------------------------------------------
 # Executable command
-#> uv run get_era5_atm_yr.py
+#> uv run get_era5_wav_yr.py
 #---------------------------------------------------------------------------
 import os
 import cdsapi
@@ -13,17 +13,17 @@ import cdsapi
 #                |______|
 #     (Llon,Blat)                     
 #
-Llon = 131    # Longitude (degrees) of the bottom-left corner of the grid. 
-Rlon = 138    # Longitude (degrees) of the top-right corner of the grid. 
-Blat = 4      # Latitude  (degrees) of the bottom-left corner of the grid.
-Tlat = 11     # Latitude  (degrees) of the top-right corner of the grid.
+Llon = 118    # Longitude (degrees) of the bottom-left corner of the grid. 
+Rlon = 127    # Longitude (degrees) of the top-right corner of the grid. 
+Blat = 9      # Latitude  (degrees) of the bottom-left corner of the grid.
+Tlat = 15     # Latitude  (degrees) of the top-right corner of the grid.
 
 #Years=["2017","2018","2019","2020","2021"]
-Years=["2022"]
+Years=["2025"]
 
 OUTPUT_DIR = 'Data/Palau'
 
-FILE_NAME_prefix='era5_atm'
+FILE_NAME_prefix='era5_wav'
 
 #---------------------------------------------------------------------------
 if not os.path.isdir(OUTPUT_DIR):
@@ -39,14 +39,9 @@ for Year in Years:
     request = {
         "product_type": ["reanalysis"],
         "variable": [
-            "10m_u_component_of_wind",
-            "10m_v_component_of_wind",
-            "2m_dewpoint_temperature",
-            "2m_temperature",
-            "mean_sea_level_pressure",
-            "total_precipitation",
-            "surface_solar_radiation_downwards",
-            "surface_thermal_radiation_downwards"
+            "mean_wave_direction",
+            "mean_wave_period",
+            "significant_height_of_combined_wind_waves_and_swell"
         ],
         "year": Year,
         "month": [

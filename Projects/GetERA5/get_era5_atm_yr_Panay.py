@@ -13,10 +13,10 @@ import cdsapi
 #                |______|
 #     (Llon,Blat)                     
 #
-Llon = 131    # Longitude (degrees) of the bottom-left corner of the grid. 
-Rlon = 138    # Longitude (degrees) of the top-right corner of the grid. 
-Blat = 4      # Latitude  (degrees) of the bottom-left corner of the grid.
-Tlat = 11     # Latitude  (degrees) of the top-right corner of the grid.
+Llon = 118    # Longitude (degrees) of the bottom-left corner of the grid. 
+Rlon = 127    # Longitude (degrees) of the top-right corner of the grid. 
+Blat = 9      # Latitude  (degrees) of the bottom-left corner of the grid.
+Tlat = 15     # Latitude  (degrees) of the top-right corner of the grid.
 
 #Years=["2017","2018","2019","2020","2021"]
 Years=["2022"]

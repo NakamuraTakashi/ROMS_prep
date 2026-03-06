@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 import netrc
 import urllib.request, urllib.parse, urllib.error
