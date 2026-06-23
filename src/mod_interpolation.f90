@@ -2800,6 +2800,36 @@ CONTAINS
     enddo
     
     
+    ! Phase 1: fill invalid points that have >=2 valid neighbours (higher-quality
+    ! average). For any region this can complete, the result is identical to the
+    ! original routine. Exit when a pass fills nothing (no infinite loop).
+    do
+      loopflag = 0   ! set to 1 if at least one point gets filled in this pass
+
+      do i=2,Nx-1
+        do j=2,Ny-1
+          if( mask(i,j)==0.0d0 ) then
+            masksum = mask(i-1,j)+mask(i+1,j)+mask(i,j-1)+mask(i,j+1)
+            if(masksum > 1.0d0) then
+              V(i,j) =( mask(i-1,j)*V(i-1,j)                   &
+                          +mask(i+1,j)*V(i+1,j)                   &
+                          +mask(i,j-1)*V(i,j-1)                   &
+                          +mask(i,j+1)*V(i,j+1) )                 &
+                         /masksum
+              mask(i,j) = 1.0d0
+              loopflag = 1
+            endif
+          endif
+        enddo
+      enddo
+      if(loopflag == 0) exit
+    enddo
+
+    ! Phase 2: fill any remaining invalid points that have >=1 valid neighbour.
+    ! This reaches regions bounded by a straight edge (e.g. a flat block of invalid
+    ! cells along a grid border), whose border cells have only one valid neighbour
+    ! and so cannot be entered by phase 1. Repeated until no progress, so every
+    ! point connected to valid data is filled; fully isolated blobs are left as-is.
     do
       loopflag = 0
 
@@ -2807,15 +2837,14 @@ CONTAINS
         do j=2,Ny-1
           if( mask(i,j)==0.0d0 ) then
             masksum = mask(i-1,j)+mask(i+1,j)+mask(i,j-1)+mask(i,j+1)
-            if(masksum <= 1.0d0) then
-              loopflag = 1
-            else
+            if(masksum > 0.0d0) then
               V(i,j) =( mask(i-1,j)*V(i-1,j)                   &
                           +mask(i+1,j)*V(i+1,j)                   &
                           +mask(i,j-1)*V(i,j-1)                   &
                           +mask(i,j+1)*V(i,j+1) )                 &
                          /masksum
               mask(i,j) = 1.0d0
+              loopflag = 1
             endif
           endif
         enddo

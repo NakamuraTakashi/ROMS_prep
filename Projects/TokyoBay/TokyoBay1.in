@@ -90,6 +90,10 @@
   INIhour  = 0      ! Initial hour
 /
 
+&his
+  HIS_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay1/His/TokyoBay1_his_HYCOM_Nz30"
+/
+
 &hcoord
   spherical  = 1   
 /

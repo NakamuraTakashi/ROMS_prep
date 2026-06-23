@@ -85,3 +85,7 @@ fort.*
 Projects/GetXRAIN/XRAIN/*
 Projects/GetXRAIN/list.txt
 Projects/GetXRAIN/files.tar
+
+# Claude Code local settings (per-user, not for the repo)
+.claude/
+CLAUDE.md
