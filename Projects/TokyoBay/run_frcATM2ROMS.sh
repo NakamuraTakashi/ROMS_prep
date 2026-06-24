@@ -31,6 +31,6 @@ gfortran ${SRC_DIR}/mod_calendar.f90 ${SRC_DIR}/mod_interpolation.f90 ${SRC_DIR}
 export OMP_NUM_THREADS=12
 rm *.mod
 
-./frcATM2ROMS.exe < TokyoBay1.in
-#./frcATM2ROMS.exe < TokyoBay2.in
+#./frcATM2ROMS.exe < TokyoBay1.in
+./frcATM2ROMS.exe < TokyoBay2.in
 #./frcATM2ROMS.exe < TokyoBay3.in

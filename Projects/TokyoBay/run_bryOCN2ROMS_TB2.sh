@@ -8,9 +8,9 @@
 # Choose ONE: ini = initial conditions (single time-step, + tide option)
 #             bry = boundary conditions (time series)
 #             his = ROMS-his-like file  (time series, whole domain)
-#gen_mode=bry
+gen_mode=bry
 #gen_mode=his
-gen_mode=ini
+#gen_mode=ini
 
 # ===== Input namelist file =================================================================
 INPUT=TokyoBay2.in
@@ -22,7 +22,8 @@ INPUT=TokyoBay2.in
 #export MY_CPP_FLAGS="-DJCOPE_MODEL"
 #export MY_CPP_FLAGS="-DROMS_MODEL"
 #export MY_CPP_FLAGS="-DFORP_MODEL"
-export MY_CPP_FLAGS="-DMOVEJPN_MODEL"
+#export MY_CPP_FLAGS="-DMOVEJPN_MODEL"
+export MY_CPP_FLAGS="-DFORA_MODEL"
 
 # ===== HYCOM option ========================================================================
 # Please choose one of the following options
@@ -56,8 +57,8 @@ export MY_CPP_FLAGS="-DMOVEJPN_MODEL"
 # ===== Tide model (ini only) ===============================================================
 # Adds NAOTIDE/NAOTIDEJ tide to zeta. Leave as 'none' for bry/his (ignored there).
 #tide_model=naotide
-tide_model=naotidej
-#tide_model=none
+#tide_model=naotidej
+tide_model=none
 
 # ===========================================================================================
 SRC_DIR=../../src

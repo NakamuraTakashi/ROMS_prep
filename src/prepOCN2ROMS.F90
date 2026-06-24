@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2025 Takashi NAKAMURA  ===== 
+!!!=== Copyright (c) 2014-2026 Takashi NAKAMURA  ===== 
 
 #if defined HYCOM_MODEL || defined JCOPE_MODEL
 # undef WET_DRY
@@ -15,7 +15,7 @@
 # undef REANALYSIS
 # undef SKIP_CHECK_TIME
 #endif 
-#if defined FORP_MODEL || defined MOVEJPN_MODEL
+#if defined FORP_MODEL || defined MOVEJPN_MODEL || defined FORA_MODEL
 # define MRICOM_MODEL
 #endif 
 
@@ -296,7 +296,7 @@ PROGRAM prepOCN2ROMS
 # if defined FORP_MODEL
   character(13) :: MRICOM_sufix  = "_dy_200601.nc"
   character(12) :: MRICOM_prefix = "forp-jpn-v4_"
-# elif defined MOVEJPN_MODEL
+# elif defined MOVEJPN_MODEL || defined FORA_MODEL
   character(9) :: MRICOM_sufix(1000)  = ".20080101"
   character(3) :: MRICOM_prefix = "nc_"
   character(256), parameter :: MOVEJPN_VAR(5) = (/ &
@@ -964,11 +964,11 @@ PROGRAM prepOCN2ROMS
     allocate( NC(iNC)%lon(Nxr_dg) )
     allocate( NC(iNC)%depth(Nzr_dg) )
 
-    call readNetCDF_1d(ncid, 'lat', Nyr_dg, NC(iNC)%lat)
-    call readNetCDF_1d(ncid, 'lon', Nxr_dg, NC(iNC)%lon)
+    call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'lat', Nyr_dg, NC(iNC)%lat)
+    call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'lon', Nxr_dg, NC(iNC)%lon)
     if( romsvar(2)==1 .or. romsvar(3)==1 .or. &
         romsvar(5)==1 .or. romsvar(6)==1       ) then
-      call readNetCDF_1d(ncid, 'depth', Nzr_dg, NC(iNC)%depth)
+      call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'depth', Nzr_dg, NC(iNC)%depth)
     else
       NC(iNC)%depth = 0.0d0
     end if
@@ -1187,7 +1187,7 @@ PROGRAM prepOCN2ROMS
         trim( MRICOM_VAR_NAME(i) )// MRICOM_sufix
     enddo
     write(*,*) "OPEN: ", trim( NC(iNC)%MRICOM_FILE(1) )
-    call check( nf90_open(NC(iNC)%MRICOM_FILE(1), nf90_nowrite, ncid) )
+    call try_nf_open(NC(iNC)%MRICOM_FILE(1), nf90_nowrite, ncid)
     call get_dimension(ncid, 'time', NC(iNC)%Nt)
     write(*,*) NC(iNC)%Nt
 
@@ -1275,7 +1275,7 @@ PROGRAM prepOCN2ROMS
 
   bry_time(:) = ( bry_time(:) + ( d_jdate_00010101-2.0d0 -d_jdate_Ref )*24.0d0)*3600.0d0 ! hour -> sec
 
-# elif defined MOVEJPN_MODEL
+# elif defined MOVEJPN_MODEL || defined FORA_MODEL
 
   write(*,*) "************ MOVE-JPN MODEL ************"
 
@@ -1305,11 +1305,19 @@ PROGRAM prepOCN2ROMS
 
     ihours = ihours + 24  !!! Files exist daily interval
     MRICOM_sufix_tmp = "."//YYYY//MM//DD
+#  if defined MOVEJPN_MODEL
     MRICOM_FILE_tmp = &
         trim( MRICOM_data_dir )// MRICOM_prefix // &
         trim( MOVEJPN_VAR(1) )// MRICOM_sufix_tmp
-
     status = access( trim( MRICOM_FILE_tmp ), ' ' )
+#  elif defined FORA_MODEL
+    MRICOM_FILE_tmp = &
+        trim( MRICOM_data_dir )// "Basic-2D/" //YYYY// "/" // &
+        MRICOM_prefix // &
+        trim( MOVEJPN_VAR(1) )// MRICOM_sufix_tmp
+    status = nf_exists( trim( MRICOM_FILE_tmp ) )
+#  endif
+
 !    write(*,*) 'CHECK FILE: ', trim( MRICOM_FILE_tmp ), status !!!!!!!!!!!!! DEBUG
     if ( status /= 0 ) cycle 
     Nt = Nt + 1
@@ -1330,9 +1338,23 @@ PROGRAM prepOCN2ROMS
     iNCt(iNC) = iNC
     idt(iNC)  = 1
     do i=1,5
+#  if defined MOVEJPN_MODEL
       NC(iNC)%MRICOM_FILE(i) = &
         trim( MRICOM_data_dir )// MRICOM_prefix // &
         trim( MOVEJPN_VAR(i) )// MRICOM_sufix(iNC)
+#  elif defined FORA_MODEL
+      if (i==1) then
+        NC(iNC)%MRICOM_FILE(i) = &
+          trim( MRICOM_data_dir )// "Basic-2D/" //YYYY// "/" // &
+          MRICOM_prefix // &
+          trim( MOVEJPN_VAR(i) )// MRICOM_sufix(iNC)
+      else
+        NC(iNC)%MRICOM_FILE(i) = &
+          trim( MRICOM_data_dir )// "Basic-3D/" //YYYY// "/" // &
+          MRICOM_prefix // &
+          trim( MOVEJPN_VAR(i) )// MRICOM_sufix(iNC)
+      endif
+#  endif
     enddo
 !    write(*,*) 'FILE ', iNC, trim( NC(iNC)%MRICOM_FILE(1) ) !!!!!!!!!!!!!!!!
   enddo
@@ -1352,13 +1374,13 @@ PROGRAM prepOCN2ROMS
   
   !---- Read FORP/MOVE-JPN netCDF grid cooredinate --------------------------------
   write(*,*) "OPEN: ", trim( NC(iNCs)%MRICOM_FILE(4) )
-  call check( nf90_open(trim( NC(iNCs)%MRICOM_FILE(4) ), nf90_nowrite, ncid) )
+  call try_nf_open(trim( NC(iNCs)%MRICOM_FILE(4) ), nf90_nowrite, ncid)
   ! Get dimension data
   call get_dimension(ncid, 'lat', Nyr_dg)
   call get_dimension(ncid, 'lon', Nxr_dg)
 # if defined FORP_MODEL
   call get_dimension(ncid, 'lev', Nzr_dg)
-# elif defined MOVEJPN_MODEL
+# elif defined MOVEJPN_MODEL || defined FORA_MODEL
   call get_dimension(ncid, 'depth', Nzr_dg)
 # endif
   write(*,*) Nxr_dg, Nyr_dg, Nzr_dg
@@ -1368,16 +1390,13 @@ PROGRAM prepOCN2ROMS
   allocate( lonst(Nxr_dg) )
   allocate( depth(Nzr_dg) )
 
-  call check( nf90_inq_varid(ncid, 'lat', var_id) )
-  call check( nf90_get_var(ncid, var_id, latst) )
-  call check( nf90_inq_varid(ncid, 'lon', var_id) )
-  call check( nf90_get_var(ncid, var_id, lonst) )
+  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, 'lat', Nyr_dg, latst)
+  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, 'lon', Nxr_dg, lonst)
 # if defined FORP_MODEL
-  call check( nf90_inq_varid(ncid, 'lev', var_id) ) 
-# elif defined MOVEJPN_MODEL
-  call check( nf90_inq_varid(ncid, 'depth', var_id) ) 
+  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, 'lev', Nzr_dg, depth)
+# elif defined MOVEJPN_MODEL || defined FORA_MODEL
+  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, 'depth', Nzr_dg, depth)
 # endif
-  call check( nf90_get_var(ncid, var_id, depth) )
 
   Ldg = Nxr_dg-1
   Mdg = Nyr_dg-1
@@ -1402,8 +1421,8 @@ PROGRAM prepOCN2ROMS
 
   start4D = (/ 1,      1,      1,  NC(iNCs)%ItS /)
   count4D = (/ Nxr_dg, Nyr_dg, 1,  1            /)
-  call check( nf90_inq_varid(ncid, MRICOM_VAR_NAME(4), var_id) )
-  call check( nf90_get_var(ncid, var_id, rmask_dg, start4D, count4D) )
+  call readNetCDF_2d_mricom(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, trim( MRICOM_VAR_NAME(4) )  &
+        , Nxr_dg, Nyr_dg, start4D, count4D, rmask_dg )
 
   call check( nf90_close(ncid) )
   write(*,*) "CLOSE: ", trim( NC(iNCs)%MRICOM_FILE(4) )
@@ -1419,21 +1438,19 @@ PROGRAM prepOCN2ROMS
   enddo
 
   write(*,*) "OPEN: ", trim( NC(iNCs)%MRICOM_FILE(2) )
-  call check( nf90_open(trim( NC(iNCs)%MRICOM_FILE(2) ), nf90_nowrite, ncid) )
+  call try_nf_open(trim( NC(iNCs)%MRICOM_FILE(2) ), nf90_nowrite, ncid)
   ! Get dimension data
   call get_dimension(ncid, 'lat', Nyu_dg)
   call get_dimension(ncid, 'lon', Nxu_dg)
   allocate( latuv(Nyu_dg) )
   allocate( lonuv(Nxu_dg) )
-  call check( nf90_inq_varid(ncid, 'lat', var_id) )
-  call check( nf90_get_var(ncid, var_id, latuv) )
-  call check( nf90_inq_varid(ncid, 'lon', var_id) )
-  call check( nf90_get_var(ncid, var_id, lonuv) )
+  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(2) ), ncid, 'lat', Nyu_dg, latuv)
+  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(2) ), ncid, 'lon', Nxu_dg, lonuv)
 
   start4D = (/ 1,      1,      1,  NC(iNCs)%ItS /)
   count4D = (/ Nxu_dg, Nyu_dg, 1,  1            /)
-  call check( nf90_inq_varid(ncid, MRICOM_VAR_NAME(2), var_id) )
-  call check( nf90_get_var(ncid, var_id, umask_dg, start4D, count4D) )
+  call readNetCDF_2d_mricom(trim( NC(iNCs)%MRICOM_FILE(2) ), ncid, trim( MRICOM_VAR_NAME(2) )  &
+        , Nxu_dg, Nyu_dg, start4D, count4D, umask_dg )
   call check( nf90_close(ncid) )
   write(*,*) "CLOSE: ", trim( NC(iNCs)%MRICOM_FILE(2) )
   do j=0,Mdg
@@ -1914,10 +1931,8 @@ PROGRAM prepOCN2ROMS
        write(*,*) 'Read: '//trim( MRICOM_VAR_NAME(1) )
        start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
        count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
-       call check( nf90_open(NC(iNC)%MRICOM_FILE(1), nf90_nowrite, ncid) )
-       call check( nf90_inq_varid(ncid, MRICOM_VAR_NAME(1), var_id) )
-       call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
-       call check( nf90_close(ncid) )
+       call readNetCDF_3d_mricom( trim( NC(iNC)%MRICOM_FILE(1) ), trim( MRICOM_VAR_NAME(1) )  &
+             , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
        zeta_dg = zeta_dg*0.01d0  ! cm -> m
 #endif
       
@@ -2793,10 +2808,8 @@ PROGRAM prepOCN2ROMS
       write(*,*) 'Read: '//trim( MRICOM_VAR_NAME(1) )
       start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
       count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
-      call check( nf90_open(NC(iNC)%MRICOM_FILE(1), nf90_nowrite, ncid) )
-      call check( nf90_inq_varid(ncid, MRICOM_VAR_NAME(1), var_id) )
-      call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
-      call check( nf90_close(ncid) )
+      call readNetCDF_3d_mricom( trim( NC(iNC)%MRICOM_FILE(1) ), trim( MRICOM_VAR_NAME(1) )  &
+            , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
       zeta_dg = zeta_dg*0.01d0  ! cm -> m
 #endif
       
@@ -3220,37 +3233,6 @@ PROGRAM prepOCN2ROMS
 #endif
 
   enddo
-!  deallocate( zeta )
-!  deallocate( ubar )
-!  deallocate( vbar )
-!  deallocate( u )
-!  deallocate( v )
-!  deallocate( ull )
-!  deallocate( uu  )
-!  deallocate( vu  )
-!  deallocate( vll )
-!  deallocate( uv  )
-!  deallocate( vv  )
-!  deallocate( t )
-!  deallocate( zeta_bry )
-!  deallocate( ubar_bry )
-!  deallocate( vbar_bry )
-!  deallocate( u_bry )
-!  deallocate( v_bry )
-!  deallocate( t_bry )
-!
-!  deallocate( ID_cnt2Dr )
-!  deallocate( w_cnt2Dr  )
-!  deallocate( ID_cnt2Du )
-!  deallocate( w_cnt2Du  )
-!  deallocate( ID_cnt2Dv )
-!  deallocate( w_cnt2Dv  )
-!  deallocate( ID_cnt3Dr )
-!  deallocate( w_cnt3Dr  )
-!  deallocate( ID_cnt3Du )
-!  deallocate( w_cnt3Du  )
-!  deallocate( ID_cnt3Dv )
-!  deallocate( w_cnt3Dv  )
 
 #endif
   write(*,*) 'FINISH!!'

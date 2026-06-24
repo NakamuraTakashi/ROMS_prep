@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2022 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2026 Takashi NAKAMURA  =====
 
 !!!**** ROMS netCDF MODULE ************************************
 
@@ -1853,8 +1853,10 @@ MODULE mod_roms_netcdf
       if (status == nf90_noerr ) then
         exit
       else
-        call check( nf90_close(ncid) )
-        call try_nf_open( NCFILE, nf90_nowrite, ncid )
+        status = nf90_close(ncid)                       ! ignore close error (connection already broken)
+        call sleep(2)                                   ! brief backoff before retry
+        call try_nf_open( NCFILE, nf90_nowrite, ncid )  ! reopen a fresh connection
+        status = nf90_inq_varid(ncid, NCNAME, var_id)   ! re-acquire var_id for the new ncid
       endif
       if (itry== Num_try) stop
       write(*,*) '*** READ FAILED: Retry!', data(Im,Jm,Nt)
@@ -1928,8 +1930,10 @@ MODULE mod_roms_netcdf
       if (status == nf90_noerr ) then
         exit
       else
-        call check( nf90_close(ncid) )
-        call try_nf_open( NCFILE, nf90_nowrite, ncid )
+        status = nf90_close(ncid)                       ! ignore close error (connection already broken)
+        call sleep(2)                                   ! brief backoff before retry
+        call try_nf_open( NCFILE, nf90_nowrite, ncid )  ! reopen a fresh connection
+        status = nf90_inq_varid(ncid, NCNAME, var_id)   ! re-acquire var_id for the new ncid
       endif
       if (itry== Num_try) stop
       write(*,*) '*** READ FAILED: Retry!', data(Im,Jm,Nt)
@@ -2014,8 +2018,10 @@ MODULE mod_roms_netcdf
         if (status == nf90_noerr ) then
           exit
         else
-          call check( nf90_close(ncid) )
-          call try_nf_open( NCFILE, nf90_nowrite, ncid )
+          status = nf90_close(ncid)                       ! ignore close error (connection already broken)
+          call sleep(2)                                   ! brief backoff before retry
+          call try_nf_open( NCFILE, nf90_nowrite, ncid )  ! reopen a fresh connection
+          status = nf90_inq_varid(ncid, NCNAME, var_id)   ! re-acquire var_id for the new ncid
         endif
         if (itry == Num_try) stop
         write(*,*) '*** READ FAILED: Retry!',  data(Nxr,Nyr,k,Nt)
@@ -2096,8 +2102,10 @@ MODULE mod_roms_netcdf
         if (status == nf90_noerr ) then
           exit
         else
-          call check( nf90_close(ncid) )
-          call try_nf_open( NCFILE, nf90_nowrite, ncid )
+          status = nf90_close(ncid)                       ! ignore close error (connection already broken)
+          call sleep(2)                                   ! brief backoff before retry
+          call try_nf_open( NCFILE, nf90_nowrite, ncid )  ! reopen a fresh connection
+          status = nf90_inq_varid(ncid, NCNAME, var_id)   ! re-acquire var_id for the new ncid
         endif
         if (itry == Num_try) stop
         write(*,*) '*** READ FAILED: Retry!',  data(Nxr,Nyr,Nzr-k+1,Nt)
@@ -2193,8 +2201,10 @@ MODULE mod_roms_netcdf
 !      if (status == nf90_noerr ) then
         exit
       else
-        call check( nf90_close(ncid) )
-        call try_nf_open( NCFILE, nf90_nowrite, ncid )
+        status = nf90_close(ncid)                       ! ignore close error (connection already broken)
+        call sleep(2)                                   ! brief backoff before retry
+        call try_nf_open( NCFILE, nf90_nowrite, ncid )  ! reopen a fresh connection
+        status = nf90_inq_varid(ncid, NCNAME, var_id)   ! re-acquire var_id for the new ncid
       endif
       if (itry == Num_try) stop
       write(*,*) '*** READ FAILED: Retry!',  data_tmp(Nxr,Nyr,Nzr,Nt)
@@ -2278,17 +2288,30 @@ MODULE mod_roms_netcdf
 ! --- Read NetCDF file ------------------------
       
     write(*,*) 'OPEN: '// NCFILE
-    call check( nf90_open(NCFILE, nf90_nowrite, ncid) )
+    call try_nf_open(NCFILE, nf90_nowrite, ncid)
     write(*,*) 'READ: '// NCNAME
     ! Get variable id
     call check( nf90_inq_varid(ncid, NCNAME, var_id) )
 
     do k=1,Nzr
       start2(3)=k
+      ! Read one vertical level, retrying on (transient) failure. This matters for
+      ! OPeNDAP: "Failure when receiving data from the peer" leaves the DAP
+      ! connection unusable, so on failure we close and reopen before retrying.
       do itry=1,Num_try
-        call check( nf90_get_var(ncid, var_id, data(:,:,Nzr-k+1,:), start=start2, count=count2) )
+        status = nf90_get_var(ncid, var_id, data(:,:,Nzr-k+1,:), start=start2, count=count2)
+        if (status == nf90_noerr) exit                 ! success -> stop retrying
+        write(*,*) '*** READ FAILED (k=',k,', try',itry,'): ', trim(nf90_strerror(status))
+        if (itry == Num_try) then
+          write(*,*) '*** GIVE UP after ', Num_try, ' tries: '//trim(NCNAME)//' in '//trim(NCFILE)
+          stop
+        end if
+        status = nf90_close(ncid)                       ! drop the broken connection
+        call sleep(2)                                   ! brief backoff before retry
+        call try_nf_open(NCFILE, nf90_nowrite, ncid)    ! reopen a fresh connection
+        status = nf90_inq_varid(ncid, NCNAME, var_id)
       end do
-    end do        
+    end do
     write(*,*) 'CLOSE: '// NCFILE
    call check( nf90_close(ncid) )
 
@@ -2307,6 +2330,132 @@ MODULE mod_roms_netcdf
     write(*,*) '*** SUCCESS'
 
   END SUBROUTINE readNetCDF_4d_mricom
+
+!**** readNetCDF_3d_mricom **************************************
+  ! Read a 2D-in-space (3D incl. time) MRICOM/MOVEJPN/FORA field (e.g. SSH).
+  ! Opens NCFILE itself and is retry-protected for OPeNDAP: a broken transfer
+  ! ("Failure when receiving data from the peer") triggers close + reopen +
+  ! re-acquire var_id, then retry. No unit scaling is applied (caller does it).
+  SUBROUTINE readNetCDF_3d_mricom(      &
+!    input parameters
+        NCFILE                        &
+      , NCNAME                        &
+      , Nxr, Nyr, Nt                  &
+      , start, count                  &
+!    output parameters
+      , data                          &
+    )
+
+!    input parameters
+    character(len=*), intent( in) :: NCFILE
+    character(len=*), intent( in) :: NCNAME
+    integer, intent( in) :: Nxr, Nyr, Nt
+    integer, intent( in) :: start(3), count(3)
+    real(8), intent(out) :: data(Nxr, Nyr, Nt)
+
+    integer, parameter :: Num_try = 50
+    integer :: ncid
+    integer :: var_id
+    integer :: status
+    integer :: itry
+
+    data(:,:,:) = -9999.0d0
+
+! --- Read NetCDF file ------------------------
+
+    write(*,*) 'OPEN: '// NCFILE
+    call try_nf_open(NCFILE, nf90_nowrite, ncid)        ! retry-protected open
+
+    write(*,*) 'READ: '// NCNAME
+    do itry=1,Num_try                                   ! retry inq_varid
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      if (status == nf90_noerr) exit
+      write(*,*) '*** INQ FAILED (try',itry,'): ', trim(nf90_strerror(status))
+      if (itry == Num_try) stop
+    end do
+
+    do itry=1,Num_try                                   ! retry get_var, reopen on failure
+      status = nf90_get_var(ncid, var_id, data, start=start, count=count)
+      if (status == nf90_noerr) exit
+      write(*,*) '*** READ FAILED (try',itry,'): ', trim(nf90_strerror(status))
+      if (itry == Num_try) then
+        write(*,*) '*** GIVE UP after ', Num_try, ' tries: '//trim(NCNAME)//' in '//trim(NCFILE)
+        stop
+      end if
+      status = nf90_close(ncid)                          ! drop the broken connection
+      call sleep(2)                                      ! brief backoff before retry
+      call try_nf_open(NCFILE, nf90_nowrite, ncid)       ! reopen a fresh connection
+      status = nf90_inq_varid(ncid, NCNAME, var_id)      ! re-acquire var_id for the new ncid
+    end do
+
+    call check( nf90_close(ncid) )
+
+  END SUBROUTINE readNetCDF_3d_mricom
+
+!**** readNetCDF_1d_safe ***************************************
+  ! Read a whole 1-D variable (e.g. lat/lon/depth grid coordinates) from an
+  ! already-open dataset, retry-protected for OPeNDAP. On failure the (possibly
+  ! broken) connection is closed and reopened, so ncid is intent(inout) and the
+  ! caller should pass both the file name and the open ncid; ncid stays valid on
+  ! return so several coordinates can be read before the caller closes the file.
+  SUBROUTINE readNetCDF_1d_safe(NCFILE, ncid, NCNAME, Nxr, data)
+
+    character(len=*), intent( in)    :: NCFILE
+    integer,          intent(inout)  :: ncid
+    character(len=*), intent( in)    :: NCNAME
+    integer,          intent( in)    :: Nxr
+    real(8),          intent(out)    :: data(Nxr)
+
+    integer, parameter :: Num_try = 50
+    integer :: var_id, status, itry
+
+    write(*,*) 'READ: ', NCNAME
+    do itry=1,Num_try
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      if (status == nf90_noerr) then
+        status = nf90_get_var(ncid, var_id, data)
+        if (status == nf90_noerr) exit
+      end if
+      write(*,*) '*** READ FAILED (try',itry,'): '//trim(NCNAME)//' : ', trim(nf90_strerror(status))
+      if (itry == Num_try) stop
+      status = nf90_close(ncid)                          ! drop the broken connection
+      call sleep(2)                                      ! brief backoff before retry
+      call try_nf_open(NCFILE, nf90_nowrite, ncid)       ! reopen a fresh connection
+    end do
+
+  END SUBROUTINE readNetCDF_1d_safe
+
+!**** readNetCDF_2d_mricom *************************************
+  ! Read a 2-D (surface) hyperslab from a 4-D MRICOM/MOVEJPN/FORA variable
+  ! (e.g. a land/sea mask: start/count are length 4, data is Nxr x Nyr) from an
+  ! already-open dataset, retry-protected with close+reopen on OPeNDAP failure.
+  SUBROUTINE readNetCDF_2d_mricom(NCFILE, ncid, NCNAME, Nxr, Nyr, start, count, data)
+
+    character(len=*), intent( in)    :: NCFILE
+    integer,          intent(inout)  :: ncid
+    character(len=*), intent( in)    :: NCNAME
+    integer,          intent( in)    :: Nxr, Nyr
+    integer,          intent( in)    :: start(4), count(4)
+    real(8),          intent(out)    :: data(Nxr, Nyr)
+
+    integer, parameter :: Num_try = 50
+    integer :: var_id, status, itry
+
+    write(*,*) 'READ: ', NCNAME
+    do itry=1,Num_try
+      status = nf90_inq_varid(ncid, NCNAME, var_id)
+      if (status == nf90_noerr) then
+        status = nf90_get_var(ncid, var_id, data, start=start, count=count)
+        if (status == nf90_noerr) exit
+      end if
+      write(*,*) '*** READ FAILED (try',itry,'): '//trim(NCNAME)//' : ', trim(nf90_strerror(status))
+      if (itry == Num_try) stop
+      status = nf90_close(ncid)                          ! drop the broken connection
+      call sleep(2)                                      ! brief backoff before retry
+      call try_nf_open(NCFILE, nf90_nowrite, ncid)       ! reopen a fresh connection
+    end do
+
+  END SUBROUTINE readNetCDF_2d_mricom
 
 !**** readNetCDF_1d **********************************************
       
@@ -2366,14 +2515,55 @@ MODULE mod_roms_netcdf
       status = nf90_open(NC_FILE, nf90_open_mode, ncid)
       write(*,*) trim(nf90_strerror(status))
       if (status == nf90_noerr) exit
-      if (itry== Num_try) stop
+      if (itry== Num_try) then
+        write(*,*) '*** GIVE UP opening after ', Num_try, ' tries: '//trim(NC_FILE)
+        stop
+      end if
       write(*,*) '*** OPEN FAILED: Retry!'
+      call sleep(2)                 ! backoff before retrying the open
     end do
     
   END SUBROUTINE try_nf_open
-    
+
 ! -------------------------------------------------------------------------
-     
+  ! Returns 0 if a netCDF file or OPeNDAP dataset can be opened (like access()),
+  ! non-zero (1) if it cannot. For OPeNDAP (http(s)://.../dodsC/...) netCDF-Fortran
+  ! must be built with DAP support (nc-config --has-dap = yes). Use this instead of
+  ! access() for remote URLs, which access() cannot test. Does NOT stop on failure.
+  !
+  ! Retries with backoff so a transient OPeNDAP error ("Failure when receiving data
+  ! from the peer") on an existing dataset is not mistaken for "missing". Trade-off:
+  ! a genuinely-missing file costs Num_try open attempts, so Num_try is kept modest
+  ! here (this is an existence probe, not a must-succeed open).
+  !
+  !   if ( nf_exists(URL) == 0 ) call try_nf_open(URL, nf90_nowrite, ncid)
+  !
+  INTEGER FUNCTION nf_exists(NC_FILE)
+
+    character(len=*),  intent( in) :: NC_FILE
+
+    integer, parameter :: Num_try = 5
+    integer :: status
+    integer :: ncid
+    integer :: itry
+
+    nf_exists = 1                          ! default: not available
+    do itry=1,Num_try
+      status = nf90_open(trim(NC_FILE), nf90_nowrite, ncid)
+      if (status == nf90_noerr) then
+        nf_exists = 0                      ! available
+        status = nf90_close(ncid)          ! opened OK -> close it again
+        return
+      end if
+      write(*,*) 'check (try',itry,'): ', trim(NC_FILE), ' : ', trim(nf90_strerror(status))
+      if (itry < Num_try) call sleep(2)    ! backoff before retry (transient network)
+    end do
+    write(*,*) 'NOT available after ', Num_try, ' tries: ', trim(NC_FILE)
+
+  END FUNCTION nf_exists
+
+! -------------------------------------------------------------------------
+
   SUBROUTINE get_dimension(ncid, name, dim)
     
     integer,           intent( in) :: ncid

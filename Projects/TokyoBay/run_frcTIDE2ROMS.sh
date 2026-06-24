@@ -15,4 +15,4 @@ rm *.mod
 
 export OMP_NUM_THREADS=12
 
-./frcTIDE2ROMS.exe < TokyoBay1.in
+./frcTIDE2ROMS.exe < TokyoBay2.in

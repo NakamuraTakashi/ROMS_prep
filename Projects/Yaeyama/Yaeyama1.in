@@ -12,8 +12,8 @@
 
 &edate
   Eyear  = 2025   ! Ending year
-  Emonth = 11      ! Ending month
-  Eday   = 1      ! Ending day
+  Emonth = 1      ! Ending month
+  Eday   = 5      ! Ending day
 /
 
 &refdate
@@ -58,14 +58,16 @@
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_HYCOM_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
 !  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPE2M_Nz15"
-  BRY_prefix  = "../../../COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
+!  BRY_prefix  = "../../../COAWST_DATA/Yaeyama/Yaeyama1/Bry/Yaeyama1_bry_JCOPET_Nz15"
+  BRY_prefix  = "Yaeyama1_bry_JCOPET_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
 !  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_HYCOMwNAO_Nz15"
-  INI_prefix  = "../../../COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
+!  INI_prefix  = "../../../COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPET_Nz15"
+  INI_prefix  = "Yaeyama1_ini_JCOPET_Nz15"
 !  INI_prefix  = "D:/COAWST_DATA/Yaeyama/Yaeyama1/Ini/Yaeyama1_ini_JCOPE2MwNAO_Nz15"
 
   INIyear  = 2013   ! Initial year

@@ -37,15 +37,15 @@
 /
 
 &sdate
-  Syear  = 2010   ! Starting year
+  Syear  = 2020   ! Starting year
   Smonth = 6      ! Starting month
-  Sday   = 1      ! Starting day
+  Sday   = 30     ! Starting day
 /
 
 &edate
-  Eyear  = 2010   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 7      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 10     ! Ending month
+  Eday   = 2      ! Ending day
 /
 
 &refdate
@@ -108,28 +108,31 @@
 !  MRICOM_data_dir = "/mnt/w/share/dias/data/FORP/FORP-JPN02/version4//MRI-CGCM3_rcp85_ver4/ts_2086-2100/nc_day/2100/"
 
 ! Directory of MOVEJPN_MRI data files
-  MRICOM_data_dir = "/mnt/f/DATA/MOVEJPN_MRI_2020/2010/"
+!  MRICOM_data_dir = "/mnt/f/DATA/MOVEJPN_MRI_2020/2010/"
+
+! Directory of FORA OPeNDAP url
+  MRICOM_data_dir = "https://www.jamstec.go.jp/jagdas/dodsC/fora/JPN/Daily-mean/"
 /
 
 &bry
 !  BRY_prefix  = "../../../COAWST_DATA/TokyoBay/TokyoBay2/Bry/TokyoBay2_bry_JCOPE-T_Nz30"
-  BRY_prefix  = "TokyoBay2_bry_MRICOM_Nz30"
+  BRY_prefix  = "TokyoBay2_bry_FORA_Nz30"
   !    south north west east
   SNWE =  1,   0,   0,   0
 /
 
 &ini
 !  INI_prefix  = "../../../COAWST_DATA/TokyoBay/TokyoBay2/Ini/TokyoBay2_ini_JCOPET_Nz30"
-  INI_prefix  = "TokyoBay2_ini_MRICOM_Nz30"
+  INI_prefix  = "TokyoBay2_ini_FORA_Nz30"
 
-  INIyear  = 2010   ! Initial year
-  INImonth = 6      ! Initial month
-  INIday   = 2      ! Initial day
+  INIyear  = 2020   ! Initial year
+  INImonth = 7      ! Initial month
+  INIday   = 1      ! Initial day
   INIhour  = 0      ! Initial hour
 /
 
 &his
-  HIS_prefix  = "TokyoBay2_his_MRICOM_Nz30"
+  HIS_prefix  = "TokyoBay2_his_FORA_Nz30"
 /
 
 &hcoord
@@ -160,7 +163,7 @@
 !/
 
 &frc_atm
-  ATM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
+  ATM_dir  =  "/mnt/y/JMA_DATA/JMA_GPV/"   ! GRIB2
 !  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Air/TokyoBay2_frc_MSMgb"
   FRC_prefix  = "TokyoBay2_frc_MSMgb"
 !  ATM_dir  =  "E:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
@@ -171,6 +174,13 @@
 !  ATM_dir  =  "X:/JMA_LSM/"   ! GRIB2
 !  FRC_prefix  = "TokyoBay2_frc_LSM"
 !/
+
+&tide
+  TIDE_DATA_dir = "../../src/"   ! For NAO99/NAO99J
+  TIDE_prefix   = "TokyoBay2_tide_nao99Jb"
+!  TIDE_DATA_dir = "C:/cygwin64/home/Takashi/fes2014/"   ! For FES2014
+!  TIDE_prefix   = "TokyoBay1_tide_fes2014"
+/
 
 &wave_cwm
   CWM_dir  =  "//gshs.t4.gsic.titech.ac.jp/t4_bs/tga-NakamuLab/DATA/JMA_DATA/JMA_GPV/"   ! GRIB2
