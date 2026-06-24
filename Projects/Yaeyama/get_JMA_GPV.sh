@@ -1,6 +1,9 @@
 #!/bin/bash
-#> sudo mount -t drvfs //131.112.42.6/disk1 /mnt/x/
-DIR_NAME="2025"
+
+DIR_NAME="2026"
+
+sudo umount /mnt/x/
+sudo mount -t drvfs //131.112.42.6/disk1 /mnt/x/
 LOCAL_DIR="/mnt/x/JMA_DATA/JMA_GPV"
 
 REMOTE_DIR="/arch/jmadata/data/gpv/original"
@@ -16,3 +19,5 @@ mirror --only-missing --parallel=4 \
 --include-glob MSM*SFC018_* \
 ${REMOTE_DIR}/${DIR_NAME} ${LOCAL_DIR}/${DIR_NAME}
 EOF
+
+sudo umount /mnt/x/
