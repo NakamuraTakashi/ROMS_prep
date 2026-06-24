@@ -1,7 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-!  GRID_FILE = "TokyoBay3_grd_v0.2.nc"
-  GRID_FILE = "TokyoBay3_grd_v1.9.nc"
+  GRID_FILE = "../../../COAWST_DATA/TokyoBay/TokyoBay3/Grid/TokyoBay3_grd_v2.1.nc"
 /
 
 &gebco
@@ -25,7 +24,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "TokyoBay2_grd_v2.0.nc"
+  parent_grid = "../../../COAWST_DATA/TokyoBay/TokyoBay2/Grid/TokyoBay2_grd_v2.1.nc"
   parent_Imin = 102
   parent_Imax = 191  !191
   parent_Jmin = 38
@@ -34,19 +33,19 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "TokyoBay2_grd_v2.1b.nc"
+  F2C_OUT_FILE = "TokyoBay2_grd_v2.2b.nc"
 /
 
 &sdate
   Syear  = 2020   ! Starting year
-  Smonth = 1      ! Starting month
+  Smonth = 7      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2021   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
-  Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Eyear  = 2020   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Emonth = 8      ! Ending month
+  Eday   = 2      ! Ending day
 /
 
 &refdate
@@ -62,8 +61,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-!  ROMS_HISFILE  = "../../../COAWST/Projects/TokyoBay2/TokyoBay2_his_20180605.nc"
-  ROMS_HISFILE  = "F:/COAWST_DATA/TokyoBay/TokyoBay2/Ini/TokyoBay2_ini_JCOPET_Nz30_20180605.00.nc"
+  ROMS_HISFILE  = "../../../Projects/TokyoBay2/TokyoBay2_his_20200701.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -93,17 +91,16 @@
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Bry/TokyoBay3_bry_ROMS_Nz30"
+  BRY_prefix  = "TokyoBay3_bry_ROMS_Nz30"
   !    south north west east
   SNWE =  1,   0,   0,   0
 /
 
 &ini
-!  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Ini/TokyoBay3_ini_ROMS_Nz30"
-  INI_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Ini/TokyoBay3_ini_JCOPET_Nz30"
+  INI_prefix  = "TokyoBay3_ini_ROMS_Nz30"
 
-  INIyear  = 2018   ! Initial year
-  INImonth = 6      ! Initial month
+  INIyear  = 2020   ! Initial year
+  INImonth = 7      ! Initial month
   INIday   = 5      ! Initial day
   INIhour  = 0      ! Initial hour
 /
@@ -136,10 +133,8 @@
 !/
 
 &frc_atm
-  ATM_dir  =  "O:/JMA_DATA/JMA_GPV/"   ! GRIB2
-  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Air/TokyoBay3_frc_MSMgb"
-!  ATM_dir  =  "N:/JMA_DATA/JMA_netcdf/MSM-S/"    ! NetCDF
-!  FRC_prefix  = "F:/COAWST_DATA/TokyoBay/TokyoBay3/Air/TokyoBay3_frc_MSMnc"
+  ATM_dir  =  "/mnt/y/JMA_DATA/JMA_GPV/"   ! GRIB2
+  FRC_prefix  = "TokyoBay3_frc_MSMgb"
 /
 
 !&frc_atm

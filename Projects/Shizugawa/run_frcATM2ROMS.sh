@@ -1,5 +1,8 @@
 #!/bin/sh
 #rm *.exe
+# ===== Input namelist file =================================================================
+INPUT=Shizugawa1.in
+
 # ---- Atmospheric Models --------------
 # Please choose one of the following options
 #
@@ -8,6 +11,7 @@ export MY_CPP_FLAGS="-DJMA_MSM"
 #export MY_CPP_FLAGS="-DJMA_LSM"
 #export MY_CPP_FLAGS="-DJRA55"
 #export MY_CPP_FLAGS="-DERA5"
+#export MY_CPP_FLAGS="-DFORP_ATM"
 
 # ---- For JMA_MSM option --------------
 # SWRAD: Downward short-wave radiation flag
@@ -25,7 +29,7 @@ export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DSWRAD"
 LIB="-L/usr/lib -L/usr/local/lib -leccodes_f90 -lnetcdff"
 INCLUDE="-I${PWD} -I/usr/include -I/usr/local/include"
 SRC_DIR=../../src
-FFLAGS="-fbounds-check -ffree-form -fopenmp -O3"
+FFLAGS="-fopenmp -O3"
 #FFLAGS="-fbounds-check -ffree-form -O0 -g -fcheck=array-temps,bounds,do,mem,pointer,recursion"
 
 gfortran ${FFLAGS} \
@@ -36,9 +40,7 @@ gfortran ${FFLAGS} \
   ${MY_CPP_FLAGS} ${INCLUDE} ${LIB} -o frcATM2ROMS.exe
 
 
-export OMP_NUM_THREADS=30
+export OMP_NUM_THREADS=12
 rm *.mod
 
-#./frcATM2ROMS.exe < Shizugawa1.in
-./frcATM2ROMS.exe < Shizugawa2.in
-#./frcATM2ROMS.exe < Shizugawa3.in
+./frcATM2ROMS.exe < ${INPUT}

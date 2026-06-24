@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2025 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2026 Takashi NAKAMURA  =====
 
 #if defined JMA_MSM
 # undef BULK_FLUX
@@ -660,6 +660,7 @@ PROGRAM frcATM2ROMS
 # if defined JMA_MSM
 !---- Set JMA-MSM GRIB2 file --------------------------------
   allocate( IN_FILE(2) )
+  allocate( IN_FILE2(2) )
   IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
   IN_FILE(2) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
@@ -1143,6 +1144,8 @@ PROGRAM frcATM2ROMS
   
   iNC = 0
 #endif
+    Write(*,*) 'DEBUG1' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 !===== LOOP1 START ================================================
   DO
