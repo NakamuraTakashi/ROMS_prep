@@ -12,12 +12,15 @@
 - [x] master と実行コードが一致（=挙動不変）を確認（`git diff` が純粋なリネームのみ）
 - [x] コミット
 
-## 段階 2: `T_region` 派生型を導入し HIS を region(1) で書き直す
-- [ ] `T_region` 型定義（(A)領域サイズ成分／(B)ドナー box 成分）
-- [ ] HIS/INI を `region(1)`（n=1, 全領域）で書き直し
-- [ ] コンパイル成功（HIS/INI × 各ドナー）
-- [ ] HIS/INI 出力が master と一致（`cdo diffn`）
-- [ ] コミット
+## 段階 2: `T_region` 派生型を導入し HIS を region(1) で書き直す ✅
+- [x] `T_region` 型定義（(A)領域サイズ成分／(B)ドナー box 成分）
+- [x] (A) 作業/重み/スライス配列の宣言を `pointer` 化（`region` は `target`）
+- [x] HIS/INI を `region(1)`（n=1, 全領域）で書き直し（A配列を region(1) に確保しポインタ別名）
+      ※(B)ドナー配列は当面 allocatable のまま（段階3で region 化）
+- [x] コンパイル成功（HIS/INI/BRY × MOVEJPN/HYCOM/ROMS）
+- [x] HIS 出力が master と **byte-identical**（`cdo diffn` 差分0／`cmp` 一致）。INI は HIS と同一コード経路＋コンパイル確認。
+- [x] （追加確認）BRY 出力も master と **byte-identical**（pointer 化の影響なし）
+- [x] コミット
 
 ## 段階 3: BRY を region 化（time 外側へ再構成・単一ファイル追記）
 - [ ] BRY の境界範囲設定を region 設定（ループ前）へ移動
@@ -51,3 +54,4 @@
 ---
 進捗メモ:
 - 段階1 完了: `BRY_FILE`/`HIS_FILE` を `OUT_FILE` に統一（純粋リネーム、挙動不変）。全モードコンパイル確認済み。
+- 段階2 完了: `T_region` 型導入、(A)配列を pointer 化、HIS/INI を region(1) 経由に。TokyoBay2/MOVEJPN(2日)で master と HIS・BRY とも byte-identical を確認。(B)ドナー配列は段階3で region 化予定。

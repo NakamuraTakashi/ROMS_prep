@@ -30,7 +30,40 @@ PROGRAM prepOCN2ROMS
 #endif
 
   implicit none
-      
+
+! ===== Output region (HIS: 1 region = whole domain; BRY: up to 4 boundaries) =====
+  type T_region
+    !----- (A) target-region sized: allocated once at region setup -----
+    integer :: LBri, UBri, LBrj, UBrj            ! rho target bounds
+    integer :: LBui, UBui, LBuj, UBuj            ! u   target bounds
+    integer :: LBvi, UBvi, LBvj, UBvj            ! v   target bounds
+    integer :: Nxr, Nyr, Nxu, Nyu, Nxv, Nyv      ! target sizes
+    integer :: Nrbry, Nubry, Nvbry               ! (BRY) slice lengths
+    real(8), allocatable :: zeta(:,:,:), ubar(:,:,:), vbar(:,:,:)
+    real(8), allocatable :: u(:,:,:,:), v(:,:,:,:), t(:,:,:,:)
+    real(8), allocatable :: ull(:,:,:,:), vll(:,:,:,:)
+    real(8), allocatable :: uu(:,:,:,:), uv(:,:,:,:), vu(:,:,:,:), vv(:,:,:,:)
+    integer, allocatable :: ID_cnt2Dr(:,:), ID_cnt2Du(:,:), ID_cnt2Dv(:,:)
+    real(8), allocatable :: w_cnt2Dr(:,:),  w_cnt2Du(:,:),  w_cnt2Dv(:,:)
+    integer, allocatable :: ID_cnt3Dr(:,:), ID_cnt3Du(:,:), ID_cnt3Dv(:,:)
+    real(8), allocatable :: w_cnt3Dr(:,:),  w_cnt3Du(:,:),  w_cnt3Dv(:,:)
+    real(8), allocatable :: zeta_bry(:,:), ubar_bry(:,:), vbar_bry(:,:)
+    real(8), allocatable :: u_bry(:,:,:),  v_bry(:,:,:),  t_bry(:,:,:)
+    !----- (B) donor-box sized: re-allocated on donor-file change -----
+    integer :: Irdg_min, Irdg_max, Jrdg_min, Jrdg_max
+    integer :: Iudg_min, Iudg_max, Judg_min, Judg_max
+    integer :: Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max
+    integer :: Nxr_dg, Nyr_dg, Nxu_dg, Nyu_dg, Nxv_dg, Nyv_dg
+    real(8), allocatable :: zeta_dg(:,:,:), ubar_dg(:,:,:), vbar_dg(:,:,:)
+    real(8), allocatable :: u_dg(:,:,:,:),  v_dg(:,:,:,:),  t_dg(:,:,:,:)
+    real(8), allocatable :: ull_dg(:,:,:,:),  vll_dg(:,:,:,:)
+    real(8), allocatable :: ullu_dg(:,:,:,:), ullv_dg(:,:,:,:)
+    real(8), allocatable :: vllu_dg(:,:,:,:), vllv_dg(:,:,:,:)
+    real(8), allocatable :: umask_wet_dg(:,:,:), vmask_wet_dg(:,:,:)
+  end type T_region
+
+  type(T_region), target, allocatable :: region(:)
+
 ! ---------------------------------------------------------------------
   integer :: Syear, Smonth, Sday
   integer :: Eyear, Emonth, Eday
@@ -108,24 +141,25 @@ PROGRAM prepOCN2ROMS
   real(8), allocatable :: hu(:,:)
   real(8), allocatable :: hv(:,:)
   
-  real(8), allocatable :: zeta(:,:,:)    ! free-surface (meter)
-  real(8), allocatable :: ubar(:,:,:)    ! vertically integrated u-momentum component (meter second-1)
-  real(8), allocatable :: vbar(:,:,:)    ! vertically integrated v-momentum component (milibar=hPa)
-  real(8), allocatable :: u(:,:,:,:)     ! u-momentum component (meter second-1)
-  real(8), allocatable :: v(:,:,:,:)     ! v-momentum component (meter second-1)
-  real(8), allocatable :: t(:,:,:,:)     ! tracer 
-  real(8), allocatable :: ull(:,:,:,:)   ! u-momentum component on lat lon coordinate (meter second-1)
-  real(8), allocatable :: vll(:,:,:,:)   ! v-momentum component on lat lon coordinate (meter second-1)
-  real(8), allocatable :: uu(:,:,:,:)
-  real(8), allocatable :: uv(:,:,:,:)
-  real(8), allocatable :: vu(:,:,:,:)
-  real(8), allocatable :: vv(:,:,:,:)
-  real(8), allocatable :: zeta_bry(:,:)  ! free-surface (meter)
-  real(8), allocatable :: ubar_bry(:,:)  ! vertically integrated u-momentum component (meter second-1)
-  real(8), allocatable :: vbar_bry(:,:)  ! vertically integrated v-momentum component (milibar=hPa)
-  real(8), allocatable :: u_bry(:,:,:)   ! u-momentum component (meter second-1)
-  real(8), allocatable :: v_bry(:,:,:)   ! v-momentum component (meter second-1)
-  real(8), allocatable :: t_bry(:,:,:)   ! tracer 
+  ! (A) region-sized working/slice arrays: pointers aliased to region(ibry)%...
+  real(8), pointer :: zeta(:,:,:)    ! free-surface (meter)
+  real(8), pointer :: ubar(:,:,:)    ! vertically integrated u-momentum component (meter second-1)
+  real(8), pointer :: vbar(:,:,:)    ! vertically integrated v-momentum component (milibar=hPa)
+  real(8), pointer :: u(:,:,:,:)     ! u-momentum component (meter second-1)
+  real(8), pointer :: v(:,:,:,:)     ! v-momentum component (meter second-1)
+  real(8), pointer :: t(:,:,:,:)     ! tracer
+  real(8), pointer :: ull(:,:,:,:)   ! u-momentum component on lat lon coordinate (meter second-1)
+  real(8), pointer :: vll(:,:,:,:)   ! v-momentum component on lat lon coordinate (meter second-1)
+  real(8), pointer :: uu(:,:,:,:)
+  real(8), pointer :: uv(:,:,:,:)
+  real(8), pointer :: vu(:,:,:,:)
+  real(8), pointer :: vv(:,:,:,:)
+  real(8), pointer :: zeta_bry(:,:)  ! free-surface (meter)
+  real(8), pointer :: ubar_bry(:,:)  ! vertically integrated u-momentum component (meter second-1)
+  real(8), pointer :: vbar_bry(:,:)  ! vertically integrated v-momentum component (milibar=hPa)
+  real(8), pointer :: u_bry(:,:,:)   ! u-momentum component (meter second-1)
+  real(8), pointer :: v_bry(:,:,:)   ! v-momentum component (meter second-1)
+  real(8), pointer :: t_bry(:,:,:)   ! tracer
 
   real(8), allocatable :: h_dg(:,:)      ! depth (meter) of donor grid
   real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
@@ -169,18 +203,18 @@ PROGRAM prepOCN2ROMS
   real(8), allocatable :: umask_wet_dg(:,:,:)
   real(8), allocatable :: vmask_wet_dg(:,:,:)
 #endif
-  integer, allocatable :: ID_cnt2Dr(:,:)
-  real(8), allocatable :: w_cnt2Dr (:,:)
-  integer, allocatable :: ID_cnt2Du(:,:)
-  real(8), allocatable :: w_cnt2Du (:,:)
-  integer, allocatable :: ID_cnt2Dv(:,:)
-  real(8), allocatable :: w_cnt2Dv (:,:)
-  integer, allocatable :: ID_cnt3Dr(:,:)
-  real(8), allocatable :: w_cnt3Dr (:,:)
-  integer, allocatable :: ID_cnt3Du(:,:)
-  real(8), allocatable :: w_cnt3Du (:,:)
-  integer, allocatable :: ID_cnt3Dv(:,:)
-  real(8), allocatable :: w_cnt3Dv (:,:)
+  integer, pointer :: ID_cnt2Dr(:,:)
+  real(8), pointer :: w_cnt2Dr (:,:)
+  integer, pointer :: ID_cnt2Du(:,:)
+  real(8), pointer :: w_cnt2Du (:,:)
+  integer, pointer :: ID_cnt2Dv(:,:)
+  real(8), pointer :: w_cnt2Dv (:,:)
+  integer, pointer :: ID_cnt3Dr(:,:)
+  real(8), pointer :: w_cnt3Dr (:,:)
+  integer, pointer :: ID_cnt3Du(:,:)
+  real(8), pointer :: w_cnt3Du (:,:)
+  integer, pointer :: ID_cnt3Dv(:,:)
+  real(8), pointer :: w_cnt3Dv (:,:)
 
   integer :: i,j,k
   real(8) :: d_lat,d_lon
@@ -2510,36 +2544,55 @@ PROGRAM prepOCN2ROMS
   Nyu = UBuj-LBuj+1
   Nyv = UBvj-LBvj+1
 
-  allocate( zeta(LBri:UBri, LBrj:UBrj, 1) )
+  ! ----- HIS/INI uses a single region (n=1, whole domain) -----
+  allocate( region(1:1) )
+  region(1)%LBri=LBri; region(1)%UBri=UBri; region(1)%LBrj=LBrj; region(1)%UBrj=UBrj
+  region(1)%LBui=LBui; region(1)%UBui=UBui; region(1)%LBuj=LBuj; region(1)%UBuj=UBuj
+  region(1)%LBvi=LBvi; region(1)%UBvi=UBvi; region(1)%LBvj=LBvj; region(1)%UBvj=UBvj
+  region(1)%Nxr=Nxr; region(1)%Nyr=Nyr; region(1)%Nxu=Nxu; region(1)%Nyu=Nyu; region(1)%Nxv=Nxv; region(1)%Nyv=Nyv
+
+  allocate( region(1)%zeta(LBri:UBri, LBrj:UBrj, 1) )
 #if defined NAOTIDE || defined NAOTIDEJ
   allocate( zeta_tide(0:L, 0:M) )
 #endif
-  allocate( ubar(LBui:UBui, LBuj:UBuj, 1) )
-  allocate( vbar(LBvi:UBvi, LBvj:UBvj, 1) )
-  allocate( u(LBui:UBui, LBuj:UBuj, 1:N, 1) )
-  allocate( v(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-  allocate( ull(LBui:UBui, LBuj:UBuj, 1:N, 1) )
-  allocate( uu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
-  allocate( vu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
-  allocate( vll(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-  allocate( uv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-  allocate( vv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-  allocate( t(LBri:UBri, LBrj:UBrj, 1:N, 1) )
-  
+  allocate( region(1)%ubar(LBui:UBui, LBuj:UBuj, 1) )
+  allocate( region(1)%vbar(LBvi:UBvi, LBvj:UBvj, 1) )
+  allocate( region(1)%u(LBui:UBui, LBuj:UBuj, 1:N, 1) )
+  allocate( region(1)%v(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+  allocate( region(1)%ull(LBui:UBui, LBuj:UBuj, 1:N, 1) )
+  allocate( region(1)%uu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
+  allocate( region(1)%vu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
+  allocate( region(1)%vll(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+  allocate( region(1)%uv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+  allocate( region(1)%vv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+  allocate( region(1)%t(LBri:UBri, LBrj:UBrj, 1:N, 1) )
+
   write(*,*) "*** Calculate weight factor ***"
 
-  allocate( ID_cnt2Dr(4, Nxr*Nyr) )
-  allocate( w_cnt2Dr (4, Nxr*Nyr) )
-  allocate( ID_cnt3Dr(6, Nxr*Nyr*Nzr) )
-  allocate( w_cnt3Dr (8, Nxr*Nyr*Nzr) )
-  allocate( ID_cnt2Du(4, Nxu*Nyu) )
-  allocate( w_cnt2Du (4, Nxu*Nyu) )
-  allocate( ID_cnt2Dv(4, Nxv*Nyv) )
-  allocate( w_cnt2Dv (4, Nxv*Nyv) )
-  allocate( ID_cnt3Du(6, Nxu*Nyu*Nzr) )
-  allocate( w_cnt3Du (8, Nxu*Nyu*Nzr) )
-  allocate( ID_cnt3Dv(6, Nxv*Nyv*Nzr) )
-  allocate( w_cnt3Dv (8, Nxv*Nyv*Nzr) )
+  allocate( region(1)%ID_cnt2Dr(4, Nxr*Nyr) )
+  allocate( region(1)%w_cnt2Dr (4, Nxr*Nyr) )
+  allocate( region(1)%ID_cnt3Dr(6, Nxr*Nyr*Nzr) )
+  allocate( region(1)%w_cnt3Dr (8, Nxr*Nyr*Nzr) )
+  allocate( region(1)%ID_cnt2Du(4, Nxu*Nyu) )
+  allocate( region(1)%w_cnt2Du (4, Nxu*Nyu) )
+  allocate( region(1)%ID_cnt2Dv(4, Nxv*Nyv) )
+  allocate( region(1)%w_cnt2Dv (4, Nxv*Nyv) )
+  allocate( region(1)%ID_cnt3Du(6, Nxu*Nyu*Nzr) )
+  allocate( region(1)%w_cnt3Du (8, Nxu*Nyu*Nzr) )
+  allocate( region(1)%ID_cnt3Dv(6, Nxv*Nyv*Nzr) )
+  allocate( region(1)%w_cnt3Dv (8, Nxv*Nyv*Nzr) )
+
+  ! alias bare pointers to region(1)'s storage (the body below uses the bare names)
+  zeta => region(1)%zeta ; ubar => region(1)%ubar ; vbar => region(1)%vbar
+  u => region(1)%u ; v => region(1)%v ; t => region(1)%t
+  ull => region(1)%ull ; vll => region(1)%vll
+  uu => region(1)%uu ; uv => region(1)%uv ; vu => region(1)%vu ; vv => region(1)%vv
+  ID_cnt2Dr => region(1)%ID_cnt2Dr ; w_cnt2Dr => region(1)%w_cnt2Dr
+  ID_cnt2Du => region(1)%ID_cnt2Du ; w_cnt2Du => region(1)%w_cnt2Du
+  ID_cnt2Dv => region(1)%ID_cnt2Dv ; w_cnt2Dv => region(1)%w_cnt2Dv
+  ID_cnt3Dr => region(1)%ID_cnt3Dr ; w_cnt3Dr => region(1)%w_cnt3Dr
+  ID_cnt3Du => region(1)%ID_cnt3Du ; w_cnt3Du => region(1)%w_cnt3Du
+  ID_cnt3Dv => region(1)%ID_cnt3Dv ; w_cnt3Dv => region(1)%w_cnt3Dv
 
   iNC = 0
 
