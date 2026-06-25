@@ -1598,6 +1598,7 @@ PROGRAM prepOCN2ROMS
 !===== LOOP START ==========================================================
 
 !-Write ROMS boundary conditions netCDF file --------------------------------
+  allocate( region(1:4) )   ! one region per boundary (S/N/W/E)
   do ibry=1,4
     if( SNWE(ibry)==0 ) cycle
 
@@ -1675,39 +1676,61 @@ PROGRAM prepOCN2ROMS
     Nyu = UBuj-LBuj+1
     Nyv = UBvj-LBvj+1
 
-    allocate( zeta(LBri:UBri, LBrj:UBrj, 1) )
-    allocate( ubar(LBui:UBui, LBuj:UBuj, 1) )
-    allocate( vbar(LBvi:UBvi, LBvj:UBvj, 1) )
-    allocate( u(LBui:UBui, LBuj:UBuj, 1:N, 1) )
-    allocate( v(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-    allocate( ull(LBui:UBui, LBuj:UBuj, 1:N, 1) )
-    allocate( uu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
-    allocate( vu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
-    allocate( vll(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-    allocate( uv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-    allocate( vv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-    allocate( t(LBri:UBri, LBrj:UBrj, 1:N, 1) )
-    allocate( zeta_bry(Nrbry, 1) )
-    allocate( ubar_bry(Nubry, 1) )
-    allocate( vbar_bry(Nvbry, 1) )
-    allocate( u_bry(Nubry, 1:N, 1) )
-    allocate( v_bry(Nvbry, 1:N, 1) )
-    allocate( t_bry(Nrbry, 1:N, 1) )
-    
+    ! ----- store bounds and allocate this boundary's region storage -----
+    region(ibry)%LBri=LBri; region(ibry)%UBri=UBri; region(ibry)%LBrj=LBrj; region(ibry)%UBrj=UBrj
+    region(ibry)%LBui=LBui; region(ibry)%UBui=UBui; region(ibry)%LBuj=LBuj; region(ibry)%UBuj=UBuj
+    region(ibry)%LBvi=LBvi; region(ibry)%UBvi=UBvi; region(ibry)%LBvj=LBvj; region(ibry)%UBvj=UBvj
+    region(ibry)%Nxr=Nxr; region(ibry)%Nyr=Nyr; region(ibry)%Nxu=Nxu
+    region(ibry)%Nyu=Nyu; region(ibry)%Nxv=Nxv; region(ibry)%Nyv=Nyv
+    region(ibry)%Nrbry=Nrbry; region(ibry)%Nubry=Nubry; region(ibry)%Nvbry=Nvbry
+
+    allocate( region(ibry)%zeta(LBri:UBri, LBrj:UBrj, 1) )
+    allocate( region(ibry)%ubar(LBui:UBui, LBuj:UBuj, 1) )
+    allocate( region(ibry)%vbar(LBvi:UBvi, LBvj:UBvj, 1) )
+    allocate( region(ibry)%u(LBui:UBui, LBuj:UBuj, 1:N, 1) )
+    allocate( region(ibry)%v(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+    allocate( region(ibry)%ull(LBui:UBui, LBuj:UBuj, 1:N, 1) )
+    allocate( region(ibry)%uu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
+    allocate( region(ibry)%vu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
+    allocate( region(ibry)%vll(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+    allocate( region(ibry)%uv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+    allocate( region(ibry)%vv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
+    allocate( region(ibry)%t(LBri:UBri, LBrj:UBrj, 1:N, 1) )
+    allocate( region(ibry)%zeta_bry(Nrbry, 1) )
+    allocate( region(ibry)%ubar_bry(Nubry, 1) )
+    allocate( region(ibry)%vbar_bry(Nvbry, 1) )
+    allocate( region(ibry)%u_bry(Nubry, 1:N, 1) )
+    allocate( region(ibry)%v_bry(Nvbry, 1:N, 1) )
+    allocate( region(ibry)%t_bry(Nrbry, 1:N, 1) )
+
     write(*,*) "*** Calculate weight factor ***"
 
-    allocate( ID_cnt2Dr(4, Nxr*Nyr) )
-    allocate( w_cnt2Dr (4, Nxr*Nyr) )
-    allocate( ID_cnt3Dr(6, Nxr*Nyr*Nzr) )
-    allocate( w_cnt3Dr (8, Nxr*Nyr*Nzr) )
-    allocate( ID_cnt2Du(4, Nxu*Nyu) )
-    allocate( w_cnt2Du (4, Nxu*Nyu) )
-    allocate( ID_cnt2Dv(4, Nxv*Nyv) )
-    allocate( w_cnt2Dv (4, Nxv*Nyv) )
-    allocate( ID_cnt3Du(6, Nxu*Nyu*Nzr) )
-    allocate( w_cnt3Du (8, Nxu*Nyu*Nzr) )
-    allocate( ID_cnt3Dv(6, Nxv*Nyv*Nzr) )
-    allocate( w_cnt3Dv (8, Nxv*Nyv*Nzr) )
+    allocate( region(ibry)%ID_cnt2Dr(4, Nxr*Nyr) )
+    allocate( region(ibry)%w_cnt2Dr (4, Nxr*Nyr) )
+    allocate( region(ibry)%ID_cnt3Dr(6, Nxr*Nyr*Nzr) )
+    allocate( region(ibry)%w_cnt3Dr (8, Nxr*Nyr*Nzr) )
+    allocate( region(ibry)%ID_cnt2Du(4, Nxu*Nyu) )
+    allocate( region(ibry)%w_cnt2Du (4, Nxu*Nyu) )
+    allocate( region(ibry)%ID_cnt2Dv(4, Nxv*Nyv) )
+    allocate( region(ibry)%w_cnt2Dv (4, Nxv*Nyv) )
+    allocate( region(ibry)%ID_cnt3Du(6, Nxu*Nyu*Nzr) )
+    allocate( region(ibry)%w_cnt3Du (8, Nxu*Nyu*Nzr) )
+    allocate( region(ibry)%ID_cnt3Dv(6, Nxv*Nyv*Nzr) )
+    allocate( region(ibry)%w_cnt3Dv (8, Nxv*Nyv*Nzr) )
+
+    ! alias bare pointers to this boundary's region storage (body uses bare names)
+    zeta => region(ibry)%zeta ; ubar => region(ibry)%ubar ; vbar => region(ibry)%vbar
+    u => region(ibry)%u ; v => region(ibry)%v ; t => region(ibry)%t
+    ull => region(ibry)%ull ; vll => region(ibry)%vll
+    uu => region(ibry)%uu ; uv => region(ibry)%uv ; vu => region(ibry)%vu ; vv => region(ibry)%vv
+    zeta_bry => region(ibry)%zeta_bry ; ubar_bry => region(ibry)%ubar_bry ; vbar_bry => region(ibry)%vbar_bry
+    u_bry => region(ibry)%u_bry ; v_bry => region(ibry)%v_bry ; t_bry => region(ibry)%t_bry
+    ID_cnt2Dr => region(ibry)%ID_cnt2Dr ; w_cnt2Dr => region(ibry)%w_cnt2Dr
+    ID_cnt2Du => region(ibry)%ID_cnt2Du ; w_cnt2Du => region(ibry)%w_cnt2Du
+    ID_cnt2Dv => region(ibry)%ID_cnt2Dv ; w_cnt2Dv => region(ibry)%w_cnt2Dv
+    ID_cnt3Dr => region(ibry)%ID_cnt3Dr ; w_cnt3Dr => region(ibry)%w_cnt3Dr
+    ID_cnt3Du => region(ibry)%ID_cnt3Du ; w_cnt3Du => region(ibry)%w_cnt3Du
+    ID_cnt3Dv => region(ibry)%ID_cnt3Dv ; w_cnt3Dv => region(ibry)%w_cnt3Dv
 
     iNC = 0
 
@@ -2431,37 +2454,8 @@ PROGRAM prepOCN2ROMS
 
     enddo
 
-    deallocate( zeta )
-    deallocate( ubar )
-    deallocate( vbar )
-    deallocate( u )
-    deallocate( v )
-    deallocate( ull )
-    deallocate( uu  )
-    deallocate( vu  )
-    deallocate( vll )
-    deallocate( uv  )
-    deallocate( vv  )
-    deallocate( t )
-    deallocate( zeta_bry )
-    deallocate( ubar_bry )
-    deallocate( vbar_bry )
-    deallocate( u_bry )
-    deallocate( v_bry )
-    deallocate( t_bry )
-  
-    deallocate( ID_cnt2Dr )
-    deallocate( w_cnt2Dr  )
-    deallocate( ID_cnt2Du )
-    deallocate( w_cnt2Du  )
-    deallocate( ID_cnt2Dv )
-    deallocate( w_cnt2Dv  )
-    deallocate( ID_cnt3Dr )
-    deallocate( w_cnt3Dr  )
-    deallocate( ID_cnt3Du )
-    deallocate( w_cnt3Du  )
-    deallocate( ID_cnt3Dv )
-    deallocate( w_cnt3Dv  )
+    ! (A) working/slice/weight arrays now live in region(ibry) and persist
+    ! (freed at program end); no per-boundary deallocate.
 
     write(*,*) '***************** '//trim(BRY_NAME(ibry))//' boundary complete! *****************'
   enddo

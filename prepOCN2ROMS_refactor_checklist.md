@@ -24,7 +24,8 @@
 
 ## 段階 3: BRY を region 化（time 外側へ再構成・単一ファイル追記）
 - [x] 3a: (B) ドナー配列を `pointer` 化（HIS は直接確保のまま＝byte-identical 確認済み）
-- [ ] BRY の境界範囲設定を region 設定（ループ前）へ移動
+- [x] 3b-1: BRY の A 配列を region(ibry) 化（ibry ループ維持）。`allocate(region(1:4))` 追加。BRY byte-identical 確認済み
+- [ ] 3b-2: BRY のループを `do itime`(外)/`do ibry`(内) へ swap、(B)ドナーを region(ibry) 化
 - [ ] `do itime`（外）/ `do ibry`（内）へ再構成、単一 `OUT_FILE` へ UNLIMITED 追記
 - [ ] スライス抽出＋書込を `#if BRY_MODE` 内に
 - [ ] コンパイル成功（BRY × 各ドナー）
