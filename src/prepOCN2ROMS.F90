@@ -69,9 +69,8 @@ PROGRAM prepOCN2ROMS
   character(33) :: TIME_ATT  = "seconds since 2000-01-01 00:00:00"
 
   character(15) :: BRY_suffix   = "_20000101.00.nc"
-  character(256) :: BRY_FILE
   character(15) :: HIS_suffix   = "_20000101.00.nc"   ! used in HIS output
-  character(256) :: HIS_FILE                          ! used in HIS output
+  character(256) :: OUT_FILE                          ! unified output file name (BRY/HIS/INI)
   
   real(8), allocatable :: time_all(:)
   real(8), allocatable :: bry_time(:)
@@ -1514,19 +1513,19 @@ PROGRAM prepOCN2ROMS
 !-Boundary condition netcdf file name -------------------------------------------------
   call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
   BRY_suffix(2:12)=YYYYMMDDpHH
-  BRY_FILE = trim( BRY_prefix )//BRY_suffix
+  OUT_FILE = trim( BRY_prefix )//BRY_suffix
 
 !-Create the ROMS boundary conditions netCDF file --------------------------------
 #if defined ROMS_MODEL     
-  call createNetCDFbry2(   trim( ROMS_HISFILE(1) ), trim( BRY_FILE )   &
+  call createNetCDFbry2(   trim( ROMS_HISFILE(1) ), trim( OUT_FILE )   &
         , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar ,SNWE   )
 #else
-  call createNetCDFbry(  trim( BRY_FILE ), TIME_ATT       &
+  call createNetCDFbry(  trim( OUT_FILE ), TIME_ATT       &
         , Nxr, Nyr, Nzr, 1 ,romsvar ,SNWE   )
 #endif
 !-Write ROMS boundary conditions netCDF file --------------------------------
  
-  call check( nf90_open(trim( BRY_FILE ), NF90_WRITE, ncid2) )
+  call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
   call check( nf90_inq_varid(ncid2, 'spherical', var_id) )
   call check( nf90_put_var(ncid2, var_id, spherical) )
   call check( nf90_inq_varid(ncid2, 'Vtransform', var_id) )
@@ -1956,7 +1955,7 @@ PROGRAM prepOCN2ROMS
         start2D = (/ 1,     itime /)
         count2D = (/ Nrbry, 1     /)
         write(*,*)  'Write: ', 'zeta_'//trim(BRY_NAME(ibry))
-        call check( nf90_open( trim( BRY_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_open( trim( OUT_FILE ), NF90_WRITE, ncid2) )
         call check( nf90_inq_varid(ncid2, 'zeta_'//trim(BRY_NAME(ibry)), var_id2) )
         call check( nf90_put_var(ncid2, var_id2, zeta_bry, start = start2D, count = count2D) )
         call check( nf90_close(ncid2) )      
@@ -2151,7 +2150,7 @@ PROGRAM prepOCN2ROMS
           start3D = (/ 1,     1,   itime /)
           count3D = (/ Nubry, Nzr, 1     /)
           write(*,*)  'Write: ', 'u_'//trim(BRY_NAME(ibry))
-          call check( nf90_open( trim( BRY_FILE ), NF90_WRITE, ncid2) )
+          call check( nf90_open( trim( OUT_FILE ), NF90_WRITE, ncid2) )
           call check( nf90_inq_varid(ncid2, 'u_'//trim(BRY_NAME(ibry)), var_id2) )
           call check( nf90_put_var(ncid2, var_id2, u_bry, start = start3D, count = count3D) )
           call check( nf90_close(ncid2) )      
@@ -2170,7 +2169,7 @@ PROGRAM prepOCN2ROMS
           start3D = (/ 1,    1,    itime /)
           count3D = (/ Nvbry, Nzr, 1     /)
           write(*,*)  'Write: ', 'v_'//trim(BRY_NAME(ibry))
-          call check( nf90_open( trim( BRY_FILE ), NF90_WRITE, ncid2) )
+          call check( nf90_open( trim( OUT_FILE ), NF90_WRITE, ncid2) )
           call check( nf90_inq_varid(ncid2, 'v_'//trim(BRY_NAME(ibry)), var_id2) )
           call check( nf90_put_var(ncid2, var_id2, v_bry, start = start3D, count = count3D) )
           call check( nf90_close(ncid2) )      
@@ -2200,7 +2199,7 @@ PROGRAM prepOCN2ROMS
           start2D = (/ 1,     itime /)
           count2D = (/ Nubry, 1     /)
           write(*,*)  'Write: ', 'ubar_'//trim(BRY_NAME(ibry))
-          call check( nf90_open( trim( BRY_FILE ), NF90_WRITE, ncid2) )
+          call check( nf90_open( trim( OUT_FILE ), NF90_WRITE, ncid2) )
           call check( nf90_inq_varid(ncid2, 'ubar_'//trim(BRY_NAME(ibry)), var_id2) )
           call check( nf90_put_var(ncid2, var_id2, ubar_bry, start = start2D, count = count2D) )
           call check( nf90_close(ncid2) )      
@@ -2229,7 +2228,7 @@ PROGRAM prepOCN2ROMS
           start2D = (/ 1,    itime /)
           count2D = (/ Nvbry, 1     /)
           write(*,*)  'Write: ', 'vbar_'//trim(BRY_NAME(ibry))
-          call check( nf90_open( trim( BRY_FILE ), NF90_WRITE, ncid2) )
+          call check( nf90_open( trim( OUT_FILE ), NF90_WRITE, ncid2) )
           call check( nf90_inq_varid(ncid2, 'vbar_'//trim(BRY_NAME(ibry)), var_id2) )
           call check( nf90_put_var(ncid2, var_id2, vbar_bry, start = start2D, count = count2D) )
           call check( nf90_close(ncid2) )      
@@ -2340,7 +2339,7 @@ PROGRAM prepOCN2ROMS
         start3D = (/ 1,    1,   itime /)
         count3D = (/ Nrbry, Nzr, 1     /)
         write(*,*)  'Write: ', trim( bryname )
-        call check( nf90_open( trim( BRY_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_open( trim( OUT_FILE ), NF90_WRITE, ncid2) )
         call check( nf90_inq_varid(ncid2, trim( bryname ), var_id2 ) )
         call check( nf90_put_var(ncid2, var_id2, t_bry, start = start3D, count = count3D) )
         call check( nf90_close(ncid2) )      
@@ -2439,22 +2438,22 @@ PROGRAM prepOCN2ROMS
   call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
   HIS_suffix(2:12)=YYYYMMDDpHH
 #if defined INI_MODE
-  HIS_FILE = trim( INI_prefix )//HIS_suffix   ! INI: single-time initial-condition file
+  OUT_FILE = trim( INI_prefix )//HIS_suffix   ! INI: single-time initial-condition file
 #else
-  HIS_FILE = trim( HIS_prefix )//HIS_suffix
+  OUT_FILE = trim( HIS_prefix )//HIS_suffix
 #endif
 
 !-Create the ROMS his netCDF file --------------------------------
 #if defined ROMS_MODEL     
-!  call createNetCDFini2(  trim( ROMS_HISFILE(1) ),  trim( HIS_FILE )   &
+!  call createNetCDFini2(  trim( ROMS_HISFILE(1) ),  trim( OUT_FILE )   &
 !        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar, Nbed, NCS, NNS  )
-  call createNetCDFini(  trim( HIS_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
+  call createNetCDFini(  trim( OUT_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
 #else
-  call createNetCDFini(  trim( HIS_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
+  call createNetCDFini(  trim( OUT_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
 #endif
 !-Write ROMS his netCDF file --------------------------------
  
-  call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+  call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
   call check( nf90_inq_varid(ncid2, 'spherical', var_id) )
   call check( nf90_put_var(ncid2, var_id, spherical) )
   call check( nf90_inq_varid(ncid2, 'Vtransform', var_id) )
@@ -2778,7 +2777,7 @@ PROGRAM prepOCN2ROMS
 
     start1D = (/ itime /)
     count1D = (/ 1 /)
-    call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+    call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
     call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
     call check( nf90_put_var(ncid2, var_id, ocean_time, start = start1D, count = count1D) )
     call check( nf90_close(ncid2) )
@@ -2846,7 +2845,7 @@ PROGRAM prepOCN2ROMS
       start3D = (/ 1,   1,   itime /)
       count3D = (/ Nxr, Nyr, 1 /)
       write(*,*)  'Write: zeta'
-      call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+      call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
       call check( nf90_inq_varid(ncid2, 'zeta', var_id2) )
       call check( nf90_put_var(ncid2, var_id2, zeta, start = start3D, count = count3D) )
       call check( nf90_close(ncid2) )
@@ -3029,7 +3028,7 @@ PROGRAM prepOCN2ROMS
         start4D = (/ 1,   1,   1,   itime /)
         count4D = (/ Nxu, Nyu, Nzr, 1 /)
         write(*,*)  'Write: u'
-        call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
         call check( nf90_inq_varid(ncid2, 'u', var_id2) )
         call check( nf90_put_var(ncid2, var_id2, u, start = start4D, count = count4D) )
         call check( nf90_close(ncid2) )
@@ -3038,7 +3037,7 @@ PROGRAM prepOCN2ROMS
         start4D = (/ 1,   1,   1,   itime /)
         count4D = (/ Nxv, Nyv, Nzr, 1 /)
         write(*,*)  'Write: v'
-        call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
         call check( nf90_inq_varid(ncid2, 'v', var_id2) )
         call check( nf90_put_var(ncid2, var_id2, v, start = start4D, count = count4D) )
         call check( nf90_close(ncid2) )
@@ -3058,7 +3057,7 @@ PROGRAM prepOCN2ROMS
         start3D = (/ 1,   1,   itime /)
         count3D = (/ Nxu, Nyu, 1 /)
         write(*,*)  'Write: ubar'
-        call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
         call check( nf90_inq_varid(ncid2, 'ubar', var_id2) )
         call check( nf90_put_var(ncid2, var_id2, ubar, start = start3D, count = count3D) )
         call check( nf90_close(ncid2) )
@@ -3077,7 +3076,7 @@ PROGRAM prepOCN2ROMS
         start3D = (/ 1,   1,   itime /)
         count3D = (/ Nxv, Nyv, 1 /)
         write(*,*)  'Write: vbar'
-        call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
         call check( nf90_inq_varid(ncid2, 'vbar', var_id2) )
         call check( nf90_put_var(ncid2, var_id2, vbar, start = start3D, count = count3D) )
         call check( nf90_close(ncid2) )
@@ -3177,7 +3176,7 @@ PROGRAM prepOCN2ROMS
       start4D = (/ 1,   1,   1,   itime /)
       count4D = (/ Nxr, Nyr, Nzr, 1 /)
       write(*,*)  'Write: ', trim( varname )
-      call check( nf90_open(trim( HIS_FILE ), NF90_WRITE, ncid2) )
+      call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
       call check( nf90_inq_varid(ncid2, trim( varname ), var_id2) )
       call check( nf90_put_var(ncid2, var_id2, t, start = start4D, count = count4D) )
       call check( nf90_close(ncid2) )

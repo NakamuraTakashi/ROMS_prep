@@ -1,0 +1,53 @@
+# prepOCN2ROMS リファクタリング 進捗チェックリスト
+
+計画: [`prepOCN2ROMS_refactor_plan.md`](prepOCN2ROMS_refactor_plan.md)
+ブランチ: `refactor/prepOCN2ROMS`
+
+各段階は「コンパイル成功」＋「master と出力一致（回帰）」を満たしたらチェック。
+
+## 段階 1: `OUT_FILE` 共通化（挙動不変）✅
+- [x] `HIS_FILE` / `BRY_FILE` → `OUT_FILE` に統一（宣言・全参照）
+- [x] 生成呼び出しのみ CPP 分岐（`#if BRY_MODE: createNetCDFbry #else: createNetCDFini`）※元から CPP 分岐済み
+- [x] 全モード組合せでコンパイル成功（BRY/HIS/INI × HYCOM/JCOPE/ROMS/MOVEJPN/FORA, WET_DRY）
+- [x] master と実行コードが一致（=挙動不変）を確認（`git diff` が純粋なリネームのみ）
+- [x] コミット
+
+## 段階 2: `T_region` 派生型を導入し HIS を region(1) で書き直す
+- [ ] `T_region` 型定義（(A)領域サイズ成分／(B)ドナー box 成分）
+- [ ] HIS/INI を `region(1)`（n=1, 全領域）で書き直し
+- [ ] コンパイル成功（HIS/INI × 各ドナー）
+- [ ] HIS/INI 出力が master と一致（`cdo diffn`）
+- [ ] コミット
+
+## 段階 3: BRY を region 化（time 外側へ再構成・単一ファイル追記）
+- [ ] BRY の境界範囲設定を region 設定（ループ前）へ移動
+- [ ] `do itime`（外）/ `do ibry`（内）へ再構成、単一 `OUT_FILE` へ UNLIMITED 追記
+- [ ] スライス抽出＋書込を `#if BRY_MODE` 内に
+- [ ] コンパイル成功（BRY × 各ドナー）
+- [ ] BRY 出力が master と一致（`cdo diffn`）
+- [ ] コミット
+
+## 段階 4: read+interp+(donor read) の物理マージ
+- [ ] BRY/HIS の重複ブロックを 1 本化（region パラメータ化、書込のみ `#if` 分岐）
+- [ ] 出力セクションを単一セクションへ統合（`#if BRY_MODE` … `#else` … `#endif`）
+- [ ] コンパイル成功（全組合せ）
+- [ ] BRY/HIS/INI とも master と一致（`cdo diffn`）
+- [ ] コミット
+
+## 段階 5: 重み再計算トリガーの修正（§3.1）
+- [ ] ファイル切替検出と重み再計算を分離
+- [ ] 非 WET_DRY: 初回（複数ファイルは切替時）に全 region 計算・保持
+- [ ] ROMS+WET_DRY: 毎ステップ再計算（毎ステップ wetdry マスクを `idt(itime)` で読む）
+- [ ] コンパイル成功（特に ROMS_MODEL + WET_DRY）
+- [ ] WET_DRY ケースの妥当性確認（時間追従するか）／非 WET_DRY は master と一致
+- [ ] コミット
+
+## 段階 6: 仕上げ
+- [ ] 全 CPP 組合せの網羅コンパイル
+- [ ] 代表データ（TokyoBay2/3, MOVEJPN/HYCOM, 必要なら FORA）で実走回帰
+- [ ] CLAUDE.md / 計画 md の追記・更新
+- [ ] master へのマージ可否を確認（ユーザー判断）
+
+---
+進捗メモ:
+- 段階1 完了: `BRY_FILE`/`HIS_FILE` を `OUT_FILE` に統一（純粋リネーム、挙動不変）。全モードコンパイル確認済み。
