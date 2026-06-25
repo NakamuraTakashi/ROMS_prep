@@ -28,12 +28,13 @@
 ## 段階 3: BRY を region 化（time 外側へ再構成・単一ファイル追記）
 - [x] 3a: (B) ドナー配列を `pointer` 化（HIS は直接確保のまま＝byte-identical 確認済み）
 - [x] 3b-1: BRY の A 配列を region(ibry) 化（ibry ループ維持）。`allocate(region(1:4))` 追加。BRY byte-identical 確認済み
-- [ ] 3b-2: BRY のループを `do itime`(外)/`do ibry`(内) へ swap、(B)ドナーを region(ibry) 化
-- [ ] `do itime`（外）/ `do ibry`（内）へ再構成、単一 `OUT_FILE` へ UNLIMITED 追記
-- [ ] スライス抽出＋書込を `#if BRY_MODE` 内に
-- [ ] コンパイル成功（BRY × 各ドナー）
-- [ ] BRY 出力が master と一致（`cdo diffn`）
-- [ ] コミット
+- [x] 3b-2: BRY のループを `do itime`(外)/`do ibry`(内) へ swap、(B)ドナーを region(ibry) 化
+- [x] `do itime`（外）/ `do ibry`（内）へ再構成、単一 `OUT_FILE` へ追記（元から単一ファイル）
+- [x] スライス抽出＋書込は `#if BRY_MODE` 内に存続（HIS と統合は段階4）
+- [x] コンパイル成功（BRY × JCOPE/ROMS/ROMS+WET_DRY/FORA。HYCOM は master と同じ既知の
+      別件エラー＝HYCOM_TIME 生成 include 未指定で本リファクタとは無関係）
+- [x] BRY 出力が master と **byte-identical**（TokyoBay2/MOVEJPN）。HIS/INI も byte-identical を再確認
+- [x] コミット
 
 ## 段階 4: read+interp+(donor read) の物理マージ
 - [ ] BRY/HIS の重複ブロックを 1 本化（region パラメータ化、書込のみ `#if` 分岐）
@@ -62,6 +63,12 @@
 - 段階2 完了: `T_region` 型導入、(A)配列を pointer 化、HIS/INI を region(1) 経由に。TokyoBay2/MOVEJPN(2日)で master と HIS・BRY とも byte-identical を確認。(B)ドナー配列は段階3で region 化予定。
 - 段階3a 完了: (B)ドナー配列を pointer 化（HIS は直接確保で byte-identical）。
 - 段階3b-1 完了: BRY の A 配列を region(ibry) 化（`allocate(region(1:4))` 追加、ibry ループ維持）。BRY byte-identical。
+- 段階3b-2 完了: BRY を `do itime`(外)/`do ibry`(内) へ swap。setup（bounds+A確保）を前出し、GRIDLOAD
+  (HYCOM 共有座標 load / ファイル open) を ibry 外へ hoist、(B)ドナーを region(ibry) 化＋bare ポインタへ alias、
+  box スカラ(Irdg_min..,Nxr_dg..)を region(ibry) に保存し非ファイル切替 step で復元。ファイル切替検出は
+  原コードどおり `if(itime<Nt){ if(iNC==iNCt(itime+1)) cycle }` を使用（`.or.` は短絡しないので
+  `iNCt(Nt+1)` 範囲外参照を避ける）。TokyoBay2/MOVEJPN で BRY/HIS/INI とも master と byte-identical。
+  次は段階4（BRY/HIS の read+interp ブロック物理マージ）。
 
 ### 3b-2 手術手順（次回実施・要点メモ）
 現 BRY: `do ibry { setup; iNC=0; do itime { if(iNCm<iNC){GRIDLOAD(1741-1810)+BOX(1811-1958)}; RW(1960-2405); cycle/donor dealloc(2406-2434) } enddo }`
