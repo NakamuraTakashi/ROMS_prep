@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Grid/Yaeyama3_grd_v12.2.nc"
+  GRID_FILE = "/mnt/d/COAWST_DATA/Yaeyama/Yaeyama3/Grid/Yaeyama3_grd_v12.2.nc"
 !  GRID_FILE = "Yaeyama3_grd_v12c.nc"
 /
 
@@ -20,7 +20,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "F:/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.1.nc"
+  parent_grid = "/mnt/d/COAWST_DATA/Yaeyama/Yaeyama2/Grid/Yaeyama2_grd_v11.3.nc"
   parent_Imin = 91
   parent_Imax = 200
   parent_Jmin = 73    !80
@@ -29,7 +29,7 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "Yaeyama2_grd_v11.2.nc"
+  F2C_OUT_FILE = "Yaeyama2_grd_v11.4.nc"
 /
 
 &utm_zone
@@ -39,15 +39,15 @@
 /
 
 &sdate
-  Syear  = 2015   ! Starting year
+  Syear  = 2023   ! Starting year
   Smonth = 1      ! Starting month
   Sday   = 1      ! Starting day
 /
 
 &edate
-  Eyear  = 2016   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
+  Eyear  = 2023   ! Ending year   !!!4/30, 5/31, 6/30, 7/31, 8/31
   Emonth = 1      ! Ending month
-  Eday   = 1      ! Ending day
+  Eday   = 5      ! Ending day
 /
 
 &refdate
@@ -62,7 +62,7 @@
 
 &roms2roms2
 ! ROMS coarse NetCDF history file name
-  ROMS_HISFILE  = "../../../COAWST/Projects/Yaeyama2/Yaeyama2_his_14_3.nc"
+  ROMS_HISFILE  = "../../../COAWST_OUTPUT/Yaeyama/Yaeyama2/Yaeyama2_his_20220914.nc"
 
 ! switches (1/0) for activate/deactivate the variables
 !
@@ -78,7 +78,8 @@
 !    
 !           1       5        10        15        20        25        30        35  
 !           |       |         |         |         |         |         |         |  
-  romsvar = 1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0
+! romsvar = 1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0
+  romsvar = 1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 /
 
 &ocn2roms      
@@ -92,18 +93,21 @@
 /
 
 &bry
-  BRY_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Bry/Yaeyama3_bry_ROMS_Nz15"
+  BRY_prefix  = "Yaeyama3_bry_ROMS_Nz15"
   !    south north west east
   SNWE =  1,   1,   1,   1
 /
 
 &ini
-  INI_prefix  = "F:/COAWST_DATA/Yaeyama/Yaeyama3/Ini/Yaeyama3_ini_ROMS_Nz15"
+  INI_prefix  = "Yaeyama3_ini_ROMS_Nz15"
 
-  INIyear  = 2014   ! Initial year
-  INImonth = 8      ! Initial month
-  INIday   = 3      ! Initial day
+  INIyear  = 2023   ! Initial year
+  INImonth = 1      ! Initial month
+  INIday   = 2      ! Initial day
   INIhour  = 0      ! Initial hour
+/
+&his
+  HIS_prefix  = "Yaeyama3_his_ROMS_Nz15"
 /
 
 &hcoord

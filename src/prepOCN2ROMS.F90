@@ -1600,13 +1600,6 @@ PROGRAM prepOCN2ROMS
   call check( nf90_put_var(ncid2, var_id, sc_w, start1D,  count1D) )
   call check( nf90_inq_varid(ncid2, 'Cs_w', var_id) )
   call check( nf90_put_var(ncid2, var_id, Cs_w, start1D, count1D) )
-
-#if defined BRY_MODE
-  start1D = (/ 1 /)
-  count1D = (/ Nt /)
-  call check( nf90_inq_varid(ncid2, 'bry_time', var_id) )
-  call check( nf90_put_var(ncid2, var_id, bry_time, start = start1D, count = count1D) )
-#endif
   call check( nf90_close(ncid2) )
 
 
@@ -1846,17 +1839,20 @@ PROGRAM prepOCN2ROMS
     endif
 
     ocean_time(1) = bry_time(itime)
-#if !defined BRY_MODE
+
     call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
     Write(*,*) 'Time = ',YYYYMMDDpHH
 
     start1D = (/ itime /)
     count1D = (/ 1 /)
     call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
+#if defined BRY_MODE
+    call check( nf90_inq_varid(ncid2, 'bry_time', var_id) )
+#else
     call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
+#endif
     call check( nf90_put_var(ncid2, var_id, ocean_time, start = start1D, count = count1D) )
     call check( nf90_close(ncid2) )
-#endif
 
     do ibry=1,n_region
 #if defined BRY_MODE
