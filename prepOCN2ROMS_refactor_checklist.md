@@ -36,12 +36,17 @@
 - [x] BRY 出力が master と **byte-identical**（TokyoBay2/MOVEJPN）。HIS/INI も byte-identical を再確認
 - [x] コミット
 
-## 段階 4: read+interp+(donor read) の物理マージ
-- [ ] BRY/HIS の重複ブロックを 1 本化（region パラメータ化、書込のみ `#if` 分岐）
-- [ ] 出力セクションを単一セクションへ統合（`#if BRY_MODE` … `#else` … `#endif`）
-- [ ] コンパイル成功（全組合せ）
-- [ ] BRY/HIS/INI とも master と一致（`cdo diffn`）
-- [ ] コミット
+## 段階 4: read+interp+(donor read) の物理マージ ✅
+- [x] BRY/HIS の重複ブロックを 1 本化（region パラメータ化、書込のみ `#if` 分岐）
+- [x] 出力セクションを単一セクションへ統合。HIS/INI 専用の HIS セクション（旧 `#elif HIS||INI`）を削除し、
+      BRY セクションを `n_region`(BRY=4/HIS=1) でパラメータ化した単一エンジンに。差分は CPP で局所化:
+      ①ファイル生成(createNetCDFbry/bry2 vs createNetCDFini)＋接尾辞/接頭辞、②時刻変数(bry_time 一括 vs
+      ocean_time を itime 毎)、③region 数・境界範囲(case vs 全域)、④書込(スライス zeta_<dir> 等 vs 全 field)、
+      ⑤INI の Nt=1、⑥NAOTIDE 潮汐加算(zeta_tide は HIS/INI のみ確保)
+- [x] コンパイル成功（BRY/HIS/INI × JCOPE/ROMS/ROMS+WET_DRY/FORA/MOVEJPN、HIS/INI×NAOTIDEJ。
+      HYCOM は master と同じ既知の別件 include エラーのみ）
+- [x] BRY/HIS/INI とも master と **byte-identical**（TokyoBay2/MOVEJPN、`cmp`）
+- [x] コミット
 
 ## 段階 5: 重み再計算トリガーの修正（§3.1）
 - [ ] ファイル切替検出と重み再計算を分離
@@ -68,7 +73,12 @@
   box スカラ(Irdg_min..,Nxr_dg..)を region(ibry) に保存し非ファイル切替 step で復元。ファイル切替検出は
   原コードどおり `if(itime<Nt){ if(iNC==iNCt(itime+1)) cycle }` を使用（`.or.` は短絡しないので
   `iNCt(Nt+1)` 範囲外参照を避ける）。TokyoBay2/MOVEJPN で BRY/HIS/INI とも master と byte-identical。
-  次は段階4（BRY/HIS の read+interp ブロック物理マージ）。
+- 段階4 完了: 出力部の二重実装を解消。HIS 専用セクションを削除し、旧 BRY セクションを `n_region` で
+  パラメータ化した単一エンジンへ統合（read+interp+donor-read は完全共有、差分は createNetCDF/時刻変数/
+  region 範囲/書込/Nt=1/NAOTIDE のみ CPP 局所化）。BRY-active 経路は不変なので BRY は構成上不変、
+  HIS/INI の `#else` 分岐を新規追加。TokyoBay2/MOVEJPN で BRY/HIS/INI とも master と byte-identical、
+  全 mode×donor 行列でコンパイル確認。次は段階5（§3.1 重み再計算トリガー: 非WET_DRYは初回のみ、
+  ROMS+WET_DRYは毎ステップ）。
 
 ### 3b-2 手術手順（次回実施・要点メモ）
 現 BRY: `do ibry { setup; iNC=0; do itime { if(iNCm<iNC){GRIDLOAD(1741-1810)+BOX(1811-1958)}; RW(1960-2405); cycle/donor dealloc(2406-2434) } enddo }`

@@ -69,6 +69,7 @@ PROGRAM prepOCN2ROMS
   integer :: Eyear, Emonth, Eday
   integer :: Ryear, Rmonth, Rday
   integer :: itime,ibry
+  integer :: n_region    ! number of output regions (BRY: 4 boundaries; HIS/INI: 1)
   integer :: mode
   character(256) :: GRID_FILE
 
@@ -1542,23 +1543,29 @@ PROGRAM prepOCN2ROMS
 !========================================================================
 !  Output generation mode: select ONE of -DBRY_MODE / -DHIS_MODE / -DINI_MODE
 !========================================================================
-#if defined BRY_MODE
-!-Read ROMS ocean_his netCDF file --------------------------------
+!-Output file name + creation (mode-specific) --------------------------------
   ocean_time(1) = bry_time(1)
-!-Boundary condition netcdf file name -------------------------------------------------
   call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
+#if defined BRY_MODE
   BRY_suffix(2:12)=YYYYMMDDpHH
   OUT_FILE = trim( BRY_prefix )//BRY_suffix
-
-!-Create the ROMS boundary conditions netCDF file --------------------------------
-#if defined ROMS_MODEL     
+#if defined ROMS_MODEL
   call createNetCDFbry2(   trim( ROMS_HISFILE(1) ), trim( OUT_FILE )   &
         , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar ,SNWE   )
 #else
   call createNetCDFbry(  trim( OUT_FILE ), TIME_ATT       &
         , Nxr, Nyr, Nzr, 1 ,romsvar ,SNWE   )
 #endif
-!-Write ROMS boundary conditions netCDF file --------------------------------
+#else
+  HIS_suffix(2:12)=YYYYMMDDpHH
+#if defined INI_MODE
+  OUT_FILE = trim( INI_prefix )//HIS_suffix   ! INI: single-time initial-condition file
+#else
+  OUT_FILE = trim( HIS_prefix )//HIS_suffix
+#endif
+  call createNetCDFini(  trim( OUT_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 )
+#endif
+!-Write static coordinate/stretching variables (shared) ----------------------
  
   call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
   call check( nf90_inq_varid(ncid2, 'spherical', var_id) )
@@ -1588,20 +1595,28 @@ PROGRAM prepOCN2ROMS
   call check( nf90_inq_varid(ncid2, 'Cs_w', var_id) )
   call check( nf90_put_var(ncid2, var_id, Cs_w, start1D, count1D) )
 
+#if defined BRY_MODE
   start1D = (/ 1 /)
   count1D = (/ Nt /)
   call check( nf90_inq_varid(ncid2, 'bry_time', var_id) )
   call check( nf90_put_var(ncid2, var_id, bry_time, start = start1D, count = count1D) )
-  call check( nf90_close(ncid2) )      
+#endif
+  call check( nf90_close(ncid2) )
 
 
 !===== LOOP START ==========================================================
 
-!-Write ROMS boundary conditions netCDF file --------------------------------
-  allocate( region(1:4) )   ! one region per boundary (S/N/W/E)
+!-Region setup (BRY: 4 boundaries; HIS/INI: 1 whole-domain region) -----------
+#if defined BRY_MODE
+  n_region = 4
+#else
+  n_region = 1
+#endif
+  allocate( region(1:n_region) )
 
-  ! ===== setup phase: target bounds + (A) array allocation per active boundary =====
-  do ibry=1,4
+  ! ===== setup phase: target bounds + (A) array allocation per region =====
+  do ibry=1,n_region
+#if defined BRY_MODE
     if( SNWE(ibry)==0 ) cycle
 
     write(*,*) '***************** Setup '//trim(BRY_NAME(ibry))//' boundary *****************'
@@ -1671,6 +1686,21 @@ PROGRAM prepOCN2ROMS
       Nubry = UBuj-LBuj+1
       Nvbry = UBvj-LBvj+1
     endif
+#else
+    write(*,*) '***************** Start extracting *****************'
+    LBri = 0
+    UBri = L
+    LBrj = 0
+    UBrj = M
+    LBui = 1
+    UBui = L
+    LBuj = 0
+    UBuj = M
+    LBvi = 0
+    UBvi = L
+    LBvj = 1
+    UBvj = M
+#endif
     Nxr = UBri-LBri+1
     Nxu = UBui-LBui+1
     Nxv = UBvi-LBvi+1
@@ -1684,7 +1714,9 @@ PROGRAM prepOCN2ROMS
     region(ibry)%LBvi=LBvi; region(ibry)%UBvi=UBvi; region(ibry)%LBvj=LBvj; region(ibry)%UBvj=UBvj
     region(ibry)%Nxr=Nxr; region(ibry)%Nyr=Nyr; region(ibry)%Nxu=Nxu
     region(ibry)%Nyu=Nyu; region(ibry)%Nxv=Nxv; region(ibry)%Nyv=Nyv
+#if defined BRY_MODE
     region(ibry)%Nrbry=Nrbry; region(ibry)%Nubry=Nubry; region(ibry)%Nvbry=Nvbry
+#endif
 
     allocate( region(ibry)%zeta(LBri:UBri, LBrj:UBrj, 1) )
     allocate( region(ibry)%ubar(LBui:UBui, LBuj:UBuj, 1) )
@@ -1698,12 +1730,18 @@ PROGRAM prepOCN2ROMS
     allocate( region(ibry)%uv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
     allocate( region(ibry)%vv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
     allocate( region(ibry)%t(LBri:UBri, LBrj:UBrj, 1:N, 1) )
+#if defined BRY_MODE
     allocate( region(ibry)%zeta_bry(Nrbry, 1) )
     allocate( region(ibry)%ubar_bry(Nubry, 1) )
     allocate( region(ibry)%vbar_bry(Nvbry, 1) )
     allocate( region(ibry)%u_bry(Nubry, 1:N, 1) )
     allocate( region(ibry)%v_bry(Nvbry, 1:N, 1) )
     allocate( region(ibry)%t_bry(Nrbry, 1:N, 1) )
+#else
+#if defined NAOTIDE || defined NAOTIDEJ
+    allocate( zeta_tide(0:L, 0:M) )
+#endif
+#endif
 
     allocate( region(ibry)%ID_cnt2Dr(4, Nxr*Nyr) )
     allocate( region(ibry)%w_cnt2Dr (4, Nxr*Nyr) )
@@ -1721,7 +1759,10 @@ PROGRAM prepOCN2ROMS
 
   iNC = 0
 
-  ! ===== time loop (outer); boundaries (inner) write into one OUT_FILE =====
+#if defined INI_MODE
+  Nt = 1   ! initial condition: write only the first (initial) time step
+#endif
+  ! ===== time loop (outer); regions (inner) write into one OUT_FILE =====
   do itime=1,Nt
     iNCm = iNC
     iNC  = iNCt(itime)
@@ -1799,24 +1840,41 @@ PROGRAM prepOCN2ROMS
     endif
 
     ocean_time(1) = bry_time(itime)
+#if !defined BRY_MODE
+    call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
+    Write(*,*) 'Time = ',YYYYMMDDpHH
 
-    do ibry=1,4
+    start1D = (/ itime /)
+    count1D = (/ 1 /)
+    call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
+    call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
+    call check( nf90_put_var(ncid2, var_id, ocean_time, start = start1D, count = count1D) )
+    call check( nf90_close(ncid2) )
+#endif
+
+    do ibry=1,n_region
+#if defined BRY_MODE
       if( SNWE(ibry)==0 ) cycle
+#endif
 
-      ! ----- restore this boundary's target bounds + alias (A) pointers -----
+      ! ----- restore this region's target bounds + alias (A) pointers -----
       LBri=region(ibry)%LBri; UBri=region(ibry)%UBri; LBrj=region(ibry)%LBrj; UBrj=region(ibry)%UBrj
       LBui=region(ibry)%LBui; UBui=region(ibry)%UBui; LBuj=region(ibry)%LBuj; UBuj=region(ibry)%UBuj
       LBvi=region(ibry)%LBvi; UBvi=region(ibry)%UBvi; LBvj=region(ibry)%LBvj; UBvj=region(ibry)%UBvj
       Nxr=region(ibry)%Nxr; Nyr=region(ibry)%Nyr; Nxu=region(ibry)%Nxu
       Nyu=region(ibry)%Nyu; Nxv=region(ibry)%Nxv; Nyv=region(ibry)%Nyv
+#if defined BRY_MODE
       Nrbry=region(ibry)%Nrbry; Nubry=region(ibry)%Nubry; Nvbry=region(ibry)%Nvbry
+#endif
 
       zeta => region(ibry)%zeta ; ubar => region(ibry)%ubar ; vbar => region(ibry)%vbar
       u => region(ibry)%u ; v => region(ibry)%v ; t => region(ibry)%t
       ull => region(ibry)%ull ; vll => region(ibry)%vll
       uu => region(ibry)%uu ; uv => region(ibry)%uv ; vu => region(ibry)%vu ; vv => region(ibry)%vv
+#if defined BRY_MODE
       zeta_bry => region(ibry)%zeta_bry ; ubar_bry => region(ibry)%ubar_bry ; vbar_bry => region(ibry)%vbar_bry
       u_bry => region(ibry)%u_bry ; v_bry => region(ibry)%v_bry ; t_bry => region(ibry)%t_bry
+#endif
       ID_cnt2Dr => region(ibry)%ID_cnt2Dr ; w_cnt2Dr => region(ibry)%w_cnt2Dr
       ID_cnt2Du => region(ibry)%ID_cnt2Du ; w_cnt2Du => region(ibry)%w_cnt2Du
       ID_cnt2Dv => region(ibry)%ID_cnt2Dv ; w_cnt2Dv => region(ibry)%w_cnt2Dv
@@ -2015,9 +2073,11 @@ PROGRAM prepOCN2ROMS
 #endif
       endif
 
+#if defined BRY_MODE
       call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
       Write(*,*) 'Time = ',YYYYMMDDpHH, ',  bry = ',trim( BRY_NAME(ibry) )
 !      Write(*,*) idt(itime) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#endif
 
       if( romsvar(1)==1 ) then
         !- zeta --------------------------------
@@ -2056,6 +2116,7 @@ PROGRAM prepOCN2ROMS
               , Id_cnt2Dr, w_cnt2Dr                                         &
               , zeta  )
 
+#if defined BRY_MODE
         if(ibry == 1) then     ! South
           zeta_bry(:,1) = zeta(LBri:UBri, 0, 1)
         elseif(ibry == 2) then ! North
@@ -2073,6 +2134,38 @@ PROGRAM prepOCN2ROMS
         call check( nf90_inq_varid(ncid2, 'zeta_'//trim(BRY_NAME(ibry)), var_id2) )
         call check( nf90_put_var(ncid2, var_id2, zeta_bry, start = start2D, count = count2D) )
         call check( nf90_close(ncid2) )
+#else
+#if defined NAOTIDE || defined NAOTIDEJ
+!---- NAOTIDE: add tide to zeta (ported from iniOCN2ROMS) --------------------
+        call mjdymd( Smjd, Ryear, Rmonth, Rday, 0, 0, 0, 1 )  ! from naotidej.f
+        jtime = dble(Smjd) + ocean_time(1)/86400.0d0
+        do j=0,M
+          do i=0,L
+#if defined NAOTIDE
+            call naotide ( lonr(i,j), latr(i,j), jtime, itmode, lpmode       &
+                         , zeta_tide(i,j), hsp, hlp, Ldata )
+#elif defined NAOTIDEJ
+            call naotidej( lonr(i,j), latr(i,j), jtime, itmode, lpmode       &
+                         , zeta_tide(i,j), hsp, hlp, Ldata )
+#endif
+            zeta_tide(i,j) = zeta_tide(i,j)*0.01d0   ! cm -> m
+          enddo
+        enddo
+        call FillExtraPoints2D(Nxr, Nyr, zeta_tide, -5.0d0, 5.0d0)
+        ! Drop any points the tide map left undefined (isolated/land cells that could
+        ! not be filled) so they do not inject ~10 m "undef" tide into zeta.
+        where( abs(zeta_tide) > 5.0d0 ) zeta_tide = 0.0d0
+        zeta(:,:,1) = zeta(:,:,1) + zeta_tide(:,:)
+#endif
+
+        start3D = (/ 1,   1,   itime /)
+        count3D = (/ Nxr, Nyr, 1 /)
+        write(*,*)  'Write: zeta'
+        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_inq_varid(ncid2, 'zeta', var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, zeta, start = start3D, count = count3D) )
+        call check( nf90_close(ncid2) )
+#endif
 
       endif
 
@@ -2251,7 +2344,7 @@ PROGRAM prepOCN2ROMS
 
         if( romsvar(2)==1 ) then
         ! Write u v --------------------------------
-
+#if defined BRY_MODE
           if(ibry == 1) then     ! South
             u_bry(:,:,1) = u(LBui:UBui, 0, 1:N, 1)
           elseif(ibry == 2) then ! North
@@ -2268,9 +2361,19 @@ PROGRAM prepOCN2ROMS
           call check( nf90_inq_varid(ncid2, 'u_'//trim(BRY_NAME(ibry)), var_id2) )
           call check( nf90_put_var(ncid2, var_id2, u_bry, start = start3D, count = count3D) )
           call check( nf90_close(ncid2) )
+#else
+          start4D = (/ 1,   1,   1,   itime /)
+          count4D = (/ Nxu, Nyu, Nzr, 1 /)
+          write(*,*)  'Write: u'
+          call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
+          call check( nf90_inq_varid(ncid2, 'u', var_id2) )
+          call check( nf90_put_var(ncid2, var_id2, u, start = start4D, count = count4D) )
+          call check( nf90_close(ncid2) )
+#endif
         endif
 
         if( romsvar(3)==1 ) then
+#if defined BRY_MODE
           if(ibry == 1) then     ! South
             v_bry(:,:,1) = v(LBvi:UBvi, 1, 1:N, 1)
           elseif(ibry == 2) then ! North
@@ -2287,7 +2390,15 @@ PROGRAM prepOCN2ROMS
           call check( nf90_inq_varid(ncid2, 'v_'//trim(BRY_NAME(ibry)), var_id2) )
           call check( nf90_put_var(ncid2, var_id2, v_bry, start = start3D, count = count3D) )
           call check( nf90_close(ncid2) )
-
+#else
+          start4D = (/ 1,   1,   1,   itime /)
+          count4D = (/ Nxv, Nyv, Nzr, 1 /)
+          write(*,*)  'Write: v'
+          call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
+          call check( nf90_inq_varid(ncid2, 'v', var_id2) )
+          call check( nf90_put_var(ncid2, var_id2, v, start = start4D, count = count4D) )
+          call check( nf90_close(ncid2) )
+#endif
         endif
 
     ! Depth averaged velocity calculation --------------------------------
@@ -2301,6 +2412,7 @@ PROGRAM prepOCN2ROMS
             enddo
           enddo
 
+#if defined BRY_MODE
           if(ibry == 1) then     ! South
             ubar_bry(:,1) = ubar(LBui:UBui, 0, 1)
           elseif(ibry == 2) then ! North
@@ -2317,6 +2429,15 @@ PROGRAM prepOCN2ROMS
           call check( nf90_inq_varid(ncid2, 'ubar_'//trim(BRY_NAME(ibry)), var_id2) )
           call check( nf90_put_var(ncid2, var_id2, ubar_bry, start = start2D, count = count2D) )
           call check( nf90_close(ncid2) )
+#else
+          start3D = (/ 1,   1,   itime /)
+          count3D = (/ Nxu, Nyu, 1 /)
+          write(*,*)  'Write: ubar'
+          call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
+          call check( nf90_inq_varid(ncid2, 'ubar', var_id2) )
+          call check( nf90_put_var(ncid2, var_id2, ubar, start = start3D, count = count3D) )
+          call check( nf90_close(ncid2) )
+#endif
 
         endif
 
@@ -2330,6 +2451,7 @@ PROGRAM prepOCN2ROMS
             enddo
           enddo
 
+#if defined BRY_MODE
           if(ibry == 1) then     ! South
             vbar_bry(:,1) = vbar(LBvi:UBvi, 1, 1)
           elseif(ibry == 2) then ! North
@@ -2346,6 +2468,15 @@ PROGRAM prepOCN2ROMS
           call check( nf90_inq_varid(ncid2, 'vbar_'//trim(BRY_NAME(ibry)), var_id2) )
           call check( nf90_put_var(ncid2, var_id2, vbar_bry, start = start2D, count = count2D) )
           call check( nf90_close(ncid2) )
+#else
+          start3D = (/ 1,   1,   itime /)
+          count3D = (/ Nxv, Nyv, 1 /)
+          write(*,*)  'Write: vbar'
+          call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
+          call check( nf90_inq_varid(ncid2, 'vbar', var_id2) )
+          call check( nf90_put_var(ncid2, var_id2, vbar, start = start3D, count = count3D) )
+          call check( nf90_close(ncid2) )
+#endif
         endif
       endif
 
@@ -2363,7 +2494,9 @@ PROGRAM prepOCN2ROMS
         if( romsvar(i)==0 ) cycle
 #endif
         varname = trim( VAR_NAME(i) )
+#if defined BRY_MODE
         bryname = trim( VAR_NAME(i) )//'_'//trim(BRY_NAME(ibry))
+#endif
 
 #if defined ROMS_MODEL
         start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
@@ -2374,7 +2507,9 @@ PROGRAM prepOCN2ROMS
             i==35 .or. i==36  ) then  ! mud_, sand_, etc...
           write(varnum,'(I2.2)') j
           varname = trim( VAR_NAME(i) )//varnum
+#if defined BRY_MODE
           bryname = trim( VAR_NAME(i) )//trim(BRY_NAME(ibry))//'_'//varnum
+#endif
           status = nf90_inq_varid(ncid, trim( varname ), var_id)
           if (status /= nf90_noerr) then
             i=i+1
@@ -2441,6 +2576,7 @@ PROGRAM prepOCN2ROMS
             , Id_cnt3Dr, w_cnt3Dr                             &
             , t  )
 
+#if defined BRY_MODE
         if(ibry == 1) then     ! South
           t_bry(:,:,1) = t(LBri:UBri, 0, 1:N, 1)
         elseif(ibry == 2) then ! North
@@ -2457,6 +2593,15 @@ PROGRAM prepOCN2ROMS
         call check( nf90_inq_varid(ncid2, trim( bryname ), var_id2 ) )
         call check( nf90_put_var(ncid2, var_id2, t_bry, start = start3D, count = count3D) )
         call check( nf90_close(ncid2) )
+#else
+        start4D = (/ 1,   1,   1,   itime /)
+        count4D = (/ Nxr, Nyr, Nzr, 1 /)
+        write(*,*)  'Write: ', trim( varname )
+        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
+        call check( nf90_inq_varid(ncid2, trim( varname ), var_id2) )
+        call check( nf90_put_var(ncid2, var_id2, t, start = start4D, count = count4D) )
+        call check( nf90_close(ncid2) )
+#endif
       enddo
 
     enddo   ! ibry
@@ -2467,8 +2612,10 @@ PROGRAM prepOCN2ROMS
       if( iNC == iNCt(itime+1) ) cycle   ! next step reuses this file; keep donor arrays
     endif
 
-      do ibry=1,4
+      do ibry=1,n_region
+#if defined BRY_MODE
         if( SNWE(ibry)==0 ) cycle
+#endif
         deallocate( region(ibry)%zeta_dg )
         deallocate( region(ibry)%ubar_dg )
         deallocate( region(ibry)%vbar_dg )
@@ -2517,830 +2664,8 @@ PROGRAM prepOCN2ROMS
 
   enddo   ! itime
 
-  write(*,*) '***************** boundary extraction complete! *****************'
+  write(*,*) '***************** extraction complete! *****************'
 
-#elif defined HIS_MODE || defined INI_MODE
-!=== Create ROMS ocean_his / initial netCDF file ===============
-  ocean_time(1) = bry_time(1)
-!-ROMS his/ini netcdf file name -------------------------------------------------
-  call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
-  HIS_suffix(2:12)=YYYYMMDDpHH
-#if defined INI_MODE
-  OUT_FILE = trim( INI_prefix )//HIS_suffix   ! INI: single-time initial-condition file
-#else
-  OUT_FILE = trim( HIS_prefix )//HIS_suffix
-#endif
-
-!-Create the ROMS his netCDF file --------------------------------
-#if defined ROMS_MODEL     
-!  call createNetCDFini2(  trim( ROMS_HISFILE(1) ),  trim( OUT_FILE )   &
-!        , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar, Nbed, NCS, NNS  )
-  call createNetCDFini(  trim( OUT_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
-#else
-  call createNetCDFini(  trim( OUT_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 ) 
-#endif
-!-Write ROMS his netCDF file --------------------------------
- 
-  call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
-  call check( nf90_inq_varid(ncid2, 'spherical', var_id) )
-  call check( nf90_put_var(ncid2, var_id, spherical) )
-  call check( nf90_inq_varid(ncid2, 'Vtransform', var_id) )
-  call check( nf90_put_var(ncid2, var_id, Vtransform ) )
-  call check( nf90_inq_varid(ncid2, 'Vstretching', var_id) )
-  call check( nf90_put_var(ncid2, var_id, Vstretching ) )
-  call check( nf90_inq_varid(ncid2, 'theta_s', var_id) )
-  call check( nf90_put_var(ncid2, var_id, THETA_S ) )
-  call check( nf90_inq_varid(ncid2, 'theta_b', var_id) )
-  call check( nf90_put_var(ncid2, var_id, THETA_B) )
-  call check( nf90_inq_varid(ncid2, 'Tcline', var_id) )
-  call check( nf90_put_var(ncid2, var_id, TCLINE) )
-  call check( nf90_inq_varid(ncid2, 'hc', var_id) )
-  call check( nf90_put_var(ncid2, var_id, hc ) )
-  start1D = (/ 1 /)
-  count1D = (/ Nzr /)
-  call check( nf90_inq_varid(ncid2, 's_rho', var_id) )
-  call check( nf90_put_var(ncid2, var_id, sc_r, start1D, count1D) )
-  call check( nf90_inq_varid(ncid2, 'Cs_r', var_id) )
-  call check( nf90_put_var(ncid2, var_id, Cs_r, start1D, count1D) )
-  start1D = (/ 1 /)
-  count1D = (/ Nzr+1 /)
-  call check( nf90_inq_varid(ncid2, 's_w', var_id) )
-  call check( nf90_put_var(ncid2, var_id, sc_w, start1D,  count1D) )
-  call check( nf90_inq_varid(ncid2, 'Cs_w', var_id) )
-  call check( nf90_put_var(ncid2, var_id, Cs_w, start1D, count1D) )
-
-!  start1D = (/ 1 /)
-!  count1D = (/ Nt /)
-!  call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
-!  call check( nf90_put_var(ncid2, var_id, bry_time, start = start1D, count = count1D) )
-  call check( nf90_close(ncid2) )      
-
-!-Write ROMS his netCDF file --------------------------------
-
-  write(*,*) '***************** Start extracting *****************'
-
-  LBri = 0
-  UBri = L
-  LBrj = 0
-  UBrj = M
-  LBui = 1
-  UBui = L
-  LBuj = 0
-  UBuj = M
-  LBvi = 0
-  UBvi = L
-  LBvj = 1
-  UBvj = M
-  Nxr = UBri-LBri+1
-  Nxu = UBui-LBui+1
-  Nxv = UBvi-LBvi+1
-  Nyr = UBrj-LBrj+1
-  Nyu = UBuj-LBuj+1
-  Nyv = UBvj-LBvj+1
-
-  ! ----- HIS/INI uses a single region (n=1, whole domain) -----
-  allocate( region(1:1) )
-  region(1)%LBri=LBri; region(1)%UBri=UBri; region(1)%LBrj=LBrj; region(1)%UBrj=UBrj
-  region(1)%LBui=LBui; region(1)%UBui=UBui; region(1)%LBuj=LBuj; region(1)%UBuj=UBuj
-  region(1)%LBvi=LBvi; region(1)%UBvi=UBvi; region(1)%LBvj=LBvj; region(1)%UBvj=UBvj
-  region(1)%Nxr=Nxr; region(1)%Nyr=Nyr; region(1)%Nxu=Nxu; region(1)%Nyu=Nyu; region(1)%Nxv=Nxv; region(1)%Nyv=Nyv
-
-  allocate( region(1)%zeta(LBri:UBri, LBrj:UBrj, 1) )
-#if defined NAOTIDE || defined NAOTIDEJ
-  allocate( zeta_tide(0:L, 0:M) )
-#endif
-  allocate( region(1)%ubar(LBui:UBui, LBuj:UBuj, 1) )
-  allocate( region(1)%vbar(LBvi:UBvi, LBvj:UBvj, 1) )
-  allocate( region(1)%u(LBui:UBui, LBuj:UBuj, 1:N, 1) )
-  allocate( region(1)%v(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-  allocate( region(1)%ull(LBui:UBui, LBuj:UBuj, 1:N, 1) )
-  allocate( region(1)%uu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
-  allocate( region(1)%vu (LBui:UBui, LBuj:UBuj, 1:N, 1) )
-  allocate( region(1)%vll(LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-  allocate( region(1)%uv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-  allocate( region(1)%vv (LBvi:UBvi, LBvj:UBvj, 1:N, 1) )
-  allocate( region(1)%t(LBri:UBri, LBrj:UBrj, 1:N, 1) )
-
-  write(*,*) "*** Calculate weight factor ***"
-
-  allocate( region(1)%ID_cnt2Dr(4, Nxr*Nyr) )
-  allocate( region(1)%w_cnt2Dr (4, Nxr*Nyr) )
-  allocate( region(1)%ID_cnt3Dr(6, Nxr*Nyr*Nzr) )
-  allocate( region(1)%w_cnt3Dr (8, Nxr*Nyr*Nzr) )
-  allocate( region(1)%ID_cnt2Du(4, Nxu*Nyu) )
-  allocate( region(1)%w_cnt2Du (4, Nxu*Nyu) )
-  allocate( region(1)%ID_cnt2Dv(4, Nxv*Nyv) )
-  allocate( region(1)%w_cnt2Dv (4, Nxv*Nyv) )
-  allocate( region(1)%ID_cnt3Du(6, Nxu*Nyu*Nzr) )
-  allocate( region(1)%w_cnt3Du (8, Nxu*Nyu*Nzr) )
-  allocate( region(1)%ID_cnt3Dv(6, Nxv*Nyv*Nzr) )
-  allocate( region(1)%w_cnt3Dv (8, Nxv*Nyv*Nzr) )
-
-  ! alias bare pointers to region(1)'s storage (the body below uses the bare names)
-  zeta => region(1)%zeta ; ubar => region(1)%ubar ; vbar => region(1)%vbar
-  u => region(1)%u ; v => region(1)%v ; t => region(1)%t
-  ull => region(1)%ull ; vll => region(1)%vll
-  uu => region(1)%uu ; uv => region(1)%uv ; vu => region(1)%vu ; vv => region(1)%vv
-  ID_cnt2Dr => region(1)%ID_cnt2Dr ; w_cnt2Dr => region(1)%w_cnt2Dr
-  ID_cnt2Du => region(1)%ID_cnt2Du ; w_cnt2Du => region(1)%w_cnt2Du
-  ID_cnt2Dv => region(1)%ID_cnt2Dv ; w_cnt2Dv => region(1)%w_cnt2Dv
-  ID_cnt3Dr => region(1)%ID_cnt3Dr ; w_cnt3Dr => region(1)%w_cnt3Dr
-  ID_cnt3Du => region(1)%ID_cnt3Du ; w_cnt3Du => region(1)%w_cnt3Du
-  ID_cnt3Dv => region(1)%ID_cnt3Dv ; w_cnt3Dv => region(1)%w_cnt3Dv
-
-  iNC = 0
-
-#if defined INI_MODE
-  Nt = 1   ! initial condition: write only the first (initial) time step
-#endif
-  do itime=1,Nt
-    iNCm = iNC
-    iNC  = iNCt(itime)
-
-    if(iNCm < iNC) then
-#if defined ROMS_MODEL
-      write(*,*) "OPEN: ", trim( ROMS_HISFILE(iNC) )
-      call check( nf90_open(trim( ROMS_HISFILE(iNC) ), nf90_nowrite, ncid) )    
-
-#elif defined HYCOM_MODEL
-  !---- Load HYCOM netCDF grid cooredinate --------------------------------
-
-      Nyr_dg = NC(iNC)%Nyr_dg
-      Nxr_dg = NC(iNC)%Nxr_dg
-      Nzr_dg = NC(iNC)%Nzr_dg
-    
-      Nxu_dg = Nxr_dg
-      Nyu_dg = Nyr_dg
-      Nxv_dg = Nxr_dg
-      Nyv_dg = Nyr_dg
-      Ldg = Nxr_dg-1
-      Mdg = Nyr_dg-1
-    
-      allocate( latr_dg(0:Ldg, 0:Mdg) )
-      allocate( lonr_dg(0:Ldg, 0:Mdg) )
-      allocate( latu_dg(0:Ldg, 0:Mdg) )
-      allocate( lonu_dg(0:Ldg, 0:Mdg) )
-      allocate( latv_dg(0:Ldg, 0:Mdg) )
-      allocate( lonv_dg(0:Ldg, 0:Mdg) )
-      allocate( rmask_dg(0:Ldg, 0:Mdg) )
-      allocate( umask_dg(0:Ldg, 0:Mdg) )
-      allocate( vmask_dg(0:Ldg, 0:Mdg) )
-      allocate( cosAu_dg(0:Ldg, 0:Mdg) )
-      allocate( sinAu_dg(0:Ldg, 0:Mdg) )
-      allocate( cosAv_dg(0:Ldg, 0:Mdg) )
-      allocate( sinAv_dg(0:Ldg, 0:Mdg) )
-      allocate( h_dg(0:Ldg, 0:Mdg) )
-      Ndg = Nzr_dg
-      allocate( z_r_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
-      allocate( z_u_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
-      allocate( z_v_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
-    
-      do j=0,Mdg
-        do i=0,Ldg
-          latr_dg(i,j) = NC(iNC)%lat(j+1)
-          lonr_dg(i,j) = NC(iNC)%lon(i+1)
-        enddo
-      enddo
-      latu_dg(:,:) = latr_dg(:,:)
-      lonu_dg(:,:) = lonr_dg(:,:)
-      latv_dg(:,:) = latr_dg(:,:)
-      lonv_dg(:,:) = lonr_dg(:,:)
-      do k=1,Ndg
-        do j=0,Mdg
-          do i=1,Ldg
-            z_r_dg(i,j,k)= NC(iNC)%depth(Ndg-k+1)
-          enddo
-        enddo
-      enddo
-      z_u_dg(:,:,:) = z_r_dg(:,:,:)
-      z_v_dg(:,:,:) = z_r_dg(:,:,:)
-    
-      rmask_dg(:,:) = 1.0d0
-    
-      cosAu_dg(:,:) = 1.0d0
-      sinAu_dg(:,:) = 0.0d0
-    
-      cosAv_dg(:,:) = 1.0d0
-      sinAv_dg(:,:) = 0.0d0
-  
-      write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
-      call try_nf_open(trim( HYCOM_FILE(iNC) ), nf90_nowrite, ncid) 
-#endif            
-  
-      write(*,*) "Seek rho point donor IJ range"
-      call seek_IJrange(                                 &
-            0, Ldg, 0, Mdg, lonr_dg, latr_dg             & 
-          , LBri, UBri, LBrj, UBrj                       &
-          , lonr(LBri:UBri,LBrj:UBrj)                    &
-          , latr(LBri:UBri,LBrj:UBrj)                    &
-          , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max)
-    
-      Irdg_min = max(Irdg_min-2, 0 )
-      Irdg_max = min(Irdg_max+2,Ldg)
-      Jrdg_min = max(Jrdg_min-2, 0 )
-      Jrdg_max = min(Jrdg_max+2,Mdg)
-      Iudg_min = Irdg_min
-      Iudg_max = Irdg_max
-      Judg_min = Jrdg_min
-      Judg_max = Jrdg_max
-      Ivdg_min = Irdg_min
-      Ivdg_max = Irdg_max
-      Jvdg_min = Jrdg_min
-      Jvdg_max = Jrdg_max
-#if defined ARAKAWA_C_GRID
-      Iudg_min = Irdg_min+1
-      Jvdg_min = Jrdg_min+1
-#endif
-  
-      Nxr_dg =Irdg_max-Irdg_min+1
-      Nyr_dg =Jrdg_max-Jrdg_min+1
-      Nxu_dg =Iudg_max-Iudg_min+1
-      Nyu_dg =Judg_max-Judg_min+1
-      Nxv_dg =Ivdg_max-Ivdg_min+1
-      Nyv_dg =Jvdg_max-Jvdg_min+1
-      
-      write(*,*) Irdg_min, Irdg_max, Jrdg_min, Jrdg_max
-    
-      allocate( zeta_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1) )
-      allocate( ubar_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
-      allocate( vbar_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
-      allocate( u_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
-      allocate( v_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
-      allocate( t_dg(Irdg_min:Irdg_max, Jrdg_min:Jrdg_max, 1:Ndg, 1) )
-      allocate( ull_dg (Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
-      allocate( ullu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
-      allocate( vllu_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1:Ndg, 1) )
-      allocate( vll_dg (Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
-      allocate( vllv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
-      allocate( ullv_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1:Ndg, 1) )
-#if defined WET_DRY
-      allocate( umask_wet_dg(Iudg_min:Iudg_max, Judg_min:Judg_max, 1) )
-      allocate( vmask_wet_dg(Ivdg_min:Ivdg_max, Jvdg_min:Jvdg_max, 1) )
-#endif
-
-#if defined HYCOM_MODEL
-      if( romsvar(1)==1 ) then
-        start3D = (/ Irdg_min+1, Jrdg_min+1, NC(iNC)%ItS /)
-        count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
-        write(*,*) 'Read surf_el, and create land mask'
-        call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
-              , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
-        do j=Jrdg_min,Jrdg_max
-          do i=Irdg_min,Irdg_max
-            if (zeta_dg(i,j,1)<=-10.0d0) then
-              rmask_dg(i,j) = 0.0d0
-            endif
-          enddo
-        enddo
-      elseif( romsvar(6)==1 ) then
-        start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      NC(iNC)%ItS /)
-        count4D = (/ Nxr_dg,     Nyr_dg,     1,      1           /)
-        write(*,*) 'Read water_temp, and create land mask'
-        call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_temp'   &
-              , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
-        do j=Jrdg_min,Jrdg_max
-          do i=Irdg_min,Irdg_max
-            if (t_dg(i,j,1,1)<=-10.0d0) then
-              rmask_dg(i,j) = 0.0d0
-            endif
-          enddo
-        enddo
-      else
-        Stop
-      endif
-      umask_dg(:,:) = rmask_dg(:,:)
-      vmask_dg(:,:) = rmask_dg(:,:)
-#endif
-  
-      write(*,*) "Calculate 2D rho point weight factor"
-      call weight2D_grid3_2(                              &
-            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max        &
-          , lonr_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
-          , latr_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max)  &
-          , rmask_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max) & 
-          , LBri, UBri, LBrj, UBrj                        &
-          , lonr(LBri:UBri,LBrj:UBrj)                     &
-          , latr(LBri:UBri,LBrj:UBrj)                     &
-          , ID_cnt2Dr, w_cnt2Dr )
-   
-      write(*,*) "Calculate 2D u point weight factor"
-      call weight2D_grid3_2(                              &
-            Iudg_min, Iudg_max, Judg_min, Judg_max        &
-          , lonu_dg(Iudg_min:Iudg_max,Judg_min:Judg_max)  &
-          , latu_dg(Iudg_min:Iudg_max,Judg_min:Judg_max)  &
-          , umask_dg(Iudg_min:Iudg_max,Judg_min:Judg_max) & 
-          , LBui, UBui, LBuj, UBuj                        &
-          , lonu(LBui:UBui,LBuj:UBuj)                     &
-          , latu(LBui:UBui,LBuj:UBuj)                     &
-          , ID_cnt2Du, w_cnt2Du )
-  
-      write(*,*) "Calculate 2D v point weight factor"
-      call weight2D_grid3_2(                              &
-            Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max        &
-          , lonv_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)  &
-          , latv_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)  &
-          , vmask_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max) & 
-          , LBvi, UBvi, LBvj, UBvj                        &
-          , lonv(LBvi:UBvi,LBvj:UBvj)                     &
-          , latv(LBvi:UBvi,LBvj:UBvj)                     &
-          , ID_cnt2Dv, w_cnt2Dv )
-  
-      write(*,*) "Calculate 3D rho point weight factor"
-      call weight3D_grid3_2(                                  &
-            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg    &
-          , z_r_dg(Irdg_min:Irdg_max,Jrdg_min:Jrdg_max,1:Ndg) &
-          , LBri, UBri, LBrj, UBrj, 1, N                      &
-          , z_r(LBri:UBri,LBrj:UBrj, 1:N)                     &
-          , ID_cnt2Dr, w_cnt2Dr                               &
-          , ID_cnt3Dr, w_cnt3Dr )
-  
-      write(*,*) "Calculate 3D u point weight factor"
-      call weight3D_grid3_2(                                  &
-            Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg    &
-          , z_u_dg(Iudg_min:Iudg_max,Judg_min:Judg_max,1:Ndg) &
-          , LBui, UBui, LBuj, UBuj, 1, N                      &
-          , z_u(LBui:UBui,LBuj:UBuj, 1:N)                     &
-          , ID_cnt2Du, w_cnt2Du                               &
-          , ID_cnt3Du, w_cnt3Du )
-  
-      write(*,*) "Calculate 3D v point weight factor"
-      call weight3D_grid3_2(                                  &
-            Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg    &
-          , z_v_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max,1:Ndg) &
-          , LBvi, UBvi, LBvj, UBvj, 1, N                      &
-          , z_v(LBvi:UBvi,LBvj:UBvj, 1:N)                     &
-          , ID_cnt2Dv, w_cnt2Dv                               &
-          , ID_cnt3Dv, w_cnt3Dv )
-  
-      write(*,*) "***************************************************************"
-
-    endif
-
-    ocean_time(1) = bry_time(itime)
-
-    call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
-    Write(*,*) 'Time = ',YYYYMMDDpHH
-!    Write(*,*) idt(itime) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    start1D = (/ itime /)
-    count1D = (/ 1 /)
-    call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
-    call check( nf90_inq_varid(ncid2, 'ocean_time', var_id) )
-    call check( nf90_put_var(ncid2, var_id, ocean_time, start = start1D, count = count1D) )
-    call check( nf90_close(ncid2) )
-      
-    if( romsvar(1)==1 ) then
-      !- zeta --------------------------------
-#if defined ROMS_MODEL
-      write(*,*) 'Read: '//trim( ROMS_HISFILE(iNC) )
-      write(*,*) 'Read: zeta'
-      start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
-      count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
-      call check( nf90_inq_varid(ncid, 'zeta', var_id) )
-      call check( nf90_get_var(ncid, var_id, zeta_dg, start3D, count3D)  )
-#elif defined HYCOM_MODEL
-      write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
-      start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
-      count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
-      call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
-            , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
-#elif defined JCOPE_MODEL
-     JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix(itime) )
-     write(*,*) 'Read: ', trim( JCOPE_data_file )
-     call read_jcope_data2D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
-           , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg )
-#elif defined MRICOM_MODEL
-      write(*,*) 'Read: '//trim( NC(iNC)%MRICOM_FILE(1) )
-      write(*,*) 'Read: '//trim( MRICOM_VAR_NAME(1) )
-      start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
-      count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
-      call readNetCDF_3d_mricom( trim( NC(iNC)%MRICOM_FILE(1) ), trim( MRICOM_VAR_NAME(1) )  &
-            , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
-      zeta_dg = zeta_dg*0.01d0  ! cm -> m
-#endif
-      
-      write(*,*) 'Linear Interporation: zeta'
-      call interp2D_grid3_2(                                              &
-              Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg             &
-            , LBri, UBri, LBrj, UBrj                                      &
-            , Id_cnt2Dr, w_cnt2Dr                                         &
-            , zeta  )
-
-#if defined NAOTIDE || defined NAOTIDEJ
-!---- NAOTIDE: add tide to zeta (ported from iniOCN2ROMS) --------------------
-      call mjdymd( Smjd, Ryear, Rmonth, Rday, 0, 0, 0, 1 )  ! from naotidej.f
-      jtime = dble(Smjd) + ocean_time(1)/86400.0d0
-      do j=0,M
-        do i=0,L
-# if defined NAOTIDE
-          call naotide ( lonr(i,j), latr(i,j), jtime, itmode, lpmode       &
-                       , zeta_tide(i,j), hsp, hlp, Ldata )
-# elif defined NAOTIDEJ
-          call naotidej( lonr(i,j), latr(i,j), jtime, itmode, lpmode       &
-                       , zeta_tide(i,j), hsp, hlp, Ldata )
-# endif
-          zeta_tide(i,j) = zeta_tide(i,j)*0.01d0   ! cm -> m
-        enddo
-      enddo
-      call FillExtraPoints2D(Nxr, Nyr, zeta_tide, -5.0d0, 5.0d0)
-      ! Drop any points the tide map left undefined (isolated/land cells that could
-      ! not be filled) so they do not inject ~10 m "undef" tide into zeta.
-      where( abs(zeta_tide) > 5.0d0 ) zeta_tide = 0.0d0
-      zeta(:,:,1) = zeta(:,:,1) + zeta_tide(:,:)
-#endif
-
-      start3D = (/ 1,   1,   itime /)
-      count3D = (/ Nxr, Nyr, 1 /)
-      write(*,*)  'Write: zeta'
-      call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
-      call check( nf90_inq_varid(ncid2, 'zeta', var_id2) )
-      call check( nf90_put_var(ncid2, var_id2, zeta, start = start3D, count = count3D) )
-      call check( nf90_close(ncid2) )
-    endif
-
-    if( romsvar(2)==1 .or. romsvar(3)==1 .or.         &
-        romsvar(4)==1 .or. romsvar(5)==1      ) then
-    !- u --------------------------------
-    
-#if defined ROMS_MODEL
-      write(*,*) 'Read: u'
-      start4D = (/ Iudg_min, Judg_min+1, 1,      idt(itime) /)
-      count4D = (/ Nxu_dg,     Nyu_dg,   Nzr_dg, 1          /)
-      call check( nf90_inq_varid(ncid, 'u', var_id) )
-      call check( nf90_get_var(ncid, var_id, u_dg, start4D, count4D)  )
-#elif defined HYCOM_MODEL
-      write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
-      start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
-      count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
-# if defined FAST_READ
-      call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, 'water_u'   &
-            , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
-# else
-      call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_u'        &
-            , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
-# endif
-#elif defined JCOPE_MODEL
-      JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( JCOPE_sufix(itime) )
-      write(*,*) 'Read: ', trim( JCOPE_data_file )
-      call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
-            , Iudg_min, Iudg_max, Judg_min, Judg_max, u_dg(:,:,:,1) )
-#elif defined MRICOM_MODEL
-      start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
-      count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
-      call readNetCDF_4d_mricom( trim( NC(iNC)%MRICOM_FILE(2) ), trim( MRICOM_VAR_NAME(2) )        &
-            , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
-      u_dg = u_dg*0.01d0  ! cm/s -> m/s
-#endif
-    
-#if defined WET_DRY
-      start3D = (/ Iudg_min, Judg_min+1, idt(itime) /)
-      count3D = (/ Nxu_dg,   Nyu_dg,     1          /)
-      call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
-      call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
-      
-      do j=Judg_min,Judg_max
-        do i=Iudg_min,Iudg_max
-          u_dg(i,j,:,1)= u_dg(i,j,:,1)*umask_wet_dg(i,j,1)
-        enddo
-      enddo
-#endif
-  !- v --------------------------------
-
-#if defined ROMS_MODEL
-      write(*,*) 'Read: v'
-      start4D = (/ Ivdg_min+1, Jvdg_min, 1,      idt(itime) /)
-      count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
-      call check( nf90_inq_varid(ncid, 'v', var_id) )
-      call check( nf90_get_var(ncid, var_id, v_dg, start4D, count4D)  )
-#elif defined HYCOM_MODEL
-      write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
-      start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
-      count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
-# if defined FAST_READ
-      call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, 'water_v'    &
-            , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
-# else
-      call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_v'         &
-            , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
-# endif
-#elif defined JCOPE_MODEL
-      JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( JCOPE_sufix(itime) )
-      write(*,*) 'Read: ', trim( JCOPE_data_file )
-      call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
-            , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, v_dg(:,:,:,1) )
-#elif defined MRICOM_MODEL
-      start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
-      count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
-      call readNetCDF_4d_mricom( trim( NC(iNC)%MRICOM_FILE(3) ), trim( MRICOM_VAR_NAME(3) )        &
-            , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
-      v_dg = v_dg*0.01d0  ! cm/s -> m/s
-#endif    
-#if defined WET_DRY
-      start3D = (/ Ivdg_min+1, Jvdg_min, idt(itime) /)
-      count3D = (/ Nxv_dg,     Nyv_dg,   1          /)
-      call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
-      call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
-      
-      do j=Jvdg_min,Jvdg_max
-        do i=Ivdg_min,Ivdg_max
-          v_dg(i,j,:,1)= v_dg(i,j,:,1)*vmask_wet_dg(i,j,1)
-        enddo
-      enddo
-#endif
-    !- convert ROMS donor coordinate to lat lon coordinate --------------------------------
-      do j=Judg_min,Judg_max
-        do i=Iudg_min,Iudg_max
-          ullu_dg(i,j,:,1) = u_dg(i,j,:,1)*cosAu_dg(i,j)
-          vllu_dg(i,j,:,1) = u_dg(i,j,:,1)*sinAu_dg(i,j)
-        enddo
-      enddo
-      do j=Jvdg_min,Jvdg_max
-        do i=Ivdg_min,Ivdg_max
-          ullv_dg(i,j,:,1) = -v_dg(i,j,:,1)*sinAv_dg(i,j)
-          vllv_dg(i,j,:,1) =  v_dg(i,j,:,1)*cosAv_dg(i,j)
-        enddo
-      enddo
-#if defined ARAKAWA_C_GRID
-      do i=Iudg_min,Iudg_max
-        do j=Judg_min,Judg_max-1
-          ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i-1,j+1,:,1)
-        enddo
-        ull_dg(i,Judg_max,:,1) = ullu_dg(i,Judg_max,:,1)+ullv_dg(i-1,Judg_max,:,1)
-      enddo
-      do j=Jvdg_min,Jvdg_max
-        do i=Ivdg_min,Ivdg_max-1
-          vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i+1,j-1,:,1)
-        enddo
-        vll_dg(Ivdg_max,j,:,1) = vllv_dg(Ivdg_max,j,:,1)+vllu_dg(Ivdg_max,j-1,:,1)
-      enddo
-#else
-      do j=Judg_min,Judg_max
-        do i=Iudg_min,Iudg_max
-            ull_dg(i,j,:,1) = ullu_dg(i,j,:,1)+ullv_dg(i,j,:,1)
-        enddo
-      enddo
-      do j=Jvdg_min,Jvdg_max
-        do i=Ivdg_min,Ivdg_max
-          vll_dg(i,j,:,1) = vllv_dg(i,j,:,1)+vllu_dg(i,j,:,1)
-        enddo
-      enddo
-#endif  
-  
-  
-      write(*,*) 'Linear Interporation: u'
-      call interp3D_grid3_2(                                  &
-              Iudg_min, Iudg_max, Judg_min, Judg_max, 1, Ndg  &
-            , ull_dg                                          &
-            , LBui, UBui, LBuj, UBuj, 1, N                    &
-            , Id_cnt3Du, w_cnt3Du                             &
-            , ull )
-      
-      write(*,*) 'Linear Interporation: v'
-      call interp3D_grid3_2(                                  &
-              Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, 1, Ndg  &
-            , vll_dg                                          &
-            , LBvi, UBvi, LBvj, UBvj, 1, N                    &
-            , Id_cnt3Dv, w_cnt3Dv                             &
-            , vll  ) 
-      
-      ! convert lat lon coordinate to ROMS refine coordinate --------------------------------
-  
-      do j=LBuj,UBuj
-        do i=LBui,UBui
-          uu(i,j,:,1) =  ull(i,j,:,1)*cosAu(i,j)
-          vu(i,j,:,1) = -ull(i,j,:,1)*sinAu(i,j)
-        enddo
-      enddo
-      do j=LBvj,UBvj
-        do i=LBvi,UBvi
-          uv(i,j,:,1) = vll(i,j,:,1)*sinAv(i,j)
-          vv(i,j,:,1) = vll(i,j,:,1)*cosAv(i,j)
-        enddo
-      enddo
-      do i=LBui,UBui
-        do j=LBuj,UBuj-1
-          u(i,j,:,1) = uu(i,j,:,1)+uv(i-1,j+1,:,1)
-        enddo
-        u(i,UBuj,:,1) = uu(i,UBuj,:,1)+uv(i-1,UBuj,:,1)
-      enddo
-      do j=LBvj,UBvj
-        do i=LBvi,UBvi-1
-          v(i,j,:,1) = vv(i,j,:,1)+vu(i+1,j-1,:,1)
-        enddo
-        v(UBvi,j,:,1) = vv(UBvi,j,:,1)+vu(UBvi,j-1,:,1)
-      enddo
-
-      if( romsvar(2)==1 ) then
-        !- Write u v --------------------------------
-        start4D = (/ 1,   1,   1,   itime /)
-        count4D = (/ Nxu, Nyu, Nzr, 1 /)
-        write(*,*)  'Write: u'
-        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
-        call check( nf90_inq_varid(ncid2, 'u', var_id2) )
-        call check( nf90_put_var(ncid2, var_id2, u, start = start4D, count = count4D) )
-        call check( nf90_close(ncid2) )
-      endif
-      if( romsvar(3)==1 ) then
-        start4D = (/ 1,   1,   1,   itime /)
-        count4D = (/ Nxv, Nyv, Nzr, 1 /)
-        write(*,*)  'Write: v'
-        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
-        call check( nf90_inq_varid(ncid2, 'v', var_id2) )
-        call check( nf90_put_var(ncid2, var_id2, v, start = start4D, count = count4D) )
-        call check( nf90_close(ncid2) )
-      endif
-
-      ! Depth averaged velocity calculation --------------------------------
-      if( romsvar(4)==1 ) then
-        ubar(:,:,1)=0.0d0
-        do j=LBuj, UBuj
-          do i=LBui, UBui
-            do k=1,N
-                ubar(i,j,1) = ubar(i,j,1)+u(i,j,k,1)*dz_u(i,j,k)/hu(i,j)*umask(i,j)
-            enddo
-          enddo
-        enddo
-  
-        start3D = (/ 1,   1,   itime /)
-        count3D = (/ Nxu, Nyu, 1 /)
-        write(*,*)  'Write: ubar'
-        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
-        call check( nf90_inq_varid(ncid2, 'ubar', var_id2) )
-        call check( nf90_put_var(ncid2, var_id2, ubar, start = start3D, count = count3D) )
-        call check( nf90_close(ncid2) )
-      endif
-        
-      if( romsvar(5)==1 ) then 
-        vbar(:,:,1)=0.0d0
-        do j=LBvj, UBvj
-          do i=LBvi, UBvi
-            do k=1,N
-              vbar(i,j,1) = vbar(i,j,1)+v(i,j,k,1)*dz_v(i,j,k)/hv(i,j)*vmask(i,j)
-            enddo
-          enddo
-        enddo
-  
-        start3D = (/ 1,   1,   itime /)
-        count3D = (/ Nxv, Nyv, 1 /)
-        write(*,*)  'Write: vbar'
-        call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
-        call check( nf90_inq_varid(ncid2, 'vbar', var_id2) )
-        call check( nf90_put_var(ncid2, var_id2, vbar, start = start3D, count = count3D) )
-        call check( nf90_close(ncid2) )
-      endif
-    endif
-  
-  !- Tracer (temp, salt, etc.) --------------------------------
-#if defined ROMS_MODEL    
-    i = 6
-    j = 1
-    do while ( i<= N_var )         
-      if( romsvar(i)==0 ) then
-        i=i+1
-        cycle
-      endif
-#else
-    do i=6, 7
-      if( romsvar(i)==0 ) cycle
-#endif    
-      varname = trim( VAR_NAME(i) )
-
-#if defined ROMS_MODEL   
-      start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
-      count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
-      if( i==8  .or. i==9  .or. i==13 .or. i==14 .or. i==15 .or. i==16 .or.  &
-          i==17 .or. i==21 .or. i==22 .or. i==23 .or. i==24 .or. i==26 .or.  &
-          i==27 .or. i==28 .or. i==29 .or. i==30 .or. i==33 .or. i==34 .or.  &
-          i==35 .or. i==36  ) then  ! mud_, sand_, etc...
-        write(varnum,'(I2.2)') j
-        varname = trim( VAR_NAME(i) )//varnum
-        status = nf90_inq_varid(ncid, trim( varname ), var_id)
-        if (status /= nf90_noerr) then
-          i=i+1
-          j = 1
-          cycle
-        endif
-        write(*,*) 'Read: ', trim( varname )
-        call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
-        j=j+1
-      else
-        write(*,*) 'Read: ', trim( varname )
-        call check( nf90_inq_varid(ncid, trim( varname ), var_id) )
-        call check( nf90_get_var(ncid, var_id, t_dg, start4D, count4D)  )
-        i=i+1
-      endif
-#elif defined HYCOM_MODEL
-      if( i == 6 ) then
-        HY_VAR_NAME = 'water_temp'
-      elseif( i == 7 ) then
-        HY_VAR_NAME = 'salinity'
-      else
-        cycle
-      endif
-      write(*,*) 'Read: '//trim( HYCOM_FILE(iNC) )
-      start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
-      count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
-# if defined FAST_READ
-      call readNetCDF_4d_hycom_fast( HYCOM_FILE(iNC), ncid, trim( HY_VAR_NAME )   &
-            , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
-# else
-      call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, trim( HY_VAR_NAME )        &
-            , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
-# endif
-#elif defined JCOPE_MODEL
-      JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(i) )//trim( JCOPE_sufix(itime) )
-      write(*,*) 'Read: ', trim( JCOPE_data_file )
-      call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
-            , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, t_dg(:,:,:,1) )
-# if !defined JCOPE_T
-      if( i == 6 ) then
-        t_dg(:,:,:,1) = t_dg(:,:,:,1) + 10.0d0
-      elseif( i == 7 ) then
-        t_dg(:,:,:,1) = t_dg(:,:,:,1) + 35.0d0
-      endif
-# endif
-#elif defined MRICOM_MODEL
-      start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
-      count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
-      if( i == 6 ) then
-        k=4
-      elseif( i == 7 ) then
-        k=5
-      else
-        cycle
-      endif
-      call readNetCDF_4d_mricom( trim( NC(iNC)%MRICOM_FILE(k) ), trim( MRICOM_VAR_NAME(k) )        &
-            , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
-#endif        
-      write(*,*) 'Linear Interporation: ', trim( varname )
-      call interp3D_grid3_2(                                &
-            Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, 1, Ndg  &
-          , t_dg                                            &
-          , LBri, UBri, LBrj, UBrj, 1, N                    &
-          , Id_cnt3Dr, w_cnt3Dr                             &
-          , t  ) 
-
-      start4D = (/ 1,   1,   1,   itime /)
-      count4D = (/ Nxr, Nyr, Nzr, 1 /)
-      write(*,*)  'Write: ', trim( varname )
-      call check( nf90_open(trim( OUT_FILE ), NF90_WRITE, ncid2) )
-      call check( nf90_inq_varid(ncid2, trim( varname ), var_id2) )
-      call check( nf90_put_var(ncid2, var_id2, t, start = start4D, count = count4D) )
-      call check( nf90_close(ncid2) )
-    enddo
-
-    if ( itime < Nt ) then
-      if( iNC == iNCt(itime+1) ) cycle
-    endif
-
-    deallocate( zeta_dg )
-    deallocate( ubar_dg )
-    deallocate( vbar_dg )
-    deallocate( u_dg )
-    deallocate( v_dg )
-    deallocate( ull_dg  )
-    deallocate( ullu_dg )
-    deallocate( vllu_dg )
-    deallocate( vll_dg  )
-    deallocate( vllv_dg )
-    deallocate( ullv_dg )
-    deallocate( t_dg )
-#if defined WET_DRY
-    deallocate( umask_wet_dg )
-    deallocate( vmask_wet_dg )
-#endif
-
-#if defined ROMS_MODEL
-    call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", trim( ROMS_HISFILE(iNC) )
-#endif
-
-#if defined HYCOM_MODEL
-    deallocate( latr_dg )
-    deallocate( lonr_dg )
-    deallocate( latu_dg )
-    deallocate( lonu_dg )
-    deallocate( latv_dg )
-    deallocate( lonv_dg )
-    deallocate( rmask_dg )
-    deallocate( umask_dg )
-    deallocate( vmask_dg )
-    deallocate( cosAu_dg )
-    deallocate( sinAu_dg )
-    deallocate( cosAv_dg )
-    deallocate( sinAv_dg )
-    deallocate( h_dg )
-    deallocate( z_r_dg )
-    deallocate( z_u_dg )
-    deallocate( z_v_dg )
-  
-    call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
-#endif
-
-  enddo
-
-#endif
   write(*,*) 'FINISH!!'
       
 END PROGRAM prepOCN2ROMS
