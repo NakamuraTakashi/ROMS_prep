@@ -70,6 +70,7 @@ PROGRAM prepOCN2ROMS
   integer :: Ryear, Rmonth, Rday
   integer :: itime,ibry
   integer :: n_region    ! number of output regions (BRY: 4 boundaries; HIS/INI: 1)
+  logical :: need_weights ! recompute interpolation weights this step? (see §3.1)
   integer :: mode
   character(256) :: GRID_FILE
 
@@ -166,6 +167,11 @@ PROGRAM prepOCN2ROMS
   real(8), allocatable :: rmask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: umask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: vmask_dg(:,:)  ! land mask of donor grid
+#if defined WET_DRY
+  ! effective weight mask = static land mask x time-varying wetdry mask (ROMS+WET_DRY)
+  real(8), allocatable :: umask_eff(:,:)
+  real(8), allocatable :: vmask_eff(:,:)
+#endif
   real(8), allocatable :: pmask_dg(:,:)  ! land mask of donor grid
   real(8), allocatable :: latr_dg(:,:)
   real(8), allocatable :: lonr_dg(:,:)
@@ -1989,6 +1995,66 @@ PROGRAM prepOCN2ROMS
         vmask_dg(:,:) = rmask_dg(:,:)
 #endif
 
+      else
+        ! ----- same donor file: reuse this boundary's box + donor arrays -----
+        Irdg_min=region(ibry)%Irdg_min; Irdg_max=region(ibry)%Irdg_max
+        Jrdg_min=region(ibry)%Jrdg_min; Jrdg_max=region(ibry)%Jrdg_max
+        Iudg_min=region(ibry)%Iudg_min; Iudg_max=region(ibry)%Iudg_max
+        Judg_min=region(ibry)%Judg_min; Judg_max=region(ibry)%Judg_max
+        Ivdg_min=region(ibry)%Ivdg_min; Ivdg_max=region(ibry)%Ivdg_max
+        Jvdg_min=region(ibry)%Jvdg_min; Jvdg_max=region(ibry)%Jvdg_max
+        Nxr_dg=region(ibry)%Nxr_dg; Nyr_dg=region(ibry)%Nyr_dg
+        Nxu_dg=region(ibry)%Nxu_dg; Nyu_dg=region(ibry)%Nyu_dg
+        Nxv_dg=region(ibry)%Nxv_dg; Nyv_dg=region(ibry)%Nyv_dg
+
+        zeta_dg => region(ibry)%zeta_dg ; ubar_dg => region(ibry)%ubar_dg ; vbar_dg => region(ibry)%vbar_dg
+        u_dg => region(ibry)%u_dg ; v_dg => region(ibry)%v_dg ; t_dg => region(ibry)%t_dg
+        ull_dg => region(ibry)%ull_dg ; vll_dg => region(ibry)%vll_dg
+        ullu_dg => region(ibry)%ullu_dg ; ullv_dg => region(ibry)%ullv_dg
+        vllu_dg => region(ibry)%vllu_dg ; vllv_dg => region(ibry)%vllv_dg
+#if defined WET_DRY
+        umask_wet_dg => region(ibry)%umask_wet_dg ; vmask_wet_dg => region(ibry)%vmask_wet_dg
+#endif
+      endif
+
+      ! ===== weight recompute trigger (see plan §3.1) =====
+      ! non-WET_DRY: compute once (donor grid is fixed); HYCOM may change grid per
+      ! donor file, so recompute on a file change. ROMS+WET_DRY: the parent wet/dry
+      ! layout changes every step, so recompute every step.
+#if defined WET_DRY
+      need_weights = .true.
+#elif defined HYCOM_MODEL
+      need_weights = ( iNCm < iNC )
+#else
+      need_weights = ( itime == 1 )
+#endif
+
+      if( need_weights ) then
+#if defined WET_DRY
+        ! ROMS+WET_DRY: read this step's wetdry mask (idt(itime)) and fold it into
+        ! the u/v weight masks (static land mask x wetdry) so the weights follow the
+        ! moving wet/dry front. The same mask is reused when masking the u/v data.
+        start3D = (/ Iudg_min, Judg_min+1, idt(itime) /)
+        count3D = (/ Nxu_dg,   Nyu_dg,     1          /)
+        call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
+        call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
+        start3D = (/ Ivdg_min+1, Jvdg_min, idt(itime) /)
+        count3D = (/ Nxv_dg,     Nyv_dg,   1          /)
+        call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
+        call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
+        if( .not. allocated(umask_eff) ) allocate( umask_eff, mold=umask_dg )
+        if( .not. allocated(vmask_eff) ) allocate( vmask_eff, mold=vmask_dg )
+        do j=Judg_min,Judg_max
+          do i=Iudg_min,Iudg_max
+            umask_eff(i,j) = umask_dg(i,j)*umask_wet_dg(i,j,1)
+          enddo
+        enddo
+        do j=Jvdg_min,Jvdg_max
+          do i=Ivdg_min,Ivdg_max
+            vmask_eff(i,j) = vmask_dg(i,j)*vmask_wet_dg(i,j,1)
+          enddo
+        enddo
+#endif
         write(*,*) "Calculate 2D rho point weight factor"
         call weight2D_grid3_2(                              &
               Irdg_min, Irdg_max, Jrdg_min, Jrdg_max        &
@@ -2005,7 +2071,11 @@ PROGRAM prepOCN2ROMS
               Iudg_min, Iudg_max, Judg_min, Judg_max        &
             , lonu_dg(Iudg_min:Iudg_max,Judg_min:Judg_max)  &
             , latu_dg(Iudg_min:Iudg_max,Judg_min:Judg_max)  &
+#if defined WET_DRY
+            , umask_eff(Iudg_min:Iudg_max,Judg_min:Judg_max)&
+#else
             , umask_dg(Iudg_min:Iudg_max,Judg_min:Judg_max) &
+#endif
             , LBui, UBui, LBuj, UBuj                        &
             , lonu(LBui:UBui,LBuj:UBuj)                     &
             , latu(LBui:UBui,LBuj:UBuj)                     &
@@ -2016,7 +2086,11 @@ PROGRAM prepOCN2ROMS
               Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max        &
             , lonv_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)  &
             , latv_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)  &
+#if defined WET_DRY
+            , vmask_eff(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max)&
+#else
             , vmask_dg(Ivdg_min:Ivdg_max,Jvdg_min:Jvdg_max) &
+#endif
             , LBvi, UBvi, LBvj, UBvj                        &
             , lonv(LBvi:UBvi,LBvj:UBvj)                     &
             , latv(LBvi:UBvi,LBvj:UBvj)                     &
@@ -2050,27 +2124,6 @@ PROGRAM prepOCN2ROMS
             , ID_cnt3Dv, w_cnt3Dv )
 
         write(*,*) "***************************************************************"
-
-      else
-        ! ----- same donor file: reuse this boundary's box + donor arrays -----
-        Irdg_min=region(ibry)%Irdg_min; Irdg_max=region(ibry)%Irdg_max
-        Jrdg_min=region(ibry)%Jrdg_min; Jrdg_max=region(ibry)%Jrdg_max
-        Iudg_min=region(ibry)%Iudg_min; Iudg_max=region(ibry)%Iudg_max
-        Judg_min=region(ibry)%Judg_min; Judg_max=region(ibry)%Judg_max
-        Ivdg_min=region(ibry)%Ivdg_min; Ivdg_max=region(ibry)%Ivdg_max
-        Jvdg_min=region(ibry)%Jvdg_min; Jvdg_max=region(ibry)%Jvdg_max
-        Nxr_dg=region(ibry)%Nxr_dg; Nyr_dg=region(ibry)%Nyr_dg
-        Nxu_dg=region(ibry)%Nxu_dg; Nyu_dg=region(ibry)%Nyu_dg
-        Nxv_dg=region(ibry)%Nxv_dg; Nyv_dg=region(ibry)%Nyv_dg
-
-        zeta_dg => region(ibry)%zeta_dg ; ubar_dg => region(ibry)%ubar_dg ; vbar_dg => region(ibry)%vbar_dg
-        u_dg => region(ibry)%u_dg ; v_dg => region(ibry)%v_dg ; t_dg => region(ibry)%t_dg
-        ull_dg => region(ibry)%ull_dg ; vll_dg => region(ibry)%vll_dg
-        ullu_dg => region(ibry)%ullu_dg ; ullv_dg => region(ibry)%ullv_dg
-        vllu_dg => region(ibry)%vllu_dg ; vllv_dg => region(ibry)%vllv_dg
-#if defined WET_DRY
-        umask_wet_dg => region(ibry)%umask_wet_dg ; vmask_wet_dg => region(ibry)%vmask_wet_dg
-#endif
       endif
 
 #if defined BRY_MODE
@@ -2204,11 +2257,7 @@ PROGRAM prepOCN2ROMS
 #endif
 
 #if defined WET_DRY
-        start3D = (/ Iudg_min, Judg_min+1, idt(itime) /)
-        count3D = (/ Nxu_dg,   Nyu_dg,     1          /)
-        call check( nf90_inq_varid(ncid, 'wetdry_mask_u', var_id) )
-        call check( nf90_get_var(ncid, var_id, umask_wet_dg, start3D, count3D)  )
-
+        ! umask_wet_dg already read this step in the weight block above; reuse it.
         do j=Judg_min,Judg_max
           do i=Iudg_min,Iudg_max
             u_dg(i,j,:,1)= u_dg(i,j,:,1)*umask_wet_dg(i,j,1)
@@ -2247,11 +2296,7 @@ PROGRAM prepOCN2ROMS
         v_dg = v_dg*0.01d0  ! cm/s -> m/s
 #endif
 #if defined WET_DRY
-        start3D = (/ Ivdg_min+1, Jvdg_min, idt(itime) /)
-        count3D = (/ Nxv_dg,     Nyv_dg,   1          /)
-        call check( nf90_inq_varid(ncid, 'wetdry_mask_v', var_id) )
-        call check( nf90_get_var(ncid, var_id, vmask_wet_dg, start3D, count3D)  )
-
+        ! vmask_wet_dg already read this step in the weight block above; reuse it.
         do j=Jvdg_min,Jvdg_max
           do i=Ivdg_min,Ivdg_max
             v_dg(i,j,:,1)= v_dg(i,j,:,1)*vmask_wet_dg(i,j,1)

@@ -48,13 +48,20 @@
 - [x] BRY/HIS/INI とも master と **byte-identical**（TokyoBay2/MOVEJPN、`cmp`）
 - [x] コミット
 
-## 段階 5: 重み再計算トリガーの修正（§3.1）
-- [ ] ファイル切替検出と重み再計算を分離
-- [ ] 非 WET_DRY: 初回（複数ファイルは切替時）に全 region 計算・保持
-- [ ] ROMS+WET_DRY: 毎ステップ再計算（毎ステップ wetdry マスクを `idt(itime)` で読む）
-- [ ] コンパイル成功（特に ROMS_MODEL + WET_DRY）
-- [ ] WET_DRY ケースの妥当性確認（時間追従するか）／非 WET_DRY は master と一致
-- [ ] コミット
+## 段階 5: 重み再計算トリガーの修正（§3.1）✅
+- [x] box 確保（`if(iNCm<iNC)`）と重み計算を分離。重みは `need_weights` ブロックへ
+- [x] トリガー（CPP分岐）:
+      - **非WET_DRY の ROMS/JCOPE/MRICOM**: `itime==1` の初回のみ（格子固定なので使い回し）
+      - **非WET_DRY の HYCOM**: `iNCm<iNC`（ファイル毎に格子が変わり得るので切替時に再計算）
+      - **ROMS+WET_DRY**: 毎ステップ（`.true.`）
+- [x] ROMS+WET_DRY: 毎ステップ `idt(itime)` の wetdry マスクを読み、`umask_eff=umask_dg*umask_wet_dg`
+      （v も同様）を作って u/v 重みに反映。u/v データ側のマスクは既読の umask_wet_dg を再利用（二重読み廃止）
+- [x] コンパイル成功（BRY/HIS/INI × JCOPE/ROMS/ROMS+WET_DRY/FORA/MOVEJPN）
+- [x] 非 WET_DRY は master と **byte-identical**（TokyoBay2/MOVEJPN は2日=ファイル切替ありで、
+      「初回のみ」化しても2日目の重み＝初日と同一＝出力不変を実証）。
+      **ROMS+WET_DRY は実走データがこのマシンに無く未実走**（コンパイル＋論理／コードレビューで担保。
+      実データ入手時に時間追従を要確認）
+- [x] コミット
 
 ## 段階 6: 仕上げ
 - [ ] 全 CPP 組合せの網羅コンパイル
@@ -77,8 +84,13 @@
   パラメータ化した単一エンジンへ統合（read+interp+donor-read は完全共有、差分は createNetCDF/時刻変数/
   region 範囲/書込/Nt=1/NAOTIDE のみ CPP 局所化）。BRY-active 経路は不変なので BRY は構成上不変、
   HIS/INI の `#else` 分岐を新規追加。TokyoBay2/MOVEJPN で BRY/HIS/INI とも master と byte-identical、
-  全 mode×donor 行列でコンパイル確認。次は段階5（§3.1 重み再計算トリガー: 非WET_DRYは初回のみ、
-  ROMS+WET_DRYは毎ステップ）。
+  全 mode×donor 行列でコンパイル確認。
+- 段階5 完了: 重み再計算トリガーを修正。box確保(`if(iNCm<iNC)`)と重み計算を分離し、重みは
+  `need_weights` ブロックへ。トリガー=非WET_DRYのROMS/JCOPE/MRICOMは初回(`itime==1`)のみ、
+  非WET_DRYのHYCOMはファイル切替時(`iNCm<iNC`)、ROMS+WET_DRYは毎step。ROMS+WET_DRYは毎step
+  wetdryマスクを読み`umask_eff=umask_dg*umask_wet_dg`をu/v重みに反映（u/vデータ側は既読マスク再利用）。
+  非WET_DRYは master と byte-identical（MOVEJPN 2日=ファイル切替ありで実証）。ROMS+WET_DRYは実走データ
+  無く未実走（コンパイル＋論理で担保）。次は段階6（網羅コンパイル/CLAUDE.md更新/master マージ可否判断）。
 
 ### 3b-2 手術手順（次回実施・要点メモ）
 現 BRY: `do ibry { setup; iNC=0; do itime { if(iNCm<iNC){GRIDLOAD(1741-1810)+BOX(1811-1958)}; RW(1960-2405); cycle/donor dealloc(2406-2434) } enddo }`
