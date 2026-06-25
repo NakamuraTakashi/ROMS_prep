@@ -64,10 +64,20 @@
 - [x] コミット
 
 ## 段階 6: 仕上げ
-- [ ] 全 CPP 組合せの網羅コンパイル
-- [ ] 代表データ（TokyoBay2/3, MOVEJPN/HYCOM, 必要なら FORA）で実走回帰
-- [ ] CLAUDE.md / 計画 md の追記・更新
-- [ ] master へのマージ可否を確認（ユーザー判断）
+- [x] 全 CPP 組合せの網羅コンパイル（25/25 PASS）:
+      BRY/HIS/INI × {JCOPE, ROMS, ROMS+WET_DRY, FORA, MOVEJPN, HYCOM(+HYCOM_LOCAL),
+      HYCOM_LOCAL+FAST_READ}、HIS/INI × {NAOTIDE, NAOTIDEJ}。
+      ※単独 `-DHYCOM_MODEL` は元から不正組合せ（HYCOM_FILE/NCnum が HYCOM_LOCAL ガード内宣言）で
+        master も同じ。HYCOM は HYCOM_LOCAL か OPeNDAP の GOFS フラグ併用が必須。
+- [x] 代表データ実走回帰: TokyoBay2/MOVE-JPN(2日) で BRY/HIS/INI とも master と byte-identical。
+      HYCOM/FORA/ROMS はローカルデータがこのマシンに無く実走なし（コンパイルのみ）。
+      ROMS+WET_DRY も実データ無し（§3.1 の挙動変更は実走未検証）。
+- [x] CLAUDE.md / 計画 md / チェックリスト 更新
+- [ ] master へのマージ可否を確認（ユーザー判断）← 最終ステップ
+
+成果: `src/prepOCN2ROMS.F90` は master 比 **+538 / -1062（約524行純減）**。出力部の二重実装
+（BRY と HIS/INI の read+interp+donor-read）が単一 region パラメータ化エンジンに統合され、
+モード固有は createNetCDF/時刻変数/region範囲/書込/Nt=1/NAOTIDE と §3.1 の重みトリガーのみ。
 
 ---
 進捗メモ:

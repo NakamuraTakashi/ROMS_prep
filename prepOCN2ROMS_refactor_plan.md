@@ -3,6 +3,12 @@
 対象ブランチ: `refactor/prepOCN2ROMS`
 対象ファイル: `src/prepOCN2ROMS.F90`（必要に応じ `src/mod_roms_netcdf.F90`）
 
+> **状態（2026-06-25）: 段階 1〜6 実装完了、master マージ可否のユーザー判断待ち。**
+> 進捗の詳細は [`prepOCN2ROMS_refactor_checklist.md`](prepOCN2ROMS_refactor_checklist.md)。
+> 出力部の二重実装を解消し単一 region パラメータ化エンジンへ統合（`src/prepOCN2ROMS.F90`
+> は master 比 約524行純減）。非 WET_DRY は TokyoBay2/MOVE-JPN で master と byte-identical。
+> ROMS+WET_DRY のみ §3.1 の重みトリガー修正で挙動が変わる（実走データ未入手で論理担保）。
+
 ## 1. 目的
 
 - `BRY_MODE`（現 1511 行〜）と `HIS_MODE`/`INI_MODE`（現 2435 行〜）の出力部に**重複**している
