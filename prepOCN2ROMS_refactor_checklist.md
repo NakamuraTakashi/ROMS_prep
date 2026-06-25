@@ -57,3 +57,24 @@
 進捗メモ:
 - 段階1 完了: `BRY_FILE`/`HIS_FILE` を `OUT_FILE` に統一（純粋リネーム、挙動不変）。全モードコンパイル確認済み。
 - 段階2 完了: `T_region` 型導入、(A)配列を pointer 化、HIS/INI を region(1) 経由に。TokyoBay2/MOVEJPN(2日)で master と HIS・BRY とも byte-identical を確認。(B)ドナー配列は段階3で region 化予定。
+- 段階3a 完了: (B)ドナー配列を pointer 化（HIS は直接確保で byte-identical）。
+- 段階3b-1 完了: BRY の A 配列を region(ibry) 化（`allocate(region(1:4))` 追加、ibry ループ維持）。BRY byte-identical。
+
+### 3b-2 手術手順（次回実施・要点メモ）
+現 BRY: `do ibry { setup; iNC=0; do itime { if(iNCm<iNC){GRIDLOAD(1741-1810)+BOX(1811-1958)}; RW(1960-2405); cycle/donor dealloc(2406-2434) } enddo }`
+目標: setup を前出し、loop を swap、GRIDLOAD は ibry 外へ hoist:
+```
+do ibry { if(SNWE)cycle; bounds→region(ibry); allocate region(ibry)%A } enddo   ! setup 前出し（retarget は外す）
+iNC=0
+do itime
+  iNCm=iNC; iNC=iNCt(itime)
+  if(iNCm<iNC): GRIDLOAD（共有 latr_dg 等。ibry 外で1回）   ! ←hoist 必須（ibry内だと共有座標が二重 allocate でエラー）
+  do ibry { if(SNWE)cycle
+     A/donor ポインタを region(ibry) に retarget; box スカラ Irdg_min 等を region(ibry) から復元
+     if(iNCm<iNC): BOX = seek→region(ibry)%Irdg_min 等; allocate region(ibry)%donor + alias; weights→region(ibry)
+     RW（素の名前のまま）
+  } enddo
+  if(itime==Nt .or. iNC/=iNCt(itime+1)): 共有座標 deallocate（1回）＋ region(ibry)%donor を全 ibry 解放
+enddo
+```
+要点: ①GRIDLOAD/BOX 分割点 = 1810(#endif)/1811(Seek)。②box スカラ(Irdg_min..,Nxr_dg..)は region(ibry) に保存し毎 ibry 復元（非ファイル切替step で stale を防ぐ）。③ドナー配列は region(ibry)%＋alias。④`cycle` ベースの解放を `if(itime==Nt .or. iNC/=iNCt(itime+1))` に。⑤行長 ≤132 厳守（production は -ffree-line-length-none 無し）。検証: TokyoBay2/MOVEJPN で BRY byte-identical。
