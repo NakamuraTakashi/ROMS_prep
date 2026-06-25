@@ -67,7 +67,7 @@ Projects/GetERA5/my_setup.sh
 Projects/GetTE/my_TE-download.sh
 
 # Backup Files
-*/backup/
+backup/
 OTPS/OTPS_back/*
 OTPS/OTPS2/*
 OTPS/OTPS2_back/*
