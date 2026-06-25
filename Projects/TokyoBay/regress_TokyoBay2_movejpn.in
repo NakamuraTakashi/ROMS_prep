@@ -1,0 +1,58 @@
+! Regression-test input for the prepOCN2ROMS refactor (branch refactor/prepOCN2ROMS).
+! Small, fast case: TokyoBay2 grid + local MOVE-JPN data, 2 time steps (2010-06-01..03).
+! Used by regress_prepOCN2ROMS.sh to check branch output == master output.
+!
+! MACHINE-SPECIFIC paths (edit for other machines):
+!   &grd   GRID_FILE        -> ../../../COAWST_DATA/TokyoBay/TokyoBay2/Grid/...
+!   &mricom MRICOM_data_dir -> local MOVE-JPN daily files (here a WSL /mnt/f mount)
+&grd
+  GRID_FILE = "../../../COAWST_DATA/TokyoBay/TokyoBay2/Grid/TokyoBay2_grd_v2.1.nc"
+/
+&sdate
+  Syear  = 2010
+  Smonth = 6
+  Sday   = 1
+/
+&edate
+  Eyear  = 2010
+  Emonth = 6
+  Eday   = 3
+/
+&refdate
+  Ryear  = 2000
+  Rmonth = 1
+  Rday   = 1
+/
+&ocn2roms
+  romsvar = 1,1,1,1,1,1,1
+/
+&mricom
+  MRICOM_data_dir = "/mnt/f/DATA/MOVEJPN_MRI_2020/2010/"
+/
+&bry
+  BRY_prefix  = "regress_bry"
+  !    south north west east
+  SNWE = 1, 1, 1, 1
+/
+&his
+  HIS_prefix  = "regress_his"
+/
+&ini
+  INI_prefix  = "regress_ini"
+  INIyear  = 2010
+  INImonth = 6
+  INIday   = 1
+  INIhour  = 0
+/
+&hcoord
+  spherical  = 1
+/
+&zcoord
+  N_s_rho = 30
+  Vtransform  = 2
+  Vstretching = 4
+  THETA_S = 7.0d0
+  THETA_B = 0.1d0
+  TCLINE  = 200.0d0
+  DCRIT   = 0.10d0
+/

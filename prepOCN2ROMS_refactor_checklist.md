@@ -3,6 +3,9 @@
 計画: [`prepOCN2ROMS_refactor_plan.md`](prepOCN2ROMS_refactor_plan.md)
 ブランチ: `refactor/prepOCN2ROMS`
 
+回帰テスト: `Projects/TokyoBay/` で `./regress_prepOCN2ROMS.sh [his|bry|ini|all]`
+（working tree と master をビルドして同一入力で実行し byte-identical を確認。入力は `regress_TokyoBay2_movejpn.in`、要 MOVE-JPN ローカルデータ）
+
 各段階は「コンパイル成功」＋「master と出力一致（回帰）」を満たしたらチェック。
 
 ## 段階 1: `OUT_FILE` 共通化（挙動不変）✅
