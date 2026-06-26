@@ -1044,17 +1044,28 @@ PROGRAM prepOCN2ROMS
     status = access( trim( JCOPE_data_file ), ' ' )
     if ( status /= 0 ) cycle 
     Nt = Nt + 1
-    JCOPE_sufix(Nt) = JCOPE_sufix_tmp  
-    bry_time(Nt) = ( dble( ijdate ) + dble( ihour )/24.0d0 - d_jdate_Ref ) * 86400.0d0  ! sec
+    JCOPE_sufix(Nt) = JCOPE_sufix_tmp
+    bry_time(Nt) = dble( ijdate ) + dble( ihour )/24.0d0  ! julian date (-> sec after the loop)
   enddo
 
 !  allocate(idt(Nt))
   allocate(iNCt(Nt))
-  
+  allocate( INFILE(Nt) )
+
+  ! JCOPE has one donor "grid" but a separate file per time; keep iNCt=1 (the grid
+  ! is loaded once) and carry the per-time file suffix + time in INFILE(itime).
   do i=1, Nt
-!    idt(i) = ItS + i-1
+    allocate( INFILE(i)%time_all(1) )
+    INFILE(i)%time_all(1) = bry_time(i)   ! julian date
+    INFILE(i)%Nt = 1
+    INFILE(i)%ItS = 1
+    INFILE(i)%ItE = 1
     iNCt(i) = 1
+    allocate( INFILE(i)%NAME(1) )
+    INFILE(i)%NAME(1) = JCOPE_sufix(i)
   enddo
+
+  bry_time(1:Nt) = ( bry_time(1:Nt) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
 
 #elif defined MRICOM_MODEL
 
@@ -1944,7 +1955,7 @@ PROGRAM prepOCN2ROMS
         call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
               , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
 #elif defined JCOPE_MODEL
-       JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( JCOPE_sufix(itime) )
+       JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( INFILE(itime)%NAME(1) )
        write(*,*) 'Read: ', trim( JCOPE_data_file )
        call read_jcope_data2D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
              , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg )
@@ -2040,7 +2051,7 @@ PROGRAM prepOCN2ROMS
               , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
 # endif
 #elif defined JCOPE_MODEL
-        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( JCOPE_sufix(itime) )
+        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( INFILE(itime)%NAME(1) )
         write(*,*) 'Read: ', trim( JCOPE_data_file )
         call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
               , Iudg_min, Iudg_max, Judg_min, Judg_max, u_dg(:,:,:,1) )
@@ -2080,7 +2091,7 @@ PROGRAM prepOCN2ROMS
               , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
 # endif
 #elif defined JCOPE_MODEL
-        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( JCOPE_sufix(itime) )
+        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( INFILE(itime)%NAME(1) )
         write(*,*) 'Read: ', trim( JCOPE_data_file )
         call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
               , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, v_dg(:,:,:,1) )
@@ -2385,7 +2396,7 @@ PROGRAM prepOCN2ROMS
               , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 # endif
 #elif defined JCOPE_MODEL
-        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(i) )//trim( JCOPE_sufix(itime) )
+        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(i) )//trim( INFILE(itime)%NAME(1) )
         write(*,*) 'Read: ', trim( JCOPE_data_file )
         call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
               , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, t_dg(:,:,:,1) )

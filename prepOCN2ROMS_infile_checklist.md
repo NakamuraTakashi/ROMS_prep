@@ -53,10 +53,12 @@
     旧 hour ベースの `.dat` とは非互換（`SKIP_CHECK_TIME` で旧キャッシュを読む場合は再生成が必要）。
     HYCOM_LOCAL は `.dat` 不使用で影響なし。
 
-## S5: JCOPE パスを INFILE 化
-- [ ] JCOPE の時刻フェーズ（日付生成名）を INFILE＋infile_check_time に統一（`Nt=1`）
-- [ ] コンパイル成功（JCOPE × BRY/HIS/INI）
-- [ ] コミット
+## S5: JCOPE パスを INFILE 化 ✅
+- [x] JCOPE の日付スキャンを INFILE 化: `INFILE(itime)%NAME(1)=日付サフィックス`、`time_all(1)=jdate`、`Nt=1`。
+      JCOPE は donor 格子が1つ（時刻別ファイル）なので `iNCt=1` を維持し挙動不変（infile_check_time は不使用）。
+      出力の `JCOPE_sufix(itime)` を `INFILE(itime)%NAME(1)` に置換
+- [x] コンパイル成功（JCOPE × BRY/HIS/INI、+JCOPE_T）
+- [x] コミット
 
 ## S6: 仕上げ
 - [ ] 網羅コンパイル（BRY/HIS/INI × JCOPE/ROMS/ROMS+WET_DRY/FORA/MOVEJPN/HYCOM_LOCAL(+FAST_READ)、
