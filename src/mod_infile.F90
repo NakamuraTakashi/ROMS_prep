@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2025 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2025-2026 Takashi NAKAMURA  =====
 
 !!!**** INFILE MODULE ************************************
 
@@ -17,15 +17,17 @@ MODULE mod_infile
 
   CONTAINS
 
-  SUBROUTINE infile_check_time( Nfile, t_Start, t_End, Nt, time )
+  SUBROUTINE infile_check_time( Nfile, t_Start, t_End, Nt, time, iNCt, idt )
 
   integer, intent( in) :: Nfile
   real(8), intent( in) :: t_Start, t_End
   integer, intent(out) :: Nt
   real(8), allocatable, intent(out) :: time(:)
+  integer, allocatable, optional, intent(out) :: iNCt(:)  ! merged step -> file index
+  integer, allocatable, optional, intent(out) :: idt(:)   ! merged step -> in-file index
 
   real(8) :: t
-  integer :: i,j,k
+  integer :: i,j,k,l
   integer :: js,je
 
   write(*,*) INFILE(:)%Nt
@@ -84,12 +86,23 @@ MODULE mod_infile
   enddo
 
   allocate( time(Nt) )
+  if( present(iNCt) .and. present(idt) ) allocate( iNCt(Nt), idt(Nt) )
 
+  ! Build the merged time list (and optional step->file / step->in-file maps).
+  ! NOTE: do NOT overwrite the loop variable j here (the earlier draft did
+  ! `j = i + ...`, which is undefined behaviour for a DO index).
   i=1
   do j=js,je
-    j = i + INFILE(j)%ItE - INFILE(j)%ItS
-    time(i:j) = INFILE(j)%time_all( INFILE(j)%ItS : INFILE(j)%ItE )
-    i = j+1
+    if( INFILE(j)%ItS==-1 ) cycle           ! skip files outside [t_Start,t_End]
+    k = INFILE(j)%ItE - INFILE(j)%ItS        ! (number of steps from this file) - 1
+    time(i:i+k) = INFILE(j)%time_all( INFILE(j)%ItS : INFILE(j)%ItE )
+    if( present(iNCt) .and. present(idt) ) then
+      do l=0,k
+        iNCt(i+l) = j
+        idt(i+l)  = INFILE(j)%ItS + l
+      end do
+    end if
+    i = i+k+1
   enddo
 
   END SUBROUTINE infile_check_time

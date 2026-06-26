@@ -13,13 +13,14 @@
 - [x] `prepOCN2ROMS_infile_plan.md` / `prepOCN2ROMS_infile_checklist.md` 作成
 - [x] コミット
 
-## S1: mod_infile 完成
-- [ ] `T_INFILE` をコア確定（`NAME(:), time_all(:), Nt, ItS, ItE`、`time_all` はジュリアン日）
-- [ ] `infile_check_time(Nfile, t_Start, t_End, Nt, time, iNCt, idt)` へ拡張
-      （`iNCt/idt` は `optional, allocatable, intent(out)`）
-- [ ] 統合 `time/iNCt/idt` 構築ロジック（ROMS 流）を実装、**末尾ループのバグ修正**
-- [ ] `mod_infile` 単体コンパイル成功
-- [ ] コミット
+## S1: mod_infile 完成 ✅
+- [x] `T_INFILE` をコア確定（`NAME(:), time_all(:), Nt, ItS, ItE`、`time_all` はジュリアン日）※既存のまま
+- [x] `infile_check_time(Nfile, t_Start, t_End, Nt, time, iNCt, idt)` へ拡張
+      （`iNCt/idt` は `optional, allocatable, intent(out)`。両方 present のときのみ確保・構築）
+- [x] 統合 `time/iNCt/idt` 構築ロジック（ROMS 流）を実装、**末尾ループのバグ修正**
+      （旧 `j = i + ...` のループ変数上書きを廃止、`ItS==-1` ファイルは cycle）
+- [x] `mod_infile` 単体コンパイル成功
+- [x] コミット
 
 ## S2: prepOCN2ROMS MRICOM パスを INFILE 化
 - [ ] `use mod_infile` 追加
