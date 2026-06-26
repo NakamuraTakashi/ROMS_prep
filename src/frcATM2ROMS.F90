@@ -441,28 +441,16 @@ PROGRAM frcATM2ROMS
   namelist/sdate/Syear, Smonth, Sday
   namelist/edate/Eyear, Emonth, Eday
   namelist/refdate/Ryear, Rmonth, Rday
-#if defined JMA_MSM
-  namelist/frc_atm/ATM_dir
-  namelist/frc_atm/FRC_prefix
-#elif defined DSJRA55
-  namelist/frc_atm/ATM_dir
-  namelist/frc_atm/FRC_prefix
-#elif defined JMA_LSM
-  namelist/frc_atm/ATM_dir
-  namelist/frc_atm/FRC_prefix
-#elif defined JRA55
-  namelist/frc_atm/ATM_dir
-  namelist/frc_atm/FRC_prefix
-#elif defined ERA5
+#if defined ERA5
   namelist/frc_era5_1/NCnum
   namelist/frc_era5_2/ATM_FILE
   namelist/frc_era5_2/FRC_prefix
-#elif defined FORP_ATM
+#else
   namelist/frc_atm/ATM_dir
   namelist/frc_atm/FRC_prefix
 #endif
   ! Read parameters in namelist file
-  
+
   read (5, nml=grd)
   rewind(5)
   read (5, nml=sdate)
@@ -470,26 +458,13 @@ PROGRAM frcATM2ROMS
   read (5, nml=edate)
   rewind(5)
   read (5, nml=refdate)
-#if defined JMA_MSM
   rewind(5)
-  read (5, nml=frc_atm)
-#elif defined DSJRA55
-  rewind(5)
-  read (5, nml=frc_atm)
-#elif defined JMA_LSM
-  rewind(5)
-  read (5, nml=frc_atm)
-#elif defined JRA55
-  rewind(5)
-  read (5, nml=frc_atm)
-#elif defined ERA5
-  rewind(5)
+#if defined ERA5
   read (5, nml=frc_era5_1)
   allocate( ATM_FILE(NCnum) )
   rewind(5)
   read (5, nml=frc_era5_2)
-#elif defined FORP_ATM
-  rewind(5)
+#else
   read (5, nml=frc_atm)
 #endif
 !---- Modify time-unit description ---------------------------------
