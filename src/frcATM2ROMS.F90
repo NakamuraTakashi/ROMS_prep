@@ -3,7 +3,6 @@
 
 #if defined JMA_MSM
 # undef BULK_FLUX
-# define INFILE_LOOP
 # if defined NETCDF_INPUT
 #  undef SWRAD
 # endif
@@ -15,28 +14,23 @@
 # undef NETCDF_INPUT
 # undef SWRAD
 # undef JMA_MSM_CLOUD_ONLY
-# define INFILE_LOOP
 
 #elif defined JMA_LSM
 # undef NETCDF_INPUT
 # undef BULK_FLUX
 # undef SWRAD
 # undef JMA_MSM_CLOUD_ONLY
-# define INFILE_LOOP
 
 #elif defined ERA5
 # undef JMA_MSM_CLOUD_ONLY
-# define INFILE_LOOP
 
 #elif defined FORP_ATM
 # define NETCDF_INPUT
-# define INFILE_LOOP
 
 #endif
 
-! The macro defined just above marks donors that use the shared mod_infile time
-! list and the single "do itime=1,Nt" engine (vs. the legacy infinite-DO,
-! date-stepping path). Add a donor to that #define as it is migrated.
+! Every donor uses the shared mod_infile time list + the single "do itime=1,Nt"
+! engine, so the input-file bookkeeping below is unconditional.
 
 PROGRAM frcATM2ROMS
   use netcdf
@@ -262,7 +256,6 @@ PROGRAM frcATM2ROMS
 
 #endif
 
-#if defined INFILE_LOOP
   real(8), allocatable :: atm_time(:)
   real(8), allocatable :: time2(:)
   integer, allocatable :: iNCt(:)
@@ -277,8 +270,6 @@ PROGRAM frcATM2ROMS
   integer :: iNC, iNCm
   integer :: Nt
   real(8), allocatable :: amask(:, :), amaskv(:, :)
-
-#endif
 
   character(10) :: GRIB_yyyymmddhh = "2002070100"
 
