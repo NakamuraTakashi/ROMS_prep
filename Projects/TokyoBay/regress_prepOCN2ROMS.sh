@@ -20,7 +20,7 @@ set -eu
 SRC=../../src
 IN=regress_TokyoBay2_movejpn.in
 COMMON="$SRC/mod_calendar.f90 $SRC/mod_utility.F90 $SRC/mod_interpolation.f90 \
-        $SRC/mod_jcope.F90 $SRC/mod_roms_netcdf.F90 $SRC/set_scoord.f90 \
+        $SRC/mod_jcope.F90 $SRC/mod_roms_netcdf.F90 $SRC/mod_infile.F90 $SRC/set_scoord.f90 \
         $SRC/set_depth.F90 $SRC/pzcon.f $SRC/potmp.f"
 FF="-fbounds-check -fno-align-commons -fopenmp -O2"
 LINK="-I/usr/include -L/usr/lib -lnetcdff"

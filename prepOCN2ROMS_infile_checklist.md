@@ -22,14 +22,17 @@
 - [x] `mod_infile` 単体コンパイル成功
 - [x] コミット
 
-## S2: prepOCN2ROMS MRICOM パスを INFILE 化
-- [ ] `use mod_infile` 追加
-- [ ] MRICOM の時刻フェーズを `INFILE` 構築＋`infile_check_time` に置換（`Nt=1` 形式）
-- [ ] `bry_time` を統合 `time`(jdate) から秒換算
-- [ ] MRICOM の `T_NC` 定義削除（NC 参照を INFILE/格子別管理に置換）
-- [ ] コンパイル成功（MOVEJPN × BRY/HIS/INI）
-- [ ] MOVE-JPN で master と **cdo diffn 差0**（BRY/HIS/INI）
-- [ ] コミット
+## S2: prepOCN2ROMS MRICOM パスを INFILE 化 ✅
+- [x] `use mod_infile` 追加
+- [x] MRICOM の時刻フェーズを INFILE 化:
+      - FORP: `INFILE`構築＋`infile_check_time(...,iNCt,idt)` に集約、`time_all` を hour→jdate 正規化
+      - MOVEJPN/FORA: 日付スキャンで `INFILE%NAME(5)/time_all(1)=jdate/Nt=1`、`iNCt/idt` 直接構築
+- [x] `bry_time` を jdate から秒換算（FORP=`(time-ref)*86400`、MOVEJPN=スキャン後 in-place 換算）
+- [x] MRICOM の `T_NC`/`NC(:)` 定義削除、grid 読込・出力の `NC%MRICOM_FILE/%ItS` を `INFILE%NAME/%ItS` に置換
+- [x] harness の COMMON に `mod_infile.F90` を追加
+- [x] コンパイル成功（MOVEJPN/FORA/FORP × BRY/HIS/INI）
+- [x] MOVE-JPN で master と **byte-identical**（cmp 完全一致。cdo diffn 差0 基準を上回る）
+- [x] コミット
 
 ## S3: ROMS パスを INFILE 化
 - [ ] ROMS の時刻フェーズを INFILE＋infile_check_time に置換、`bry_time` 秒換算

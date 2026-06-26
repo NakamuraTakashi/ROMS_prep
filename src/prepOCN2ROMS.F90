@@ -28,6 +28,7 @@ PROGRAM prepOCN2ROMS
 #if defined JCOPE_MODEL
   use mod_jcope
 #endif
+  use mod_infile   ! shared T_INFILE / infile_check_time (input file + time list)
 
   implicit none
 
@@ -109,6 +110,7 @@ PROGRAM prepOCN2ROMS
   
   real(8), allocatable :: time_all(:)
   real(8), allocatable :: bry_time(:)
+  real(8), allocatable :: time(:)      ! merged julian-date list from infile_check_time
   integer, allocatable :: iNCt(:)
   integer :: start1D(1), count1D(1)
   integer :: start2D(2), count2D(2)
@@ -322,13 +324,7 @@ PROGRAM prepOCN2ROMS
 #endif
 #if defined MRICOM_MODEL
   character(256) :: MRICOM_data_dir
-  TYPE T_NC
-    character(256) :: MRICOM_FILE(5)
-    real(8), pointer :: time_all(:)
-    integer :: Nt
-    integer :: ItS, ItE
-  END TYPE T_NC
-  TYPE (T_NC), allocatable :: NC(:)
+  ! input-file info (file names + time list) now lives in mod_infile's INFILE(:)
 !  real(8), allocatable :: time2(:)
   real(8), allocatable :: latst(:), lonst(:), latuv(:), lonuv(:)
   real(8), allocatable :: depth(:)
@@ -1214,7 +1210,7 @@ PROGRAM prepOCN2ROMS
   NCnum = 12*(Eyear-Syear) + Emonth - Smonth + 1
   NCnum = min( NCnum, 12 )  ! FORP data limit to 1 year
   write(*,*) 'NCnum = ', NCnum
-  allocate( NC(NCnum) ) 
+  allocate( INFILE(NCnum) )
 
   do iNC=1, NCnum
     write(*,*) 'CHECK: Time'
@@ -1222,105 +1218,38 @@ PROGRAM prepOCN2ROMS
     write (YYYY, "(I4.4)") Syear
     write (MM, "(I2.2)") Smonth + iNC -1
     MRICOM_sufix = "_dy_"//YYYY//MM//".nc"
+    allocate( INFILE(iNC)%NAME(5) )
     do i=1,5
-      NC(iNC)%MRICOM_FILE(i) = &
+      INFILE(iNC)%NAME(i) = &
         trim( MRICOM_data_dir )// MRICOM_prefix // &
         trim( MRICOM_VAR_NAME(i) )// MRICOM_sufix
     enddo
-    write(*,*) "OPEN: ", trim( NC(iNC)%MRICOM_FILE(1) )
-    call try_nf_open(NC(iNC)%MRICOM_FILE(1), nf90_nowrite, ncid)
-    call get_dimension(ncid, 'time', NC(iNC)%Nt)
-    write(*,*) NC(iNC)%Nt
+    write(*,*) "OPEN: ", trim( INFILE(iNC)%NAME(1) )
+    call try_nf_open(INFILE(iNC)%NAME(1), nf90_nowrite, ncid)
+    call get_dimension(ncid, 'time', INFILE(iNC)%Nt)
+    write(*,*) INFILE(iNC)%Nt
 
-    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
-!    allocate( time2(NC(iNC)%Nt) )
+    allocate( INFILE(iNC)%time_all(INFILE(iNC)%Nt) )
     call check( nf90_inq_varid(ncid, 'time', var_id) )
-!    call check( nf90_get_var(ncid, var_id, time2) )
-    call check( nf90_get_var(ncid, var_id, NC(iNC)%time_all) )
+    call check( nf90_get_var(ncid, var_id, INFILE(iNC)%time_all) )
     call check( nf90_close(ncid) )
-    write(*,*) "CLOSE: ", trim( NC(iNC)%MRICOM_FILE(1) )
-!    NC(iNC)%time_all = time2
-!    deallocate(time2)
+    write(*,*) "CLOSE: ", trim( INFILE(iNC)%NAME(1) )
+    ! FORP 'time' is hours; normalise to julian date (ref shifted by -2 as before)
+    INFILE(iNC)%time_all = d_jdate_00010101 - 2.0d0 + INFILE(iNC)%time_all/24.0d0
   end do
 
-  write(*,*) NC(:)%Nt
-  
-  do iNC=1, NCnum-1
-    do i=2,NC(iNC)%Nt
-      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
-        NC(iNC)%Nt = i-1
-        exit
-      end if
-    end do
-  end do
-  
-  write(*,*) NC(:)%Nt
-  
-  write(*,*) "******************************************************************"
-    
-  
-  NC(:)%ItE = -1
-  NC(:)%ItS = -1
-  
-  do iNC=NCnum,1,-1
-    do i=NC(iNC)%Nt,1,-1
-      d_jdate=d_jdate_00010101-2.0d0+NC(iNC)%time_all(i)/24.0d0
-      if(d_jdate < dble(jdate_End)) then
-        write(*,*) '*** FOUND: Ending point @ MRICOM_FILE',iNC
-        NC(iNC)%ItE=i
-        exit
-      endif
-    end do
-  end do
-  write(*,*) NC(:)%ItE 
-  
-  do iNC=1,NCnum
-    do i=NC(iNC)%ItE,1,-1
-      d_jdate=d_jdate_00010101-2.0d0+NC(iNC)%time_all(i)/24.0d0
-      if(d_jdate < dble(jdate_Start)) then
-!        write(*,*) '*** FOUND: Starting point @ MRICOM_FILE',iNC
-        exit
-      endif
-      NC(iNC)%ItS=i
-    end do
-  end do
-  write(*,*) NC(:)%ItS 
-
-  Nt = 0
-  iNCs = NCnum
-  iNCe = 1
-
-  do iNC=1,NCnum
-    if(NC(iNC)%ItS==-1) then
-      cycle
-    end if
-    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
-    iNCs = min(iNCs,iNC)
-    iNCe = max(iNCe,iNC)
-  enddo
+  call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
   allocate(bry_time(Nt))
-  allocate(idt(Nt))
-  allocate(iNCt(Nt))
-
-  i=1
-  do iNC=iNCs,iNCe
-    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
-      iNCt(i+k) = iNC
-      idt(i+k)  = NC(iNC)%ItS + k
-    enddo
-    j=i+NC(iNC)%ItE-NC(iNC)%ItS
-    bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
-    i=j+1
-  enddo
-
-  bry_time(:) = ( bry_time(:) + ( d_jdate_00010101-2.0d0 -d_jdate_Ref )*24.0d0)*3600.0d0 ! hour -> sec
+  bry_time(:) = ( time(:) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
+  iNCs = iNCt(1)
+  iNCe = iNCt(Nt)
 
 # elif defined MOVEJPN_MODEL || defined FORA_MODEL
 
   write(*,*) "************ MOVE-JPN MODEL ************"
 
-  allocate( bry_time(10000) ) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  allocate( bry_time(10000) ) ! holds julian date during the scan; converted to sec below
   Nt = 0
   itime = 1
   ihours = 0
@@ -1360,45 +1289,48 @@ PROGRAM prepOCN2ROMS
 #  endif
 
 !    write(*,*) 'CHECK FILE: ', trim( MRICOM_FILE_tmp ), status !!!!!!!!!!!!! DEBUG
-    if ( status /= 0 ) cycle 
+    if ( status /= 0 ) cycle
     Nt = Nt + 1
-    MRICOM_sufix(Nt) = MRICOM_sufix_tmp  
-    bry_time(Nt) = ( dble( ijdate ) + dble( ihour )/24.0d0 - d_jdate_Ref ) * 86400.0d0  ! sec
+    MRICOM_sufix(Nt) = MRICOM_sufix_tmp
+    bry_time(Nt) = dble( ijdate ) + dble( ihour )/24.0d0  ! julian date (-> sec after the loop)
   enddo
 
   allocate(idt(Nt))
   allocate(iNCt(Nt))
-  allocate( NC(Nt) ) 
+  allocate( INFILE(Nt) )
 
   do iNC=1,Nt
-    allocate( NC(iNC)%time_all(1) )
-    NC(iNC)%time_all(1) = bry_time(iNC)
-    NC(iNC)%Nt = 1
-    NC(iNC)%ItS = 1
-    NC(iNC)%ItE = 1
+    allocate( INFILE(iNC)%time_all(1) )
+    INFILE(iNC)%time_all(1) = bry_time(iNC)   ! julian date
+    INFILE(iNC)%Nt = 1
+    INFILE(iNC)%ItS = 1
+    INFILE(iNC)%ItE = 1
     iNCt(iNC) = iNC
     idt(iNC)  = 1
+    allocate( INFILE(iNC)%NAME(5) )
     do i=1,5
 #  if defined MOVEJPN_MODEL
-      NC(iNC)%MRICOM_FILE(i) = &
+      INFILE(iNC)%NAME(i) = &
         trim( MRICOM_data_dir )// MRICOM_prefix // &
         trim( MOVEJPN_VAR(i) )// MRICOM_sufix(iNC)
 #  elif defined FORA_MODEL
       if (i==1) then
-        NC(iNC)%MRICOM_FILE(i) = &
+        INFILE(iNC)%NAME(i) = &
           trim( MRICOM_data_dir )// "Basic-2D/" //YYYY// "/" // &
           MRICOM_prefix // &
           trim( MOVEJPN_VAR(i) )// MRICOM_sufix(iNC)
       else
-        NC(iNC)%MRICOM_FILE(i) = &
+        INFILE(iNC)%NAME(i) = &
           trim( MRICOM_data_dir )// "Basic-3D/" //YYYY// "/" // &
           MRICOM_prefix // &
           trim( MOVEJPN_VAR(i) )// MRICOM_sufix(iNC)
       endif
 #  endif
     enddo
-!    write(*,*) 'FILE ', iNC, trim( NC(iNC)%MRICOM_FILE(1) ) !!!!!!!!!!!!!!!!
+!    write(*,*) 'FILE ', iNC, trim( INFILE(iNC)%NAME(1) ) !!!!!!!!!!!!!!!!
   enddo
+
+  bry_time(1:Nt) = ( bry_time(1:Nt) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
 
   write(*,*) "Total time step: ", Nt
   if( Nt <= 0 ) then
@@ -1407,15 +1339,15 @@ PROGRAM prepOCN2ROMS
     write(*,*) "***   MRICOM_data_dir = ", trim( MRICOM_data_dir )
     stop
   endif
-  write(*,*) "Start file: ", trim( NC(1)%MRICOM_FILE(1) )
-  write(*,*) "End file:   ", trim( NC(Nt)%MRICOM_FILE(1) )
+  write(*,*) "Start file: ", trim( INFILE(1)%NAME(1) )
+  write(*,*) "End file:   ", trim( INFILE(Nt)%NAME(1) )
   iNCs=1
 # endif
 
   
   !---- Read FORP/MOVE-JPN netCDF grid cooredinate --------------------------------
-  write(*,*) "OPEN: ", trim( NC(iNCs)%MRICOM_FILE(4) )
-  call try_nf_open(trim( NC(iNCs)%MRICOM_FILE(4) ), nf90_nowrite, ncid)
+  write(*,*) "OPEN: ", trim( INFILE(iNCs)%NAME(4) )
+  call try_nf_open(trim( INFILE(iNCs)%NAME(4) ), nf90_nowrite, ncid)
   ! Get dimension data
   call get_dimension(ncid, 'lat', Nyr_dg)
   call get_dimension(ncid, 'lon', Nxr_dg)
@@ -1431,12 +1363,12 @@ PROGRAM prepOCN2ROMS
   allocate( lonst(Nxr_dg) )
   allocate( depth(Nzr_dg) )
 
-  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, 'lat', Nyr_dg, latst)
-  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, 'lon', Nxr_dg, lonst)
+  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(4) ), ncid, 'lat', Nyr_dg, latst)
+  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(4) ), ncid, 'lon', Nxr_dg, lonst)
 # if defined FORP_MODEL
-  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, 'lev', Nzr_dg, depth)
+  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(4) ), ncid, 'lev', Nzr_dg, depth)
 # elif defined MOVEJPN_MODEL || defined FORA_MODEL
-  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, 'depth', Nzr_dg, depth)
+  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(4) ), ncid, 'depth', Nzr_dg, depth)
 # endif
 
   Ldg = Nxr_dg-1
@@ -1460,13 +1392,13 @@ PROGRAM prepOCN2ROMS
   allocate( z_u_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
   allocate( z_v_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
 
-  start4D = (/ 1,      1,      1,  NC(iNCs)%ItS /)
+  start4D = (/ 1,      1,      1,  INFILE(iNCs)%ItS /)
   count4D = (/ Nxr_dg, Nyr_dg, 1,  1            /)
-  call readNetCDF_2d_mricom(trim( NC(iNCs)%MRICOM_FILE(4) ), ncid, trim( MRICOM_VAR_NAME(4) )  &
+  call readNetCDF_2d_mricom(trim( INFILE(iNCs)%NAME(4) ), ncid, trim( MRICOM_VAR_NAME(4) )  &
         , Nxr_dg, Nyr_dg, start4D, count4D, rmask_dg )
 
   call check( nf90_close(ncid) )
-  write(*,*) "CLOSE: ", trim( NC(iNCs)%MRICOM_FILE(4) )
+  write(*,*) "CLOSE: ", trim( INFILE(iNCs)%NAME(4) )
 
   do j=0,Mdg
     do i=0,Ldg
@@ -1478,22 +1410,22 @@ PROGRAM prepOCN2ROMS
     enddo
   enddo
 
-  write(*,*) "OPEN: ", trim( NC(iNCs)%MRICOM_FILE(2) )
-  call try_nf_open(trim( NC(iNCs)%MRICOM_FILE(2) ), nf90_nowrite, ncid)
+  write(*,*) "OPEN: ", trim( INFILE(iNCs)%NAME(2) )
+  call try_nf_open(trim( INFILE(iNCs)%NAME(2) ), nf90_nowrite, ncid)
   ! Get dimension data
   call get_dimension(ncid, 'lat', Nyu_dg)
   call get_dimension(ncid, 'lon', Nxu_dg)
   allocate( latuv(Nyu_dg) )
   allocate( lonuv(Nxu_dg) )
-  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(2) ), ncid, 'lat', Nyu_dg, latuv)
-  call readNetCDF_1d_safe(trim( NC(iNCs)%MRICOM_FILE(2) ), ncid, 'lon', Nxu_dg, lonuv)
+  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(2) ), ncid, 'lat', Nyu_dg, latuv)
+  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(2) ), ncid, 'lon', Nxu_dg, lonuv)
 
-  start4D = (/ 1,      1,      1,  NC(iNCs)%ItS /)
+  start4D = (/ 1,      1,      1,  INFILE(iNCs)%ItS /)
   count4D = (/ Nxu_dg, Nyu_dg, 1,  1            /)
-  call readNetCDF_2d_mricom(trim( NC(iNCs)%MRICOM_FILE(2) ), ncid, trim( MRICOM_VAR_NAME(2) )  &
+  call readNetCDF_2d_mricom(trim( INFILE(iNCs)%NAME(2) ), ncid, trim( MRICOM_VAR_NAME(2) )  &
         , Nxu_dg, Nyu_dg, start4D, count4D, umask_dg )
   call check( nf90_close(ncid) )
-  write(*,*) "CLOSE: ", trim( NC(iNCs)%MRICOM_FILE(2) )
+  write(*,*) "CLOSE: ", trim( INFILE(iNCs)%NAME(2) )
   do j=0,Mdg
     do i=0,Ldg
       if( umask_dg(i,j) < -10000.0d0 ) then  !! Land: Mask < 0.5 grids
@@ -2149,11 +2081,11 @@ PROGRAM prepOCN2ROMS
        call read_jcope_data2D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
              , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg )
 #elif defined MRICOM_MODEL
-       write(*,*) 'Read: '//trim( NC(iNC)%MRICOM_FILE(1) )
+       write(*,*) 'Read: '//trim( INFILE(iNC)%NAME(1) )
        write(*,*) 'Read: '//trim( MRICOM_VAR_NAME(1) )
        start3D = (/ Irdg_min+1, Jrdg_min+1, idt(itime) /)
        count3D = (/ Nxr_dg,     Nyr_dg,     1          /)
-       call readNetCDF_3d_mricom( trim( NC(iNC)%MRICOM_FILE(1) ), trim( MRICOM_VAR_NAME(1) )  &
+       call readNetCDF_3d_mricom( trim( INFILE(iNC)%NAME(1) ), trim( MRICOM_VAR_NAME(1) )  &
              , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
        zeta_dg = zeta_dg*0.01d0  ! cm -> m
 #endif
@@ -2247,7 +2179,7 @@ PROGRAM prepOCN2ROMS
 #elif defined MRICOM_MODEL
         start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
         count4D = (/ Nxu_dg,     Nyu_dg,     Nzr_dg, 1          /)
-        call readNetCDF_4d_mricom( trim( NC(iNC)%MRICOM_FILE(2) ), trim( MRICOM_VAR_NAME(2) )        &
+        call readNetCDF_4d_mricom( trim( INFILE(iNC)%NAME(2) ), trim( MRICOM_VAR_NAME(2) )        &
               , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
         u_dg = u_dg*0.01d0  ! cm/s -> m/s
 #endif
@@ -2287,7 +2219,7 @@ PROGRAM prepOCN2ROMS
 #elif defined MRICOM_MODEL
         start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
         count4D = (/ Nxv_dg,     Nyv_dg,   Nzr_dg, 1          /)
-        call readNetCDF_4d_mricom( trim( NC(iNC)%MRICOM_FILE(3) ), trim( MRICOM_VAR_NAME(3) )        &
+        call readNetCDF_4d_mricom( trim( INFILE(iNC)%NAME(3) ), trim( MRICOM_VAR_NAME(3) )        &
               , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
         v_dg = v_dg*0.01d0  ! cm/s -> m/s
 #endif
@@ -2606,7 +2538,7 @@ PROGRAM prepOCN2ROMS
         else
           cycle
         endif
-        call readNetCDF_4d_mricom( trim( NC(iNC)%MRICOM_FILE(k) ), trim( MRICOM_VAR_NAME(k) )        &
+        call readNetCDF_4d_mricom( trim( INFILE(iNC)%NAME(k) ), trim( MRICOM_VAR_NAME(k) )        &
               , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 #endif
         write(*,*) 'Linear Interporation: ', trim( varname )
