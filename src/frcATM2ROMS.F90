@@ -5,6 +5,7 @@
 # undef BULK_FLUX
 # if defined NETCDF_INPUT
 #  undef SWRAD
+#  define INFILE_LOOP
 # endif
 # if defined JMA_MSM_CLOUD_ONLY
 #  undef SWRAD
@@ -1117,6 +1118,60 @@ PROGRAM frcATM2ROMS
   write(*,*) "*************************************"
 
   iNC = 0
+
+#elif defined JMA_MSM && defined NETCDF_INPUT
+!======= Set starting time and Ending time (JMA-MSM NetCDF) =================
+!  One daily file (24 steps) per day; rain comes from a parallel r1h file.
+!  Enumerate candidate days [Start, End-1], skip missing days, and build
+!  INFILE(:) (NAME(1)=main, NAME(2)=r1h; time_all = julian date of each step).
+!  The per-file time variable is "hours since <that day> 00:00", so
+!  time_all = (julian day of the file) + hours/24.
+  call jd(Syear, Smonth, Sday, jdate_Start)
+  call jd(Eyear, Emonth, Eday, jdate_End)
+  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  d_jdate_Ref = dble(jdate_Ref)
+  write(*,*) jdate_Start, jdate_End
+
+  allocate( INFILE(jdate_End - jdate_Start + 1) )   ! upper bound on day count
+  NCnum = 0
+  do ijdate = jdate_Start, jdate_End-1
+    call cdate( ijdate, iyear, imonth, iday )
+    write (YYYY,"(I4.4)") iyear
+    write (MM,"(I2.2)") imonth
+    write (DD,"(I2.2)") iday
+    IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//DD//".nc"
+    inquire(FILE=trim(IN_FILE(1)), EXIST=file_exists)
+    if(.not. file_exists) then
+      write(*,*) "Not found (skip): ", trim(IN_FILE(1))
+      cycle
+    endif
+    NCnum = NCnum + 1
+    allocate( INFILE(NCnum)%NAME(2) )
+    INFILE(NCnum)%NAME(1) = trim(ATM_dir)//YYYY//"/"//MM//DD//".nc"
+    INFILE(NCnum)%NAME(2) = trim(ATM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
+
+    write(*,*) "OPEN: ", trim( INFILE(NCnum)%NAME(1) )
+    call check( nf90_open(trim( INFILE(NCnum)%NAME(1) ), nf90_nowrite, ncid) )
+    call get_dimension(ncid, NC_TIME_NAME, INFILE(NCnum)%Nt)
+    allocate( INFILE(NCnum)%time_all(INFILE(NCnum)%Nt) )
+    allocate( time2(INFILE(NCnum)%Nt) )
+    call check( nf90_inq_varid(ncid, NC_TIME_NAME, var_id) )
+    call check( nf90_get_var(ncid, var_id, time2) )
+    call check( nf90_close(ncid) )
+
+    INFILE(NCnum)%time_all = dble(ijdate) + time2/24.0d0   ! hour-of-day -> julian date
+    deallocate(time2)
+  end do
+  write(*,*) 'NCnum = ', NCnum
+
+  call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
+  atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
+  iNCs = iNCt(1)
+  iNCe = iNCt(Nt)
+
+  write(*,*) "*************************************"
+
+  iNC = 0
 #endif
     Write(*,*) 'DEBUG1' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -1127,6 +1182,9 @@ PROGRAM frcATM2ROMS
     iNCm = iNC
     iNC  = iNCt(itime)
     ifc  = idt(itime)
+# if defined JMA_MSM
+    ijdate = int( INFILE(iNC)%time_all(ifc) )   ! julian day of this step (jd_msmnew test)
+# endif
 #else
   DO
     ihour = mod(ihours,24)
@@ -1145,12 +1203,11 @@ PROGRAM frcATM2ROMS
 #endif
 
 #if defined JMA_MSM && defined NETCDF_INPUT
-    ihours = ihours + 24  !!! Files exist daily interval
-
-    IN_FILE2(1) = IN_FILE(1)  
-    IN_FILE2(2) = IN_FILE(2)  
-    IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//DD//".nc"
-    IN_FILE(2) = trim(ATM_dir)//"r1h/"//YYYY//"/"//MM//DD//".nc"
+    ! iNCm/iNC/ifc/ijdate already set at the top of the do itime loop.
+    if(iNCm < iNC) then        ! donor-file change: repoint main + r1h files
+      IN_FILE(1) = trim( INFILE(iNC)%NAME(1) )
+      IN_FILE(2) = trim( INFILE(iNC)%NAME(2) )
+    endif
 
 #elif defined ERA5
     ! iNCm/iNC/ifc already set at the top of the do itime loop.
@@ -1255,12 +1312,8 @@ PROGRAM frcATM2ROMS
 !  ---- LOOP2 START --------------------------------
 !  (ERA5 has no inner loop: the outer do itime=1,Nt with ifc=idt(itime) walks
 !   every step directly.)
-#if defined JMA_MSM
-# if defined NETCDF_INPUT
-    DO ifc=1,24
-# else
+#if defined JMA_MSM && !defined NETCDF_INPUT
     DO ifc=isp,isp+2
-# endif
 #elif !defined INFILE_LOOP
     DO ifc=1,1
 #endif
@@ -1444,22 +1497,8 @@ PROGRAM frcATM2ROMS
       END DO
 #endif
 
-#if defined JMA_MSM && defined NETCDF_INPUT
-! ======= NetCDF file input ================================================
-    ! Set date & time
-      call check( nf90_open(trim( IN_FILE(1) ), nf90_nowrite, ncid) )
-      start1D = (/ ifc /)
-      count1D = (/ 1 /)
-      call check( nf90_inq_varid(ncid, NC_TIME_NAME, var_id) )  !!!  not Japan time (00:00:00+09:00)
-      call check( nf90_get_var(ncid, var_id, time, start=start1D, count=count1D) )
-      call check( nf90_close(ncid) )
-
-    ! JMA_MSM time: hours since 2000-01-01 00:00:00
-      call ndays(imonth, iday, iyear, 1, 1, 2000, d_ref_days)
-      t = time(1)/24.0d0 + dble(d_ref_days)
-
-#elif defined INFILE_LOOP
-    ! ERA5 time
+#if defined INFILE_LOOP
+    ! time from the merged mod_infile list (days since reference date)
       t = atm_time(itime)
 
 #else

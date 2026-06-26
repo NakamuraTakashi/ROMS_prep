@@ -1,0 +1,33 @@
+! ============================================================================
+!  Regression input for frcATM2ROMS JMA_MSM NetCDF refactor (refactor/frcATM2ROMS)
+!  3 daily files (2010-06-01..06-03; Edate is exclusive) to exercise the
+!  per-day INFILE switch (iNCt). Output goes to the scratchpad (FRC_prefix).
+!  Only the groups frcATM2ROMS reads for JMA_MSM are needed:
+!    &grd &sdate &edate &refdate &frc_atm
+! ============================================================================
+&grd
+  GRID_FILE = "Kushimoto_grd_v0.1.nc"
+/
+
+&sdate
+  Syear  = 2010
+  Smonth = 6
+  Sday   = 1
+/
+
+&edate
+  Eyear  = 2010
+  Emonth = 6
+  Eday   = 4
+/
+
+&refdate
+  Ryear  = 2000
+  Rmonth = 1
+  Rday   = 1
+/
+
+&frc_atm
+  ATM_dir  =  "/mnt/y/JMA_DATA/JMA_netcdf/MSM-S/"
+  FRC_prefix  = "REGRESS_FRC_PREFIX_PLACEHOLDER"
+/
