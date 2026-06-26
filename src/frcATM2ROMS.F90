@@ -23,11 +23,17 @@
 
 #elif defined ERA5
 # undef JMA_MSM_CLOUD_ONLY
+# define INFILE_LOOP
 
 #elif defined FORP_ATM
 # define NETCDF_INPUT
+# define INFILE_LOOP
 
 #endif
+
+! The macro defined just above marks donors that use the shared mod_infile time
+! list and the single "do itime=1,Nt" engine (vs. the legacy infinite-DO,
+! date-stepping path). Add a donor to that #define as it is migrated.
 
 PROGRAM frcATM2ROMS
   use netcdf
@@ -256,7 +262,7 @@ PROGRAM frcATM2ROMS
 
 #endif
 
-#if defined ERA5 || defined FORP_ATM
+#if defined INFILE_LOOP
   real(8), allocatable :: atm_time(:)
   real(8), allocatable :: time2(:)
   integer, allocatable :: iNCt(:)
@@ -1116,7 +1122,7 @@ PROGRAM frcATM2ROMS
 
 
 !===== LOOP1 START ================================================
-#if defined ERA5 || defined FORP_ATM
+#if defined INFILE_LOOP
   do itime=1,Nt
     iNCm = iNC
     iNC  = iNCt(itime)
@@ -1208,7 +1214,7 @@ PROGRAM frcATM2ROMS
 # endif
 #endif
 
-#if !defined ERA5 && !defined FORP_ATM
+#if !defined INFILE_LOOP
     ! Check GRIB/nc file  (ERA5/FORP open per donor-file change above; files in
     ! the time list are guaranteed present, so no per-step existence test here.)
     write(*,*) "CHECK: ", trim( IN_FILE(1) )
@@ -1233,7 +1239,7 @@ PROGRAM frcATM2ROMS
 # endif
 #endif
 ! ---- Open GRIB files --------------------------------
-#if !defined NETCDF_INPUT && !defined ERA5
+#if !defined NETCDF_INPUT && !defined INFILE_LOOP
 # if defined JMA_MSM || defined DSJRA55 || defined JRA55
     DO iin=1,2
 # else
@@ -1255,7 +1261,7 @@ PROGRAM frcATM2ROMS
 # else
     DO ifc=isp,isp+2
 # endif
-#elif !defined ERA5 && !defined FORP_ATM
+#elif !defined INFILE_LOOP
     DO ifc=1,1
 #endif
 
@@ -1452,7 +1458,7 @@ PROGRAM frcATM2ROMS
       call ndays(imonth, iday, iyear, 1, 1, 2000, d_ref_days)
       t = time(1)/24.0d0 + dble(d_ref_days)
 
-#elif defined ERA5 || defined FORP_ATM
+#elif defined INFILE_LOOP
     ! ERA5 time
       t = atm_time(itime)
 
@@ -1729,7 +1735,7 @@ PROGRAM frcATM2ROMS
         
       END DO
 !  ---- LOOP3.3 END --------------------------------
-#if !defined ERA5 && !defined FORP_ATM
+#if !defined INFILE_LOOP
       itime = itime + 1
 
 
