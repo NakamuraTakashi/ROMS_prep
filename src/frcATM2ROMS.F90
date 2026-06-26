@@ -3,9 +3,9 @@
 
 #if defined JMA_MSM
 # undef BULK_FLUX
+# define INFILE_LOOP
 # if defined NETCDF_INPUT
 #  undef SWRAD
-#  define INFILE_LOOP
 # endif
 # if defined JMA_MSM_CLOUD_ONLY
 #  undef SWRAD
@@ -1172,6 +1172,60 @@ PROGRAM frcATM2ROMS
   write(*,*) "*************************************"
 
   iNC = 0
+
+#elif defined JMA_MSM
+!======= Set starting time and Ending time (JMA-MSM GRIB) =================
+!  One 3-hourly GPV file (FH00-15) per base time; each base contributes 3 hourly
+!  outputs (forecast hours 0,1,2). Enumerate base times Start..(End, exclusive)
+!  every 3 h, skip missing files (unified skip; no FH-lookback gap fill), and
+!  build INFILE(:) with NAME(1)=NAME(2)=file, Nt=3, time_all = base + {0,1,2}/24.
+!  The validity time is base+FH, so times come straight from the filename --
+!  no need to open the GRIB here.
+  call jd(Syear, Smonth, Sday, jdate_Start)
+  call jd(Eyear, Emonth, Eday, jdate_End)
+  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  d_jdate_Ref = dble(jdate_Ref)
+  write(*,*) jdate_Start, jdate_End
+
+  allocate( INFILE( (jdate_End - jdate_Start)*8 + 8 ) )   ! upper bound (8 files/day)
+  NCnum = 0
+  ihours = 0
+  do while ( dble(jdate_Start) + dble(ihours)/24.0d0 < dble(jdate_End) )
+    ijdate = jdate_Start + ihours/24
+    call cdate( ijdate, iyear, imonth, iday )
+    write (YYYY,"(I4.4)") iyear
+    write (MM,"(I2.2)") imonth
+    write (DD,"(I2.2)") iday
+    write (hh,"(I2.2)") mod(ihours,24)
+    GRIB_yyyymmddhh = YYYY//MM//DD//hh
+    IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
+                 GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
+    inquire(FILE=trim(IN_FILE(1)), EXIST=file_exists)
+    if(file_exists) then
+      NCnum = NCnum + 1
+      allocate( INFILE(NCnum)%NAME(2) )
+      INFILE(NCnum)%NAME(1) = IN_FILE(1)
+      INFILE(NCnum)%NAME(2) = IN_FILE(1)   ! MSM reads both halves from one file
+      INFILE(NCnum)%Nt = 3                 ! forecast hours 0,1,2
+      allocate( INFILE(NCnum)%time_all(3) )
+      do i=1,3
+        INFILE(NCnum)%time_all(i) = dble(ijdate) + dble(mod(ihours,24) + (i-1))/24.0d0
+      end do
+    else
+      write(*,*) "Not found (skip): ", trim(IN_FILE(1))
+    endif
+    ihours = ihours + 3   !!! files exist at 3-hourly interval
+  end do
+  write(*,*) 'NCnum = ', NCnum
+
+  call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
+  atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
+  iNCs = iNCt(1)
+  iNCe = iNCt(Nt)
+
+  write(*,*) "*************************************"
+
+  iNC = 0
 #endif
     Write(*,*) 'DEBUG1' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -1230,20 +1284,29 @@ PROGRAM frcATM2ROMS
       end do
     endif
 
+#elif defined JMA_MSM
+    ! GRIB: iNCm/iNC/ifc/ijdate already set at the top of the do itime loop.
+    ! Each 3-hourly file is read through two handles (params 1-9 / 10-N), so open
+    ! both on a file change and keep them across the file's 3 forecast steps.
+    if(iNCm < iNC) then
+      IN_FILE(1) = trim( INFILE(iNC)%NAME(1) )
+      IN_FILE(2) = trim( INFILE(iNC)%NAME(2) )
+      if(iNCm >= 1) then
+        call codes_close_file(ifile(1))
+        call codes_close_file(ifile(2))
+      endif
+      DO iin=1,2
+        call codes_grib_multi_support_on( iret(iin) )
+        write(*,*) "OPEN: ", trim( IN_FILE(iin) )
+        call codes_open_file(ifile(iin), trim( IN_FILE(iin) ),'r', iret(iin))
+        call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
+      END DO
+    endif
+
 #else
     GRIB_yyyymmddhh = YYYY//MM//DD//hh
 
-# if defined JMA_MSM
-    ihours = ihours + 3  !!! Files exist 3 hourly interval
-
-    IN_FILE2(1) = IN_FILE(1)  
-    IN_FILE2(2) = IN_FILE(2)  
-    IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
-                  GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
-    IN_FILE(2) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
-                  GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
-
-# elif defined DSJRA55
+# if defined DSJRA55
 !---- Read DSJRA55 GRIB2 file --------------------------------
     ihours = ihours + 1  !!! Files exist 1 hourly interval
 
@@ -1312,9 +1375,7 @@ PROGRAM frcATM2ROMS
 !  ---- LOOP2 START --------------------------------
 !  (ERA5 has no inner loop: the outer do itime=1,Nt with ifc=idt(itime) walks
 !   every step directly.)
-#if defined JMA_MSM && !defined NETCDF_INPUT
-    DO ifc=isp,isp+2
-#elif !defined INFILE_LOOP
+#if !defined INFILE_LOOP
     DO ifc=1,1
 #endif
 
@@ -1797,10 +1858,13 @@ PROGRAM frcATM2ROMS
 !---- LOOP1 END --------------------------------
 #else
   end do
-!---- LOOP1 END (ERA5/FORP do itime=1,Nt) --------------------------------
+!---- LOOP1 END (INFILE single-loop: do itime=1,Nt) --------------------------------
 # if !defined NETCDF_INPUT
   write(*,*) "CLOSE: ", trim( IN_FILE(1) )
   if(iNC >= 1) call codes_close_file(ifile(1))   ! close last GRIB file
+#  if defined JMA_MSM
+  if(iNC >= 1) call codes_close_file(ifile(2))   ! MSM: second handle on the same file
+#  endif
 # endif
 #endif
 

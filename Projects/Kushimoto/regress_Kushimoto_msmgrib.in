@@ -1,0 +1,29 @@
+! ============================================================================
+!  Regression input for frcATM2ROMS JMA_MSM GRIB refactor (refactor/frcATM2ROMS)
+!  3-hourly MSM GPV files (FH00-15), 2017-01-01..01-01 (Edate exclusive) = 8
+!  files x 3 forecast steps = 24 hourly outputs. Exercises the per-file INFILE
+!  switch. Output -> scratchpad (FRC_prefix). Groups read for JMA_MSM:
+!    &grd &sdate &edate &refdate &frc_atm
+! ============================================================================
+&grd
+  GRID_FILE = "Kushimoto_grd_v0.1.nc"
+/
+&sdate
+  Syear  = 2017
+  Smonth = 1
+  Sday   = 1
+/
+&edate
+  Eyear  = 2017
+  Emonth = 1
+  Eday   = 2
+/
+&refdate
+  Ryear  = 2000
+  Rmonth = 1
+  Rday   = 1
+/
+&frc_atm
+  ATM_dir  =  "/mnt/y/JMA_DATA/JMA_GPV/"
+  FRC_prefix  = "REGRESS_FRC_PREFIX_PLACEHOLDER"
+/
