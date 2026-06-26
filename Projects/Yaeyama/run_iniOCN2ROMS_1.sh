@@ -94,6 +94,7 @@ echo "CPP flags  : ${MY_CPP_FLAGS}"
 gfortran \
   ${SRC_DIR}/mod_calendar.f90 \
   ${SRC_DIR}/mod_utility.F90 \
+  ${SRC_DIR}/mod_infile.F90 \
   ${SRC_DIR}/mod_interpolation.f90 \
   ${SRC_DIR}/mod_jcope.F90 \
   ${SRC_DIR}/mod_roms_netcdf.F90 \

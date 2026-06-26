@@ -8,19 +8,19 @@
 # Choose ONE: ini = initial conditions (single time-step, + tide option)
 #             bry = boundary conditions (time series)
 #             his = ROMS-his-like file  (time series, whole domain)
-gen_mode=bry
+#gen_mode=bry
 #gen_mode=his
-#gen_mode=ini
+gen_mode=ini
 
 # ===== Input namelist file =================================================================
-INPUT=Shizugawa1.in
+INPUT=Shiraho_reef1.in
 
 # ===== Ocean Models ========================================================================
 # Please choose one of the following options
 #
 #export MY_CPP_FLAGS="-DHYCOM_MODEL"
-export MY_CPP_FLAGS="-DJCOPE_MODEL"
-#export MY_CPP_FLAGS="-DROMS_MODEL"
+#export MY_CPP_FLAGS="-DJCOPE_MODEL"
+export MY_CPP_FLAGS="-DROMS_MODEL"
 #export MY_CPP_FLAGS="-DFORP_MODEL"
 #export MY_CPP_FLAGS="-DMOVEJPN_MODEL"
 #export MY_CPP_FLAGS="-DFORA_MODEL"
@@ -49,10 +49,10 @@ export MY_CPP_FLAGS="-DJCOPE_MODEL"
 #export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DFAST_READ"
 
 # ===== ROMS option =========================================================================
-#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
+export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DWET_DRY"
 
 # ===== JCOPE option ========================================================================
-export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
+#export MY_CPP_FLAGS="${MY_CPP_FLAGS} -DJCOPE_T"
 
 # ===== Tide model (ini only) ===============================================================
 # Adds NAOTIDE/NAOTIDEJ tide to zeta. Leave as 'none' for bry/his (ignored there).
@@ -65,9 +65,9 @@ SRC_DIR=../../src
 
 # ----- Map gen_mode -> output-mode CPP flag + exe name -----
 case ${gen_mode} in
-  ini) MODE_FLAG="-DINI_MODE"; EXE=iniOCN2ROMS_2.exe ;;
-  bry) MODE_FLAG="-DBRY_MODE"; EXE=bryOCN2ROMS_2.exe ;;
-  his) MODE_FLAG="-DHIS_MODE"; EXE=hisOCN2ROMS_2.exe ;;
+  ini) MODE_FLAG="-DINI_MODE"; EXE=iniOCN2ROMS_3.exe ;;
+  bry) MODE_FLAG="-DBRY_MODE"; EXE=bryOCN2ROMS_3.exe ;;
+  his) MODE_FLAG="-DHIS_MODE"; EXE=hisOCN2ROMS_3.exe ;;
   *)   echo "ERROR: gen_mode must be one of ini / bry / his"; exit 1 ;;
 esac
 export MY_CPP_FLAGS="${MY_CPP_FLAGS} ${MODE_FLAG}"

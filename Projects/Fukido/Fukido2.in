@@ -1,6 +1,6 @@
 &grd
 ! ROMS NetCDF grid file     
-  GRID_FILE = "F:/COAWST_DATA/Yaeyama/Fukido2/Grid/Fukido2_20m_grd_v6.6.nc"
+  GRID_FILE = "../../../COAWST_DATA/Yaeyama/Fukido2/Grid/Fukido2_20m_grd_v6.6.nc"
 !  GRID_FILE = "Fukido1_100m_grd_v2.1.nc"
 /
 
@@ -25,7 +25,7 @@
 
 &refinement
 ! ROMS NetCDF coarse grid file     
-  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v3.2.nc"
+  parent_grid = "../../../COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v3.2.nc"
 !  parent_grid = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v1.0.nc"
   parent_Imin = 33  !347
   parent_Imax = 61  !376
@@ -35,7 +35,7 @@
 /
 
 &fine2coarse
-  F2C_OUT_FILE = "F:/COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v3.3.nc"
+  F2C_OUT_FILE = "../../../COAWST_DATA/Yaeyama/Fukido1/Grid/Fukido1_100m_grd_v3.3.nc"
 /
 
 &utm_zone
