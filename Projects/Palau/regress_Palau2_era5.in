@@ -1,0 +1,37 @@
+! ============================================================================
+!  Regression input for frcATM2ROMS ERA5 (GRIB) refactor (refactor/frcATM2ROMS)
+!  Crosses the 2023->2024 year boundary with NCnum=2 to exercise the
+!  multi-file (iNCt) switch path. Output goes to the scratchpad (see FRC_prefix).
+!  Only the namelist groups that frcATM2ROMS reads for ERA5 are needed:
+!    &grd &sdate &edate &refdate &frc_era5_1 &frc_era5_2
+! ============================================================================
+&grd
+  GRID_FILE = "Palau2_grd_v1.2.nc"
+/
+
+&sdate
+  Syear  = 2023
+  Smonth = 12
+  Sday   = 28
+/
+
+&edate
+  Eyear  = 2024
+  Emonth = 1
+  Eday   = 3
+/
+
+&refdate
+  Ryear  = 2000
+  Rmonth = 1
+  Rday   = 1
+/
+
+&frc_era5_1
+  NCnum = 2
+/
+&frc_era5_2
+  ATM_FILE  =  "../GetERA5/Data/Palau/era5_atm_2023.grib",
+               "../GetERA5/Data/Palau/era5_atm_2024.grib"
+  FRC_prefix  = "REGRESS_FRC_PREFIX_PLACEHOLDER"
+/
