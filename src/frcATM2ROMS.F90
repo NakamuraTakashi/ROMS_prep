@@ -86,7 +86,6 @@ PROGRAM frcATM2ROMS
     character(len=*), parameter :: NC_LAT_NAME  = 'lat'
     character(len=*), parameter :: NC_LON_NAME  = 'lon'
     character(len=*), parameter :: NC_TIME_NAME = 'time'
-    integer :: d_ref_days
     real(8) :: sf, off
 # else
 
@@ -225,7 +224,6 @@ PROGRAM frcATM2ROMS
   character(len=*), parameter :: NC_LAT_NAME  = 'latitude'
   character(len=*), parameter :: NC_LON_NAME  = 'longitude'
   character(len=*), parameter :: NC_TIME_NAME = 'time'
-  integer :: d_ref_days
   real(8) :: sf, off
 
 # else
@@ -260,7 +258,6 @@ PROGRAM frcATM2ROMS
   character(len=*), parameter :: NC_LAT_NAME  = 'lat'
   character(len=*), parameter :: NC_LON_NAME  = 'lon'
   character(len=*), parameter :: NC_TIME_NAME = 'time'
-  integer :: d_ref_days
   real(8) :: sf, off
 
 #endif
@@ -426,13 +423,10 @@ PROGRAM frcATM2ROMS
   integer :: start1D(1), count1D(1)
   integer :: start3D(3), count3D(3)
   
-  character(256), allocatable :: IN_FILE(:), IN_FILE2(:)
+  character(256), allocatable :: IN_FILE(:)
   integer :: iyear, imonth, iday
-  integer :: ihour, imin
-  integer :: iyear2, imonth2, iday2
-  integer :: ihour2, imin2
   integer :: i,j,k
-  integer :: idays,ihours,ijdate,Sjdate
+  integer :: ihours,ijdate
   integer :: itime
   character(4) :: YYYY
   character(2) :: MM
@@ -445,7 +439,7 @@ PROGRAM frcATM2ROMS
   integer :: dimids(3)
   integer :: xi_rho_dimid, eta_rho_dimid, time_dimid
   
-  integer :: iparam,ifc,iin,isp
+  integer :: iparam,ifc,iin
   real(8) :: d_lat, d_lon
   real(8) :: s_lat, s_lon
   real(8) :: u, v
@@ -663,7 +657,6 @@ PROGRAM frcATM2ROMS
 # if defined JMA_MSM
 !---- Set JMA-MSM GRIB2 file --------------------------------
   allocate( IN_FILE(2) )
-  allocate( IN_FILE2(2) )
   IN_FILE(1) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
               GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
   IN_FILE(2) = trim(ATM_dir)//YYYY//"/"//MM//"/"//DD//"/"// &
@@ -961,14 +954,8 @@ PROGRAM frcATM2ROMS
 #endif
 
 !==== LOOP set up ==========================================
-  itime = 1
-  ihours = 0
-  iyear = Syear
-  imonth = Smonth
-  iday = Sday
-  call jd(iyear, imonth, iday, Sjdate)
 #if defined JMA_MSM
-  call jd(2006, 3, 1, jd_msmnew)
+  call jd(2006, 3, 1, jd_msmnew)   ! MSM input-format regime switch (2006-03-01)
 #endif
 
 #if defined ERA5
@@ -1298,33 +1285,14 @@ PROGRAM frcATM2ROMS
 
   iNC = 0
 #endif
-    Write(*,*) 'DEBUG1' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 !===== LOOP1 START ================================================
-#if defined INFILE_LOOP
   do itime=1,Nt
     iNCm = iNC
     iNC  = iNCt(itime)
     ifc  = idt(itime)
-# if defined JMA_MSM
+#if defined JMA_MSM
     ijdate = int( INFILE(iNC)%time_all(ifc) )   ! julian day of this step (jd_msmnew test)
-# endif
-#else
-  DO
-    ihour = mod(ihours,24)
-    ijdate = Sjdate + int(ihours/24)
-    call cdate( ijdate, iyear, imonth, iday )
-    ! Check end date
-    if(iyear==Eyear .and. imonth==Emonth .and. iday==Eday) then
-      write(*,*) "Completed!!!"
-      STOP
-    endif
-
-    write (YYYY, "(I4.4)") iyear
-    write (MM, "(I2.2)") imonth
-    write (DD, "(I2.2)") iday ! 1+int((itime-1)*1/24)
-    write (hh, "(I2.2)") ihour ! mod((itime-1)*1,24)
 #endif
 
 #if defined JMA_MSM && defined NETCDF_INPUT
@@ -1398,51 +1366,6 @@ PROGRAM frcATM2ROMS
         call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
       END DO
     endif
-#endif
-
-#if !defined INFILE_LOOP
-    ! Check GRIB/nc file  (ERA5/FORP open per donor-file change above; files in
-    ! the time list are guaranteed present, so no per-step existence test here.)
-    write(*,*) "CHECK: ", trim( IN_FILE(1) )
-    inquire(FILE=trim( IN_FILE(1) ), EXIST=file_exists)
-# if defined JMA_MSM && !defined NETCDF_INPUT
-    if( file_exists ) then
-      isp=1
-      write(*,*) "PASSED"
-    else
-      IN_FILE(1) = IN_FILE2(1)
-      isp=isp+3
-      write(*,*) "Not found..."
-      if(isp>13) cycle
-    endif
-# else
-    if( file_exists ) then
-      write(*,*) "PASSED"
-    else
-      write(*,*) "Not found..."
-      cycle
-    endif
-# endif
-#endif
-! ---- Open GRIB files --------------------------------
-#if !defined NETCDF_INPUT && !defined INFILE_LOOP
-# if defined JMA_MSM || defined DSJRA55 || defined JRA55
-    DO iin=1,2
-# else
-    DO iin=1,1
-# endif
-      call codes_grib_multi_support_on	(	iret(iin)	)
-      write(*,*) "OPEN: ", trim( IN_FILE(iin) )
-      call codes_open_file(ifile(iin), trim( IN_FILE(iin) ),'r', iret(iin))
-      call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
-    END DO
-#endif
-
-!  ---- LOOP2 START --------------------------------
-!  (ERA5 has no inner loop: the outer do itime=1,Nt with ifc=idt(itime) walks
-!   every step directly.)
-#if !defined INFILE_LOOP
-    DO ifc=1,1
 #endif
 
 ! ======= NetCDF file input ================================================
@@ -1624,25 +1547,8 @@ PROGRAM frcATM2ROMS
       END DO
 #endif
 
-#if defined INFILE_LOOP
     ! time from the merged mod_infile list (days since reference date)
       t = atm_time(itime)
-
-#else
-! ======= GRIB2 file input ================================================
-    ! Set date & time
-      iyear  = YYYYMMDD(7)/10000
-      imonth = (YYYYMMDD(7)-iyear*10000)/100
-      iday   = YYYYMMDD(7)-iyear*10000-imonth*100
-      ihour  = hhmm(7)/100
-      imin   = hhmm(7)-100*ihour
-
-    !  ihour  = ihour-1 ! since time for precipitation is set +1 hour
-
-      call ndays(imonth, iday, iyear, Rmonth, Rday, Ryear, idays)
-      
-      t = dble(idays)+dble(ihour)/24.0d0+dble(imin)/1440.0d0
-#endif
 !  ---- LOOP3.1 END --------------------------------
 #if defined JMA_MSM
 # if !defined JMA_MSM_CLOUD_ONLY
@@ -1901,36 +1807,13 @@ PROGRAM frcATM2ROMS
         
       END DO
 !  ---- LOOP3.3 END --------------------------------
-#if !defined INFILE_LOOP
-      itime = itime + 1
-
-
-    END DO
-! ---- LOOP2 END --------------------------------
-
-! ---- Close GRIB files --------------------------------
-# if !defined NETCDF_INPUT
-#  if defined JMA_MSM || defined DSJRA55 || defined JRA55
-    DO iin=1,2
-#  else
-    DO iin=1,1
-#  endif
-        write(*,*) "CLOSE: ", trim( IN_FILE(iin) )
-        call codes_close_file(ifile(iin))
-    END DO
-# endif
-
-  END DO
-!---- LOOP1 END --------------------------------
-#else
   end do
-!---- LOOP1 END (INFILE single-loop: do itime=1,Nt) --------------------------------
-# if !defined NETCDF_INPUT
+!---- LOOP1 END (do itime=1,Nt) --------------------------------
+#if !defined NETCDF_INPUT
   write(*,*) "CLOSE: ", trim( IN_FILE(1) )
   if(iNC >= 1) call codes_close_file(ifile(1))   ! close last GRIB file
-#  if defined JMA_MSM || defined DSJRA55 || defined JRA55
+# if defined JMA_MSM || defined DSJRA55 || defined JRA55
   if(iNC >= 1) call codes_close_file(ifile(2))   ! second handle (MSM same file / surf+phy2m)
-#  endif
 # endif
 #endif
 
