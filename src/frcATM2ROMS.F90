@@ -15,12 +15,14 @@
 # undef NETCDF_INPUT
 # undef SWRAD
 # undef JMA_MSM_CLOUD_ONLY
+# define INFILE_LOOP
 
 #elif defined JMA_LSM
 # undef NETCDF_INPUT
 # undef BULK_FLUX
 # undef SWRAD
 # undef JMA_MSM_CLOUD_ONLY
+# define INFILE_LOOP
 
 #elif defined ERA5
 # undef JMA_MSM_CLOUD_ONLY
@@ -167,8 +169,8 @@ PROGRAM frcATM2ROMS
 
 #elif defined JRA55
 !--- JRA55 parameter setting -----------------
-  character(256) :: ATM_dir
-  character(256) :: FRC_prefix
+! (ATM_dir / FRC_prefix are already declared globally near the top of the program;
+!  the earlier local re-declaration here was a compile error.)
 
 # if defined BULK_FLUX
   integer, parameter :: N_InPar  = 16
@@ -1226,6 +1228,75 @@ PROGRAM frcATM2ROMS
   write(*,*) "*************************************"
 
   iNC = 0
+
+#elif defined DSJRA55 || defined JRA55 || defined JMA_LSM
+!======= Set starting time and Ending time (DSJRA55 / JRA55 / JMA_LSM GRIB) =====
+!  One GRIB time-slice per file. Enumerate nominal times Start..(End, exclusive)
+!  at the donor interval, skip missing files, and build INFILE(:) with Nt=1 and
+!  time_all(1) = julian date of the file's nominal (= validity) time. The field
+!  reads below select records by parameter (not by time), so the field data is
+!  independent of this list; only the output time axis uses it.
+  call jd(Syear, Smonth, Sday, jdate_Start)
+  call jd(Eyear, Emonth, Eday, jdate_End)
+  call jd(Ryear, Rmonth, Rday, jdate_Ref)
+  d_jdate_Ref = dble(jdate_Ref)
+  write(*,*) jdate_Start, jdate_End
+
+# if defined JRA55
+  i = 3      ! JRA55 files are 3-hourly
+# else
+  i = 1      ! DSJRA55 / JMA_LSM files are hourly
+# endif
+  allocate( INFILE( (jdate_End - jdate_Start)*24/i + 24 ) )   ! upper bound
+  NCnum = 0
+  ihours = 0
+  do while ( dble(jdate_Start) + dble(ihours)/24.0d0 < dble(jdate_End) )
+    ijdate = jdate_Start + ihours/24
+    call cdate( ijdate, iyear, imonth, iday )
+    write (YYYY,"(I4.4)") iyear
+    write (MM,"(I2.2)") imonth
+    write (DD,"(I2.2)") iday
+    write (hh,"(I2.2)") mod(ihours,24)
+    GRIB_yyyymmddhh = YYYY//MM//DD//hh
+# if defined DSJRA55
+    IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM//"/fcst_surf."//GRIB_yyyymmddhh
+    IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM//"/fcst_phy2m."//GRIB_yyyymmddhh
+# elif defined JRA55
+    IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM//"/fcst_surf125."//GRIB_yyyymmddhh
+    IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM//"/fcst_phy2m125."//GRIB_yyyymmddhh
+# elif defined JMA_LSM
+    IN_FILE(1) = trim(ATM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
+                 GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
+# endif
+    inquire(FILE=trim(IN_FILE(1)), EXIST=file_exists)
+    if(file_exists) then
+      NCnum = NCnum + 1
+# if defined JMA_LSM
+      allocate( INFILE(NCnum)%NAME(1) )
+      INFILE(NCnum)%NAME(1) = IN_FILE(1)
+# else
+      allocate( INFILE(NCnum)%NAME(2) )
+      INFILE(NCnum)%NAME(1) = IN_FILE(1)
+      INFILE(NCnum)%NAME(2) = IN_FILE(2)
+# endif
+      INFILE(NCnum)%Nt = 1
+      allocate( INFILE(NCnum)%time_all(1) )
+      INFILE(NCnum)%time_all(1) = dble(ijdate) + dble(mod(ihours,24))/24.0d0
+    else
+      write(*,*) "Not found (skip): ", trim(IN_FILE(1))
+    endif
+    ihours = ihours + i
+  end do
+  write(*,*) 'NCnum = ', NCnum
+
+  call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
+  atm_time = atm_time - d_jdate_Ref
+  iNCs = iNCt(1)
+  iNCe = iNCt(Nt)
+
+  write(*,*) "*************************************"
+
+  iNC = 0
 #endif
     Write(*,*) 'DEBUG1' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -1303,35 +1374,30 @@ PROGRAM frcATM2ROMS
       END DO
     endif
 
-#else
-    GRIB_yyyymmddhh = YYYY//MM//DD//hh
-
-# if defined DSJRA55
-!---- Read DSJRA55 GRIB2 file --------------------------------
-    ihours = ihours + 1  !!! Files exist 1 hourly interval
-
-    IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf/"//YYYY//MM// &
-                   "/fcst_surf."//GRIB_yyyymmddhh
-    IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m/"//YYYY//MM// &
-                   "/fcst_phy2m."//GRIB_yyyymmddhh
-
-# elif defined JMA_LSM
-!---- Read DSJRA55 GRIB2 file --------------------------------
-    ihours = ihours + 1  !!! Files exist 1 hourly interval
-
-    IN_FILE(1) = trim(ATM_dir)//YYYY//MM//"/LA"//YYYY//"_"//MM//"/"// &
-                  GRIB_prefix//GRIB_yyyymmddhh//GRIB_suffix
-
-# elif defined JRA55
-!---- Read JRA55 GRIB2 file --------------------------------
-    ihours = ihours + 3  !!! Files exist 3 hourly interval
-
-    IN_FILE(1) = trim(ATM_dir)//"Hist/Daily/fcst_surf125/"//YYYY//MM// &
-                   "/fcst_surf125."//GRIB_yyyymmddhh
-    IN_FILE(2) = trim(ATM_dir)//"Hist/Daily/fcst_phy2m125/"//YYYY//MM// &
-                   "/fcst_phy2m125."//GRIB_yyyymmddhh
-
+#elif defined DSJRA55 || defined JRA55 || defined JMA_LSM
+    ! GRIB: iNCm/iNC/ifc set at the top. One time-slice per file (Nt=1), so a new
+    ! file is opened every step; DSJRA55/JRA55 read two files (surf / phy2m),
+    ! JMA_LSM one.
+    if(iNCm < iNC) then
+# if defined JMA_LSM
+      IN_FILE(1) = trim( INFILE(iNC)%NAME(1) )
+      if(iNCm >= 1) call codes_close_file(ifile(1))
+      DO iin=1,1
+# else
+      IN_FILE(1) = trim( INFILE(iNC)%NAME(1) )
+      IN_FILE(2) = trim( INFILE(iNC)%NAME(2) )
+      if(iNCm >= 1) then
+        call codes_close_file(ifile(1))
+        call codes_close_file(ifile(2))
+      endif
+      DO iin=1,2
 # endif
+        call codes_grib_multi_support_on( iret(iin) )
+        write(*,*) "OPEN: ", trim( IN_FILE(iin) )
+        call codes_open_file(ifile(iin), trim( IN_FILE(iin) ),'r', iret(iin))
+        call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
+      END DO
+    endif
 #endif
 
 #if !defined INFILE_LOOP
@@ -1862,8 +1928,8 @@ PROGRAM frcATM2ROMS
 # if !defined NETCDF_INPUT
   write(*,*) "CLOSE: ", trim( IN_FILE(1) )
   if(iNC >= 1) call codes_close_file(ifile(1))   ! close last GRIB file
-#  if defined JMA_MSM
-  if(iNC >= 1) call codes_close_file(ifile(2))   ! MSM: second handle on the same file
+#  if defined JMA_MSM || defined DSJRA55 || defined JRA55
+  if(iNC >= 1) call codes_close_file(ifile(2))   ! second handle (MSM same file / surf+phy2m)
 #  endif
 # endif
 #endif
