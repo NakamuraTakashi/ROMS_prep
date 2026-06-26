@@ -261,10 +261,9 @@ PROGRAM frcATM2ROMS
   integer, allocatable :: iNCt(:)
   integer, allocatable :: idt(:)
   integer :: NCnum
-  integer :: iNCs, iNCe
   character(256), allocatable :: ATM_FILE(:)
   real(8) :: d_jdate
-  real(8) :: d_jdate_Start, d_jdate_Ref, d_jdate_Ref_atm
+  real(8) :: d_jdate_Ref, d_jdate_Ref_atm
   integer :: jdate_Start, jdate_End, jdate_Ref, jdate_Ref_atm
   integer :: N_days
   integer :: iNC, iNCm
@@ -275,7 +274,7 @@ PROGRAM frcATM2ROMS
 
   integer :: ifile(2),iret(2),igrib(2)
   integer :: istart, iend
-  integer :: YYYYMMDD(N_InPar), hhmm(N_InPar), endStep(N_InPar)
+  integer :: YYYYMMDD(N_InPar), hhmm(N_InPar)
   real(8), allocatable :: values(:)
   integer :: p1,p2,p3
   character(256) :: p4
@@ -1028,8 +1027,6 @@ PROGRAM frcATM2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
   atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
-  iNCs = iNCt(1)
-  iNCe = iNCt(Nt)
 
   write(*,*) "*************************************"
 
@@ -1092,8 +1089,6 @@ PROGRAM frcATM2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
   atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
-  iNCs = iNCt(1)
-  iNCe = iNCt(Nt)
 
   write(*,*) "*************************************"
 
@@ -1146,8 +1141,6 @@ PROGRAM frcATM2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
   atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
-  iNCs = iNCt(1)
-  iNCe = iNCt(Nt)
 
   write(*,*) "*************************************"
 
@@ -1200,8 +1193,6 @@ PROGRAM frcATM2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
   atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
-  iNCs = iNCt(1)
-  iNCe = iNCt(Nt)
 
   write(*,*) "*************************************"
 
@@ -1269,8 +1260,6 @@ PROGRAM frcATM2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
   atm_time = atm_time - d_jdate_Ref
-  iNCs = iNCt(1)
-  iNCe = iNCt(Nt)
 
   write(*,*) "*************************************"
 
