@@ -34,11 +34,12 @@
 - [x] MOVE-JPN で master と **byte-identical**（cmp 完全一致。cdo diffn 差0 基準を上回る）
 - [x] コミット
 
-## S3: ROMS パスを INFILE 化
-- [ ] ROMS の時刻フェーズを INFILE＋infile_check_time に置換、`bry_time` 秒換算
-- [ ] ROMS の `T_NC` 定義削除
-- [ ] コンパイル成功（ROMS × BRY/HIS/INI、+WET_DRY）
-- [ ] コミット
+## S3: ROMS パスを INFILE 化 ✅
+- [x] ROMS の時刻フェーズを INFILE＋`infile_check_time` に置換（`ocean_time` 秒→jdate 正規化）、
+      `bry_time = (time-ref)*86400` に。`ROMS_HISFILE(:)` は維持し `INFILE%NAME(1)` にコピー
+- [x] ROMS の `T_NC`/`NC(:)` 定義削除、重複 `allocate(NC(NCnum))` も撤去（INFILE は時刻フェーズで確保）
+- [x] コンパイル成功（ROMS × BRY/HIS/INI、+WET_DRY）。MOVEJPN も無回帰
+- [x] コミット
 
 ## S4: HYCOM パスを INFILE 化＋HYgrid 外出し
 - [ ] `T_HYCOM_GRID{lat,lon,depth,Nxr_dg,Nyr_dg,Nzr_dg}` ＋ `HYgrid(:)` を新設

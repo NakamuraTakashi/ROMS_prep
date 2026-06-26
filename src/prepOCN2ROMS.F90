@@ -266,13 +266,7 @@ PROGRAM prepOCN2ROMS
 
 
 #if defined ROMS_MODEL
-  TYPE T_NC
-    real(8), pointer :: time_all(:)
-    integer :: Nt
-    integer :: ItS, ItE
-  END TYPE T_NC
-  TYPE (T_NC), allocatable :: NC(:)
-
+  ! input-file info (file names + time list) now lives in mod_infile's INFILE(:)
   real(8), allocatable :: time2(:)
 
   character(256) :: parent_grid
@@ -403,7 +397,6 @@ PROGRAM prepOCN2ROMS
   rewind(5)
   read (5, nml=roms2roms1)
   allocate( ROMS_HISFILE(NCnum) )
-  allocate( NC(NCnum) )
   rewind(5)
   read (5, nml=roms2roms2)
   rewind(5)
@@ -756,94 +749,34 @@ PROGRAM prepOCN2ROMS
   enddo
 
 ! Check time
+  allocate( INFILE(NCnum) )
   do iNC=1, NCnum
     write(*,*) 'CHECK: Time'
     ! Open NetCDF file
     write(*,*) "OPEN: ", trim( ROMS_HISFILE(iNC) )
     call check( nf90_open(trim( ROMS_HISFILE(iNC) ), nf90_nowrite, ncid) )
-    call get_dimension(ncid, 'ocean_time', NC(iNC)%Nt)
-    write(*,*) NC(iNC)%Nt
-    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
-    allocate( time2(NC(iNC)%Nt) )
+    call get_dimension(ncid, 'ocean_time', INFILE(iNC)%Nt)
+    write(*,*) INFILE(iNC)%Nt
+    allocate( INFILE(iNC)%NAME(1) )
+    INFILE(iNC)%NAME(1) = ROMS_HISFILE(iNC)
+    allocate( INFILE(iNC)%time_all(INFILE(iNC)%Nt) )
+    allocate( time2(INFILE(iNC)%Nt) )
     call check( nf90_inq_varid(ncid, 'ocean_time', var_id) )
     call check( nf90_get_var(ncid, var_id, time2) )
     call check( nf90_close(ncid) )
-    NC(iNC)%time_all = time2
+    INFILE(iNC)%time_all = d_jdate_Ref + time2/86400.0d0  ! sec since ref -> julian date
 
     deallocate(time2)
   end do
 
-  write(*,*) NC(:)%Nt
-
-  do iNC=1, NCnum-1
-    do i=2,NC(iNC)%Nt
-      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
-        NC(iNC)%Nt = i-1
-        exit
-      end if
-    end do
-  end do
-  
-  write(*,*) NC(:)%Nt
-
-  write(*,*) "******************************************************************"
-
-  NC(:)%ItE = -1
-  NC(:)%ItS = -1
-  
-  do iNC=NCnum,1,-1
-    do i=NC(iNC)%Nt,1,-1
-      d_jdate = d_jdate_Ref + NC(iNC)%time_all(i)/86400.0d0
-      if(d_jdate < dble(jdate_End)) then
-        write(*,*) '*** FOUND: Ending point @ ROMS_HISFILE',iNC
-        NC(iNC)%ItE=i
-        exit
-      endif
-    end do
-  end do
-  write(*,*) NC(:)%ItE 
-  
-  do iNC=1,NCnum
-    do i=NC(iNC)%ItE,1,-1
-      d_jdate = d_jdate_Ref + NC(iNC)%time_all(i)/86400.0d0
-      if(d_jdate < dble(jdate_Start)) then
-!        write(*,*) '*** FOUND: Starting point @ ROMS_HISFILE',iNC
-        exit
-      endif
-      NC(iNC)%ItS=i
-    end do
-  end do
-  write(*,*) NC(:)%ItS 
-
-  Nt = 0
-  iNCs = NCnum
-  iNCe = 1
-
-  do iNC=1,NCnum
-    if(NC(iNC)%ItS==-1) then
-      cycle
-    end if
-    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
-    iNCs = min(iNCs,iNC)
-    iNCe = max(iNCe,iNC)
-  enddo
+  call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
   allocate(bry_time(Nt))
-  allocate(idt(Nt))
-  allocate(iNCt(Nt))
+  bry_time(:) = ( time(:) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
+  iNCs = iNCt(1)
+  iNCe = iNCt(Nt)
 
-  i=1
-  do iNC=iNCs,iNCe
-    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
-      iNCt(i+k) = iNC
-      idt(i+k)  = NC(iNC)%ItS + k
-    enddo
-    j=i+NC(iNC)%ItE-NC(iNC)%ItS
-    bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
-    i=j+1
-  enddo
-
-  write(*,*) "*************************************" 
+  write(*,*) "*************************************"
 
 #elif defined HYCOM_MODEL
 !---- Read HYCOM netCDF file --------------------------------
