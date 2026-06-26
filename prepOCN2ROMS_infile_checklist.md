@@ -41,13 +41,17 @@
 - [x] コンパイル成功（ROMS × BRY/HIS/INI、+WET_DRY）。MOVEJPN も無回帰
 - [x] コミット
 
-## S4: HYCOM パスを INFILE 化＋HYgrid 外出し
-- [ ] `T_HYCOM_GRID{lat,lon,depth,Nxr_dg,Nyr_dg,Nzr_dg}` ＋ `HYgrid(:)` を新設
-- [ ] HYCOM 格子読込先・GRIDLOAD 参照を `NC%…` → `HYgrid%…` に置換
-- [ ] HYCOM の時刻フェーズを INFILE＋infile_check_time に置換、`bry_time` 秒換算
-- [ ] HYCOM の `T_NC` 定義削除
-- [ ] コンパイル成功（HYCOM_LOCAL(+FAST_READ) × BRY/HIS/INI）
-- [ ] コミット
+## S4: HYCOM パスを INFILE 化＋HYgrid 外出し ✅
+- [x] `T_HYCOM_GRID{lat,lon,depth,Nxr_dg,Nyr_dg,Nzr_dg}` ＋ `HYgrid(:)` を新設
+- [x] HYCOM 格子読込先・GRIDLOAD 参照を `NC%lat/lon/depth/N*_dg` → `HYgrid%…`、`NC%ItS` → `INFILE%ItS` に置換
+- [x] HYCOM の時刻フェーズを INFILE＋`infile_check_time` に置換、`time_all` を hour(since 2000)→jdate 正規化、
+      `bry_time=(time-ref)*86400`。`HYCOM_FILE(:)` は維持し `INFILE%NAME(1)` にコピー
+- [x] HYCOM の `T_NC`/`NC(:)` 定義削除、重複 `allocate(NC(NCnum))` 撤去
+- [x] コンパイル成功（HYCOM_LOCAL(+FAST_READ) × BRY/HIS/INI）。MOVEJPN/ROMS も無回帰
+- [x] コミット
+  - 注意: 非 HYCOM_LOCAL（GOFS）の time キャッシュ `.dat` は jdate で書く形に変えたため、
+    旧 hour ベースの `.dat` とは非互換（`SKIP_CHECK_TIME` で旧キャッシュを読む場合は再生成が必要）。
+    HYCOM_LOCAL は `.dat` 不使用で影響なし。
 
 ## S5: JCOPE パスを INFILE 化
 - [ ] JCOPE の時刻フェーズ（日付生成名）を INFILE＋infile_check_time に統一（`Nt=1`）

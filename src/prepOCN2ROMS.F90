@@ -283,15 +283,13 @@ PROGRAM prepOCN2ROMS
 
 #if defined HYCOM_MODEL
 
-  TYPE T_NC
-    real(8), pointer :: time_all(:)
+  ! per-file donor grid (lat/lon/depth + dims). file names + time list now live
+  ! in mod_infile's INFILE(:); only the grid stays donor-specific here.
+  TYPE T_HYCOM_GRID
     real(8), pointer :: lat(:), lon(:), depth(:)
     integer :: Nxr_dg, Nyr_dg, Nzr_dg
-    integer :: Nt
-    integer :: ItS, ItE
-  END TYPE T_NC
-!  TYPE (T_NC) :: NC(NCnum)
-  TYPE (T_NC), allocatable :: NC(:)
+  END TYPE T_HYCOM_GRID
+  TYPE (T_HYCOM_GRID), allocatable :: HYgrid(:)
 
   real(8), allocatable :: time2(:)
 
@@ -437,8 +435,7 @@ PROGRAM prepOCN2ROMS
   rewind(5)
   read (5, nml=hycom_local2)
 # endif
-  allocate( NC(NCnum) )
-#endif          
+#endif
 
 !-Modify time-unit description ---------------------------------
   
@@ -801,13 +798,16 @@ PROGRAM prepOCN2ROMS
   open(50, file=trim(HYCOM_TIME_DIR)//'/time_HYCOM_GOF_30_reanalysis.dat')
 #  endif
 # endif
+  allocate( INFILE(NCnum) )
 # if defined SKIP_CHECK_TIME
   write(*,*) 'READ: Time'
   do iNC=1, NCnum
-    read(50,*) NC(iNC)%Nt
-    write(*,*) NC(iNC)%Nt
-    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
-    read(50,*) NC(iNC)%time_all
+    allocate( INFILE(iNC)%NAME(1) )
+    INFILE(iNC)%NAME(1) = HYCOM_FILE(iNC)
+    read(50,*) INFILE(iNC)%Nt
+    write(*,*) INFILE(iNC)%Nt
+    allocate( INFILE(iNC)%time_all(INFILE(iNC)%Nt) )
+    read(50,*) INFILE(iNC)%time_all     ! cached as julian date
   end do
 # else
   do iNC=1, NCnum
@@ -815,100 +815,35 @@ PROGRAM prepOCN2ROMS
     ! Open NetCDF file
     write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
     call try_nf_open(HYCOM_FILE(iNC), nf90_nowrite, ncid)
-    call get_dimension(ncid, 'time', NC(iNC)%Nt)
-    write(*,*) NC(iNC)%Nt
+    call get_dimension(ncid, 'time', INFILE(iNC)%Nt)
+    write(*,*) INFILE(iNC)%Nt
+    allocate( INFILE(iNC)%NAME(1) )
+    INFILE(iNC)%NAME(1) = HYCOM_FILE(iNC)
 #  ifndef HYCOM_LOCAL
-    write(50,*) NC(iNC)%Nt
+    write(50,*) INFILE(iNC)%Nt
 #  endif
-    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
-    allocate( time2(NC(iNC)%Nt) )
-    call readNetCDF_1d(ncid, 'time', NC(iNC)%Nt, time2)
+    allocate( INFILE(iNC)%time_all(INFILE(iNC)%Nt) )
+    allocate( time2(INFILE(iNC)%Nt) )
+    call readNetCDF_1d(ncid, 'time', INFILE(iNC)%Nt, time2)
     call check( nf90_close(ncid) )
     write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
-    NC(iNC)%time_all = time2
+    INFILE(iNC)%time_all = d_jdate_20000101 + time2/24.0d0  ! hours since 2000 -> julian date
 #  ifndef HYCOM_LOCAL
-    write(50,*) NC(iNC)%time_all
+    write(50,*) INFILE(iNC)%time_all     ! cached as julian date
 #  endif
     deallocate(time2)
   end do
 #endif
-  close(50)   
+  close(50)
 
-  write(*,*) NC(:)%Nt
-  
-  do iNC=1, NCnum-1
-    do i=2,NC(iNC)%Nt
-      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
-        NC(iNC)%Nt = i-1
-        exit
-      end if
-    end do
-  end do
-  
-  write(*,*) NC(:)%Nt
-  
-  write(*,*) "******************************************************************"
-    
-  
-  NC(:)%ItE = -1
-  NC(:)%ItS = -1
-  
-  do iNC=NCnum,1,-1
-    do i=NC(iNC)%Nt,1,-1
-      d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24.0d0
-      if(d_jdate < dble(jdate_End)) then
-        write(*,*) '*** FOUND: Ending point @ HYCOM_FILE',iNC
-        NC(iNC)%ItE=i
-        exit
-      endif
-    end do
-  end do
-  write(*,*) NC(:)%ItE 
-  
-  do iNC=1,NCnum
-    do i=NC(iNC)%ItE,1,-1
-      d_jdate=d_jdate_20000101+NC(iNC)%time_all(i)/24.0d0
-      if(d_jdate < dble(jdate_Start)) then
-!        write(*,*) '*** FOUND: Starting point @ HYCOM_FILE',iNC
-        exit
-      endif
-      NC(iNC)%ItS=i
-    end do
-  end do
-  write(*,*) NC(:)%ItS 
-
-  Nt = 0
-  iNCs = NCnum
-  iNCe = 1
-
-  do iNC=1,NCnum
-    if(NC(iNC)%ItS==-1) then
-      cycle
-    end if
-    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
-    iNCs = min(iNCs,iNC)
-    iNCe = max(iNCe,iNC)
-  enddo
+  call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
   allocate(bry_time(Nt))
-  allocate(idt(Nt))
-  allocate(iNCt(Nt))
+  bry_time(:) = ( time(:) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
+  iNCs = iNCt(1)
+  iNCe = iNCt(Nt)
 
-  i=1
-  do iNC=iNCs,iNCe
-    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
-      iNCt(i+k) = iNC
-      idt(i+k)  = NC(iNC)%ItS + k
-    enddo
-    j=i+NC(iNC)%ItE-NC(iNC)%ItS
-    bry_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE )
-    i=j+1
-  enddo
-
-  ! hour -> sec. Correct conversion: bry_time is seconds since the reference date,
-  ! HYCOM time_all is hours since 2000-01-01. (Original bryOCN2ROMS had the sign of the
-  ! offset reversed, which was only correct when Ref date = 2000-01-01; fixed here.)
-  bry_time(:) = ( bry_time(:) + ( d_jdate_20000101 - d_jdate_Ref )*24.0d0)*3600.0d0
+  allocate( HYgrid(NCnum) )
 
 
   !---- Read HYCOM netCDF grid cooredinate --------------------------------
@@ -926,21 +861,21 @@ PROGRAM prepOCN2ROMS
     end if
     write(*,*) Nxr_dg, Nyr_dg, Nzr_dg
     ! Allocate variable
-    NC(iNC)%Nyr_dg = Nyr_dg
-    NC(iNC)%Nxr_dg = Nxr_dg
-    NC(iNC)%Nzr_dg = Nzr_dg
+    HYgrid(iNC)%Nyr_dg = Nyr_dg
+    HYgrid(iNC)%Nxr_dg = Nxr_dg
+    HYgrid(iNC)%Nzr_dg = Nzr_dg
 
-    allocate( NC(iNC)%lat(Nyr_dg) )
-    allocate( NC(iNC)%lon(Nxr_dg) )
-    allocate( NC(iNC)%depth(Nzr_dg) )
+    allocate( HYgrid(iNC)%lat(Nyr_dg) )
+    allocate( HYgrid(iNC)%lon(Nxr_dg) )
+    allocate( HYgrid(iNC)%depth(Nzr_dg) )
 
-    call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'lat', Nyr_dg, NC(iNC)%lat)
-    call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'lon', Nxr_dg, NC(iNC)%lon)
+    call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'lat', Nyr_dg, HYgrid(iNC)%lat)
+    call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'lon', Nxr_dg, HYgrid(iNC)%lon)
     if( romsvar(2)==1 .or. romsvar(3)==1 .or. &
         romsvar(5)==1 .or. romsvar(6)==1       ) then
-      call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'depth', Nzr_dg, NC(iNC)%depth)
+      call readNetCDF_1d_safe(HYCOM_FILE(iNC), ncid, 'depth', Nzr_dg, HYgrid(iNC)%depth)
     else
-      NC(iNC)%depth = 0.0d0
+      HYgrid(iNC)%depth = 0.0d0
     end if
     call check( nf90_close(ncid) )
     write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
@@ -1640,9 +1575,9 @@ PROGRAM prepOCN2ROMS
 #elif defined HYCOM_MODEL
   !---- Load HYCOM netCDF grid cooredinate --------------------------------
 
-        Nyr_dg = NC(iNC)%Nyr_dg
-        Nxr_dg = NC(iNC)%Nxr_dg
-        Nzr_dg = NC(iNC)%Nzr_dg
+        Nyr_dg = HYgrid(iNC)%Nyr_dg
+        Nxr_dg = HYgrid(iNC)%Nxr_dg
+        Nzr_dg = HYgrid(iNC)%Nzr_dg
 
         Nxu_dg = Nxr_dg
         Nyu_dg = Nyr_dg
@@ -1672,8 +1607,8 @@ PROGRAM prepOCN2ROMS
 
         do j=0,Mdg
           do i=0,Ldg
-            latr_dg(i,j) = NC(iNC)%lat(j+1)
-            lonr_dg(i,j) = NC(iNC)%lon(i+1)
+            latr_dg(i,j) = HYgrid(iNC)%lat(j+1)
+            lonr_dg(i,j) = HYgrid(iNC)%lon(i+1)
           enddo
         enddo
         latu_dg(:,:) = latr_dg(:,:)
@@ -1683,7 +1618,7 @@ PROGRAM prepOCN2ROMS
         do k=1,Ndg
           do j=0,Mdg
             do i=1,Ldg
-              z_r_dg(i,j,k)= NC(iNC)%depth(Ndg-k+1)
+              z_r_dg(i,j,k)= HYgrid(iNC)%depth(Ndg-k+1)
             enddo
           enddo
         enddo
@@ -1825,7 +1760,7 @@ PROGRAM prepOCN2ROMS
 #if defined HYCOM_MODEL
         if( romsvar(1)==1 ) then
           write(*,*) 'Read surf_el, and create land mask'
-          start3D = (/ Irdg_min+1, Jrdg_min+1, NC(iNC)%ItS /)
+          start3D = (/ Irdg_min+1, Jrdg_min+1, INFILE(iNC)%ItS /)
           count3D = (/ Nxr_dg,     Nyr_dg,     1     /)
           call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
                 , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
@@ -1838,7 +1773,7 @@ PROGRAM prepOCN2ROMS
           enddo
         elseif( romsvar(6)==1 ) then
           write(*,*) 'Read water_temp, and create land mask'
-          start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      NC(iNC)%ItS /)
+          start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      INFILE(iNC)%ItS /)
           count4D = (/ Nxr_dg,     Nyr_dg,     1,      1           /)
           call readNetCDF_4d_hycom( HYCOM_FILE(iNC), ncid, 'water_temp'   &
                 , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
