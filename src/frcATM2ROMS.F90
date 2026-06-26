@@ -274,7 +274,6 @@ PROGRAM frcATM2ROMS
 
   integer :: ifile(2),iret(2),igrib(2)
   integer :: istart, iend
-  integer :: YYYYMMDD(N_InPar), hhmm(N_InPar)
   real(8), allocatable :: values(:)
   integer :: p1,p2,p3
   character(256) :: p4
@@ -404,7 +403,6 @@ PROGRAM frcATM2ROMS
   real(8), allocatable :: alat(:, :), alon(:, :)
   real(8), allocatable :: alatv(:, :), alonv(:, :)
 
-  real(8) :: t
   real(8) :: time(1)
   integer, allocatable :: ID_cont(:,:)
   real(8), allocatable :: w_cont(:,:)
@@ -1494,25 +1492,6 @@ PROGRAM frcATM2ROMS
    
           write(*,*) "READ GRIB DATA: ", trim(p4)
 
-# if defined JMA_MSM
-          call codes_get(igrib(iin),'dataDate',YYYYMMDD(iparam))
-          write(*,*) 'dataDate =     ', YYYYMMDD(iparam)
-          call codes_get(igrib(iin),'dataTime',hhmm(iparam))
-          hhmm(iparam) = hhmm(iparam) + p1*100
-          write(*,*) 'dataTime =     ', hhmm(iparam)
-!          write(*,*) 'forecastTime = ', p1
-# elif defined JMA_LSM
-          call codes_get(igrib(iin),'dataDate',YYYYMMDD(iparam))
-          write(*,*) 'dataDate = ', YYYYMMDD(iparam)
-          call codes_get(igrib(iin),'dataTime',hhmm(iparam))
-          write(*,*) 'dataTime = ', hhmm(iparam)
-# elif defined DSJRA55 || defined JRA55
-          call codes_get(igrib(iin),'validityDate',YYYYMMDD(iparam))
-          write(*,*) 'validityDate = ', YYYYMMDD(iparam)
-          call codes_get(igrib(iin),'validityTime',hhmm(iparam))
-          write(*,*) 'validityTime = ', hhmm(iparam)
-# endif
-  
           call codes_get(igrib(iin),'values', values)
           call codes_release(igrib(iin))
           call codes_grib_new_from_file(ifile(iin),igrib(iin), iret(iin))
@@ -1527,8 +1506,6 @@ PROGRAM frcATM2ROMS
       END DO
 #endif
 
-    ! time from the merged mod_infile list (days since reference date)
-      t = atm_time(itime)
 !  ---- LOOP3.1 END --------------------------------
 #if defined JMA_MSM
 # if !defined JMA_MSM_CLOUD_ONLY
@@ -1744,7 +1721,8 @@ PROGRAM frcATM2ROMS
       enddo
 #endif
 !  ---- LOOP3.3 START --------------------------------
-      time(1) = t
+    ! atm_time(itime) = days since the reference date (&refdate)
+      time(1) = atm_time(itime)
       write(*,*) time(1),TIME_ATT
       start1D = (/ itime /)
       count1D = (/ 1 /)
@@ -1753,13 +1731,13 @@ PROGRAM frcATM2ROMS
 
 #if !defined JMA_LSM && !defined JMA_MSM_CLOUD_ONLY
 # if defined JRA55
-      time(1) = t+1.5d0/24.0d0
+      time(1) = atm_time(itime)+1.5d0/24.0d0
 # elif defined ERA5
-      time(1) = t-0.5d0/24.0d0
+      time(1) = atm_time(itime)-0.5d0/24.0d0
 # elif defined FORP_ATM
-      time(1) = t
+      time(1) = atm_time(itime)
 # else
-      time(1) = t+0.5d0/24.0d0
+      time(1) = atm_time(itime)+0.5d0/24.0d0
 # endif
 
       start1D = (/ itime /)
