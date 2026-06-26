@@ -61,12 +61,21 @@
 - [x] コミット
 
 ## S6: 仕上げ
-- [ ] 網羅コンパイル（BRY/HIS/INI × JCOPE/ROMS/ROMS+WET_DRY/FORA/MOVEJPN/HYCOM_LOCAL(+FAST_READ)、
-      HIS/INI×NAOTIDE/NAOTIDEJ）
-- [ ] 最終 cdo diffn 回帰（MOVE-JPN）
-- [ ] CLAUDE.md 追記、master マージ可否をユーザー確認
-- [ ] コミット
+- [x] 網羅コンパイル 28/28（BRY/HIS/INI × JCOPE/ROMS/ROMS+WET_DRY/FORA/MOVEJPN/FORP/HYCOM_LOCAL(+FAST_READ)、
+      HIS/INI×NAOTIDE/NAOTIDEJ）。`T_NC` は完全消滅（全ドナー INFILE 化）
+- [x] 最終回帰（MOVE-JPN, BRY/HIS/INI）: master と **byte-identical**
+- [x] CLAUDE.md 追記
+- [ ] master マージ可否をユーザー確認 ← 最終ステップ
+- [x] コミット（S1〜S6 各段階で実施）
 
 ---
+成果:
+- `src/mod_infile.F90` の `T_INFILE`（`NAME/time_all/Nt/ItS/ItE`）＋ `infile_check_time`（`iNCt/idt` も返す、
+  バグ修正済み）に、HYCOM/MRICOM/ROMS/JCOPE 全ドナーの入力ファイル情報＋時刻リストを統一。
+- `prepOCN2ROMS.F90` の `T_NC`×3 を撤去。HYCOM の格子のみ `T_HYCOM_GRID/HYgrid(:)` に分離。
+- `time_all` はジュリアン日に正規化、出力 `bry_time`(秒) は統合 `time` から換算。
+- 非WET_DRY/MOVEJPN は master と byte-identical。HYCOM/ROMS/JCOPE/FORA/FORP はローカルデータ無しでコンパイルのみ。
+
 進捗メモ:
-- （随時更新）
+- frcATM2ROMSv2 は未完成のため対象外。`infile_check_time` の新引数 `iNCt/idt` は optional にしたので
+  既存 5 引数呼出は壊れない。
