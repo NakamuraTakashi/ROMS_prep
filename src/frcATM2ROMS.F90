@@ -35,7 +35,7 @@ PROGRAM frcATM2ROMS
   use mod_roms_netcdf
   use mod_interpolation
   use mod_calendar
-  use mod_infile   ! shared T_INFILE / infile_check_time (ERA5 uses this; FORP still on T_NC)
+  use mod_infile   ! shared T_INFILE / infile_check_time (ERA5 + FORP_ATM)
 
   implicit none
   
@@ -257,14 +257,6 @@ PROGRAM frcATM2ROMS
 #endif
 
 #if defined ERA5 || defined FORP_ATM
-# if defined FORP_ATM
-  TYPE T_NC
-    real(8), pointer :: time_all(:)
-    integer :: Nt
-    integer :: ItS, ItE
-  END TYPE T_NC
-  TYPE (T_NC), allocatable :: NC(:)
-# endif
   real(8), allocatable :: atm_time(:)
   real(8), allocatable :: time2(:)
   integer, allocatable :: iNCt(:)
@@ -1058,6 +1050,9 @@ PROGRAM frcATM2ROMS
 
 #elif defined FORP_ATM
 !======= Set starting time and Ending time (FORP) =================
+!  Build INFILE(:) the same way as ERA5: each monthly file group holds one file
+!  per input variable (NAME(1)=pso is the time source); infile_check_time then
+!  yields Nt / atm_time / iNCt / idt.
   call ndays(Emonth, Eday, Eyear, Smonth, Sday, Syear, N_days)
   call jd(Syear, Smonth, Sday, jdate_Start)
 
@@ -1070,119 +1065,48 @@ PROGRAM frcATM2ROMS
   write(*,*) d_jdate_Ref
 
   call jd(1, 1, 1, jdate_Ref_atm)! FORP time: hours since 1-01-01 00:00:00
-
   d_jdate_Ref_atm = dble(jdate_Ref_atm)-2.0d0
-  Nt = 0
-  itime = 1
-  ihours = 0
-  iyear = Syear
-  imonth = Smonth
-  iday = Sday
-  call jd(iyear, imonth, iday, Sjdate)
+  write(*,*) d_jdate_Ref_atm
 
   NCnum = 12*(Eyear-Syear) + Emonth - Smonth + 1
   NCnum = min( NCnum, 12 )  ! FORP data limit to 1 year
   write(*,*) 'NCnum = ', NCnum
   allocate( ATM_FILE(NCnum) )
-  allocate( NC(NCnum) )
+  allocate( INFILE(NCnum) )
   do iNC=1, NCnum
     write (YYYY, "(I4.4)") Syear
     write (MM, "(I2.2)") Smonth + iNC -1
-    ATM_FILE(iNC) = trim(ATM_dir)//"forp-jpn-v4_"//trim(NCIN_NAME(1))// &
-                   "_dy_"//YYYY//MM//".nc"
+    allocate( INFILE(iNC)%NAME(N_InPar) )
+    do iin=1, N_InPar
+      INFILE(iNC)%NAME(iin) = trim(ATM_dir)//"forp-jpn-v4_"//trim(NCIN_NAME(iin))// &
+                     "_dy_"//YYYY//MM//".nc"
+    end do
+    ATM_FILE(iNC) = INFILE(iNC)%NAME(1)
   end do
-
-  write(*,*) d_jdate_Ref_atm
 
 ! Check time
   do iNC=1, NCnum
     write(*,*) 'CHECK: Time'
     ! Open NetCDF file
-    write(*,*) "OPEN: ", trim( ATM_FILE(iNC) )
-    call check( nf90_open(trim( ATM_FILE(iNC) ), nf90_nowrite, ncid) )
-    call get_dimension(ncid, NC_TIME_NAME, NC(iNC)%Nt)
-    write(*,*) NC(iNC)%Nt
-    allocate( NC(iNC)%time_all(NC(iNC)%Nt) )
-    allocate( time2(NC(iNC)%Nt) )
+    write(*,*) "OPEN: ", trim( INFILE(iNC)%NAME(1) )
+    call check( nf90_open(trim( INFILE(iNC)%NAME(1) ), nf90_nowrite, ncid) )
+    call get_dimension(ncid, NC_TIME_NAME, INFILE(iNC)%Nt)
+    write(*,*) INFILE(iNC)%Nt
+    allocate( INFILE(iNC)%time_all(INFILE(iNC)%Nt) )
+    allocate( time2(INFILE(iNC)%Nt) )
     call check( nf90_inq_varid(ncid, NC_TIME_NAME, var_id) )
     call check( nf90_get_var(ncid, var_id, time2) )
     call check( nf90_close(ncid) )
 
-    NC(iNC)%time_all = time2/24.0d0 + d_jdate_Ref_atm ! hour -> day
+    INFILE(iNC)%time_all = time2/24.0d0 + d_jdate_Ref_atm ! hour -> day
 
     deallocate(time2)
   end do
 
-  write(*,*) NC(:)%Nt
-
-  do iNC=1, NCnum-1
-    do i=2,NC(iNC)%Nt
-      if( NC(iNC+1)%time_all(1) <= NC(iNC)%time_all(i) ) then
-        NC(iNC)%Nt = i-1
-        exit
-      end if
-    end do
-  end do
-
-  write(*,*) NC(:)%Nt
-
-  write(*,*) "******************************************************************"
-
-  NC(:)%ItE = -1
-  NC(:)%ItS = -1
-
-  do iNC=NCnum,1,-1
-    do i=NC(iNC)%Nt,1,-1
-      d_jdate = NC(iNC)%time_all(i)
-      if(d_jdate < dble(jdate_End)) then
-        write(*,*) '*** FOUND: Ending point @ ATM_FILE',iNC
-        NC(iNC)%ItE=i
-        exit
-      endif
-    end do
-  end do
-  write(*,*) NC(:)%ItE
-
-  do iNC=1,NCnum
-    do i=NC(iNC)%ItE,1,-1
-      d_jdate = NC(iNC)%time_all(i)
-      if(d_jdate < dble(jdate_Start)) then
-!        write(*,*) '*** FOUND: Starting point @ ATM_FILE',iNC
-        exit
-      endif
-      NC(iNC)%ItS=i
-    end do
-  end do
-  write(*,*) NC(:)%ItS
-
-  Nt = 0
-  iNCs = NCnum
-  iNCe = 1
-
-  do iNC=1,NCnum
-    if(NC(iNC)%ItS==-1) then
-      cycle
-    end if
-    Nt = Nt + NC(iNC)%ItE - NC(iNC)%ItS + 1
-    iNCs = min(iNCs,iNC)
-    iNCe = max(iNCe,iNC)
-  enddo
-
-  allocate(atm_time(Nt))
-  allocate(idt(Nt))
-  allocate(iNCt(Nt))
-
-  i=1
-  do iNC=iNCs,iNCe
-    do k=0,NC(iNC)%ItE-NC(iNC)%ItS
-      iNCt(i+k) = iNC
-      idt(i+k)  = NC(iNC)%ItS + k
-    enddo
-    j=i+NC(iNC)%ItE-NC(iNC)%ItS
-    atm_time(i:j) = NC(iNC)%time_all( NC(iNC)%ItS : NC(iNC)%ItE ) &
-                    - d_jdate_Ref
-    i=j+1
-  enddo
+  call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
+  atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
+  iNCs = iNCt(1)
+  iNCe = iNCt(Nt)
 
   write(*,*) "*************************************"
 
@@ -1192,20 +1116,13 @@ PROGRAM frcATM2ROMS
 
 
 !===== LOOP1 START ================================================
-#if defined ERA5
+#if defined ERA5 || defined FORP_ATM
   do itime=1,Nt
     iNCm = iNC
     iNC  = iNCt(itime)
     ifc  = idt(itime)
 #else
   DO
-# if defined FORP_ATM
-    ! Check end date
-    if(itime>Nt) then
-      write(*,*) "Completed!!!"
-      STOP
-    endif
-# else
     ihour = mod(ihours,24)
     ijdate = Sjdate + int(ihours/24)
     call cdate( ijdate, iyear, imonth, iday )
@@ -1219,7 +1136,6 @@ PROGRAM frcATM2ROMS
     write (MM, "(I2.2)") imonth
     write (DD, "(I2.2)") iday ! 1+int((itime-1)*1/24)
     write (hh, "(I2.2)") ihour ! mod((itime-1)*1,24)
-# endif
 #endif
 
 #if defined JMA_MSM && defined NETCDF_INPUT
@@ -1244,15 +1160,14 @@ PROGRAM frcATM2ROMS
     endif
 
 #elif defined FORP_ATM
-    iNC  = iNCt(itime)
-    do iin=1, N_InPar
-      write (YYYY, "(I4.4)") Syear
-      write (MM, "(I2.2)") Smonth + iNC -1
-      IN_FILE(iin) = trim(ATM_dir)//"forp-jpn-v4_"//trim(NCIN_NAME(iin))// &
-                     "_dy_"//YYYY//MM//".nc"
-    end do
+    ! iNCm/iNC/ifc already set at the top of the do itime loop.
+    if(iNCm < iNC) then        ! donor-file change: repoint the per-variable files
+      do iin=1, N_InPar
+        IN_FILE(iin) = trim( INFILE(iNC)%NAME(iin) )
+      end do
+    endif
 
-#else 
+#else
     GRIB_yyyymmddhh = YYYY//MM//DD//hh
 
 # if defined JMA_MSM
@@ -1293,8 +1208,8 @@ PROGRAM frcATM2ROMS
 # endif
 #endif
 
-#if !defined ERA5
-    ! Check GRIB/nc file  (ERA5 opens once per donor-file change above; files in
+#if !defined ERA5 && !defined FORP_ATM
+    ! Check GRIB/nc file  (ERA5/FORP open per donor-file change above; files in
     ! the time list are guaranteed present, so no per-step existence test here.)
     write(*,*) "CHECK: ", trim( IN_FILE(1) )
     inquire(FILE=trim( IN_FILE(1) ), EXIST=file_exists)
@@ -1340,9 +1255,7 @@ PROGRAM frcATM2ROMS
 # else
     DO ifc=isp,isp+2
 # endif
-#elif defined FORP_ATM
-    DO ifc=NC(iNC)%ItS,NC(iNC)%ItE
-#elif !defined ERA5
+#elif !defined ERA5 && !defined FORP_ATM
     DO ifc=1,1
 #endif
 
@@ -1816,7 +1729,7 @@ PROGRAM frcATM2ROMS
         
       END DO
 !  ---- LOOP3.3 END --------------------------------
-#if !defined ERA5
+#if !defined ERA5 && !defined FORP_ATM
       itime = itime + 1
 
 
@@ -1839,7 +1752,7 @@ PROGRAM frcATM2ROMS
 !---- LOOP1 END --------------------------------
 #else
   end do
-!---- LOOP1 END (ERA5 do itime=1,Nt) --------------------------------
+!---- LOOP1 END (ERA5/FORP do itime=1,Nt) --------------------------------
 # if !defined NETCDF_INPUT
   write(*,*) "CLOSE: ", trim( IN_FILE(1) )
   if(iNC >= 1) call codes_close_file(ifile(1))   ! close last GRIB file

@@ -1,0 +1,33 @@
+! ============================================================================
+!  Regression input for frcATM2ROMS FORP_ATM refactor (refactor/frcATM2ROMS)
+!  Crosses the 2100-01 -> 2100-02 monthly-file boundary (NCnum=2) to exercise
+!  the multi-file (iNCt) switch path. Output goes to the scratchpad (FRC_prefix).
+!  Only the groups frcATM2ROMS reads for FORP are needed:
+!    &grd &sdate &edate &refdate &frc_atm
+! ============================================================================
+&grd
+  GRID_FILE = "forp-kuroshio_grd_v0.0.nc"
+/
+
+&sdate
+  Syear  = 2100
+  Smonth = 1
+  Sday   = 29
+/
+
+&edate
+  Eyear  = 2100
+  Emonth = 2
+  Eday   = 2
+/
+
+&refdate
+  Ryear  = 2000
+  Rmonth = 1
+  Rday   = 1
+/
+
+&frc_atm
+  ATM_dir  =  "/mnt/w/share/dias/data/FORP/FORP-JPN02/version4//MRI-CGCM3_rcp85_ver4/ts_2086-2100/nc_day/2100/"
+  FRC_prefix  = "REGRESS_FRC_PREFIX_PLACEHOLDER"
+/
