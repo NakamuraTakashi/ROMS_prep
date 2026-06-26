@@ -1024,7 +1024,6 @@ PROGRAM frcATM2ROMS
 # endif
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
-  atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
 
   write(*,*) "*************************************"
 
@@ -1086,7 +1085,6 @@ PROGRAM frcATM2ROMS
   end do
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
-  atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
 
   write(*,*) "*************************************"
 
@@ -1138,7 +1136,6 @@ PROGRAM frcATM2ROMS
   write(*,*) 'NCnum = ', NCnum
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
-  atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
 
   write(*,*) "*************************************"
 
@@ -1190,7 +1187,6 @@ PROGRAM frcATM2ROMS
   write(*,*) 'NCnum = ', NCnum
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
-  atm_time = atm_time - d_jdate_Ref   ! julian date -> days since reference date
 
   write(*,*) "*************************************"
 
@@ -1257,7 +1253,6 @@ PROGRAM frcATM2ROMS
   write(*,*) 'NCnum = ', NCnum
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, atm_time, iNCt, idt )
-  atm_time = atm_time - d_jdate_Ref
 
   write(*,*) "*************************************"
 
@@ -1721,8 +1716,8 @@ PROGRAM frcATM2ROMS
       enddo
 #endif
 !  ---- LOOP3.3 START --------------------------------
-    ! atm_time(itime) = days since the reference date (&refdate)
-      time(1) = atm_time(itime)
+    ! atm_time(itime) is a julian date; subtract d_jdate_Ref -> days since &refdate
+      time(1) = atm_time(itime)-d_jdate_Ref
       write(*,*) time(1),TIME_ATT
       start1D = (/ itime /)
       count1D = (/ 1 /)
@@ -1731,13 +1726,13 @@ PROGRAM frcATM2ROMS
 
 #if !defined JMA_LSM && !defined JMA_MSM_CLOUD_ONLY
 # if defined JRA55
-      time(1) = atm_time(itime)+1.5d0/24.0d0
+      time(1) = atm_time(itime)-d_jdate_Ref+1.5d0/24.0d0
 # elif defined ERA5
-      time(1) = atm_time(itime)-0.5d0/24.0d0
+      time(1) = atm_time(itime)-d_jdate_Ref-0.5d0/24.0d0
 # elif defined FORP_ATM
-      time(1) = atm_time(itime)
+      time(1) = atm_time(itime)-d_jdate_Ref
 # else
-      time(1) = atm_time(itime)+0.5d0/24.0d0
+      time(1) = atm_time(itime)-d_jdate_Ref+0.5d0/24.0d0
 # endif
 
       start1D = (/ itime /)
