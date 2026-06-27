@@ -104,8 +104,8 @@ PROGRAM prepOCN2ROMS
 
   character(33) :: TIME_ATT  = "seconds since 2000-01-01 00:00:00"
 
-  character(15) :: BRY_suffix   = "_20000101.00.nc"
-  character(15) :: HIS_suffix   = "_20000101.00.nc"   ! used in HIS output
+  character(13) :: ds_str, de_str   ! "YYYYMMDD.HHMM" start/end of the output period
+  character(13) :: date_str         ! "YYYYMMDD.HHMM" progress print
   character(256) :: OUT_FILE                          ! unified output file name (BRY/HIS/INI)
   
   real(8), allocatable :: time_all(:)
@@ -237,7 +237,6 @@ PROGRAM prepOCN2ROMS
   character(2) :: MM
   character(2) :: DD
   character(2) :: hh
-  character(11) :: YYYYMMDDpHH
   character(12) :: YYYYMMDDhhmm
   character(8) :: YYYYMMDD
 
@@ -1363,11 +1362,13 @@ PROGRAM prepOCN2ROMS
 !  Output generation mode: select ONE of -DBRY_MODE / -DHIS_MODE / -DINI_MODE
 !========================================================================
 !-Output file name + creation (mode-specific) --------------------------------
-  ocean_time(1) = bry_time(1)
-  call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
+!  Name the file by the data period: bry_time is sec since &refdate, so the
+!  julian date is d_jdate_Ref + bry_time/86400. BRY/HIS are time series
+!  (<start>-<end>); INI is a single time.
+  call jd2yyyymmddpHHMM( d_jdate_Ref + bry_time(1) /86400.0d0, ds_str )
+  call jd2yyyymmddpHHMM( d_jdate_Ref + bry_time(Nt)/86400.0d0, de_str )
 #if defined BRY_MODE
-  BRY_suffix(2:12)=YYYYMMDDpHH
-  OUT_FILE = trim( BRY_prefix )//BRY_suffix
+  OUT_FILE = trim( BRY_prefix )//'_'//ds_str//'-'//de_str//'.nc'
 #if defined ROMS_MODEL
   call createNetCDFbry2(   trim( ROMS_HISFILE(1) ), trim( OUT_FILE )   &
         , TIME_ATT , Nxr, Nyr, Nzr, 1 ,romsvar ,SNWE   )
@@ -1376,11 +1377,10 @@ PROGRAM prepOCN2ROMS
         , Nxr, Nyr, Nzr, 1 ,romsvar ,SNWE   )
 #endif
 #else
-  HIS_suffix(2:12)=YYYYMMDDpHH
 #if defined INI_MODE
-  OUT_FILE = trim( INI_prefix )//HIS_suffix   ! INI: single-time initial-condition file
+  OUT_FILE = trim( INI_prefix )//'_'//ds_str//'.nc'   ! INI: single-time initial-condition file
 #else
-  OUT_FILE = trim( HIS_prefix )//HIS_suffix
+  OUT_FILE = trim( HIS_prefix )//'_'//ds_str//'-'//de_str//'.nc'
 #endif
   call createNetCDFini(  trim( OUT_FILE ), TIME_ATT, Nxr, Nyr, Nzr, 1 )
 #endif
@@ -1653,8 +1653,8 @@ PROGRAM prepOCN2ROMS
 
     ocean_time(1) = bry_time(itime)
 
-    call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
-    Write(*,*) 'Time = ',YYYYMMDDpHH
+    call jd2yyyymmddpHHMM( d_jdate_Ref + ocean_time(1)/86400.0d0, date_str )
+    Write(*,*) 'Time = ',date_str
 
     start1D = (/ itime /)
     count1D = (/ 1 /)
@@ -1936,8 +1936,8 @@ PROGRAM prepOCN2ROMS
       endif
 
 #if defined BRY_MODE
-      call oceantime2cdate(ocean_time(1), Ryear, Rmonth, Rday, YYYYMMDDpHH)
-      Write(*,*) 'Time = ',YYYYMMDDpHH, ',  bry = ',trim( BRY_NAME(ibry) )
+      call jd2yyyymmddpHHMM( d_jdate_Ref + ocean_time(1)/86400.0d0, date_str )
+      Write(*,*) 'Time = ',date_str, ',  bry = ',trim( BRY_NAME(ibry) )
 !      Write(*,*) idt(itime) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #endif
 
