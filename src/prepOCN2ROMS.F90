@@ -1014,8 +1014,8 @@ PROGRAM prepOCN2ROMS
         write(*,*) "***   Check the date (&ini for INI_MODE, or &sdate/&edate) and JCOPE_data_dir."
         stop
       endif
-      write(*,*) "Start file: ", trim( JCOPE_data_dir )//trim( JCOPE_prefix(4) )//trim( JCOPE_sufix(1) )
-      write(*,*) "End file:   ", trim( JCOPE_data_dir )//trim( JCOPE_prefix(4) )//trim( JCOPE_sufix(Nt) )
+      write(*,*) "Start file: ", trim( JCOPE_data_dir )//'*_'//trim( JCOPE_sufix(1) )
+      write(*,*) "End file:   ", trim( JCOPE_data_dir )//'*_'//trim( JCOPE_sufix(Nt) )
       write(*,*) time(1), time(Nt)
       exit
     endif
@@ -1054,9 +1054,11 @@ PROGRAM prepOCN2ROMS
     INFILE(i)%Nt = 1
     INFILE(i)%ItS = 1
     INFILE(i)%ItE = 1
-    iNCt(i) = 1
-    allocate( INFILE(i)%NAME(1) )
-    INFILE(i)%NAME(1) = JCOPE_sufix(i)
+    iNCt(i) = i
+    allocate( INFILE(i)%NAME(5) )
+    do j=1,5
+      INFILE(i)%NAME(j) = trim( JCOPE_data_dir )//trim( JCOPE_prefix(j) )//trim( JCOPE_sufix(i) )
+    enddo
   enddo
 
 #elif defined MRICOM_MODEL
@@ -1942,9 +1944,8 @@ PROGRAM prepOCN2ROMS
         call readNetCDF_3d_hycom( HYCOM_FILE(iNC), ncid, 'surf_el'      &
               , Nxr_dg, Nyr_dg, 1, start3D, count3D, zeta_dg )
 #elif defined JCOPE_MODEL
-       JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(1) )//trim( INFILE(itime)%NAME(1) )
-       write(*,*) 'Read: ', trim( JCOPE_data_file )
-       call read_jcope_data2D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+       write(*,*) 'Read: ', trim( INFILE(iNC)%NAME(1) )
+       call read_jcope_data2D( trim( INFILE(iNC)%NAME(1) ), 0, Ldg, 0, Mdg     &
              , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, zeta_dg )
 #elif defined MRICOM_MODEL
        write(*,*) 'Read: '//trim( INFILE(iNC)%NAME(1) )
@@ -2038,9 +2039,8 @@ PROGRAM prepOCN2ROMS
               , Nxu_dg, Nyu_dg, Nzr_dg, 1, start4D, count4D, u_dg )
 # endif
 #elif defined JCOPE_MODEL
-        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(2) )//trim( INFILE(itime)%NAME(1) )
-        write(*,*) 'Read: ', trim( JCOPE_data_file )
-        call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+        write(*,*) 'Read: ', trim( INFILE(iNC)%NAME(2) )
+        call read_jcope_data3D( trim( INFILE(iNC)%NAME(2) ), 0, Ldg, 0, Mdg     &
               , Iudg_min, Iudg_max, Judg_min, Judg_max, u_dg(:,:,:,1) )
 #elif defined MRICOM_MODEL
         start4D = (/ Iudg_min+1, Judg_min+1, 1,      idt(itime) /)
@@ -2078,9 +2078,8 @@ PROGRAM prepOCN2ROMS
               , Nxv_dg, Nyv_dg, Nzr_dg, 1, start4D, count4D, v_dg )
 # endif
 #elif defined JCOPE_MODEL
-        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(3) )//trim( INFILE(itime)%NAME(1) )
-        write(*,*) 'Read: ', trim( JCOPE_data_file )
-        call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+        write(*,*) 'Read: ', trim( INFILE(iNC)%NAME(3) )
+        call read_jcope_data3D( trim( INFILE(iNC)%NAME(3) ), 0, Ldg, 0, Mdg     &
               , Ivdg_min, Ivdg_max, Jvdg_min, Jvdg_max, v_dg(:,:,:,1) )
 #elif defined MRICOM_MODEL
         start4D = (/ Ivdg_min+1, Jvdg_min+1, 1,    idt(itime) /)
@@ -2383,9 +2382,8 @@ PROGRAM prepOCN2ROMS
               , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 # endif
 #elif defined JCOPE_MODEL
-        JCOPE_data_file = trim( JCOPE_data_dir )//trim( JCOPE_prefix(i) )//trim( INFILE(itime)%NAME(1) )
-        write(*,*) 'Read: ', trim( JCOPE_data_file )
-        call read_jcope_data3D( trim( JCOPE_data_file ), 0, Ldg, 0, Mdg     &
+        write(*,*) 'Read: ', trim( INFILE(iNC)%NAME(i-2) )
+        call read_jcope_data3D( trim( INFILE(iNC)%NAME(i-2) ), 0, Ldg, 0, Mdg     &
               , Irdg_min, Irdg_max, Jrdg_min, Jrdg_max, t_dg(:,:,:,1) )
 # if !defined JCOPE_T
         if( i == 6 ) then
@@ -2397,14 +2395,7 @@ PROGRAM prepOCN2ROMS
 #elif defined MRICOM_MODEL
         start4D = (/ Irdg_min+1, Jrdg_min+1, 1,      idt(itime) /)
         count4D = (/ Nxr_dg,     Nyr_dg,     Nzr_dg, 1          /)
-        if( i == 6 ) then
-          k=4
-        elseif( i == 7 ) then
-          k=5
-        else
-          cycle
-        endif
-        call readNetCDF_4d_mricom( trim( INFILE(iNC)%NAME(k) ), trim( MRICOM_VAR_NAME(k) )        &
+        call readNetCDF_4d_mricom( trim( INFILE(iNC)%NAME(i-2) ), trim( MRICOM_VAR_NAME(i-2) )        &
               , Nxr_dg, Nyr_dg, Nzr_dg, 1, start4D, count4D, t_dg )
 #endif
         write(*,*) 'Linear Interporation: ', trim( varname )

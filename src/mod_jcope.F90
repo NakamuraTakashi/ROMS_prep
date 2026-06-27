@@ -7,11 +7,11 @@ MODULE mod_jcope
 
   implicit none  
 #if defined JCOPE_T
-  character(4), parameter :: JCOPE_prefix(7) = (/  &
-    "EGT_", "UT_ ", "VT_ ", "*_  ", "*_  ", "TT_ ", "ST_ " /)
+  character(4), parameter :: JCOPE_prefix(5) = (/  &
+    "EGT_", "UT_ ", "VT_ ", "TT_ ", "ST_ " /)
 #else
-  character(3), parameter :: JCOPE_prefix(7) = (/  &
-    "EL_", "U_ ", "V_ ", "*_ ", "*_ ", "T_ ", "S_ " /)
+  character(3), parameter :: JCOPE_prefix(5) = (/  &
+    "EL_",  "U_ ",  "V_ ",  "T_ ",  "S_ "  /)
 #endif
 
   CONTAINS
