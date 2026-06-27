@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2018-2024 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2018-2026 Takashi NAKAMURA  =====
 
 PROGRAM bryWAVE2SWAN
   use netcdf

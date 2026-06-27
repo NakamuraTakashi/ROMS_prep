@@ -1,5 +1,5 @@
 
-!!!=== Copyright (c) 2014-2022 Takashi NAKAMURA  =====
+!!!=== Copyright (c) 2014-2026 Takashi NAKAMURA  =====
 
 !!!**** Interpolation MODULE ************************************
 

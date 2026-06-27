@@ -34,6 +34,7 @@ FFLAGS="-fopenmp -O3"
 
 gfortran ${FFLAGS} \
   ${SRC_DIR}/mod_calendar.f90 \
+  ${SRC_DIR}/mod_infile.F90 \
   ${SRC_DIR}/mod_interpolation.f90 \
   ${SRC_DIR}/mod_roms_netcdf.F90 \
   ${SRC_DIR}/frcATM2ROMS.F90 \
