@@ -109,8 +109,8 @@ PROGRAM prepOCN2ROMS
   character(256) :: OUT_FILE                          ! unified output file name (BRY/HIS/INI)
   
   real(8), allocatable :: time_all(:)
-  real(8), allocatable :: bry_time(:)
-  real(8), allocatable :: time(:)      ! merged julian-date list from infile_check_time
+  real(8), allocatable :: time(:)      ! merged julian-date list (the single time array;
+                                       ! converted to "sec since &refdate" only at write)
   integer, allocatable :: iNCt(:)
   integer :: start1D(1), count1D(1)
   integer :: start2D(2), count2D(2)
@@ -769,8 +769,6 @@ PROGRAM prepOCN2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
-  allocate(bry_time(Nt))
-  bry_time(:) = ( time(:) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
   iNCs = iNCt(1)
   iNCe = iNCt(Nt)
 
@@ -839,8 +837,6 @@ PROGRAM prepOCN2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
-  allocate(bry_time(Nt))
-  bry_time(:) = ( time(:) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
   iNCs = iNCt(1)
   iNCe = iNCt(Nt)
 
@@ -998,9 +994,9 @@ PROGRAM prepOCN2ROMS
   cosAv_dg(:,:) = 1.0d0
   sinAv_dg(:,:) = 0.0d0
 
-! ---------------- bry_time check ----------------------------------
+! ---------------- time check (julian date) ------------------------
 
-  allocate( bry_time(10000) ) !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  allocate( time(10000) ) !!!!!!!!!!!!!!!!!!!!!!!!!!!!  (julian date)
   Nt = 0
   itime = 1
   ihours = 0
@@ -1023,7 +1019,7 @@ PROGRAM prepOCN2ROMS
       endif
       write(*,*) "Start file: ", trim( JCOPE_data_dir )//trim( JCOPE_prefix(4) )//trim( JCOPE_sufix(1) )
       write(*,*) "End file:   ", trim( JCOPE_data_dir )//trim( JCOPE_prefix(4) )//trim( JCOPE_sufix(Nt) )
-      write(*,*) bry_time(1), bry_time(Nt)
+      write(*,*) time(1), time(Nt)
       exit
     endif
 
@@ -1046,7 +1042,7 @@ PROGRAM prepOCN2ROMS
     if ( status /= 0 ) cycle 
     Nt = Nt + 1
     JCOPE_sufix(Nt) = JCOPE_sufix_tmp
-    bry_time(Nt) = dble( ijdate ) + dble( ihour )/24.0d0  ! julian date (-> sec after the loop)
+    time(Nt) = dble( ijdate ) + dble( ihour )/24.0d0  ! julian date
   enddo
 
 !  allocate(idt(Nt))
@@ -1057,7 +1053,7 @@ PROGRAM prepOCN2ROMS
   ! is loaded once) and carry the per-time file suffix + time in INFILE(itime).
   do i=1, Nt
     allocate( INFILE(i)%time_all(1) )
-    INFILE(i)%time_all(1) = bry_time(i)   ! julian date
+    INFILE(i)%time_all(1) = time(i)   ! julian date
     INFILE(i)%Nt = 1
     INFILE(i)%ItS = 1
     INFILE(i)%ItE = 1
@@ -1065,8 +1061,6 @@ PROGRAM prepOCN2ROMS
     allocate( INFILE(i)%NAME(1) )
     INFILE(i)%NAME(1) = JCOPE_sufix(i)
   enddo
-
-  bry_time(1:Nt) = ( bry_time(1:Nt) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
 
 #elif defined MRICOM_MODEL
 
@@ -1120,8 +1114,6 @@ PROGRAM prepOCN2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
-  allocate(bry_time(Nt))
-  bry_time(:) = ( time(:) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
   iNCs = iNCt(1)
   iNCe = iNCt(Nt)
 
@@ -1129,7 +1121,7 @@ PROGRAM prepOCN2ROMS
 
   write(*,*) "************ MOVE-JPN MODEL ************"
 
-  allocate( bry_time(10000) ) ! holds julian date during the scan; converted to sec below
+  allocate( time(10000) ) ! holds julian date during the scan
   Nt = 0
   itime = 1
   ihours = 0
@@ -1172,7 +1164,7 @@ PROGRAM prepOCN2ROMS
     if ( status /= 0 ) cycle
     Nt = Nt + 1
     MRICOM_sufix(Nt) = MRICOM_sufix_tmp
-    bry_time(Nt) = dble( ijdate ) + dble( ihour )/24.0d0  ! julian date (-> sec after the loop)
+    time(Nt) = dble( ijdate ) + dble( ihour )/24.0d0  ! julian date
   enddo
 
   allocate(idt(Nt))
@@ -1181,7 +1173,7 @@ PROGRAM prepOCN2ROMS
 
   do iNC=1,Nt
     allocate( INFILE(iNC)%time_all(1) )
-    INFILE(iNC)%time_all(1) = bry_time(iNC)   ! julian date
+    INFILE(iNC)%time_all(1) = time(iNC)   ! julian date
     INFILE(iNC)%Nt = 1
     INFILE(iNC)%ItS = 1
     INFILE(iNC)%ItE = 1
@@ -1209,8 +1201,6 @@ PROGRAM prepOCN2ROMS
     enddo
 !    write(*,*) 'FILE ', iNC, trim( INFILE(iNC)%NAME(1) ) !!!!!!!!!!!!!!!!
   enddo
-
-  bry_time(1:Nt) = ( bry_time(1:Nt) - d_jdate_Ref )*86400.0d0  ! julian date -> sec
 
   write(*,*) "Total time step: ", Nt
   if( Nt <= 0 ) then
@@ -1362,11 +1352,10 @@ PROGRAM prepOCN2ROMS
 !  Output generation mode: select ONE of -DBRY_MODE / -DHIS_MODE / -DINI_MODE
 !========================================================================
 !-Output file name + creation (mode-specific) --------------------------------
-!  Name the file by the data period: bry_time is sec since &refdate, so the
-!  julian date is d_jdate_Ref + bry_time/86400. BRY/HIS are time series
-!  (<start>-<end>); INI is a single time.
-  call jd2yyyymmddpHHMM( d_jdate_Ref + bry_time(1) /86400.0d0, ds_str )
-  call jd2yyyymmddpHHMM( d_jdate_Ref + bry_time(Nt)/86400.0d0, de_str )
+!  Name the file by the data period (time is a julian date). BRY/HIS are time
+!  series (<start>-<end>); INI is a single time.
+  call jd2yyyymmddpHHMM( time(1),  ds_str )
+  call jd2yyyymmddpHHMM( time(Nt), de_str )
 #if defined BRY_MODE
   OUT_FILE = trim( BRY_prefix )//'_'//ds_str//'-'//de_str//'.nc'
 #if defined ROMS_MODEL
@@ -1651,9 +1640,10 @@ PROGRAM prepOCN2ROMS
 #endif
     endif
 
-    ocean_time(1) = bry_time(itime)
+    ! time(itime) is a julian date; convert to "sec since &refdate" for the ROMS file
+    ocean_time(1) = ( time(itime) - d_jdate_Ref )*86400.0d0
 
-    call jd2yyyymmddpHHMM( d_jdate_Ref + ocean_time(1)/86400.0d0, date_str )
+    call jd2yyyymmddpHHMM( time(itime), date_str )
     Write(*,*) 'Time = ',date_str
 
     start1D = (/ itime /)
@@ -1936,7 +1926,7 @@ PROGRAM prepOCN2ROMS
       endif
 
 #if defined BRY_MODE
-      call jd2yyyymmddpHHMM( d_jdate_Ref + ocean_time(1)/86400.0d0, date_str )
+      call jd2yyyymmddpHHMM( time(itime), date_str )
       Write(*,*) 'Time = ',date_str, ',  bry = ',trim( BRY_NAME(ibry) )
 !      Write(*,*) idt(itime) !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #endif
