@@ -276,7 +276,6 @@ PROGRAM prepOCN2ROMS
   integer :: parent_Jmin, parent_Jmax
   integer :: refine_factor
   integer :: NCnum
-  integer :: iNCs, iNCe
   character(256), allocatable :: ROMS_HISFILE(:)
   integer :: romsvar(N_var)
 #else
@@ -296,7 +295,6 @@ PROGRAM prepOCN2ROMS
   real(8), allocatable :: time2(:)
 
   character(256) :: HY_VAR_NAME
-  integer :: iNCs, iNCe
   integer :: jdate_20000101
   real(8) :: d_jdate_20000101
 # if defined HYCOM_LOCAL
@@ -323,7 +321,6 @@ PROGRAM prepOCN2ROMS
   real(8), allocatable :: latst(:), lonst(:), latuv(:), lonuv(:)
   real(8), allocatable :: depth(:)
   integer :: NCnum
-  integer :: iNCs, iNCe
 # if defined FORP_MODEL
   character(13) :: MRICOM_sufix  = "_dy_200601.nc"
   character(12) :: MRICOM_prefix = "forp-jpn-v4_"
@@ -769,9 +766,6 @@ PROGRAM prepOCN2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
-  iNCs = iNCt(1)
-  iNCe = iNCt(Nt)
-
   write(*,*) "*************************************"
 
 #elif defined HYCOM_MODEL
@@ -837,14 +831,11 @@ PROGRAM prepOCN2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
-  iNCs = iNCt(1)
-  iNCe = iNCt(Nt)
-
   allocate( HYgrid(NCnum) )
 
 
   !---- Read HYCOM netCDF grid cooredinate --------------------------------
-  do iNC=iNCs,iNCe
+  do iNC=iNCt(1),iNCt(Nt)
     write(*,*) "OPEN: ", trim( HYCOM_FILE(iNC) )
     call try_nf_open(trim( HYCOM_FILE(iNC) ), nf90_nowrite, ncid)
     ! Get dimension data
@@ -1114,9 +1105,6 @@ PROGRAM prepOCN2ROMS
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
 
-  iNCs = iNCt(1)
-  iNCe = iNCt(Nt)
-
 # elif defined MOVEJPN_MODEL || defined FORA_MODEL
 
   write(*,*) "************ MOVE-JPN MODEL ************"
@@ -1211,13 +1199,12 @@ PROGRAM prepOCN2ROMS
   endif
   write(*,*) "Start file: ", trim( INFILE(1)%NAME(1) )
   write(*,*) "End file:   ", trim( INFILE(Nt)%NAME(1) )
-  iNCs=1
 # endif
 
   
   !---- Read FORP/MOVE-JPN netCDF grid cooredinate --------------------------------
-  write(*,*) "OPEN: ", trim( INFILE(iNCs)%NAME(4) )
-  call try_nf_open(trim( INFILE(iNCs)%NAME(4) ), nf90_nowrite, ncid)
+  write(*,*) "OPEN: ", trim( INFILE(iNCt(1))%NAME(4) )
+  call try_nf_open(trim( INFILE(iNCt(1))%NAME(4) ), nf90_nowrite, ncid)
   ! Get dimension data
   call get_dimension(ncid, 'lat', Nyr_dg)
   call get_dimension(ncid, 'lon', Nxr_dg)
@@ -1233,12 +1220,12 @@ PROGRAM prepOCN2ROMS
   allocate( lonst(Nxr_dg) )
   allocate( depth(Nzr_dg) )
 
-  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(4) ), ncid, 'lat', Nyr_dg, latst)
-  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(4) ), ncid, 'lon', Nxr_dg, lonst)
+  call readNetCDF_1d_safe(trim( INFILE(iNCt(1))%NAME(4) ), ncid, 'lat', Nyr_dg, latst)
+  call readNetCDF_1d_safe(trim( INFILE(iNCt(1))%NAME(4) ), ncid, 'lon', Nxr_dg, lonst)
 # if defined FORP_MODEL
-  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(4) ), ncid, 'lev', Nzr_dg, depth)
+  call readNetCDF_1d_safe(trim( INFILE(iNCt(1))%NAME(4) ), ncid, 'lev', Nzr_dg, depth)
 # elif defined MOVEJPN_MODEL || defined FORA_MODEL
-  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(4) ), ncid, 'depth', Nzr_dg, depth)
+  call readNetCDF_1d_safe(trim( INFILE(iNCt(1))%NAME(4) ), ncid, 'depth', Nzr_dg, depth)
 # endif
 
   Ldg = Nxr_dg-1
@@ -1262,13 +1249,13 @@ PROGRAM prepOCN2ROMS
   allocate( z_u_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
   allocate( z_v_dg(0:Ldg, 0:Mdg, 1:Ndg ) )
 
-  start4D = (/ 1,      1,      1,  INFILE(iNCs)%ItS /)
+  start4D = (/ 1,      1,      1,  INFILE(iNCt(1))%ItS /)
   count4D = (/ Nxr_dg, Nyr_dg, 1,  1            /)
-  call readNetCDF_2d_mricom(trim( INFILE(iNCs)%NAME(4) ), ncid, trim( MRICOM_VAR_NAME(4) )  &
+  call readNetCDF_2d_mricom(trim( INFILE(iNCt(1))%NAME(4) ), ncid, trim( MRICOM_VAR_NAME(4) )  &
         , Nxr_dg, Nyr_dg, start4D, count4D, rmask_dg )
 
   call check( nf90_close(ncid) )
-  write(*,*) "CLOSE: ", trim( INFILE(iNCs)%NAME(4) )
+  write(*,*) "CLOSE: ", trim( INFILE(iNCt(1))%NAME(4) )
 
   do j=0,Mdg
     do i=0,Ldg
@@ -1280,22 +1267,22 @@ PROGRAM prepOCN2ROMS
     enddo
   enddo
 
-  write(*,*) "OPEN: ", trim( INFILE(iNCs)%NAME(2) )
-  call try_nf_open(trim( INFILE(iNCs)%NAME(2) ), nf90_nowrite, ncid)
+  write(*,*) "OPEN: ", trim( INFILE(iNCt(1))%NAME(2) )
+  call try_nf_open(trim( INFILE(iNCt(1))%NAME(2) ), nf90_nowrite, ncid)
   ! Get dimension data
   call get_dimension(ncid, 'lat', Nyu_dg)
   call get_dimension(ncid, 'lon', Nxu_dg)
   allocate( latuv(Nyu_dg) )
   allocate( lonuv(Nxu_dg) )
-  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(2) ), ncid, 'lat', Nyu_dg, latuv)
-  call readNetCDF_1d_safe(trim( INFILE(iNCs)%NAME(2) ), ncid, 'lon', Nxu_dg, lonuv)
+  call readNetCDF_1d_safe(trim( INFILE(iNCt(1))%NAME(2) ), ncid, 'lat', Nyu_dg, latuv)
+  call readNetCDF_1d_safe(trim( INFILE(iNCt(1))%NAME(2) ), ncid, 'lon', Nxu_dg, lonuv)
 
-  start4D = (/ 1,      1,      1,  INFILE(iNCs)%ItS /)
+  start4D = (/ 1,      1,      1,  INFILE(iNCt(1))%ItS /)
   count4D = (/ Nxu_dg, Nyu_dg, 1,  1            /)
-  call readNetCDF_2d_mricom(trim( INFILE(iNCs)%NAME(2) ), ncid, trim( MRICOM_VAR_NAME(2) )  &
+  call readNetCDF_2d_mricom(trim( INFILE(iNCt(1))%NAME(2) ), ncid, trim( MRICOM_VAR_NAME(2) )  &
         , Nxu_dg, Nyu_dg, start4D, count4D, umask_dg )
   call check( nf90_close(ncid) )
-  write(*,*) "CLOSE: ", trim( INFILE(iNCs)%NAME(2) )
+  write(*,*) "CLOSE: ", trim( INFILE(iNCt(1))%NAME(2) )
   do j=0,Mdg
     do i=0,Ldg
       if( umask_dg(i,j) < -10000.0d0 ) then  !! Land: Mask < 0.5 grids
