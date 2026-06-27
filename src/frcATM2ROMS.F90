@@ -280,7 +280,11 @@ PROGRAM frcATM2ROMS
   integer :: param_count
   integer :: ips, ipe
 
-  character(9) :: FRC_yyyymmdd = "_20020701" 
+  character(28) :: FRC_period1  ! "_YYYYMMDD.HHMM-YYYYMMDD.HHMM" for _1/_cloud (no offset)
+  character(28) :: FRC_period2  ! "_YYYYMMDD.HHMM-YYYYMMDD.HHMM" for _2 (donor time offset)
+  character(13) :: ds_str, de_str  ! per-end "YYYYMMDD.HHMM" scratch
+  character(13) :: date_str        ! progress print "YYYYMMDD.HHMM"
+  real(8) :: toff                  ! _2.nc time offset vs atm_time (days), donor-specific
   character(30) :: TIME_ATT  = "days since 2000-01-01 00:00:00"
   character(256) :: FRC_FILE(2)
 
@@ -820,65 +824,6 @@ PROGRAM frcATM2ROMS
   call weight2D_grid(Im,Jm,lon,lat,Nxr,Nyr,lonr,latr,ID_cont,w_cont)  
 #endif
 
-!==== Create the forcing netCDF file ===================================
-
-  FRC_yyyymmdd(2:5)=YYYY
-  FRC_yyyymmdd(6:7)=MM
-  FRC_yyyymmdd(8:9)=DD
-
-#if defined JMA_MSM_CLOUD_ONLY
-  FRC_FILE(1) = trim(FRC_prefix)//FRC_yyyymmdd//'_cloud.nc'
-#else
-  FRC_FILE(1) = trim(FRC_prefix)//FRC_yyyymmdd//'_1.nc'
-#endif  
-  write(*,*) "CREATE: ", trim( FRC_FILE(1) )
-  call check( nf90_create(trim( FRC_FILE(1) ), nf90_clobber, ncid) )
-  call check( nf90_def_dim(ncid, 'xi_rho', Nxr, xi_rho_dimid) )
-  call check( nf90_def_dim(ncid, 'eta_rho',Nyr, eta_rho_dimid) )
-  call check( nf90_def_dim(ncid, 'time', NF90_UNLIMITED, time_dimid) )
-  dimids = (/ xi_rho_dimid, eta_rho_dimid, time_dimid /)
-  call check( nf90_def_var(ncid, 'time', NF90_DOUBLE, time_dimid, var_id) )
-  call check( nf90_put_att(ncid, var_id, 'long_name', 'atmospheric forcing time') )
-  call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
-
-  DO iparam=1,N_OutPar1
-#if defined JMA_MSM_CLOUD_ONLY
-    if(iparam<6.or.iparam>9) cycle
-#endif
-    call check( nf90_def_var(ncid, trim( NC_NAME(iparam) ), NF90_REAL, dimids, var_id) )
-    call check( nf90_put_att(ncid, var_id, 'long_name', trim( NC_LNAME(iparam) )) )
-    call check( nf90_put_att(ncid, var_id, 'units',     trim( NC_UNIT(iparam) ) ) )
-    call check( nf90_put_att(ncid, var_id, 'time',      'time') )
-  END DO
-! End define mode.
-  call check( nf90_enddef(ncid) )
-  call check( nf90_close(ncid) )
-
-#if !defined JMA_LSM  && !defined JMA_MSM_CLOUD_ONLY
-  FRC_FILE(2) = trim(FRC_prefix)//FRC_yyyymmdd//'_2.nc'
-  
-  write(*,*) "CREATE: ", trim( FRC_FILE(2) )
-  call check( nf90_create(trim( FRC_FILE(2) ), nf90_clobber, ncid) )
-  call check( nf90_def_dim(ncid, 'xi_rho', Nxr, xi_rho_dimid) )
-  call check( nf90_def_dim(ncid, 'eta_rho',Nyr, eta_rho_dimid) )
-  call check( nf90_def_dim(ncid, 'time', NF90_UNLIMITED, time_dimid) )
-  dimids = (/ xi_rho_dimid, eta_rho_dimid, time_dimid /)
-! Define the netCDF variables for the pressure and temperature data.
-  call check( nf90_def_var(ncid, 'time', NF90_DOUBLE, time_dimid, var_id) )
-  call check( nf90_put_att(ncid, var_id, 'long_name', 'atmospheric forcing time') )
-  call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
-
-  DO iparam=N_OutPar1+1,N_OutPar
-    call check( nf90_def_var(ncid, trim( NC_NAME(iparam) ), NF90_REAL, dimids, var_id) )
-    call check( nf90_put_att(ncid, var_id, 'long_name', trim( NC_LNAME(iparam) )) )
-    call check( nf90_put_att(ncid, var_id, 'units',     trim( NC_UNIT(iparam) ) ) )
-    call check( nf90_put_att(ncid, var_id, 'time',      'time') )
-  END DO
-! End define mode.
-  call check( nf90_enddef(ncid) )
-  call check( nf90_close(ncid) )
-#endif
-
 !==== LOOP set up ==========================================
 #if defined JMA_MSM
   call jd(2006, 3, 1, jd_msmnew)   ! MSM input-format regime switch (2006-03-01)
@@ -1195,6 +1140,83 @@ PROGRAM frcATM2ROMS
   write(*,*) "*************************************"
 
   iNC = 0
+#endif
+
+!==== Create the forcing netCDF file ===================================
+!  Built AFTER atm_time is known so the file name carries the data period:
+!  atm_time(1) = start, atm_time(Nt) = end (julian dates). The name becomes
+!  <prefix>_<YYYYMMDD.HHMM start>-<YYYYMMDD.HHMM end>_1/2/cloud.nc .
+!  _1/_cloud store atm_time as-is; _2 is shifted by a donor-specific offset
+!  (toff, in days) so its file name reflects the *actual* stored times.
+
+#if defined JRA55
+  toff =  1.5d0/24.0d0
+#elif defined ERA5
+  toff = -0.5d0/24.0d0
+#elif defined FORP_ATM
+  toff =  0.0d0
+#else
+  toff =  0.5d0/24.0d0
+#endif
+
+  call jd2yyyymmddpHHMM( atm_time(1),  ds_str )
+  call jd2yyyymmddpHHMM( atm_time(Nt), de_str )
+  FRC_period1 = '_'//ds_str//'-'//de_str
+  call jd2yyyymmddpHHMM( atm_time(1) +toff, ds_str )
+  call jd2yyyymmddpHHMM( atm_time(Nt)+toff, de_str )
+  FRC_period2 = '_'//ds_str//'-'//de_str
+
+#if defined JMA_MSM_CLOUD_ONLY
+  FRC_FILE(1) = trim(FRC_prefix)//trim(FRC_period1)//'_cloud.nc'
+#else
+  FRC_FILE(1) = trim(FRC_prefix)//trim(FRC_period1)//'_1.nc'
+#endif
+  write(*,*) "CREATE: ", trim( FRC_FILE(1) )
+  call check( nf90_create(trim( FRC_FILE(1) ), nf90_clobber, ncid) )
+  call check( nf90_def_dim(ncid, 'xi_rho', Nxr, xi_rho_dimid) )
+  call check( nf90_def_dim(ncid, 'eta_rho',Nyr, eta_rho_dimid) )
+  call check( nf90_def_dim(ncid, 'time', NF90_UNLIMITED, time_dimid) )
+  dimids = (/ xi_rho_dimid, eta_rho_dimid, time_dimid /)
+  call check( nf90_def_var(ncid, 'time', NF90_DOUBLE, time_dimid, var_id) )
+  call check( nf90_put_att(ncid, var_id, 'long_name', 'atmospheric forcing time') )
+  call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
+
+  DO iparam=1,N_OutPar1
+#if defined JMA_MSM_CLOUD_ONLY
+    if(iparam<6.or.iparam>9) cycle
+#endif
+    call check( nf90_def_var(ncid, trim( NC_NAME(iparam) ), NF90_REAL, dimids, var_id) )
+    call check( nf90_put_att(ncid, var_id, 'long_name', trim( NC_LNAME(iparam) )) )
+    call check( nf90_put_att(ncid, var_id, 'units',     trim( NC_UNIT(iparam) ) ) )
+    call check( nf90_put_att(ncid, var_id, 'time',      'time') )
+  END DO
+! End define mode.
+  call check( nf90_enddef(ncid) )
+  call check( nf90_close(ncid) )
+
+#if !defined JMA_LSM  && !defined JMA_MSM_CLOUD_ONLY
+  FRC_FILE(2) = trim(FRC_prefix)//trim(FRC_period2)//'_2.nc'
+
+  write(*,*) "CREATE: ", trim( FRC_FILE(2) )
+  call check( nf90_create(trim( FRC_FILE(2) ), nf90_clobber, ncid) )
+  call check( nf90_def_dim(ncid, 'xi_rho', Nxr, xi_rho_dimid) )
+  call check( nf90_def_dim(ncid, 'eta_rho',Nyr, eta_rho_dimid) )
+  call check( nf90_def_dim(ncid, 'time', NF90_UNLIMITED, time_dimid) )
+  dimids = (/ xi_rho_dimid, eta_rho_dimid, time_dimid /)
+! Define the netCDF variables for the pressure and temperature data.
+  call check( nf90_def_var(ncid, 'time', NF90_DOUBLE, time_dimid, var_id) )
+  call check( nf90_put_att(ncid, var_id, 'long_name', 'atmospheric forcing time') )
+  call check( nf90_put_att(ncid, var_id, 'units',     TIME_ATT ) )
+
+  DO iparam=N_OutPar1+1,N_OutPar
+    call check( nf90_def_var(ncid, trim( NC_NAME(iparam) ), NF90_REAL, dimids, var_id) )
+    call check( nf90_put_att(ncid, var_id, 'long_name', trim( NC_LNAME(iparam) )) )
+    call check( nf90_put_att(ncid, var_id, 'units',     trim( NC_UNIT(iparam) ) ) )
+    call check( nf90_put_att(ncid, var_id, 'time',      'time') )
+  END DO
+! End define mode.
+  call check( nf90_enddef(ncid) )
+  call check( nf90_close(ncid) )
 #endif
 
 !===== LOOP1 START ================================================
@@ -1644,22 +1666,16 @@ PROGRAM frcATM2ROMS
 !  ---- LOOP3.3 START --------------------------------
     ! atm_time(itime) is a julian date; subtract d_jdate_Ref -> days since &refdate
       time(1) = atm_time(itime)-d_jdate_Ref
-      write(*,*) time(1),TIME_ATT
+      call jd2yyyymmddpHHMM( atm_time(itime), date_str )
+      write(*,*) "time: ", date_str, " (", itime, "/", Nt, ")"
       start1D = (/ itime /)
       count1D = (/ 1 /)
       call writeNetCDF_1d( 'time', trim( FRC_FILE(1) )                  &
             , 1, time, start1D, count1D )
 
 #if !defined JMA_LSM && !defined JMA_MSM_CLOUD_ONLY
-# if defined JRA55
-      time(1) = atm_time(itime)-d_jdate_Ref+1.5d0/24.0d0
-# elif defined ERA5
-      time(1) = atm_time(itime)-d_jdate_Ref-0.5d0/24.0d0
-# elif defined FORP_ATM
-      time(1) = atm_time(itime)-d_jdate_Ref
-# else
-      time(1) = atm_time(itime)-d_jdate_Ref+0.5d0/24.0d0
-# endif
+    ! _2.nc stored time is shifted by the donor-specific offset toff (set above)
+      time(1) = atm_time(itime)-d_jdate_Ref+toff
 
       start1D = (/ itime /)
       count1D = (/ 1 /)

@@ -191,6 +191,34 @@ END SUBROUTINE dble_jd2yyyyMMMdd_hhmm
 
 !**************************************************************
 
+!converts a (double) julian date number to a "YYYYMMDD.HHMM" string.
+!Rounds to the nearest minute and handles day roll-over in both
+!directions (e.g. a small negative offset rolling back to the
+!previous day's 23:HH). Unlike dble_jd2cdate this floors the integer
+!day part (int), so it stays correct for hours >= 12.
+SUBROUTINE jd2yyyymmddpHHMM(dble_jd, str)
+ real(8), intent(IN)        :: dble_jd
+ character(13), intent(OUT) :: str   ! "YYYYMMDD.HHMM"
+
+ integer :: ijd, imin_total
+ integer :: iyear, imonth, iday, ihour, imin
+
+ ijd        = int( dble_jd + 1.0d-8 )                      ! floor of the julian day
+ imin_total = nint( (dble_jd - dble(ijd))*1440.0d0 )       ! minutes into that day
+ if(imin_total >= 1440) then                               ! rounded up to next day
+   imin_total = imin_total - 1440 ; ijd = ijd + 1
+ else if(imin_total < 0) then                              ! negative offset -> prev day
+   imin_total = imin_total + 1440 ; ijd = ijd - 1
+ end if
+ Call cdate(ijd, iyear, imonth, iday)
+ ihour = imin_total/60
+ imin  = mod(imin_total,60)
+ write(str,'(I4.4,2I2.2,".",2I2.2)') iyear, imonth, iday, ihour, imin
+
+END SUBROUTINE jd2yyyymmddpHHMM
+
+!**************************************************************
+
 !calculates number of days between two dates.
 !days is positive if date1 is more recent than date2
 SUBROUTINE ndays(mm1, dd1, yyyy1, mm2, dd2, yyyy2, days)
