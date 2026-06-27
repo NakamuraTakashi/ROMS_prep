@@ -72,6 +72,7 @@ PROGRAM prepOCN2ROMS
   integer :: itime,ibry
   integer :: n_region    ! number of output regions (BRY: 4 boundaries; HIS/INI: 1)
   logical :: need_weights ! recompute interpolation weights this step? (see §3.1)
+  logical :: leaving_file  ! last step, or the next step uses a different donor file
   integer :: mode
   character(256) :: GRID_FILE
 
@@ -1393,9 +1394,9 @@ PROGRAM prepOCN2ROMS
   call check( nf90_close(ncid2) )
 
 
-!===== LOOP START ==========================================================
-
-!-Region setup (BRY: 4 boundaries; HIS/INI: 1 whole-domain region) -----------
+!========================================================================
+!  Region setup (BRY: 4 boundaries; HIS/INI: 1 whole-domain region)      
+!========================================================================
 #if defined BRY_MODE
   n_region = 4
 #else
@@ -1546,6 +1547,9 @@ PROGRAM prepOCN2ROMS
     allocate( region(ibry)%w_cnt3Dv (8, Nxv*Nyv*Nzr) )
   enddo
 
+!========================================================================
+!  LOOP START      
+!========================================================================
   iNC = 0
 
 #if defined INI_MODE
@@ -1675,8 +1679,11 @@ PROGRAM prepOCN2ROMS
       ID_cnt3Du => region(ibry)%ID_cnt3Du ; w_cnt3Du => region(ibry)%w_cnt3Du
       ID_cnt3Dv => region(ibry)%ID_cnt3Dv ; w_cnt3Dv => region(ibry)%w_cnt3Dv
 
-      if(iNCm < iNC) then
-
+#if defined HYCOM_MODEL
+      if ( iNCm < iNC ) then
+#else
+      if ( itime == 1 ) then
+#endif
         write(*,*) "Seek rho point donor IJ range"
         call seek_IJrange(                                 &
               0, Ldg, 0, Mdg, lonr_dg, latr_dg             &
@@ -2438,12 +2445,25 @@ PROGRAM prepOCN2ROMS
 
     enddo   ! ibry
 
-    ! ----- free donor box (and shared donor grid for HYCOM) when leaving this file -----
-    ! (.or. is not short-circuit, so guard iNCt(itime+1) with the itime<Nt test)
+    ! ----- free donor box / close donor file when leaving this file -----
+    ! leaving_file = this is the last step, OR the next step uses a different
+    ! donor file. (.or. is not short-circuit, so guard iNCt(itime+1) with itime<Nt.)
+    leaving_file = .true.
     if( itime < Nt ) then
-      if( iNC == iNCt(itime+1) ) cycle   ! next step reuses this file; keep donor arrays
+      if( iNC == iNCt(itime+1) ) leaving_file = .false.
     endif
 
+    ! Donor-box data arrays: for HYCOM the donor grid varies per file, so free them
+    ! whenever we leave the file (they are reallocated for the next file). For every
+    ! other donor the donor grid is fixed and the box is allocated once (itime==1)
+    ! and overwritten in place each step, so free it only after the last step --
+    ! freeing it every step would leave the itime>=2 reuse branch with dangling
+    ! pointers (the unconditional donor read then writes into freed memory).
+#if defined HYCOM_MODEL
+    if( leaving_file ) then
+#else
+    if( itime == Nt ) then
+#endif
       do ibry=1,n_region
 #if defined BRY_MODE
         if( SNWE(ibry)==0 ) cycle
@@ -2465,13 +2485,19 @@ PROGRAM prepOCN2ROMS
         deallocate( region(ibry)%vmask_wet_dg )
 #endif
       enddo
+    endif
 
 #if defined ROMS_MODEL
+    ! ROMS keeps a persistent ncid per his file; close it whenever we leave the file
+    if( leaving_file ) then
       call check( nf90_close(ncid) )
       write(*,*) "CLOSE: ", trim( ROMS_HISFILE(iNC) )
+    endif
 #endif
 
 #if defined HYCOM_MODEL
+    ! per-file HYCOM donor grid + open file: free/close when leaving the file
+    if( leaving_file ) then
       deallocate( latr_dg )
       deallocate( lonr_dg )
       deallocate( latu_dg )
@@ -2492,6 +2518,7 @@ PROGRAM prepOCN2ROMS
 
       call check( nf90_close(ncid) )
       write(*,*) "CLOSE: ", trim( HYCOM_FILE(iNC) )
+    endif
 #endif
 
   enddo   ! itime
