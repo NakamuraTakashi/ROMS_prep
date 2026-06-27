@@ -337,8 +337,13 @@ PROGRAM prepOCN2ROMS
   character(9) :: MRICOM_sufix_tmp  = ".20080101"
   character(256) :: MRICOM_FILE_tmp
 # endif
-  integer :: jdate_00010101
-  real(8) :: d_jdate_00010101
+  ! FORP 'time' is "hours since 0001-01-01" counted in the standard calendar,
+  ! whose year-1 epoch lies in the Julian calendar (JDN 1721424). Note that
+  ! mod_calendar::jd() is proleptic-Gregorian, so jd(1,1,1)=1721426 — the two
+  ! calendars differ by exactly 2 days at year 1. Reconstructing the epoch with
+  ! jd() would therefore push every FORP date 2 days late; use the Julian epoch
+  ! directly instead (this is what the old "d_jdate_00010101 - 2" did).
+  real(8), parameter :: d_jdate_FORP_ref = 1721424.0d0  ! JDN of 0001-01-01 (Julian)
   integer :: iyear, imonth, iday
   integer :: ihour, imin
   integer :: idays,ihours,ijdate,Sjdate,Ejdate
@@ -1059,10 +1064,6 @@ PROGRAM prepOCN2ROMS
 # if defined FORP_MODEL
 
   write(*,*) "************ FORP MODEL ************"
-      
-  call jd(1, 1, 1, jdate_00010101)
-  d_jdate_00010101 = dble(jdate_00010101)
-  write(*,*) d_jdate_00010101
 
   Nt = 0
   itime = 1
@@ -1099,8 +1100,8 @@ PROGRAM prepOCN2ROMS
     call check( nf90_get_var(ncid, var_id, INFILE(iNC)%time_all) )
     call check( nf90_close(ncid) )
     write(*,*) "CLOSE: ", trim( INFILE(iNC)%NAME(1) )
-    ! FORP 'time' is hours; normalise to julian date (ref shifted by -2 as before)
-    INFILE(iNC)%time_all = d_jdate_00010101 - 2.0d0 + INFILE(iNC)%time_all/24.0d0
+    ! FORP 'time' is hours since the Julian-calendar 0001-01-01 -> julian date
+    INFILE(iNC)%time_all = d_jdate_FORP_ref + INFILE(iNC)%time_all/24.0d0
   end do
 
   call infile_check_time( NCnum, dble(jdate_Start), dble(jdate_End), Nt, time, iNCt, idt )
