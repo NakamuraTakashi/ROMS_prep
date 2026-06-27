@@ -386,7 +386,8 @@ PROGRAM frcATM2ROMS
   real(8), allocatable :: sinAu(:, :)
   real(8), allocatable :: cosAv(:, :)
   real(8), allocatable :: sinAv(:, :)
-  
+  real(8), allocatable :: u_rot(:,:), v_rot(:,:)  ! scratch for en->uv rotation
+
   real(8), allocatable :: in_data(:,:, :), in_data2(:,:, :)
   real(8), allocatable :: out_data(:,:,:) ! output forcing data
        
@@ -430,7 +431,6 @@ PROGRAM frcATM2ROMS
   integer :: iparam,ifc,iin
   real(8) :: d_lat, d_lon
   real(8) :: s_lat, s_lon
-  real(8) :: u, v
   real(8) :: dpT, sat_VP, VP
   logical :: file_exists
   real(8) :: xp,yp
@@ -493,6 +493,8 @@ PROGRAM frcATM2ROMS
   allocate( sinAu(0:L, 0:M) )
   allocate( cosAv(0:L, 0:M) )
   allocate( sinAv(0:L, 0:M) )
+  allocate( u_rot(0:L, 0:M) )
+  allocate( v_rot(0:L, 0:M) )
   allocate(out_data(0:L, 0:M, N_OutPar))
   allocate(ID_cont(4, Nxr*Nyr))
   allocate(w_cont(4, Nxr*Nyr))
@@ -510,29 +512,8 @@ PROGRAM frcATM2ROMS
   ! Close NetCDF file
   call check( nf90_close(ncid) )
   
-  do j=0,M
-    do i=0,L-1
-      d_lat=latr(i+1,j)-latr(i,j)
-      d_lon=lonr(i+1,j)-lonr(i,j)
-      d_lon=d_lon*cos(latr(i,j)/180.0d0*PI)
-      cosAu(i,j) = d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAu(i,j) = d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-    enddo
-  enddo
-  cosAu(L,:) = cosAu(L-1,:)
-  sinAu(L,:) = sinAu(L-1,:)
-
-  do j=0,M-1
-    do i=0,L
-      d_lat=latr(i,j+1)-latr(i,j)
-      d_lon=lonr(i,j)-lonr(i,j+1)
-      d_lon=d_lon*cos(latr(i,j)/180.0d0*PI)
-      cosAv(i,j) = d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAv(i,j) = d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-    enddo         
-  enddo
-  cosAv(:,M) = cosAv(:,M-1)
-  sinAv(:,M) = sinAv(:,M-1)
+  ! ROMS-grid rotation angles at rho points (xi-axis: cosAu/sinAu, eta-axis: cosAv/sinAv)
+  call rotation_angle(Nxr, Nyr, lonr, latr, cosAu, sinAu, cosAv, sinAv)
 
   write (YYYY, "(I4.4)") Syear
   write (MM, "(I2.2)") Smonth
@@ -720,29 +701,11 @@ PROGRAM frcATM2ROMS
   write(*,*) 'SE corner:', lat(Im,Jm),lon(Im,Jm)
    
 !  ---- Calc. rotation angle --------------
-  do j=1, Jm
-    do i=1,Im-1
-      d_lat=lat(i+1,j)-lat(i,j)
-      d_lon=lon(i+1,j)-lon(i,j)
-      d_lon=d_lon*cos(lat(i,j)/180.0d0*PI)
-      cosAx(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAx(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-    end do
-  end do
-  cosAx(Im,:) = cosAx(Im-1,:)
-  sinAx(Im,:) = sinAx(Im-1,:)
-  
-  do j=1, Jm-1
-    do i=1,Im
-      d_lat=lat(i,j)-lat(i,j+1)
-      d_lon=lon(i,j+1)-lon(i,j)
-      d_lon=d_lon*cos(lat(i,j)/180.0d0*PI)
-      cosAy(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAy(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-    end do
-  end do
-  cosAy(:,Jm) = cosAy(:,Jm-1)
-  sinAy(:,Jm) = sinAy(:,Jm-1)
+!  Donor (Lambert) grid: the y-axis here uses the opposite sign convention to the
+!  shared routine's j-axis, so negate cosAy/sinAy after the call (bit-identical).
+  call rotation_angle(Im, Jm, lon, lat, cosAx, sinAx, cosAy, sinAy)
+  cosAy = -cosAy
+  sinAy = -sinAy
 
 # elif defined JMA_MSM || defined JRA55
 !  ---- Get Lat Lon coordinates from GRIB file --------------
@@ -1524,13 +1487,9 @@ PROGRAM frcATM2ROMS
 #elif defined DSJRA55
     ! for Pair (Pressure)
       in_data2(:,:,1) = in_data(:,:,1)*0.01  ! Pa -> millibar (= hPa) 
-    ! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors 
-      do j=1, Jm
-        do i=1,Im
-          in_data2(i,j,2) = in_data(i,j,2)*cosAx(i,j)-in_data(i,j,3)*sinAy(i,j)
-          in_data2(i,j,3) = in_data(i,j,2)*sinAx(i,j)+in_data(i,j,3)*cosAy(i,j)
-        end do
-      end do
+    ! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors
+      call rotate_uv_to_en(Im, Jm, in_data(:,:,2), in_data(:,:,3)  &
+            , cosAx, sinAx, cosAy, sinAy, in_data2(:,:,2), in_data2(:,:,3))
     ! for Tair
       in_data2(:,:,4) = in_data(:,:,4) - 273.15d0  ! K -> degC
     ! for Qair: convert Dewpoint depression (K) to Relative humidity (%)
@@ -1565,13 +1524,9 @@ PROGRAM frcATM2ROMS
     ! for Pair (Pressure) index 5->1
       in_data2(:,:,1) = in_data(:,:,5)*0.01  ! Pa -> millibar (= hPa) 
     ! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors
-      ! indecis: 1->2, 2-> 3 
-      do j=1, Jm
-        do i=1,Im
-          in_data2(i,j,2) = in_data(i,j,1)*cosAx(i,j)-in_data(i,j,2)*sinAy(i,j)
-          in_data2(i,j,3) = in_data(i,j,1)*sinAx(i,j)+in_data(i,j,2)*cosAy(i,j)
-        end do
-      end do
+      ! indecis: 1->2, 2-> 3
+      call rotate_uv_to_en(Im, Jm, in_data(:,:,1), in_data(:,:,2)  &
+            , cosAx, sinAx, cosAy, sinAy, in_data2(:,:,2), in_data2(:,:,3))
     ! for Tair index 3->4
       in_data2(:,:,4) = in_data(:,:,3) - 273.15d0  ! K -> degC
     ! for Qait (Relative humidity) index 4-> 5
@@ -1680,15 +1635,11 @@ PROGRAM frcATM2ROMS
       END DO
 !  ---- LOOP3.2 END --------------------------------
 #if !defined JMA_MSM_CLOUD_ONLY
-  !!! for U V: change regular Lat Lon to ROMS grid coordinat vectors 
-      do j=0,M
-        do i=0,L
-          u = out_data(i,j,2)*cosAu(i,j)+out_data(i,j,3)*sinAu(i,j)
-          v =-out_data(i,j,2)*sinAv(i,j)+out_data(i,j,3)*cosAv(i,j)
-          out_data(i,j,2) = u
-          out_data(i,j,3) = v
-        enddo
-      enddo
+  !!! for U V: change regular Lat Lon to ROMS grid coordinat vectors
+      call rotate_en_to_uv(L+1, M+1, out_data(:,:,2), out_data(:,:,3)  &
+            , cosAu, sinAu, cosAv, sinAv, u_rot, v_rot)
+      out_data(:,:,2) = u_rot
+      out_data(:,:,3) = v_rot
 #endif
 !  ---- LOOP3.3 START --------------------------------
     ! atm_time(itime) is a julian date; subtract d_jdate_Ref -> days since &refdate

@@ -270,7 +270,6 @@ PROGRAM frcATM2SWAT
   integer :: xi_rho_dimid, eta_rho_dimid, time_dimid
   
   integer :: iparam,ifc,iin,isp
-  real(8) :: d_lat, d_lon
   real(8) :: u, v
   real(8) :: dpT, sat_VP, VP
   logical :: file_exists
@@ -456,29 +455,10 @@ PROGRAM frcATM2SWAT
   write(*,*) 'NE corner:', lat(Im,Jm),lon(Im,Jm)
    
 !  ---- Calc. rotation angle --------------
-  do j=1, Jm
-    do i=1,Im-1
-      d_lat=lat(i+1,j)-lat(i,j)
-      d_lon=lon(i+1,j)-lon(i,j)
-      d_lon=d_lon*cos(lat(i,j)/180.0d0*PI)
-      cosAx(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAx(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-    end do
-  end do
-  cosAx(Im,:) = cosAx(Im-1,:)
-  sinAx(Im,:) = sinAx(Im-1,:)
-  
-  do j=1, Jm-1
-    do i=1,Im
-      d_lat=lat(i,j)-lat(i,j+1)
-      d_lon=lon(i,j+1)-lon(i,j)
-      d_lon=d_lon*cos(lat(i,j)/180.0d0*PI)
-      cosAy(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAy(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-    end do
-  end do
-  cosAy(:,Jm) = cosAy(:,Jm-1)
-  sinAy(:,Jm) = sinAy(:,Jm-1)
+  call rotation_angle(Im, Jm, lon, lat, cosAx, sinAx, cosAy, sinAy)
+  ! frcATM2SWAT uses the opposite j-axis sign convention
+  cosAy(:,:) = -cosAy(:,:)
+  sinAy(:,:) = -sinAy(:,:)
 
 # else
 
@@ -1034,13 +1014,9 @@ PROGRAM frcATM2SWAT
 #elif defined DSJRA55
     ! for Pair (Pressure)
       in_data2(:,:,1) = in_data(:,:,1)*0.01  ! Pa -> millibar (= hPa) 
-    ! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors 
-      do j=1, Jm
-        do i=1,Im
-          in_data2(i,j,2) = in_data(i,j,2)*cosAx(i,j)-in_data(i,j,3)*sinAy(i,j)
-          in_data2(i,j,3) = in_data(i,j,2)*sinAx(i,j)+in_data(i,j,3)*cosAy(i,j)
-        end do
-      end do
+    ! for U V: change DSJRA55 Lambert conformal to regular Lat Lon coordinat vectors
+      call rotate_uv_to_en(Im, Jm, in_data(:,:,2), in_data(:,:,3)  &
+            , cosAx, sinAx, cosAy, sinAy, in_data2(:,:,2), in_data2(:,:,3))
     ! for Tair
       in_data2(:,:,4) = in_data(:,:,4) - 273.15d0  ! K -> degC
     ! for Qair: convert Dewpoint depression (K) to Relative humidity (%)

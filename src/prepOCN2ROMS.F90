@@ -131,7 +131,11 @@ PROGRAM prepOCN2ROMS
   real(8), allocatable :: sinAu(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
   real(8), allocatable :: cosAv(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
   real(8), allocatable :: sinAv(:,:)  ! angle differece between lat lon and ROMS coordinates (radian)
-  real(8) :: hc       
+  real(8), allocatable :: cosA_i(:,:) ! rho-point rotation angle (i-axis) from rotation_angle
+  real(8), allocatable :: sinA_i(:,:) ! rho-point rotation angle (i-axis) from rotation_angle
+  real(8), allocatable :: cosA_j(:,:) ! rho-point rotation angle (j-axis) from rotation_angle
+  real(8), allocatable :: sinA_j(:,:) ! rho-point rotation angle (j-axis) from rotation_angle
+  real(8) :: hc
   real(8), allocatable :: sc_w(:)       
   real(8), allocatable :: sc_r(:)  
   real(8), allocatable :: Cs_w(:)       
@@ -227,7 +231,6 @@ PROGRAM prepOCN2ROMS
   real(8), pointer :: w_cnt3Dv (:,:)
 
   integer :: i,j,k
-  real(8) :: d_lat,d_lon
   real(8) :: cff
   
   character(4) :: YYYY
@@ -548,13 +551,15 @@ PROGRAM prepOCN2ROMS
     enddo
   enddo
   
+  ! Rotation angle (cos/sin) of the ROMS grid axes vs east/north, computed at
+  ! rho points, then mapped to u-points (cosAu/sinAu) and v-points (cosAv/sinAv).
+  allocate( cosA_i(0:L, 0:M), sinA_i(0:L, 0:M) )
+  allocate( cosA_j(0:L, 0:M), sinA_j(0:L, 0:M) )
+  call rotation_angle(L+1, M+1, lonr, latr, cosA_i, sinA_i, cosA_j, sinA_j)
   do j=0,M
     do i=1,L
-      d_lat=latr(i,j)-latr(i-1,j)
-      d_lon=lonr(i,j)-lonr(i-1,j)
-      d_lon=d_lon*cos(latu(i,j)/180.0d0*PI)
-      cosAu(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAu(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+      cosAu(i,j) = cosA_i(i-1,j)
+      sinAu(i,j) = sinA_i(i-1,j)
 
       hu(i,j) = (h(i-1,j)+h(i,j))*0.5d0
       if(abs( hu(i,j) ) < 1.0d-2) hu(i,j) = 0.01d0
@@ -562,16 +567,14 @@ PROGRAM prepOCN2ROMS
   enddo
   do j=1,M
     do i=0,L
-      d_lat=latr(i,j)-latr(i,j-1)
-      d_lon=lonr(i,j-1)-lonr(i,j)
-      d_lon=d_lon*cos(latv(i,j)/180.0d0*PI)
-      cosAv(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAv(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+      cosAv(i,j) = cosA_j(i,j-1)
+      sinAv(i,j) = sinA_j(i,j-1)
 
       hv(i,j) = (h(i,j-1)+h(i,j))*0.5d0
       if(abs( hv(i,j) ) < 1.0d-2 ) hv(i,j) = 0.01d0
-    enddo         
+    enddo
   enddo
+  deallocate( cosA_i, sinA_i, cosA_j, sinA_j )
 
 !======= Set starting time and Ending time ========================
 
@@ -726,24 +729,23 @@ PROGRAM prepOCN2ROMS
     enddo
   enddo
 
+  ! Donor-grid rotation angle at rho points, mapped to u/v points (see above).
+  allocate( cosA_i(0:Ldg, 0:Mdg), sinA_i(0:Ldg, 0:Mdg) )
+  allocate( cosA_j(0:Ldg, 0:Mdg), sinA_j(0:Ldg, 0:Mdg) )
+  call rotation_angle(Ldg+1, Mdg+1, lonr_dg, latr_dg, cosA_i, sinA_i, cosA_j, sinA_j)
   do j=0,Mdg
     do i=1,Ldg
-      d_lat=latr_dg(i,j)-latr_dg(i-1,j)
-      d_lon=lonr_dg(i,j)-lonr_dg(i-1,j)
-      d_lon=d_lon*cos(latu_dg(i,j)/180.0d0*PI)
-      cosAu_dg(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAu_dg(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+      cosAu_dg(i,j) = cosA_i(i-1,j)
+      sinAu_dg(i,j) = sinA_i(i-1,j)
     enddo
   enddo
   do j=1,Mdg
     do i=0,Ldg
-      d_lat=latr_dg(i,j)-latr_dg(i,j-1)
-      d_lon=lonr_dg(i,j-1)-lonr_dg(i,j)
-      d_lon=d_lon*cos(latv_dg(i,j)/180.0d0*PI)
-      cosAv_dg(i,j)= d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
-      sinAv_dg(i,j)= d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
-    enddo         
+      cosAv_dg(i,j) = cosA_j(i,j-1)
+      sinAv_dg(i,j) = sinA_j(i,j-1)
+    enddo
   enddo
+  deallocate( cosA_i, sinA_i, cosA_j, sinA_j )
 
 ! Check time
   allocate( INFILE(NCnum) )

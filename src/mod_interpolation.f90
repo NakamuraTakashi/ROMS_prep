@@ -8,6 +8,104 @@ MODULE mod_interpolation
 CONTAINS
 
 !!! **********************************************************************
+!!!  Rotation angle (cos/sin) of a curvilinear grid's axes vs geographic
+!!!  east/north, from a 2D (lon,lat) field. Forward finite differences with
+!!!  edge replication on the last column (i-axis) and last row (j-axis); the
+!!!  longitude difference is scaled by cos(lat) at each cell.
+!!!    i-axis: cosA_i = dlon/r , sinA_i = dlat/r   (dlat=lat(i+1,j)-lat(i,j))
+!!!    j-axis: cosA_j = dlat/r , sinA_j = dlon/r   (dlat=lat(i,j+1)-lat(i,j),
+!!!                                                 dlon=lon(i,j)-lon(i,j+1))
+!!!  Callers that need the opposite j-axis sign convention negate cosA_j/sinA_j.
+!!! **********************************************************************
+  !
+  SUBROUTINE rotation_angle(Nx, Ny, lon, lat, cosA_i, sinA_i, cosA_j, sinA_j)
+
+    implicit none
+    integer, intent( in) :: Nx, Ny
+    real(8), intent( in) :: lon(Nx,Ny), lat(Nx,Ny)
+    real(8), intent(out) :: cosA_i(Nx,Ny), sinA_i(Nx,Ny)
+    real(8), intent(out) :: cosA_j(Nx,Ny), sinA_j(Nx,Ny)
+
+    real(8), parameter :: PI = 3.141592653589793d0
+    integer :: i, j
+    real(8) :: d_lat, d_lon
+
+    do j=1,Ny
+      do i=1,Nx-1
+        d_lat = lat(i+1,j)-lat(i,j)
+        d_lon = lon(i+1,j)-lon(i,j)
+        d_lon = d_lon*cos(lat(i,j)/180.0d0*PI)
+        cosA_i(i,j) = d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+        sinA_i(i,j) = d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+      enddo
+    enddo
+    cosA_i(Nx,:) = cosA_i(Nx-1,:)
+    sinA_i(Nx,:) = sinA_i(Nx-1,:)
+
+    do j=1,Ny-1
+      do i=1,Nx
+        d_lat = lat(i,j+1)-lat(i,j)
+        d_lon = lon(i,j)-lon(i,j+1)
+        d_lon = d_lon*cos(lat(i,j)/180.0d0*PI)
+        cosA_j(i,j) = d_lat/sqrt(d_lat*d_lat+d_lon*d_lon)
+        sinA_j(i,j) = d_lon/sqrt(d_lat*d_lat+d_lon*d_lon)
+      enddo
+    enddo
+    cosA_j(:,Ny) = cosA_j(:,Ny-1)
+    sinA_j(:,Ny) = sinA_j(:,Ny-1)
+
+  END SUBROUTINE rotation_angle
+
+!!! **********************************************************************
+!!!  Rotate a co-located 2D vector between grid-aligned (u,v) and
+!!!  geographic east/north (e,n) components, using per-cell rotation
+!!!  cos/sin from rotation_angle. The i-axis pair (cosA_i,sinA_i) scales
+!!!  the first component, the j-axis pair (cosA_j,sinA_j) the second; for
+!!!  an orthogonal grid both pairs are the same angle. e/n and u/v MUST be
+!!!  distinct arrays from each other (no in-place aliasing).
+!!!    rotate_uv_to_en:  e = u*cosA_i - v*sinA_j ,  n = u*sinA_i + v*cosA_j
+!!!    rotate_en_to_uv:  u = e*cosA_i + n*sinA_i ,  v =-e*sinA_j + n*cosA_j
+!!! **********************************************************************
+  !
+  SUBROUTINE rotate_uv_to_en(Nx, Ny, u, v, cosA_i, sinA_i, cosA_j, sinA_j, e, n)
+
+    implicit none
+    integer, intent( in) :: Nx, Ny
+    real(8), intent( in) :: u(Nx,Ny), v(Nx,Ny)
+    real(8), intent( in) :: cosA_i(Nx,Ny), sinA_i(Nx,Ny)
+    real(8), intent( in) :: cosA_j(Nx,Ny), sinA_j(Nx,Ny)
+    real(8), intent(out) :: e(Nx,Ny), n(Nx,Ny)
+    integer :: i, j
+
+    do j=1,Ny
+      do i=1,Nx
+        e(i,j) = u(i,j)*cosA_i(i,j) - v(i,j)*sinA_j(i,j)
+        n(i,j) = u(i,j)*sinA_i(i,j) + v(i,j)*cosA_j(i,j)
+      enddo
+    enddo
+
+  END SUBROUTINE rotate_uv_to_en
+  !
+  SUBROUTINE rotate_en_to_uv(Nx, Ny, e, n, cosA_i, sinA_i, cosA_j, sinA_j, u, v)
+
+    implicit none
+    integer, intent( in) :: Nx, Ny
+    real(8), intent( in) :: e(Nx,Ny), n(Nx,Ny)
+    real(8), intent( in) :: cosA_i(Nx,Ny), sinA_i(Nx,Ny)
+    real(8), intent( in) :: cosA_j(Nx,Ny), sinA_j(Nx,Ny)
+    real(8), intent(out) :: u(Nx,Ny), v(Nx,Ny)
+    integer :: i, j
+
+    do j=1,Ny
+      do i=1,Nx
+        u(i,j) =  e(i,j)*cosA_i(i,j) + n(i,j)*sinA_i(i,j)
+        v(i,j) = -e(i,j)*sinA_j(i,j) + n(i,j)*cosA_j(i,j)
+      enddo
+    enddo
+
+  END SUBROUTINE rotate_en_to_uv
+
+!!! **********************************************************************
 !!!  Linear interpolation on the 2D grid
 !!! **********************************************************************
   !

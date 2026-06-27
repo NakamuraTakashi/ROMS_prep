@@ -55,7 +55,10 @@ PROGRAM windROMS2SWAN
   real(8), allocatable :: yr(:, :)
   real(8), allocatable :: xr(:, :)
   real(8), allocatable :: angler(:, :)
-#if defined   OUTPUT_SWAN_GRID  
+#if defined NAUTICAL
+  real(8), allocatable :: cosang(:, :), sinang(:, :)
+#endif
+#if defined   OUTPUT_SWAN_GRID
   real(8), allocatable :: h(:, :)
   real(8), allocatable :: rmask(:, :)
 #endif
@@ -154,6 +157,12 @@ PROGRAM windROMS2SWAN
   allocate( angler(0:L, 0:M) )
   call check( nf90_inq_varid(ncid, 'angle', var_id) )
   call check( nf90_get_var(ncid, var_id, angler) )
+#if defined NAUTICAL
+  ! angler is time-independent; precompute its cos/sin once for the wind rotation
+  allocate( cosang(0:L, 0:M), sinang(0:L, 0:M) )
+  cosang(:,:) = cos(angler(:,:))
+  sinang(:,:) = sin(angler(:,:))
+#endif
 
   ! Close NetCDF file
   call check( nf90_close(ncid) )
@@ -378,12 +387,9 @@ PROGRAM windROMS2SWAN
       call check( nf90_close(ncid) ) 
       
 #if defined NAUTICAL
-      do j=0,myc
-        do i=0,mxc
-          wind2(i,j,1) = wind(i,j,1)*cos(angler(i,j)) - wind(i,j,2)*sin(angler(i,j)) 
-          wind2(i,j,2) = wind(i,j,1)*sin(angler(i,j)) + wind(i,j,2)*cos(angler(i,j)) 
-        enddo
-      enddo
+      ! geographic (east,north) wind -> SWAN grid frame (rotation by +angler)
+      call rotate_uv_to_en(mxc+1, myc+1, wind(:,:,1), wind(:,:,2)  &
+            , cosang, sinang, cosang, sinang, wind2(:,:,1), wind2(:,:,2))
 #else
       wind2(:,:,:) = wind(:,:,:)
 #endif
